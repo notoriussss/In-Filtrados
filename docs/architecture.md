@@ -297,7 +297,7 @@ Si al equipo del servidor se le quita la red pero no se apaga, Go, Rust y las ba
 Un solo repositorio con una carpeta por servicio. Cada carpeta es independiente: tiene su propio `Dockerfile`, sus dependencias y sus pruebas, así que sigue siendo microservicios aunque viva en un repo.
 
 ```
-beneath-the-surface/
+bajo-la-superficie/
 ├── proto/                      contratos gRPC, la única fuente de verdad
 │   ├── match.proto
 │   └── players.proto

@@ -13,7 +13,7 @@ Proyecto de Computación en la Nube (equipo de 5). Entrega alrededor del 24 de o
 | `players/` | Rust | Cuentas, monedas y progreso |
 | `monitor/` | Python (FastAPI) | `/health` de todos, eventos y panel |
 | `proto/` | Protobuf | Contratos gRPC compartidos |
-| `messages/` | TypeScript | Tipos de los mensajes WebSocket (`@beneath-the-surface/messages`) |
+| `messages/` | TypeScript | Tipos de los mensajes WebSocket (`@bajo-la-superficie/messages`) |
 | `shared/` | JSON | `map.json`, usado por `match` y `web` |
 
 Middleware: gRPC entre servicios y RabbitMQ para eventos. Dos PostgreSQL, uno por cada servicio con datos.

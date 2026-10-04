@@ -3,6 +3,6 @@
   "version": "0.0.0",
   "private": true,
   "dependencies": {
-    "@beneath-the-surface/messages": "*"
+    "@bajo-la-superficie/messages": "*"
   }
 }
