@@ -1,0 +1,60 @@
+# AGENTS.md
+
+Guía para cualquier persona o asistente de IA (Claude Code, Codex, Copilot, Cursor) que trabaje en este repo. Léela antes de tocar código.
+
+## El proyecto
+
+**Bajo la Superficie**: juego multijugador tipo Among Us sobre las 3R aplicadas al agua, para la materia Computación en la Nube. Equipo de 5 (A a E), entrega alrededor del 24 de octubre de 2026.
+El *porqué* de todo está en `docs/architecture.md`; el *cómo* de cada tarea, en `docs/tasks.md`. Si este archivo y los docs no coinciden, mandan los docs y se corrige este archivo.
+
+## Reglas que no se rompen
+
+1. **Idioma:** todo el código en inglés (carpetas, archivos, variables, tablas, eventos, mensajes gRPC, commits). Documentación y comentarios para el equipo en español, con los nombres de código tal cual.
+2. **El servidor manda.** `match` es la única autoridad del estado de la partida. `web` solo manda intenciones (dirección, acción) y dibuja lo que recibe. Nunca muevas lógica del juego al navegador.
+3. **Database per Service.** `match` solo habla con `match-db` y `players` solo con `players-db`. Ningún servicio lee la base de otro: los datos se piden por gRPC o se escuchan como eventos.
+4. **Contratos en un solo lugar.** gRPC en `proto/`, mensajes WebSocket en `messages/src/index.ts`, mapa en `shared/map.json`, eventos en `docs/tasks.md` 0.7. Nunca copies estos tipos dentro de un servicio. Para cambiarlos, usa la skill `change-contract`.
+5. **Idempotencia.** Los consumidores de RabbitMQ toleran mensajes duplicados (llave por `event_id` o `(match_id, player_id)`) y hacen ack solo después de guardar.
+6. **Todo servicio expone `GET /health`** con el formato de `docs/tasks.md` 0.2: 200 o 503, `checks` por dependencia y timeout de 1 s por revisión.
+7. **Timeouts y reintentos** en toda llamada por red. El gateway envuelve sus clientes gRPC con Retry y Circuit Breaker.
+8. **Configuración por variables de entorno**, nunca IPs ni contraseñas en el código. Los valores de ejemplo van en `.env.example`; `.env` y `lab.env` no se suben.
+
+## Mapa del repo
+
+| Carpeta | Stack | Dueño |
+|---|---|---|
+| `web/` | TypeScript, canvas, Vite, nginx | D |
+| `gateway/` | NestJS, `@grpc/proto-loader`, sin base de datos | C |
+| `match/` | Go, gRPC, pgx + sqlc, una goroutine por sala sin mutex | A |
+| `players/` | Rust: tokio, tonic, sqlx, lapin, argon2 y axum para `/health` | B |
+| `monitor/` | Python, FastAPI | E |
+| `proto/`, `messages/`, `shared/` | Contratos compartidos | Todos |
+| `docs/` | Planes vigentes | Quien cambie una decisión, en el mismo PR |
+
+Puertos: `docs/tasks.md` 0.1. Despliegue en 5 laptops: `docs/deployment-lab.md`.
+
+## Comandos por servicio
+
+| Carpeta | Verificar antes del PR |
+|---|---|
+| `match/` | `go vet ./... && go test -race ./...` |
+| `players/` | `cargo fmt --check && cargo clippy -- -D warnings && cargo test` |
+| `gateway/`, `web/`, `messages/` | `npm run lint && npm test && npm run build` (desde la carpeta) |
+| `monitor/` | `ruff check && pytest` |
+| Todo | `docker compose up --build` desde cero levanta los contenedores sanos |
+
+## Flujo de trabajo
+
+- Rama por tarea con su id: `feat/S1-08-room-loop`, `fix/S2-03-vote-timeout`. Commits pequeños en inglés.
+- PR hacia `main` con la plantilla, revisado por el revisor de esa carpeta en la semana (`docs/team-plan.md`, sección 2) y con CI en verde.
+- "Listo" significa lo de `docs/tasks.md` 0.8: en `main` por PR, al menos una prueba si hay lógica, `docker compose up --build` sigue funcionando y docs actualizados si cambió un acuerdo.
+- No agregues dependencias, servicios ni patrones que no estén en `docs/architecture.md` sin hablarlo con el equipo.
+
+## Skills del repo
+
+Están en `.claude/skills/`. Cualquier asistente puede leerlas como instrucciones en Markdown.
+
+| Skill | Cuándo |
+|---|---|
+| `start-task` | Empezar o cerrar una tarea de `docs/tasks.md`: rama, contexto, criterio de verificación y PR |
+| `change-contract` | Cambiar `proto/`, `messages/`, `shared/map.json`, un evento de RabbitMQ, un puerto o `/health` |
+| `review-pr` | Revisar el PR de otra carpeta como revisor de la semana |

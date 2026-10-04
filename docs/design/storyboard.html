@@ -1,0 +1,360 @@
+<title>Storyboard Bajo la Superficie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: a storyboard sheet — acts as horizontal bands, each a grid of numbered frames (screen sketch + caption + "behind the scenes" note) */
+:root {
+  --bg: #e6ecea;
+  --sheet: #f7faf8;
+  --ink: #12262b;
+  --muted: #4d6266;
+  --line: #c3d0cd;
+  --water: #1c86ad;
+  --water-soft: #b9dfea;
+  --crop: #4f8f2f;
+  --earth: #d9c9a8;
+  --earth-dry: #c7ae7f;
+  --oil: #3a2a4a;
+  --alert: #d24a24;
+  --scr: #efe6d2;
+  --scr-ink: #12262b;
+  --p-azul: #2f6fdb; --p-rojo: #d33a2c; --p-verde: #3a9a3a; --p-amarillo: #e8b923; --p-morado: #7b3fb5; --p-naranja: #ec7a1c;
+  --f-display: "Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+  --f-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1a1d; --sheet: #142427; --ink: #e3eeec; --muted: #9db3b3; --line: #2b4146;
+    --water: #4fb6db; --water-soft: #1d4a5a; --crop: #78c24f; --earth: #4a4130; --earth-dry: #6b5a3a;
+    --oil: #c9a6f0; --alert: #ff7a52; --scr: #1f2e2b; --scr-ink: #e3eeec; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1a1d; --sheet: #142427; --ink: #e3eeec; --muted: #9db3b3; --line: #2b4146;
+  --water: #4fb6db; --water-soft: #1d4a5a; --crop: #78c24f; --earth: #4a4130; --earth-dry: #6b5a3a;
+  --oil: #c9a6f0; --alert: #ff7a52; --scr: #1f2e2b; --scr-ink: #e3eeec; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-inline: 20px; padding-block: 32px 64px; }
+header { display: grid; gap: 10px; margin-bottom: 28px; }
+.kicker { font-family: var(--f-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--water); }
+h1 { font-family: var(--f-display); font-weight: 800; font-size: clamp(34px, 6vw, 56px); line-height: 1; margin: 0; text-wrap: balance; }
+h1 span { color: var(--water); }
+.lede { max-width: 68ch; color: var(--muted); margin: 0; }
+.facts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.fact { font-family: var(--f-mono); font-size: 12px; border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; background: var(--sheet); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 4px; font-size: 13px; color: var(--muted); align-items: center; }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+.act { margin-top: 36px; }
+.act-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; border-bottom: 2px solid var(--ink); padding-bottom: 6px; margin-bottom: 16px; }
+.act-head h2 { font-family: var(--f-display); font-weight: 800; font-size: 26px; margin: 0; }
+.act-head p { margin: 0; color: var(--muted); font-size: 14px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
+.frame { background: var(--sheet); border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.frame-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.num { font-family: var(--f-display); font-weight: 800; font-size: 20px; color: var(--water); }
+.time { font-family: var(--f-mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.screen { width: 100%; aspect-ratio: 16 / 10; border: 2px solid var(--ink); border-radius: 6px; overflow: hidden; background: var(--scr); }
+.screen svg { width: 100%; height: 100%; display: block; }
+.frame h3 { font-family: var(--f-display); font-weight: 600; font-size: 18px; line-height: 1.2; margin: 0; text-wrap: balance; }
+.frame p { margin: 0; font-size: 14px; }
+.behind { border-top: 1px dashed var(--line); padding-top: 8px; font-size: 13px; color: var(--muted); display: grid; gap: 6px; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { font-family: var(--f-mono); font-size: 11px; padding: 1px 7px; border-radius: 4px; border: 1px solid var(--line); color: var(--ink); }
+.tag.go { border-color: var(--water); }
+.tag.rust { border-color: var(--alert); }
+.tag.ts { border-color: var(--p-azul); }
+.tag.py { border-color: var(--crop); }
+footer { margin-top: 44px; border-top: 1px solid var(--line); padding-top: 16px; color: var(--muted); font-size: 13px; max-width: 75ch; }
+/* svg classes */
+.s-bg { fill: var(--earth); }
+.s-dry { fill: var(--earth-dry); }
+.s-ink { fill: var(--scr-ink); }
+.s-stroke { stroke: var(--scr-ink); fill: none; stroke-width: 2; }
+.s-water { fill: var(--water); }
+.s-water-soft { fill: var(--water-soft); }
+.s-crop { fill: var(--crop); }
+.s-oil { fill: var(--oil); }
+.s-alert { fill: var(--alert); }
+.s-panel { fill: var(--scr); stroke: var(--scr-ink); stroke-width: 2; }
+.s-t { fill: var(--scr-ink); font-family: var(--f-body); font-weight: 700; }
+.s-td { font-family: var(--f-display); font-weight: 800; }
+.s-tm { font-family: var(--f-mono); }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="kicker">Juego de las 3R del agua · storyboard</div>
+    <h1>Bajo la <span>Superficie</span></h1>
+    <p class="lede">Una partida completa, viñeta por viñeta, desde que los jugadores entran a la sala hasta que reciben sus monedas. Cada viñeta muestra qué ve el jugador y, debajo, qué servicio trabaja por detrás. Los tiempos son aproximados, para una partida de unos 8 minutos con 6 jugadores.</p>
+    <div class="facts">
+      <span class="fact">6 jugadores · 1 Contaminador</span>
+      <span class="fact">≈ 8 min por partida</span>
+      <span class="fact">Granja en sequía</span>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--p-azul)"></i>Azul: nuestro protagonista</span>
+      <span><i style="background:var(--p-morado)"></i>Morado: El Contaminador (secreto hasta el final)</span>
+      <span><i style="background:var(--oil)"></i>Gotas de aceite</span>
+    </div>
+  </header>
+  <main id="board"></main>
+  <footer>Storyboard basado en el plan del juego (versión del agua). Los servicios de cada viñeta siguen la arquitectura propuesta: Go para la partida en vivo, Rust para los datos de cada jugador, el gateway en TypeScript entre el navegador y el resto, y el monitor en Python. Todo se puede ajustar.</footer>
+</div>
+
+<script>
+const P = { azul:'var(--p-azul)', rojo:'var(--p-rojo)', verde:'var(--p-verde)', amarillo:'var(--p-amarillo)', morado:'var(--p-morado)', naranja:'var(--p-naranja)' };
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+
+// --- drawing helpers (viewBox 320 x 200) ---
+const t = (x,y,s,size=10,anchor='start',cls='') => `<text x="${x}" y="${y}" font-size="${size}" text-anchor="${anchor}" class="s-t ${cls}">${esc(s)}</text>`;
+const ground = () => `<rect width="320" height="200" class="s-bg"/>`;
+function player(x,y,color,label,{ghost=false,bucket=false,scale=1}={}) {
+  const o = ghost ? ' opacity="0.4"' : '';
+  const s = scale;
+  return `<g transform="translate(${x},${y}) scale(${s})"${o}>
+    <rect x="-7" y="-12" width="14" height="20" rx="7" fill="${color}" stroke="var(--scr-ink)" stroke-width="1.5"/>
+    <rect x="-9.5" y="-5" width="4" height="9" rx="2" fill="${color}" stroke="var(--scr-ink)" stroke-width="1.2"/>
+    <rect x="-2" y="-8" width="9" height="5" rx="2.5" fill="var(--water-soft)" stroke="var(--scr-ink)" stroke-width="1.2"/>
+    ${bucket ? `<path d="M7 0 h7 l-1 7 h-5 z" class="s-water" stroke="var(--scr-ink)" stroke-width="1"/>` : ''}
+    ${label ? `<text x="0" y="18" font-size="7" text-anchor="middle" class="s-t">${esc(label)}</text>` : ''}
+  </g>`;
+}
+function tank(x,y,water,contam,{label='',w=18,h=26}={}) {
+  const wh = h*water;
+  return `<g>
+    <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" class="s-panel"/>
+    <rect x="${x+2}" y="${y+h-wh+1}" width="${w-4}" height="${Math.max(wh-3,0)}" rx="2" class="s-water"/>
+    <rect x="${x}" y="${y+h+3}" width="${w}" height="4" rx="2" class="s-dry"/>
+    <rect x="${x}" y="${y+h+3}" width="${w*contam}" height="4" rx="2" class="s-alert"/>
+    ${label ? t(x+w/2, y+h+15, label, 7, 'middle') : ''}
+  </g>`;
+}
+function crop(x,y,stage,dead=false) {
+  const c = dead ? 'var(--earth-dry)' : 'var(--crop)';
+  let g = `<rect x="${x-10}" y="${y}" width="20" height="5" rx="2" class="s-dry"/>`;
+  const hgt = [3,7,11,15][stage] || 3;
+  for (const dx of [-6,0,6]) g += `<path d="M${x+dx} ${y} v-${hgt}" stroke="${c}" stroke-width="2"/><ellipse cx="${x+dx+2}" cy="${y-hgt+2}" rx="3" ry="2" fill="${c}"/>`;
+  return g;
+}
+function plot(x,y,color,stage,water,contam,{dead=false}={}) {
+  return `<g><rect x="${x-14}" y="${y-22}" width="50" height="40" rx="4" fill="none" stroke="${color}" stroke-width="2" stroke-dasharray="3 2"/>
+    ${crop(x,y+10,stage,dead)}${tank(x+16,y-16,water,contam,{w:14,h:20})}</g>`;
+}
+function reservoir(x,y,w,h,level,label='Embalse') {
+  return `<g><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="8" class="s-panel"/>
+    <rect x="${x+3}" y="${y+h-(h-6)*level-3}" width="${w-6}" height="${(h-6)*level}" rx="6" class="s-water"/>
+    ${t(x+w/2, y+h+10, label, 8, 'middle')}</g>`;
+}
+function plant(x,y,label='Planta de tratamiento') {
+  return `<g><rect x="${x}" y="${y}" width="44" height="30" rx="3" class="s-panel"/>
+    <rect x="${x+6}" y="${y-10}" width="8" height="12" class="s-panel"/>
+    <circle cx="${x+30}" cy="${y+15}" r="8" class="s-water-soft" stroke="var(--scr-ink)" stroke-width="1.5"/>
+    ${t(x+22, y+40, label, 7, 'middle')}</g>`;
+}
+function barrel(x,y,label='Lluvia') {
+  return `<g><rect x="${x}" y="${y}" width="16" height="20" rx="4" class="s-panel"/><rect x="${x+3}" y="${y+7}" width="10" height="11" rx="2" class="s-water"/>${t(x+8,y+29,label,7,'middle')}</g>`;
+}
+function hud({res=0.5,pur=0.8,timer=''}={}) {
+  return `<g><rect x="0" y="0" width="320" height="18" class="s-panel" stroke-width="0"/>
+    ${t(6,12,'Embalse',8)}<rect x="44" y="5" width="60" height="8" rx="4" class="s-dry"/><rect x="44" y="5" width="${60*res}" height="8" rx="4" class="s-water"/>
+    ${t(112,12,'Pureza',8)}<rect x="144" y="5" width="60" height="8" rx="4" class="s-dry"/><rect x="144" y="5" width="${60*pur}" height="8" rx="4" class="s-crop"/>
+    ${timer ? t(314,12,timer,8,'end','s-tm') : ''}</g>`;
+}
+function banner(text,{y=34,tone='alert'}={}) {
+  const fill = tone==='alert' ? 'var(--alert)' : 'var(--water)';
+  return `<g><rect x="30" y="${y-12}" width="260" height="18" rx="9" fill="${fill}"/><text x="160" y="${y+1}" font-size="9" text-anchor="middle" class="s-td" fill="var(--sheet)">${esc(text)}</text></g>`;
+}
+const drops = pts => pts.map(([x,y,s=1])=>`<ellipse cx="${x}" cy="${y}" rx="${3*s}" ry="${2*s}" fill="var(--p-morado)" opacity="0.85"/>`).join('');
+const arrow = (x1,y1,x2,y2) => `<path d="M${x1} ${y1} L${x2} ${y2}" class="s-stroke" stroke-dasharray="4 3" marker-end="url(#ah)"/>`;
+const defs = `<defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--scr-ink)"/></marker></defs>`;
+function bubble(x,y,w,color,name,msg) {
+  return `<g><rect x="${x}" y="${y}" width="${w}" height="22" rx="6" class="s-panel" stroke-width="1.2"/>
+    <circle cx="${x+9}" cy="${y+11}" r="5" fill="${color}" stroke="var(--scr-ink)" stroke-width="1"/>
+    ${t(x+18,y+9,name,6.5)}<text x="${x+18}" y="${y+18}" font-size="7" class="s-t" style="font-weight:400">${esc(msg)}</text></g>`;
+}
+function svg(inner) { return `<svg viewBox="0 0 320 200" role="img" xmlns="http://www.w3.org/2000/svg">${defs}${inner}</svg>`; }
+
+// --- the frames ---
+const ACTS = [
+ { name:'Antes de jugar', note:'Entrar, juntarse y recibir un papel secreto', frames:[
+  { time:'0:00', title:'Sala de espera', see:'Los jugadores entran con el código de la sala o escaneando el QR desde el celular. Cada uno elige un color. Cuando hay entre 4 y 8, el anfitrión pulsa Empezar.',
+    behind:'El gateway recibe el login y lo valida con Rust. Go crea la sala y le asigna su propia goroutine.', tags:['ts','rust','go'],
+    draw:()=>svg(`${ground()}<rect x="10" y="10" width="300" height="180" rx="8" class="s-panel"/>
+      ${t(24,34,'SALA 4F7K',16,'start','s-td')}${t(24,48,'6 de 8 jugadores',9)}
+      ${['azul','rojo','verde','amarillo','morado','naranja'].map((c,i)=>player(40+i*34,98,P[c],c[0].toUpperCase()+c.slice(1))).join('')}
+      <rect x="236" y="22" width="56" height="56" class="s-panel"/>
+      ${[0,1,2,3,4,5,6].map(i=>[0,1,2,3,4,5,6].map(j=>((i*3+j*5)%4<2)?`<rect x="${240+i*7}" y="${26+j*7}" width="6" height="6" class="s-ink"/>`:'').join('')).join('')}
+      <rect x="110" y="140" width="100" height="26" rx="13" class="s-water"/><text x="160" y="157" font-size="11" text-anchor="middle" class="s-td" fill="var(--sheet)">Empezar</text>`)},
+  { time:'0:10', title:'Cada uno recibe su papel', see:'Cinco jugadores ven "Tripulante: cuida el agua y riega tu cultivo". Solo uno ve, en su pantalla, "Eres El Contaminador". Nadie sabe quién es.',
+    behind:'Go elige al impostor al azar y le manda el papel a cada jugador por separado, por su propio WebSocket.', tags:['go','ts'],
+    draw:()=>svg(`<rect width="160" height="200" class="s-water"/><rect x="160" width="160" height="200" fill="var(--oil)"/>
+      ${player(80,96,P.azul,'',{scale:2.4})}${player(240,96,P.morado,'',{scale:2.4})}
+      <text x="80" y="160" font-size="14" text-anchor="middle" class="s-td" fill="var(--sheet)">TRIPULANTE</text>
+      <text x="80" y="176" font-size="8" text-anchor="middle" class="s-t" fill="var(--sheet)">Cuida el agua y riega tu cultivo</text>
+      <text x="240" y="160" font-size="12" text-anchor="middle" class="s-td" fill="var(--sheet)">EL CONTAMINADOR</text>
+      <text x="240" y="176" font-size="8" text-anchor="middle" class="s-t" fill="var(--sheet)">Contamina sin que te descubran</text>
+      ${t(80,24,'Pantalla de Azul',8,'middle')}<text x="240" y="24" font-size="8" text-anchor="middle" class="s-t" fill="var(--sheet)">Pantalla de Morado</text>`)},
+  { time:'0:15', title:'La granja en sequía', see:'Aparece el mapa. Un canal lo parte en dos y solo se cruza por 3 puentes: arriba están el embalse, la plaza con la torre de agua, los techos con barriles y la planta; abajo, el cuarto de bombas, el huerto con su invernadero y el lavadero. Una acequia rodea todo como un anillo. Cada jugador solo ve un círculo a su alrededor.',
+    behind:'Desde aquí Go hace un "tick" varias veces por segundo y transmite el estado de la sala a todos (Pub/Sub con canales). Go también decide qué ve cada jugador según su radio de visión.', tags:['go'],
+    draw:()=>{
+      const zone=(x,y,w,h,name,sub='')=>`<g><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" class="s-panel"/>${t(x+w/2,y+10,name,7,'middle','s-td')}${sub?t(x+w/2,y+h-4,sub,5.5,'middle'):''}</g>`;
+      const bridge=(x,name)=>`<g><rect x="${x-9}" y="98" width="18" height="16" fill="var(--earth-dry)" stroke="var(--scr-ink)" stroke-width="1.2"/><path d="M${x-9} 102 H${x+9} M${x-9} 106 H${x+9} M${x-9} 110 H${x+9}" stroke="var(--scr-ink)" stroke-width="0.6"/>${t(x,96,name,5.5,'middle')}</g>`;
+      return svg(`${ground()}${hud({res:0.15,pur:1,timer:'7:45'})}
+      <rect x="4" y="22" width="312" height="174" rx="10" fill="none" stroke="var(--water)" stroke-width="3" opacity="0.7"/>
+      <rect x="4" y="100" width="312" height="12" class="s-water"/>
+      <path d="M46 88 V100 M46 112 V120 M160 92 V100 M160 112 V120 M274 88 V100 M274 112 V120 M82 64 H120 M200 64 H238 M82 150 H96 M224 150 H238" stroke="var(--earth-dry)" stroke-width="6"/>
+      ${zone(120,22,80,24,'Embalse')}<rect x="124" y="34" width="72" height="7" rx="3" class="s-water"/><path d="M200 30 q6 6 2 14" stroke="var(--water)" stroke-width="2" fill="none"/>
+      ${zone(120,50,80,42,'Plaza central','reuniones')}<circle cx="160" cy="72" r="7" class="s-water-soft" stroke="var(--scr-ink)" stroke-width="1.2"/>
+      <g><rect x="213" y="74" width="10" height="16" class="s-panel"/><rect x="209" y="68" width="18" height="8" rx="2" class="s-water"/>${t(218,97,'torre de agua',5.5,'middle')}</g>
+      ${zone(10,40,72,48,'Techos','Reutilizar: lluvia')}${barrel(30,54,'')}${barrel(48,54,'')}
+      <g transform="translate(70,50)"><path d="M0 -8 V8 M-8 0 H8 M-6 -6 L6 6 M-6 6 L6 -6" stroke="var(--scr-ink)" stroke-width="1.5"/></g>
+      ${zone(238,40,72,48,'Planta','Reciclar: filtro')}<circle cx="274" cy="64" r="7" class="s-water-soft" stroke="var(--scr-ink)" stroke-width="1.2"/>
+      ${bridge(46,'puente O')}${bridge(160,'puente C')}${bridge(274,'puente E')}
+      ${zone(10,120,72,62,'Bombas','Reducir · panel')}<rect x="30" y="136" width="32" height="18" rx="2" class="s-panel"/><rect x="34" y="140" width="6" height="10" class="s-water"/><rect x="43" y="144" width="6" height="6" class="s-water"/><rect x="52" y="138" width="6" height="12" class="s-water"/>
+      ${zone(96,120,128,70,'Huerto','parcelas + invernadero')}
+      ${['azul','rojo','verde','amarillo','morado','naranja'].map((c,i)=>`<rect x="${102+i*16}" y="136" width="13" height="26" rx="2" fill="none" stroke="${P[c]}" stroke-width="1.8"/><rect x="${105+i*16}" y="140" width="7" height="7" rx="1" class="s-water"/>`).join('')}
+      <path d="M200 162 V140 a10 10 0 0 1 20 0 V162 z" class="s-water-soft" stroke="var(--scr-ink)" stroke-width="1.2"/>${crop(210,160,3)}
+      ${zone(238,120,72,62,'Lavadero','Reutilizar: agua gris')}<path d="M246 136 H302" class="s-stroke" stroke-width="1"/><rect x="250" y="136" width="12" height="16" fill="var(--sheet)" stroke="var(--scr-ink)" stroke-width="1"/><rect x="268" y="136" width="12" height="18" fill="var(--sheet)" stroke="var(--scr-ink)" stroke-width="1"/><rect x="286" y="136" width="12" height="14" fill="var(--sheet)" stroke="var(--scr-ink)" stroke-width="1"/>`);}},
+]},
+ { name:'Farmear con las 3R', note:'Ir por agua, volver y regar', frames:[
+  { time:'0:40', title:'Reutilizar: agua de lluvia', see:'Azul va a los barriles, llena una cubeta y la lleva a su parcela. Al regar, el cultivo crece un nivel. Quedarse en la parcela no sirve: el agua está lejos.',
+    behind:'Go valida que Azul esté junto al barril, le da la cubeta y, al regar, sube el nivel del cultivo y del tanque.', tags:['go'],
+    draw:()=>svg(`${ground()}${hud({res:0.25,pur:1,timer:'7:20'})}
+      ${barrel(40,40)}${barrel(64,40)}${player(98,62,P.azul,'Azul',{bucket:true})}
+      ${arrow(110,80,170,130)}${plot(196,150,P.azul,2,0.6,0)}
+      <rect x="120" y="30" width="96" height="18" rx="9" class="s-water"/><text x="168" y="42" font-size="8" text-anchor="middle" class="s-td" fill="var(--sheet)">+1 cubeta de lluvia</text>`)},
+  { time:'1:30', title:'Reducir: cerrar la fuga', see:'En una tubería gotea el agua. Azul hace un minijuego corto: girar la válvula hasta llenar la barra. Mientras tanto, el embalse deja de perder agua.',
+    behind:'Go marca la fuga como reparada y deja de restar agua al embalse en cada tick.', tags:['go'],
+    draw:()=>svg(`<rect width="320" height="200" class="s-bg"/><rect x="20" y="16" width="280" height="168" rx="10" class="s-panel"/>
+      ${t(160,38,'Gira la válvula',13,'middle','s-td')}
+      <path d="M40 110 H140 M180 110 H280" stroke="var(--scr-ink)" stroke-width="10"/>
+      <circle cx="160" cy="110" r="26" class="s-stroke" stroke-width="4"/><path d="M134 110 H186 M160 84 V136" class="s-stroke" stroke-width="4"/>
+      <path d="M200 116 q4 10 0 14 q-4 -4 0 -14" class="s-water"/><path d="M214 118 q3 8 0 11 q-3 -3 0 -11" class="s-water"/>
+      <path d="M190 80 a40 40 0 0 1 10 30" class="s-stroke" marker-end="url(#ah)"/>
+      <rect x="70" y="156" width="180" height="10" rx="5" class="s-dry"/><rect x="70" y="156" width="120" height="10" rx="5" class="s-crop"/>`)},
+  { time:'2:10', title:'Reciclar: la planta de tratamiento', see:'El agua sucia se lleva a la planta. El minijuego: arrastrar el agua por las capas del filtro (grava, arena, carbón) hasta que sale limpia. El agua limpia sobrante va al embalse.',
+    behind:'Go convierte el agua sucia en limpia, sube el nivel del embalse y lo transmite a todos en vivo.', tags:['go'],
+    draw:()=>svg(`<rect width="320" height="200" class="s-bg"/><rect x="20" y="16" width="280" height="168" rx="10" class="s-panel"/>
+      ${t(160,38,'Filtra el agua sucia',13,'middle','s-td')}
+      <rect x="40" y="60" width="44" height="60" rx="6" fill="var(--earth-dry)" stroke="var(--scr-ink)" stroke-width="2"/>${t(62,134,'Sucia',8,'middle')}
+      <rect x="130" y="50" width="60" height="90" rx="4" class="s-panel"/>
+      <rect x="132" y="56" width="56" height="24" fill="var(--earth-dry)"/><rect x="132" y="82" width="56" height="24" fill="var(--earth)"/><rect x="132" y="108" width="56" height="28" class="s-ink" opacity="0.75"/>
+      ${t(200,72,'grava',7)}${t(200,98,'arena',7)}${t(200,124,'carbón',7)}
+      <rect x="240" y="60" width="44" height="60" rx="6" class="s-water"/>${t(262,134,'Limpia',8,'middle')}
+      ${arrow(88,90,126,90)}${arrow(194,150,240,110)}
+      <rect x="90" y="156" width="140" height="18" rx="9" class="s-water"/><text x="160" y="168" font-size="8" text-anchor="middle" class="s-td" fill="var(--sheet)">+30 L al embalse</text>`)},
+ ]},
+ { name:'El sabotaje', note:'El Contaminador ataca y deja rastro', frames:[
+  { time:'3:00', title:'Morado contamina un tanque', see:'Morado se para junto al tanque de Verde unos 3 segundos, con una animación visible. La barra roja del tanque sube. Al irse, deja gotas de aceite moradas que duran unos 15 segundos.',
+    behind:'Mientras Morado está cerca, Go sube la contaminación en cada tick, anota a Morado como visitante del tanque y guarda las gotas con su hora de caducidad.', tags:['go'],
+    draw:()=>svg(`${ground()}${hud({res:0.45,pur:0.85,timer:'5:00'})}
+      ${plot(150,120,P.verde,2,0.6,0.55)}${player(196,100,P.morado,'Morado')}
+      <circle cx="196" cy="92" r="16" fill="none" stroke="var(--alert)" stroke-width="3" stroke-dasharray="70 31"/>
+      ${t(196,66,'3 s',9,'middle','s-tm')}
+      ${drops([[214,118],[226,128],[240,134,.9],[256,142,.8],[272,148,.7]])}
+      ${t(270,170,'gotas de aceite',7,'middle')}`)},
+  { time:'3:05', title:'Alerta en la pantalla de Verde', see:'Verde, que estaba lejos en la planta, ve en el borde rojo: "¡Tu tanque está siendo contaminado!". No dice por quién. Tiene pocos segundos para correr a verlo.',
+    behind:'Go envía este aviso solo al dueño del tanque, no a toda la sala.', tags:['go','ts'],
+    draw:()=>svg(`${ground()}<rect x="2" y="2" width="316" height="196" fill="none" stroke="var(--alert)" stroke-width="6"/>
+      ${hud({res:0.45,pur:0.82,timer:'4:55'})}${banner('¡Tu tanque está siendo contaminado!',{y:40})}
+      ${plant(40,80)}${player(110,110,P.verde,'Verde')}${arrow(124,110,230,130)}
+      ${tank(250,110,0.6,0.7,{label:'Tu tanque'})}`)},
+  { time:'3:55', title:'Morado abre su menú de sabotaje', see:'Solo el impostor tiene este menú: romper la tubería principal, vapor en la planta, cerrar una compuerta o apagón de bombas. Hay un tiempo de espera de unos 40 s entre sabotajes y la tubería solo se puede romper 2 veces por partida. Morado elige la tubería.',
+    behind:'El gateway reenvía la orden a Go. Go revisa que sea el impostor, que no haya otro sabotaje activo y que el tiempo de espera haya pasado, y pausa los eventos aleatorios un rato.', tags:['ts','go'],
+    draw:()=>{
+      const opt=(y,name,note,on=true,sel=false)=>`<g opacity="${on?1:0.45}"><rect x="150" y="${y}" width="156" height="28" rx="6" fill="${sel?'var(--alert)':'var(--scr)'}" stroke="var(--scr-ink)" stroke-width="1.5"/>
+        <text x="160" y="${y+12}" font-size="8" class="s-td" fill="${sel?'var(--sheet)':'var(--scr-ink)'}">${esc(name)}</text>
+        <text x="160" y="${y+22}" font-size="6.5" class="s-t" style="font-weight:400" fill="${sel?'var(--sheet)':'var(--scr-ink)'}">${esc(note)}</text></g>`;
+      return svg(`${ground()}${hud({res:0.48,pur:0.8,timer:'4:05'})}
+      <rect x="0" y="18" width="320" height="182" fill="var(--oil)" opacity="0.18"/>
+      ${player(70,110,P.morado,'Morado',{scale:1.8})}
+      ${t(70,160,'Solo lo ve el impostor',7,'middle')}
+      <rect x="142" y="26" width="172" height="168" rx="8" class="s-panel"/>
+      ${t(150,40,'SABOTEAR',10,'start','s-td')}${t(306,40,'listo',8,'end','s-tm')}
+      ${opt(48,'Romper tubería principal','crítico · quedan 2 usos',true,true)}
+      ${opt(82,'Vapor en la planta','reduce la visión de todos')}
+      ${opt(116,'Cerrar una compuerta','bloquea un puente 20 s')}
+      ${opt(150,'Apagón de bombas','apaga torre y panel')}`);}},
+  { time:'4:00', title:'Emergencia: se rompe la tubería principal', see:'Suena la alarma: "¡Se rompió la tubería principal! 0:30". Se ve igual que una emergencia aleatoria, así que nadie sabe que fue Morado. Hacen falta dos jugadores, uno en cada extremo, o todos los tanques suben un 20 %. Mientras todos corren, Morado vuelve al tanque de Verde.',
+    behind:'Go usa el mismo sistema para las emergencias aleatorias y para los sabotajes. Si nadie la arregla a tiempo, aplica +20 % de contaminación a todos los tanques.', tags:['go'],
+    draw:()=>svg(`${ground()}${hud({res:0.5,pur:0.75,timer:'4:00'})}${banner('¡Se rompió la tubería principal!  0:30',{y:38})}
+      <path d="M20 90 H140 M170 90 H300" stroke="var(--scr-ink)" stroke-width="10"/>
+      <path d="M150 84 q-12 -20 -4 -30 M156 84 q2 -22 10 -30 M162 86 q12 -14 20 -18" stroke="var(--water)" stroke-width="3" fill="none"/>
+      ${player(60,150,P.azul,'Azul')}${player(110,160,P.rojo,'Rojo')}${player(210,160,P.amarillo,'Amarillo')}${player(260,150,P.naranja,'Naranja')}
+      ${arrow(66,136,140,104)}${arrow(116,146,148,106)}${arrow(204,146,170,106)}${arrow(254,136,180,104)}
+      ${player(24,170,P.morado,'Morado')}${t(40,192,'…va hacia otro lado',7)}`)},
+  { time:'4:40', title:'El tanque de Verde llega al 100 %', see:'El cultivo de Verde se seca y Verde queda eliminado. No se va: sigue en el mapa como fantasma transparente y puede seguir haciendo tareas para ayudar al equipo.',
+    behind:'Go marca a Verde como eliminado y le cambia el estado a fantasma; sus acciones siguen contando, pero ya no vota.', tags:['go'],
+    draw:()=>svg(`${ground()}${hud({res:0.55,pur:0.7,timer:'3:20'})}
+      ${plot(120,130,P.verde,3,0.5,1,{dead:true})}${player(210,90,P.verde,'Verde',{ghost:true,scale:1.6})}
+      <rect x="190" y="130" width="120" height="34" rx="6" class="s-panel"/>
+      ${t(250,144,'Ahora eres fantasma',8,'middle')}${t(250,156,'Sigue haciendo tareas',7,'middle')}`)},
+ ]},
+ { name:'La reunión', note:'Juntar pistas, discutir y votar', frames:[
+  { time:'5:00', title:'Azul encuentra el tanque arruinado', see:'Azul pasa junto a la parcela seca de Verde y ve gotas moradas todavía en el suelo. Pulsa REPORTAR y se abre una reunión para todos.',
+    behind:'El gateway recibe el reporte y Go congela la partida. Para la reunión, Go adjunta los últimos 3 jugadores que pasaron por ese tanque.', tags:['ts','go'],
+    draw:()=>svg(`${ground()}${hud({res:0.58,pur:0.68,timer:'3:00'})}
+      ${plot(110,130,P.verde,3,0.5,1,{dead:true})}${drops([[160,150],[172,158,.9],[186,162,.7]])}
+      ${player(206,124,P.azul,'Azul')}
+      <rect x="230" y="150" width="76" height="28" rx="14" class="s-alert"/><text x="268" y="168" font-size="11" text-anchor="middle" class="s-td" fill="var(--sheet)">REPORTAR</text>`)},
+  { time:'5:05', title:'Discusión en el chat', see:'Todos se ven en la reunión. El sistema muestra quiénes pasaron últimos por el tanque, sin decir quién lo contaminó. Empiezan las acusaciones en el chat.',
+    behind:'El chat pasa por el gateway, que limita cuántos mensajes manda cada jugador por segundo; Go lo reparte a la sala y lo guarda en su base de datos.', tags:['ts','go'],
+    draw:()=>svg(`<rect width="320" height="200" class="s-water-soft"/>
+      <rect x="10" y="10" width="110" height="180" rx="8" class="s-panel"/>
+      ${t(65,28,'Últimos en pasar',9,'middle','s-td')}
+      ${player(34,58,P.morado,'')}${t(52,62,'Morado',8)}${player(34,94,P.rojo,'')}${t(52,98,'Rojo',8)}${player(34,130,P.azul,'')}${t(52,134,'Azul',8)}
+      ${t(65,172,'Tanque de Verde',7,'middle')}
+      ${bubble(130,16,180,P.azul,'Azul','Había gotas moradas junto al tanque')}
+      ${bubble(130,46,180,P.morado,'Morado','¡Yo estaba en la planta, lo juro!')}
+      ${bubble(130,76,180,P.rojo,'Rojo','Yo vi a Morado salir de ahí')}
+      ${bubble(130,106,180,P.naranja,'Naranja','Morado tampoco fue a la tubería')}
+      ${bubble(130,136,180,P.morado,'Morado','Rojo también pasó por ahí…')}
+      ${t(220,182,'1:20 para votar',8,'middle','s-tm')}`)},
+  { time:'6:30', title:'Votación y expulsión', see:'Cada uno vota a quién expulsar, o se salta el voto. Morado recibe la mayoría y cae por el desagüe. La pantalla revela: "Morado era El Contaminador".',
+    behind:'Go cuenta los votos, resuelve el empate si lo hay y transmite el resultado a toda la sala.', tags:['go'],
+    draw:()=>svg(`<rect width="320" height="200" fill="var(--oil)"/>
+      ${player(160,82,P.morado,'',{scale:2.2})}
+      <path d="M120 120 q40 30 80 0" stroke="var(--water)" stroke-width="4" fill="none"/>
+      <text x="160" y="150" font-size="14" text-anchor="middle" class="s-td" fill="var(--sheet)">Morado era El Contaminador</text>
+      <text x="160" y="168" font-size="9" text-anchor="middle" class="s-t" fill="var(--sheet)">4 votos · 1 salto</text>`)},
+ ]},
+ { name:'El final', note:'Quién gana y qué se lleva cada uno', frames:[
+  { time:'7:30', title:'Victoria de los tripulantes', see:'Con el impostor fuera, el equipo termina de llenar el embalse con agua limpia. Si Morado no hubiera sido descubierto y la pureza llegaba a 0 %, habría ganado él.',
+    behind:'Go cierra la partida, guarda el resultado en su base de datos y envía a Rust lo que ganó cada jugador por gRPC. Si Rust no responde, el gateway reintenta (circuit breaker) sin romper la partida.', tags:['go','rust'],
+    draw:()=>svg(`${ground()}${hud({res:1,pur:0.9,timer:'0:30'})}
+      ${reservoir(100,40,120,80,1)}
+      ${['azul','rojo','amarillo','naranja'].map((c,i)=>player(76+i*56,160,P[c],'')).join('')}${player(116+2*56+56,160,P.verde,'',{ghost:true})}
+      ${banner('¡Victoria de los tripulantes!',{y:186,tone:'water'})}`)},
+  { time:'8:00', title:'Recompensas y parcela personal', see:'Cada jugador ve lo que ganó: monedas y semillas según el agua que aportó. Con eso mejora su parcela personal (riego por goteo, barriles de lluvia) o compra atuendos. Botón: Jugar otra.',
+    behind:'Rust guarda monedas, semillas y mejoras en su base de datos. La tienda se usa por REST a través del gateway. El monitor en Python cuenta partidas y usuarios en línea.', tags:['rust','ts','py'],
+    draw:()=>svg(`${ground()}<rect x="10" y="10" width="300" height="180" rx="8" class="s-panel"/>
+      ${t(24,34,'Partida terminada',14,'start','s-td')}
+      ${t(24,58,'+120 monedas',11)}${t(24,74,'+8 semillas',11)}${t(24,90,'45 L aportados',11)}
+      <rect x="170" y="24" width="126" height="96" rx="6" class="s-water-soft"/>
+      ${crop(206,100,3)}${barrel(240,70,'')}
+      ${t(233,114,'Tu parcela',8,'middle')}
+      <rect x="24" y="110" width="128" height="22" rx="4" class="s-panel"/>${t(30,125,'Riego por goteo · 80',8)}
+      <rect x="24" y="136" width="128" height="22" rx="4" class="s-panel"/>${t(30,151,'Sombrero de bidón · 50',8)}
+      <rect x="190" y="146" width="100" height="26" rx="13" class="s-water"/><text x="240" y="163" font-size="11" text-anchor="middle" class="s-td" fill="var(--sheet)">Jugar otra</text>`)},
+ ]},
+];
+
+const TAGS = { go:['go','Go'], rust:['rust','Rust'], ts:['ts','Gateway TS'], py:['py','Monitor Python'] };
+let n = 0;
+document.getElementById('board').innerHTML = ACTS.map(a => `
+  <section class="act">
+    <div class="act-head"><h2>${esc(a.name)}</h2><p>${esc(a.note)}</p></div>
+    <div class="grid">${a.frames.map(f => { n++; return `
+      <article class="frame">
+        <div class="frame-top"><span class="num">${n}</span><span class="time">${f.time}</span></div>
+        <div class="screen">${f.draw()}</div>
+        <h3>${esc(f.title)}</h3>
+        <p>${esc(f.see)}</p>
+        <div class="behind"><div class="tags">${f.tags.map(k=>`<span class="tag ${TAGS[k][0]}">${TAGS[k][1]}</span>`).join('')}</div><span>${esc(f.behind)}</span></div>
+      </article>`; }).join('')}</div>
+  </section>`).join('');
+</script>

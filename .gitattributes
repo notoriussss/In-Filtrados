@@ -1,0 +1,6 @@
+# The team works on Windows, but containers run Linux: keep LF in the repo.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.ogg binary
+*.mp3 binary

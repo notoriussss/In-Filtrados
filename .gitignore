@@ -1,0 +1,19 @@
+# Node
+node_modules/
+dist/
+# Rust
+target/
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+# Secrets and local config
+.env
+lab.env
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,843 @@
+# Bajo la Superficie: tareas detalladas
+
+Cada tarea dice **qué archivos tocar, qué construir paso a paso y cómo se verifica que está terminada**.
+Complementa a `team-plan.md` (quién y cuándo) y a `architecture.md` (por qué).
+Fecha: 3 de octubre de 2026.
+
+> Las personas se llaman **A, B, C, D y E**. Código en inglés; documentación en español.
+> Cada tarea tiene un id (`S1-08`). Úsenlo en el nombre de la rama y del PR: `feat/S1-08-room-loop`.
+
+---
+
+## 0. Acuerdos comunes (léanlos antes de empezar)
+
+Estos valores los usan varias tareas. Si alguien necesita cambiarlos, se cambia aquí primero y se avisa al equipo.
+
+### 0.1 Puertos
+
+| Servicio | Puerto interno | Puerto en tu máquina | Para qué |
+|---|---|---|---|
+| `web` (nginx) | 80 | **8080** | El juego. Hace proxy de `/api` y `/ws` al gateway |
+| `gateway` | 3000 | 3000 | REST `/api/*` y WebSocket `/ws` |
+| `match` | 50051 (gRPC), 8081 (HTTP) | 8081 | gRPC y `/health` |
+| `players` | 50052 (gRPC), 8082 (HTTP) | 8082 | gRPC y `/health` |
+| `monitor` | 8000 | 8000 | Panel y `/health` |
+| `match-db` (PostgreSQL) | 5432 | 5433 | Base de datos de `match` |
+| `players-db` (PostgreSQL) | 5432 | 5434 | Base de datos de `players` |
+| `rabbitmq` | 5672, 15672 | 5672, 15672 | Broker y su consola web |
+
+Como nginx reenvía `/api` y `/ws` al gateway, **el navegador solo conoce `http://localhost:8080`**: no hay problemas de CORS y se demuestra el patrón API Gateway.
+
+### 0.2 Formato de `/health` (los 5 servicios)
+
+`GET /health` responde **200** si todo está bien y **503** si falla alguna dependencia:
+
+```json
+{
+  "status": "ok",
+  "service": "match",
+  "checks": { "db": "ok", "rabbitmq": "ok" }
+}
+```
+
+Con una dependencia caída: `"status": "degraded"` y en `checks` el valor `"fail: <motivo corto>"`.
+
+### 0.3 Mapa compartido
+
+El mapa vive en **`shared/map.json`** (carpeta nueva en la raíz). Lo usan `match` para las colisiones y `web` para dibujar. Mundo de **1600 × 1200 unidades**, origen arriba a la izquierda.
+
+```json
+{
+  "width": 1600,
+  "height": 1200,
+  "spawn": { "x": 800, "y": 600 },
+  "walls": [ { "x": 0, "y": 560, "w": 700, "h": 40 } ],
+  "zones": [ { "id": "plaza", "name": "Plaza central", "x": 650, "y": 450, "w": 300, "h": 300, "color": "#d9c27a" } ],
+  "stations": [ { "id": "leak-1", "type": "reduce", "x": 200, "y": 900 } ],
+  "tanks": [ { "slot": 0, "x": 620, "y": 1050 } ]
+}
+```
+
+- `walls`: rectángulos que no se pueden atravesar. El canal es una pared con 3 huecos, que son los puentes.
+- `stations`: dónde se hacen las tareas (`reduce`, `reuse`, `recycle`). Se usan desde la semana 2.
+- `tanks`: los tanques de riego de cada jugador, por número de lugar (`slot`). Se usan desde la semana 2.
+
+### 0.4 Reglas de movimiento
+
+- Ticker a **20 Hz** (cada 50 ms).
+- Velocidad: **200 unidades por segundo**, o sea 10 unidades por tick.
+- El cliente solo manda la **dirección** (`dx`, `dy` entre -1 y 1). El servidor mueve, nunca el cliente.
+- Radio del personaje: 16 unidades.
+
+### 0.5 Mensajes WebSocket (`messages/src/index.ts`)
+
+```ts
+// Navegador → gateway
+export type ClientMessage =
+  | { type: 'join'; matchId: string; lastTick: number }   // primer mensaje al conectar
+  | { type: 'move'; dx: -1 | 0 | 1; dy: -1 | 0 | 1 };
+
+// Gateway → navegador
+export type ServerMessage =
+  | { type: 'snapshot'; tick: number; phase: Phase; players: PlayerView[] }
+  | { type: 'error'; code: ErrorCode; message: string };
+
+export type Phase = 'LOBBY' | 'PLAYING' | 'MEETING' | 'ENDED';
+export type PlayerView = {
+  id: string; name: string; color: string;
+  x: number; y: number; connected: boolean; alive: boolean;
+};
+export type ErrorCode = 'UNAUTHORIZED' | 'MATCH_NOT_FOUND' | 'SERVICE_UNAVAILABLE' | 'BAD_MESSAGE';
+```
+
+En la semana 2 se agregan mensajes; se agregan aquí, nunca se duplican en `web` o `gateway`.
+
+### 0.6 REST del gateway
+
+| Método y ruta | Cuerpo | Respuesta |
+|---|---|---|
+| `POST /api/auth/register` | `{ username, password }` | `201 { playerId, username }` |
+| `POST /api/auth/login` | `{ username, password }` | `200 { token, playerId, username }` |
+| `GET /api/me` | — (header `Authorization: Bearer <token>`) | `200 { playerId, username, coins, matchesPlayed, wins }` |
+| `POST /api/rooms` | — | `201 { roomCode, matchId }` |
+| `POST /api/rooms/:roomCode/join` | — | `200 { roomCode, matchId }` |
+
+El WebSocket se abre en `/ws?token=<token>`.
+
+### 0.7 Eventos en RabbitMQ
+
+- Exchange **`game.events`**, tipo `topic`, **durable**.
+- Mensajes **persistentes** (`delivery_mode = 2`) en JSON, con `event_id` (UUID) en todos.
+
+| Routing key | Lo publica | Contenido |
+|---|---|---|
+| `match.started` | `match` | `{ event_id, match_id, room_code, started_at, player_ids[] }` |
+| `match.finished` | `match` | `{ event_id, match_id, finished_at, winner: "crew" \| "impostor", players: [{ player_id, role, ejected, harvest }] }` |
+| `task.completed` | `match` (semana 2) | `{ event_id, match_id, player_id, task_type, liters_saved }` |
+| `player.ejected` | `match` (semana 2) | `{ event_id, match_id, player_id, was_impostor }` |
+
+| Cola (durable) | Enlazada a | La consume |
+|---|---|---|
+| `players.match-finished` | `match.finished` | `players` |
+| `monitor.all` | `#` (todo) | `monitor` |
+
+### 0.8 Listo significa (vale para todas las tareas)
+
+Una tarea solo está terminada cuando, además de su criterio de verificación:
+1. Está en `main` por PR, revisado por el revisor de esa carpeta, con el CI en verde.
+2. Tiene al menos una prueba automática si tiene lógica (un `if`, un ciclo o un cálculo).
+3. `docker compose up --build` desde cero sigue levantando todo.
+4. Si cambió un acuerdo de esta sección, el documento se actualizó en el mismo PR.
+
+---
+
+## 1. Semana 1 (3 al 9 de octubre)
+
+### Sábado y domingo: la base
+
+#### S1-01 — Monorepo base · A
+
+**Por qué:** todos necesitan clonar lo mismo el sábado en la tarde para empezar en paralelo.
+
+**Pasos:**
+1. Crear el repo `beneath-the-surface` en GitHub e invitar a los 5. Proteger `main`: PR obligatorio, 1 aprobación y CI en verde.
+2. Crear todas las carpetas de `architecture.md` sección 7, más `shared/`. Cada carpeta de servicio lleva un `README.md` de 3 líneas: qué es, cómo correrlo solo y quién es el dueño.
+3. `package.json` en la raíz con `"workspaces": ["web", "gateway", "messages"]` y el paquete `messages` llamado `@beneath-the-surface/messages`, con `src/index.ts` exportando los tipos de la sección 0.5.
+4. `.gitignore` para Node, Go, Rust y Python (`node_modules/`, `target/`, `__pycache__/`, `.env`).
+5. `.github/CODEOWNERS` con el dueño de cada carpeta y `proto/` asignado a dos personas.
+6. `README.md` raíz con: requisitos (Docker, Node 20, Go 1.22, Rust estable, Python 3.12), `cp .env.example .env` y `docker compose up --build`.
+
+**Criterio de verificación:** cualquier persona del equipo clona el repo en una máquina limpia, corre `npm install` en la raíz sin errores y puede importar `@beneath-the-surface/messages` desde `gateway/` y `web/`. Un push directo a `main` es rechazado por GitHub.
+
+---
+
+#### S1-02 — Contratos gRPC v0 · B
+
+**Por qué:** `match`, `players` y `gateway` no pueden hablarse sin el contrato, y es lo que más bloquea.
+
+**Archivos:** `proto/match.proto`, `proto/players.proto`, `match/gen/` (generado), `players/build.rs`.
+
+**Pasos:**
+1. `proto/match.proto`:
+   ```proto
+   syntax = "proto3";
+   package match.v1;
+   option go_package = "github.com/<org>/beneath-the-surface/match/gen/matchv1";
+
+   service Match {
+     rpc CreateRoom(CreateRoomRequest) returns (Room);
+     rpc JoinRoom(JoinRoomRequest) returns (Room);
+     rpc Play(stream ClientAction) returns (stream ServerEvent);
+   }
+
+   message CreateRoomRequest { string player_id = 1; string display_name = 2; }
+   message JoinRoomRequest  { string room_code = 1; string player_id = 2; string display_name = 3; }
+   message Room { string room_code = 1; string match_id = 2; }
+
+   message ClientAction {
+     oneof action {
+       Join join = 1;   // siempre el primer mensaje del stream
+       Move move = 2;
+     }
+   }
+   message Join { string match_id = 1; string player_id = 2; int64 last_tick = 3; }
+   message Move { int32 dx = 1; int32 dy = 2; }
+
+   message ServerEvent {
+     oneof event {
+       Snapshot snapshot = 1;
+       Error error = 2;
+     }
+   }
+   enum Phase { LOBBY = 0; PLAYING = 1; MEETING = 2; ENDED = 3; }
+   message Snapshot { int64 tick = 1; Phase phase = 2; repeated PlayerView players = 3; }
+   message PlayerView {
+     string id = 1; string name = 2; string color = 3;
+     float x = 4; float y = 5; bool connected = 6; bool alive = 7;
+   }
+   message Error { string code = 1; string message = 2; }
+   ```
+2. `proto/players.proto` con `Register`, `Login`, `ValidateToken` y `GetProfile`. `Login` devuelve `{ token, player_id, username }`; `ValidateToken` recibe `{ token }` y devuelve `{ player_id, username }` o el error gRPC `UNAUTHENTICATED`.
+3. Go: script `match/gen.sh` que corre `protoc --go_out --go-grpc_out` hacia `match/gen/matchv1/`. El código generado **se sube al repo**, así el CI no necesita `protoc`.
+4. Rust: `players/build.rs` con `tonic_build::compile_protos("../proto/players.proto")`.
+5. NestJS no genera nada: carga los `.proto` con `@grpc/proto-loader` al arrancar.
+
+**Criterio de verificación:** `cd match && go build ./...` y `cd players && cargo build` compilan usando los tipos generados. Dos personas más (quien hace `match` y quien hace `gateway`) aprobaron el PR del `.proto`.
+
+---
+
+#### S1-03 — `docker compose` de todo el sistema · C
+
+**Por qué:** desde el lunes todos prueban contra el sistema completo, no contra su servicio solo.
+
+**Archivos:** `docker-compose.yml`, `.env.example`, un `Dockerfile` inicial en cada servicio.
+
+**Pasos:**
+1. Servicios: `web`, `gateway`, `match`, `players`, `monitor`, `match-db`, `players-db` y `rabbitmq` (imagen `rabbitmq:3-management`), con los puertos de la sección 0.1.
+2. `match` y `players` se construyen con `context: .` (la raíz) y `dockerfile: match/Dockerfile`, porque necesitan `proto/` y `shared/`.
+3. Cada base de datos con su propio volumen (`match-db-data`, `players-db-data`) y `healthcheck` con `pg_isready`.
+4. `depends_on` con `condition: service_healthy` hacia la base de datos y RabbitMQ.
+5. `.env.example` con todas las variables: `MATCH_DB_URL`, `PLAYERS_DB_URL`, `RABBITMQ_URL`, `MATCH_GRPC_ADDR=match:50051`, `PLAYERS_GRPC_ADDR=players:50052`, `MAP_PATH=/app/shared/map.json`, y usuarios y contraseñas de Postgres y RabbitMQ.
+6. Dockerfiles multi-etapa: compilar en una imagen grande y correr en una pequeña (`gcr.io/distroless` o `alpine`).
+7. Mientras los servicios no existan, cada `Dockerfile` puede levantar un "hola mundo" en su puerto.
+
+**Criterio de verificación:** en una máquina limpia, `cp .env.example .env && docker compose up --build` deja los 8 contenedores en estado `running` o `healthy` (`docker compose ps`). La consola de RabbitMQ abre en `http://localhost:15672` y `docker compose down -v && docker compose up` vuelve a levantar sin errores.
+
+---
+
+#### S1-04 — Mapa en canvas · D
+
+**Por qué:** es lo primero que se ve, y define el `map.json` que también usa Go.
+
+**Archivos:** `shared/map.json`, `web/src/main.ts`, `web/src/canvas/renderMap.ts`, `web/src/canvas/camera.ts`, `web/vite.config.ts`, `web/nginx.conf`, `web/Dockerfile`.
+
+**Pasos:**
+1. Crear el proyecto con Vite (plantilla `vanilla-ts`), sin frameworks de juego.
+2. Escribir `shared/map.json` con el formato de la sección 0.3: las 7 zonas del plan del juego, el canal con 3 puentes como paredes con huecos, la acequia en anillo y los 5 lugares de tanques en el huerto.
+3. `renderMap(ctx, map, camera)`: zonas como rectángulos de color con su nombre, paredes en gris oscuro y estaciones y tanques como círculos.
+4. `camera.ts`: la cámara sigue a un punto y convierte coordenadas del mundo a pantalla. Por ahora sigue al centro del mapa y se mueve con las flechas, solo para probar.
+5. `nginx.conf`: servir `dist/` y reenviar `/api/` y `/ws` a `gateway:3000`, este último con los encabezados de WebSocket (`Upgrade` y `Connection`).
+6. `Dockerfile`: `npm run build` en una etapa con Node y copia de `dist/` a `nginx:alpine`.
+
+**Criterio de verificación:** con `docker compose up`, `http://localhost:8080` muestra el mapa completo con las 7 zonas rotuladas, el canal y sus 3 puentes visibles. Las flechas mueven la cámara sin parpadeo. El mismo `map.json` es el que leerá `match` (no hay una copia en `web/`).
+
+---
+
+#### S1-05 — CI en GitHub Actions · E
+
+**Por qué:** sin CI, el `main` se rompe el primer día y nadie sabe quién fue.
+
+**Archivo:** `.github/workflows/ci.yml`.
+
+**Pasos:**
+1. Un job por servicio, que solo corre si cambió su carpeta (con `dorny/paths-filter` o `on.push.paths`). Si cambia `proto/` o `shared/`, corren `match`, `players` y `gateway`.
+2. `match`: `go vet ./...` y `go test ./...`.
+3. `players`: `cargo fmt --check`, `cargo clippy -- -D warnings` y `cargo test`.
+4. `gateway`, `web` y `messages`: `npm ci`, `npm run lint`, `npm test` y `npm run build`.
+5. `monitor`: `pip install -e .[dev]`, `ruff check` y `pytest`.
+6. Un job final `compose` que corre `docker compose build` para confirmar que las imágenes construyen.
+7. Caché de dependencias (`actions/setup-go`, `Swatinem/rust-cache`, `actions/setup-node` y `pip`) para que no tarde 10 minutos.
+
+**Criterio de verificación:** un PR que solo toca `monitor/` corre solo el job de `monitor` y `compose`. Un PR con un test fallando a propósito sale en rojo y GitHub no deja hacer merge. Un PR limpio sale en verde en menos de 6 minutos.
+
+---
+
+#### S1-06 — `/health` en los 5 servicios · E
+
+**Por qué:** es la base del patrón Health Endpoint Monitoring y del panel.
+
+**Archivos:** `match/internal/health/health.go`, `players/src/health.rs`, `gateway/src/health/health.controller.ts`, `monitor/app/main.py` y la ruta `/health` en `web/nginx.conf`.
+
+**Pasos:**
+1. En cada servicio, `GET /health` con el formato de la sección 0.2.
+2. `match` y `players` revisan su base de datos con `SELECT 1` y su conexión a RabbitMQ. Usan un servidor HTTP aparte del gRPC (puertos 8081 y 8082); en Rust con `axum`.
+3. `gateway` revisa que los clientes gRPC de `match` y `players` estén conectados.
+4. `web`: `location = /health { return 200 '{"status":"ok","service":"web","checks":{}}'; }` en nginx.
+5. Cada revisión con un timeout de 1 segundo, para que `/health` nunca se cuelgue.
+
+**Criterio de verificación:** `curl -i localhost:8081/health` (y los otros 4) responde 200 con el JSON correcto. Tras `docker compose stop match-db`, el de `match` responde 503 con `"db": "fail: ..."` en menos de 2 segundos, y vuelve a 200 al levantar la base de datos.
+
+---
+
+### Lunes 5: la rebanada vertical
+
+#### S1-07 — Conectar todo de punta a punta · Todos, en una llamada
+
+**Por qué:** es la forma más rápida de encontrar los errores de integración, y todos entienden el flujo completo.
+
+**Pasos (versión mínima, sin login ni salas todavía):**
+1. `match`: una sola sala fija `DEV`, con el `Play` aceptando cualquier `player_id` y moviendo con `Move`.
+2. `gateway`: WebSocket en `/ws` sin token; reenvía `join` y `move` al stream `Play` y devuelve los `snapshot`.
+3. `web`: al abrir la página, conecta al WebSocket, manda `join` con un id aleatorio, envía `move` con las flechas y dibuja los puntos de todos los `snapshot`.
+4. Cada quien revisa los logs de su servicio mientras otro prueba.
+
+**Criterio de verificación:** con `docker compose up`, dos pestañas en `localhost:8080` muestran dos puntos. Al mover uno con las flechas, la otra pestaña lo ve moverse con menos de 200 ms de retraso a simple vista. Todo está en `main` antes de que termine la llamada.
+
+---
+
+### Martes a viernes: cada uno su servicio
+
+#### S1-08 — La sala como goroutine con ticker · A (`match/`)
+
+**Por qué:** es el corazón del juego; todo lo de la semana 2 se monta encima.
+
+**Archivos:** `match/internal/room/room.go`, `match/internal/room/state.go`, `match/internal/room/room_test.go`.
+
+**Pasos:**
+1. `type Room struct` con su estado (jugadores, fase y tick) y **sin mutex**. Solo lo toca su goroutine.
+2. `func NewRoom(code string, matchID string, m *Map) *Room` y `func (r *Room) Run(ctx context.Context)`.
+3. `Run` hace un `select` sobre:
+   - `r.actions` (`chan PlayerAction`, con buffer de 256): aplica la acción. Por ahora guarda la última dirección de cada jugador.
+   - `r.joins` y `r.leaves`: agrega o marca como desconectado a un jugador.
+   - `ticker.C` (50 ms): mueve a cada jugador según su dirección (sección 0.4), suma 1 al tick y llama a `broadcast()`.
+   - `ctx.Done()`: termina.
+4. `broadcast()` arma un `Snapshot` y lo manda al canal de salida de cada jugador **sin bloquear** (`select` con `default`). Si el canal de un jugador está lleno, se descarta ese snapshot para él; el siguiente lo pone al día.
+5. `type Registry struct` con un `map[string]*Room` y un mutex, solo para buscar salas por código. Es lo único con mutex.
+6. Colores: los 8 colores fijos se asignan en orden de llegada.
+
+**Criterio de verificación:** `go test ./internal/room/... -race` pasa con una prueba que crea una sala, mete 3 jugadores, les manda direcciones desde 3 goroutines a la vez durante 1 segundo y comprueba que (a) el detector de carreras no reporta nada, (b) cada jugador avanzó unas 200 unidades (±20) en su dirección, y (c) ningún `broadcast` bloqueó al ticker, porque se hicieron entre 18 y 22 ticks.
+
+---
+
+#### S1-09 — `CreateRoom`, `JoinRoom` y stream `Play` · A (`match/`)
+
+**Archivos:** `match/internal/grpc/server.go`, `match/cmd/match/main.go`.
+
+**Pasos:**
+1. `CreateRoom`: genera un código de 4 letras sin ambigüedades (sin `O`, `0`, `I` ni `1`), crea el `match_id` (UUID), arranca la goroutine de la sala y devuelve `Room`.
+2. `JoinRoom`: busca la sala; si no existe, error gRPC `NOT_FOUND`; si tiene 10 jugadores, `RESOURCE_EXHAUSTED`.
+3. `Play`:
+   - El primer mensaje **debe** ser `Join`. Si no lo es, responde `Error{code:"BAD_MESSAGE"}` y cierra.
+   - Crea el canal de salida del jugador y lo registra en la sala.
+   - Lanza **una goroutine de envío** que lee ese canal y hace `stream.Send`.
+   - En el hilo principal, lee `stream.Recv()` en un ciclo y pasa cada `Move` al canal `actions` de la sala.
+   - Si `Recv` devuelve error (el cliente se fue), avisa a la sala con `leaves` y termina.
+4. `main.go` arranca el servidor gRPC en `:50051` y el `/health` en `:8081`, y se apaga limpio con `SIGTERM`.
+
+**Criterio de verificación:** con `grpcurl` (o un test de integración en Go), crear una sala, unirse con dos jugadores y abrir dos `Play`: los dos reciben unos 20 `Snapshot` por segundo con ambos jugadores. Cerrar uno de los streams no tumba la sala ni el otro stream, y el jugador cerrado aparece con `connected: false`.
+
+---
+
+#### S1-10 — Colisiones con el mapa · A (`match/`)
+
+**Archivos:** `match/internal/room/mapdata.go`, `match/internal/room/collision.go` y su test.
+
+**Pasos:**
+1. Cargar `shared/map.json` desde `MAP_PATH` al arrancar. Si el archivo no existe o está mal formado, el servicio **no arranca** y lo dice en el log.
+2. `func (m *Map) Move(x, y, dx, dy float64) (nx, ny float64)`: mueve primero en X y luego en Y, y en cada eje revierte el paso si el círculo del jugador (radio 16) toca una pared o sale del mundo. Así el jugador se desliza pegado a la pared en lugar de quedarse trabado.
+3. Los jugadores nuevos aparecen alrededor de `spawn`, separados 40 unidades entre sí.
+
+**Criterio de verificación:** tests de tabla que comprueban: (a) caminar contra una pared no la atraviesa, (b) caminar en diagonal contra una pared desliza por el otro eje, (c) se puede cruzar el canal solo por los 3 puentes, y (d) nadie sale del rectángulo 1600 × 1200. En el navegador, nadie atraviesa el canal fuera de los puentes.
+
+---
+
+#### S1-11 — Guardar partidas y publicar eventos · A (`match/`)
+
+**Archivos:** `match/migrations/0001_init.sql`, `match/internal/db/queries.sql` (sqlc), `match/internal/events/publisher.go`.
+
+**Pasos:**
+1. Migración:
+   ```sql
+   CREATE TABLE matches (
+     id UUID PRIMARY KEY,
+     room_code TEXT NOT NULL,
+     started_at TIMESTAMPTZ,
+     ended_at TIMESTAMPTZ,
+     winner TEXT CHECK (winner IN ('crew', 'impostor'))
+   );
+   CREATE TABLE participants (
+     match_id UUID REFERENCES matches(id),
+     player_id UUID NOT NULL,
+     display_name TEXT NOT NULL,
+     role TEXT NOT NULL DEFAULT 'crew',
+     ejected BOOLEAN NOT NULL DEFAULT false,
+     PRIMARY KEY (match_id, player_id)
+   );
+   ```
+   Se aplica al arrancar con `golang-migrate`.
+2. `publisher.go`: conexión a RabbitMQ con `amqp091-go`, declara el exchange `game.events` (sección 0.7) y expone `Publish(ctx, routingKey string, payload any) error`, con mensajes persistentes y **publisher confirms**. Si RabbitMQ no está, reintenta conectar cada 2 segundos sin tumbar el servicio.
+3. La sala pasa de `LOBBY` a `PLAYING` cuando el creador manda una acción `Start` (agregarla al proto) con al menos 2 jugadores. En ese momento inserta en `matches` y `participants` y publica `match.started`.
+4. **Regla temporal de la semana 1:** la partida termina sola a los 3 minutos con `winner: "crew"` y `harvest: 0`. Se guarda `ended_at` y se publica `match.finished`. Es solo para que `players` y `monitor` tengan eventos reales; en la semana 2 se reemplaza.
+
+**Criterio de verificación:** jugar una partida de 3 minutos con 2 jugadores. Al terminar, `SELECT * FROM matches` en `match-db` muestra la fila con `ended_at` y `winner`, y en la consola de RabbitMQ la cola `monitor.all` recibió exactamente 1 `match.started` y 1 `match.finished` con el formato de la sección 0.7. Con RabbitMQ apagado, el servicio sigue funcionando y el `/health` dice `"rabbitmq": "fail: ..."`.
+
+---
+
+#### S1-12 — Cuentas: registro, login y tokens · B (`players/`)
+
+**Archivos:** `players/migrations/0001_init.sql`, `players/src/accounts.rs`, `players/src/grpc.rs`, `players/src/main.rs`.
+
+**Pasos:**
+1. Migración (se aplica al arrancar con `sqlx::migrate!`):
+   ```sql
+   CREATE TABLE players (
+     id UUID PRIMARY KEY,
+     username TEXT NOT NULL UNIQUE,
+     password_hash TEXT NOT NULL,
+     coins INTEGER NOT NULL DEFAULT 0,
+     matches_played INTEGER NOT NULL DEFAULT 0,
+     wins INTEGER NOT NULL DEFAULT 0,
+     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+   );
+   CREATE TABLE sessions (
+     token TEXT PRIMARY KEY,
+     player_id UUID NOT NULL REFERENCES players(id),
+     expires_at TIMESTAMPTZ NOT NULL
+   );
+   ```
+2. `Register`: valida usuario (3 a 20 caracteres: letras, números y `_`) y contraseña (mínimo 8). Guarda el hash con `argon2` (parámetros por defecto del crate). Si el usuario existe, error `ALREADY_EXISTS`.
+3. `Login`: compara con `argon2::verify`. Si falla, `UNAUTHENTICATED` con el mismo mensaje sea el usuario o la contraseña lo incorrecto (no revelar cuál). Si funciona, crea un token aleatorio de 32 bytes en hexadecimal, con vigencia de 24 horas, en `sessions`.
+4. `ValidateToken`: busca el token no vencido; devuelve `player_id` y `username`, o `UNAUTHENTICATED`.
+5. Nunca registrar contraseñas ni tokens completos en los logs.
+
+**Criterio de verificación:** tests de integración con una base de datos de prueba que comprueban: registrar, iniciar sesión, validar el token, rechazar contraseña incorrecta, rechazar usuario repetido y rechazar un token vencido (insertándolo con `expires_at` en el pasado). En la base de datos, `password_hash` empieza con `$argon2`.
+
+---
+
+#### S1-13 — Perfil del jugador · B (`players/`)
+
+**Archivos:** `players/src/progress.rs` y `proto/players.proto` (agregar `GetProfile` si no quedó en S1-02).
+
+**Pasos:**
+1. `GetProfile(player_id)` devuelve `username`, `coins`, `matches_played` y `wins`.
+2. Si el jugador no existe, `NOT_FOUND`.
+
+**Criterio de verificación:** test que registra un jugador y comprueba que el perfil nuevo tiene 0 monedas, 0 partidas y 0 victorias. Desde el navegador, `GET /api/me` (hecho en S1-15) muestra esos datos.
+
+---
+
+#### S1-14 — Consumidor idempotente de `match.finished` · B (`players/`)
+
+**Por qué:** demuestra Publisher-Subscriber y la entrega "al menos una vez" sin duplicados (D5).
+
+**Archivos:** `players/migrations/0002_results.sql`, `players/src/consumer.rs`.
+
+**Pasos:**
+1. Migración:
+   ```sql
+   CREATE TABLE results (
+     match_id UUID NOT NULL,
+     player_id UUID NOT NULL REFERENCES players(id),
+     role TEXT NOT NULL,
+     won BOOLEAN NOT NULL,
+     harvest INTEGER NOT NULL,
+     coins_earned INTEGER NOT NULL,
+     PRIMARY KEY (match_id, player_id)
+   );
+   ```
+2. Con `lapin`, declarar la cola durable `players.match-finished`, enlazada a `game.events` con `match.finished`, y consumir con `prefetch = 10`.
+3. Por cada mensaje, en **una sola transacción** y para cada jugador del evento:
+   - `INSERT INTO results ... ON CONFLICT (match_id, player_id) DO NOTHING`.
+   - Solo si se insertó la fila: `UPDATE players SET coins = coins + $1, matches_played = matches_played + 1, wins = wins + $2`.
+   - Monedas: `harvest + (20 si su equipo ganó, 0 si no)`.
+4. `ack` **después** del `COMMIT`. Si el JSON está mal formado, `nack` sin reencolar y log de error. Si falla la base de datos, `nack` con reencolar.
+5. Un `player_id` que no existe en `players` se ignora con un log de advertencia, sin tumbar el consumidor.
+
+**Criterio de verificación:** test de integración que publica **el mismo** `match.finished` dos veces y comprueba que el jugador tiene 1 partida y las monedas sumadas una sola vez. Prueba manual: `docker compose stop players`, terminar una partida, `docker compose start players` y ver que las monedas aparecen en `GET /api/me`.
+
+---
+
+#### S1-15 — REST de autenticación y salas · C (`gateway/`)
+
+**Archivos:** `gateway/src/auth/auth.controller.ts`, `gateway/src/auth/auth.guard.ts`, `gateway/src/game/rooms.controller.ts`, `gateway/src/clients/players.client.ts`, `gateway/src/clients/match.client.ts`.
+
+**Pasos:**
+1. Clientes gRPC con `@grpc/grpc-js` y `@grpc/proto-loader`, leyendo `../proto/*.proto`, envueltos en servicios de NestJS que devuelven promesas.
+2. Rutas de la sección 0.6. Validar los cuerpos con `class-validator`; un cuerpo inválido responde 400.
+3. `AuthGuard`: lee `Authorization: Bearer <token>`, llama a `ValidateToken` y deja `playerId` y `username` en la petición. Sin token o token inválido: 401.
+4. Traducir errores gRPC a HTTP: `UNAUTHENTICATED` → 401, `ALREADY_EXISTS` → 409, `NOT_FOUND` → 404, `UNAVAILABLE` → 503.
+
+**Criterio de verificación:** con `docker compose up`, esta secuencia funciona con `curl`: registrar (201), registrar el mismo usuario (409), login (200 con token), `GET /api/me` con token (200), sin token (401), `POST /api/rooms` (201 con un código de 4 letras) y unirse con otro usuario (200, mismo `matchId`).
+
+---
+
+#### S1-16 — WebSocket ↔ stream `Play` · C (`gateway/`)
+
+**Archivos:** `gateway/src/game/game.gateway.ts`, `gateway/src/main.ts`.
+
+**Pasos:**
+1. Usar `@nestjs/platform-ws` (WebSocket puro, sin Socket.IO, para que el navegador use la API nativa).
+2. Al conectar a `/ws?token=...`: validar el token con `players`. Si no es válido, mandar `{type:'error', code:'UNAUTHORIZED'}` y cerrar con el código 4001.
+3. Al recibir `join`: abrir un stream `Play` con `match`, mandarle `Join` con el `playerId` **del token**, nunca uno que mande el navegador.
+4. Reenviar cada `move` como `Move`, validando que `dx` y `dy` estén en {-1, 0, 1}. Si un mensaje no se puede parsear, `error BAD_MESSAGE` sin cerrar la conexión.
+5. Reenviar cada `Snapshot` al navegador convertido a `ServerMessage`.
+6. Si el WebSocket se cierra, cerrar el stream. Si el stream se cae, mandar `error SERVICE_UNAVAILABLE` y cerrar el WebSocket con el código 1011, para que el navegador se reconecte.
+7. Un jugador = un stream. Si el mismo `playerId` abre un segundo WebSocket, se cierra el anterior.
+
+**Criterio de verificación:** dos usuarios distintos, en dos navegadores, entran a la misma sala y se ven moverse. Modificar a mano en la consola del navegador el `playerId` no permite mover a otro jugador. Un WebSocket sin token recibe `UNAUTHORIZED` y se cierra.
+
+---
+
+#### S1-17 — Retry y Circuit Breaker en los clientes gRPC · C (`gateway/`)
+
+**Por qué:** es el patrón 5, y es el que se demuestra en vivo apagando `players`.
+
+**Archivos:** `gateway/src/clients/resilience.ts` y los dos clientes de S1-15.
+
+**Pasos:**
+1. Cada llamada unaria (`Login`, `ValidateToken`, `CreateRoom`, etc.) lleva un **deadline de 2 segundos**.
+2. **Retry:** hasta 3 intentos con espera de 200 ms, 400 ms y 800 ms, solo para errores `UNAVAILABLE` y `DEADLINE_EXCEEDED`. Nunca reintentar `Register`, porque no es idempotente.
+3. **Circuit Breaker** con `opossum`, uno por servicio de destino: se abre con 50 % de errores en una ventana de 10 llamadas, prueba de nuevo a los 10 segundos (`resetTimeout`) y, abierto, falla de inmediato con `SERVICE_UNAVAILABLE`.
+4. Registrar en el log cada cambio de estado del breaker (`open`, `halfOpen` y `close`) y exponer el estado en el `/health` del gateway: `"checks": { "players": "ok" | "circuit-open" }`.
+
+**Criterio de verificación:** con `docker compose stop players`: el primer `POST /api/auth/login` tarda unos 2 a 3 segundos en fallar (reintentos), y desde que se abre el breaker, cada intento responde 503 en menos de 50 ms. El `/health` del gateway muestra `"players": "circuit-open"`. Con `docker compose start players`, a los 10 a 20 segundos el login vuelve a funcionar sin reiniciar el gateway.
+
+---
+
+#### S1-18 — Pantallas de login, sala de espera y partida · D (`web/`)
+
+**Archivos:** `web/src/screens/login.ts`, `web/src/screens/lobby.ts`, `web/src/screens/game.ts`, `web/src/api.ts`, `web/src/session.ts`.
+
+**Pasos:**
+1. `api.ts`: funciones para cada ruta de la sección 0.6, que lanzan un error con el mensaje del servidor si la respuesta no es 2xx.
+2. `session.ts`: guardar y leer `{ token, playerId, username, matchId? }` en `localStorage`, envuelto en `try/catch`.
+3. **Login:** formulario con usuario y contraseña, y botones "Entrar" y "Crear cuenta". Errores visibles bajo el formulario ("Usuario o contraseña incorrectos", "Ese usuario ya existe").
+4. **Sala de espera:** botón "Crear sala" que muestra el código en grande, campo para "Unirse con código", lista de jugadores conectados (desde los `snapshot` en fase `LOBBY`) y botón "Empezar", visible solo para quien creó la sala y activo con 2 o más jugadores.
+5. **Partida:** el canvas a pantalla completa.
+6. Navegación simple sin router: una función `show(screen)` que cambia lo que se ve.
+
+**Criterio de verificación:** un usuario nuevo crea su cuenta, crea una sala y ve su código. Otro usuario, en otra máquina, se une con ese código, y los dos aparecen en la lista. El creador pulsa "Empezar" y ambos pasan a la partida. Recargar la página en la sala de espera no pide login de nuevo.
+
+---
+
+#### S1-19 — Moverse y ver a los demás · D (`web/`)
+
+**Archivos:** `web/src/net/socket.ts`, `web/src/input.ts`, `web/src/canvas/renderPlayers.ts`, `web/src/screens/game.ts`.
+
+**Pasos:**
+1. `input.ts`: leer WASD y flechas, y calcular `dx` y `dy`. Mandar `move` **solo cuando cambia la dirección**, no en cada cuadro.
+2. Guardar los dos últimos `snapshot` e **interpolar** entre ellos con un retraso de 100 ms, para que el movimiento se vea fluido a 60 cuadros por segundo aunque lleguen 20 snapshots por segundo.
+3. Dibujar a cada jugador como un círculo de su color con el nombre encima; los desconectados semitransparentes.
+4. La cámara sigue al jugador propio.
+
+**Criterio de verificación:** con dos navegadores en la misma partida, el movimiento propio y el del otro se ve fluido, sin saltos, y nadie atraviesa paredes. En la pestaña Red de las herramientas del navegador, mantener una flecha presionada 3 segundos manda 1 solo mensaje `move`, no 180.
+
+---
+
+#### S1-20 — Reconexión básica del WebSocket · D (`web/`)
+
+**Archivos:** `web/src/net/socket.ts`.
+
+**Pasos:**
+1. Clase `GameSocket` con `connect()`, `send()` y `onMessage()`.
+2. Si la conexión se cierra con un código distinto de 1000 (cierre normal) o 4001 (token inválido), reintentar con espera creciente: 0,5 s, 1 s, 2 s, 4 s, 8 s y luego cada 10 s, indefinidamente.
+3. Mientras reconecta, mostrar sobre el canvas el aviso "Reconectando…" con el número de intento.
+4. Al reconectar, mandar de nuevo `join` con el `matchId` guardado en `session.ts` y el último `tick` recibido.
+5. Si el cierre es 4001, borrar la sesión y volver al login.
+
+**Criterio de verificación:** en plena partida, `docker compose restart gateway`: el navegador muestra "Reconectando…" y en menos de 10 segundos vuelve a la misma partida sin recargar la página. Lo mismo al desactivar el wifi 20 segundos y reactivarlo (en la semana 1 el personaje puede reaparecer en otra posición; mantener el lugar es la tarea S3-01).
+
+---
+
+#### S1-21 — Panel de salud del monitor · E (`monitor/`)
+
+**Archivos:** `monitor/app/main.py`, `monitor/app/health.py`, `monitor/app/dashboard/index.html`, `monitor/pyproject.toml`.
+
+**Pasos:**
+1. FastAPI con una tarea en segundo plano (`asyncio`, arrancada en el `lifespan`) que cada 5 segundos consulta en paralelo, con `httpx.AsyncClient` y un timeout de 2 segundos, el `/health` de `web`, `gateway`, `match` y `players`, y que comprueba ambas bases de datos y RabbitMQ con una conexión directa.
+2. Guardar en memoria el último resultado de cada uno: estado, latencia en ms, hora de la última respuesta correcta y los últimos 20 resultados.
+3. `GET /api/status` devuelve todo eso en JSON.
+4. `GET /` sirve `index.html`: una tarjeta por servicio en verde, amarillo (`degraded`) o rojo (sin respuesta), con la latencia y "caído desde hace X s". Se actualiza sola cada 2 segundos con `fetch`.
+5. Alerta: cuando un servicio pasa a rojo, la tarjeta parpadea y aparece arriba en una lista de "incidentes" con la hora.
+6. Su propio `/health` según la sección 0.2.
+
+**Criterio de verificación:** con todo arriba, `http://localhost:8000` muestra 7 tarjetas en verde. Tras `docker compose stop players`, su tarjeta se pone en rojo en menos de 10 segundos y aparece un incidente con la hora. Al levantarlo vuelve a verde solo, sin recargar la página.
+
+---
+
+#### S1-22 — Eventos en el panel · E (`monitor/`)
+
+**Archivos:** `monitor/app/events.py`, `monitor/app/dashboard/index.html`.
+
+**Pasos:**
+1. Con `aio-pika`, declarar la cola durable `monitor.all` enlazada a `game.events` con `#`, y consumir.
+2. Mantener en memoria: partidas activas (`match.started` suma, `match.finished` resta), jugadores en partida, partidas terminadas hoy y los últimos 20 eventos con su hora.
+3. Exponerlos en `GET /api/stats` y mostrarlos en el panel: tres números grandes y una lista de eventos recientes.
+4. Si RabbitMQ se cae, reintentar la conexión cada 2 segundos sin tumbar el monitor (`connect_robust`).
+
+**Criterio de verificación:** al empezar una partida con 3 jugadores, el panel muestra "1 partida activa, 3 jugadores" en menos de 3 segundos. Al terminar, vuelve a 0 y suma 1 a "partidas hoy". Con `docker compose restart rabbitmq`, el monitor se reconecta solo y sigue contando las siguientes partidas.
+
+---
+
+#### S1-23 — Desplegar en la nube · E (infraestructura)
+
+**Archivos:** `deploy/README.md` y `deploy/setup.sh`.
+
+**Pasos:**
+1. Crear una máquina virtual en una capa gratuita (Azure for Students, Oracle Cloud Always Free o AWS), con Ubuntu 22.04, 2 vCPU y 4 GB de RAM o más.
+2. Abrir **solo** los puertos 80 (juego) y 8000 (panel) en el firewall de la nube. No exponer Postgres, RabbitMQ ni los puertos gRPC.
+3. `setup.sh`: instalar Docker y el plugin de compose, clonar el repo, copiar `.env` con contraseñas **distintas** a las de `.env.example` y correr `docker compose up -d --build`.
+4. En la nube, `web` publica el puerto 80 en lugar del 8080.
+5. Documentar en `deploy/README.md` cómo actualizar: `git pull && docker compose up -d --build`.
+
+**Criterio de verificación:** desde el celular, con datos móviles (no el wifi de la universidad), abrir `http://<ip-pública>` y jugar contra alguien en una laptop. `http://<ip-pública>:8000` muestra el panel. `nc -zv <ip-pública> 5432` y `nc -zv <ip-pública> 5672` fallan (los puertos no están expuestos).
+
+---
+
+## 2. Semana 2 (10 al 16 de octubre): el juego completo
+
+> Los mensajes nuevos de WebSocket se agregan en `messages/src/index.ts` y los de gRPC en `proto/match.proto`, en **un solo PR al inicio de la semana** (S2-01), para que nadie se bloquee esperando el contrato.
+
+#### S2-01 — Contrato v1 del juego · C con A (`proto/` y `messages/`)
+
+**Pasos:**
+1. Nuevas acciones en `ClientAction` y `ClientMessage`: `Start`, `Interact { station_id }` (hacer tarea o limpiar tanque), `Contaminate { tank_slot }`, `Report { tank_slot }`, `Vote { target_player_id | skip }` y `Chat { client_msg_id, text }`.
+2. Nuevos campos en `Snapshot`: `tanks[] { slot, owner_id, contamination (0 a 100), dead }`, `reservoir` (0 a 100), `my_role` (solo el del destinatario), `my_task_progress`, `meeting { reporter_id, tank_slot, last_visitors[], votes_cast, ends_at_tick }` y `chat[]` (últimos 30 mensajes).
+3. Nuevo evento `MatchEnded { winner, impostor_id }`.
+4. Ver el rol del impostor **solo en su propio snapshot**: el gateway jamás debe recibir el rol de otros.
+
+**Criterio de verificación:** el PR lo aprueban A, C y D. `match`, `players`, `gateway` y `web` compilan con el contrato nuevo antes del lunes 12 al mediodía.
+
+---
+
+#### S2-02 — Roles e impostor · A (`match/`)
+
+**Pasos:**
+1. Al pasar a `PLAYING`, elegir 1 impostor al azar (`crypto/rand`). Con 7 o más jugadores, 2 impostores.
+2. Guardar el rol en `participants.role`.
+3. Cada `Snapshot` lleva `my_role` solo para su destinatario.
+4. Asignar a cada jugador un tanque del huerto (`slot`) en orden de llegada.
+
+**Criterio de verificación:** test que corre 1000 asignaciones con 5 jugadores y comprueba que siempre hay exactamente 1 impostor y que cada jugador fue impostor entre 150 y 250 veces. En el juego, abrir las herramientas del navegador de un tripulante no muestra en ningún mensaje quién es el impostor.
+
+---
+
+#### S2-03 — Tanques, contaminación y limpieza · A (`match/`)
+
+**Pasos:**
+1. Cada tanque tiene `contamination` de 0 a 100.
+2. `Contaminate`: solo el impostor, a 40 unidades o menos del tanque. Requiere quedarse quieto **3 segundos** (60 ticks); si se mueve, se cancela. Al terminar, suma 35 puntos de contaminación. Tiempo de espera de 20 s entre contaminaciones.
+3. El tanque del impostor sube solo 1 punto cada 5 segundos, para que no se vea siempre limpio.
+4. Limpiar (`Interact` sobre un tanque ajeno o propio): resta 15 puntos, requiere 2 segundos quieto.
+5. Si un tanque llega a 100: `dead = true`, su dueño queda `alive = false` (fantasma: sigue moviéndose y haciendo tareas, pero no vota ni habla en la reunión).
+6. Cada contaminación, limpieza o paso a 40 unidades de un tanque se anota en `event_log (match_id, tick, player_id, kind, tank_slot)`.
+
+**Criterio de verificación:** tests que comprueban: (a) un tripulante no puede contaminar, (b) moverse a mitad de los 3 segundos cancela, (c) el tiempo de espera de 20 s se respeta, (d) 3 contaminaciones sin limpiar matan el tanque y convierten al dueño en fantasma. En el juego, el impostor contamina un tanque y todos ven subir la barra.
+
+---
+
+#### S2-04 — Tareas de las 3R y embalse · A (`match/`)
+
+**Pasos:**
+1. Las estaciones de `map.json` tienen tipo `reduce` (cerrar fuga), `reuse` (recoger agua gris o de lluvia) o `recycle` (filtrar en la planta).
+2. `Interact` sobre una estación a 40 unidades o menos inicia la tarea: el servidor registra que empezó y el navegador muestra el minijuego (S2-11). Al terminar, el navegador manda `Interact` otra vez con `completed: true`, y el servidor la acepta solo si pasaron al menos 3 segundos desde el inicio y el jugador sigue cerca.
+3. Cada tarea completa suma al embalse: `reduce` +3, `reuse` +4, `recycle` +5. Cada jugador tiene 4 tareas asignadas al azar por partida.
+4. Publicar `task.completed` con `liters_saved` (100 por cada punto de embalse).
+5. El impostor puede "fingir" una tarea: se le muestra el minijuego, pero no suma nada.
+
+**Criterio de verificación:** tests de que una tarea completada en menos de 3 segundos se rechaza y de que el impostor no suma al embalse. En el juego, completar una tarea sube el embalse para todos y el panel del monitor suma litros.
+
+---
+
+#### S2-05 — Reportar, reunión y votación · A (`match/`) con C (chat)
+
+**Pasos:**
+1. `Report { tank_slot }`: solo sobre un tanque `dead`, a 60 unidades o menos, y por un jugador vivo. Pasa a fase `MEETING` y teletransporta a todos a la plaza.
+2. `meeting.last_visitors`: los últimos 3 jugadores **distintos** que pasaron a 40 unidades o menos de ese tanque, según `event_log`.
+3. La reunión dura 60 segundos: 45 para discutir por chat y votar, y se cierra antes si todos los vivos ya votaron.
+4. **Chat (C):** `Chat` solo en `MEETING` y de jugadores vivos, máximo 200 caracteres, máximo 1 mensaje por segundo por jugador. Se guarda en el estado de la sala y va en los snapshots.
+5. Resultado: el más votado es expulsado (`ejected = true`, `alive = false`). Empate o mayoría de `skip`: nadie sale. Publicar `player.ejected`.
+6. Tras la reunión, 5 segundos de pantalla de resultado ("Morado era el impostor" o "Morado no era el impostor") y vuelta a `PLAYING`.
+
+**Criterio de verificación:** tests de tabla para el conteo: mayoría simple, empate, todos `skip` y un fantasma que intenta votar (se ignora). En el juego, con 4 personas: reportar un tanque muerto muestra la reunión con los 3 últimos visitantes correctos, el chat funciona y la expulsión se aplica.
+
+---
+
+#### S2-06 — Fin de partida real · A (`match/`)
+
+**Pasos:**
+1. Ganan los tripulantes si el embalse llega a 100 **o** todos los impostores fueron expulsados.
+2. Gana el impostor si quedan tantos impostores vivos como tripulantes vivos **o** pasan 8 minutos sin que el embalse llegue a 100.
+3. `harvest` por jugador = tareas completadas × 5 + (10 si su tanque sigue vivo).
+4. Quitar la regla temporal de 3 minutos de S1-11.
+5. Fase `ENDED`: snapshot con `MatchEnded { winner, impostor_id }`, guardar en `matches` y `participants`, publicar `match.finished` y liberar la sala de memoria a los 30 segundos.
+
+**Criterio de verificación:** tests de cada una de las 4 condiciones de fin. Una partida real termina sola, muestra quién era el impostor y las monedas aparecen en el perfil según la fórmula.
+
+---
+
+#### S2-07 — Monedas y estadísticas · B (`players/`)
+
+**Pasos:**
+1. Ajustar el consumidor a la fórmula definitiva: `coins_earned = harvest + 20 si ganó su equipo`.
+2. Agregar `times_impostor` y `wins_as_impostor` a `players` (migración nueva, nunca editar una vieja).
+3. `GetProfile` devuelve también esas dos estadísticas.
+4. Ayudar a A con tests de integración de `match` (es el revisor de `players` esta semana, pero `match` es lo más pesado).
+
+**Criterio de verificación:** después de una partida como impostor ganada, el perfil muestra `times_impostor: 1`, `wins_as_impostor: 1` y las monedas correctas. Repetir el evento no cambia nada.
+
+---
+
+#### S2-08 — Mensajes nuevos y límite de velocidad en el gateway · C (`gateway/`)
+
+**Pasos:**
+1. Reenviar todas las acciones nuevas de S2-01 al stream `Play`, validando cada una (tipos, rangos y largo del chat).
+2. **Rate limiting por jugador** (patrón Gateway Offloading): máximo 30 mensajes por segundo por WebSocket con un token bucket en memoria. Si se pasa, descartar y, tras 3 avisos, cerrar con el código 4008.
+3. Límite en REST: 10 intentos de login por minuto por IP (`@nestjs/throttler`).
+
+**Criterio de verificación:** test unitario del token bucket. Un script que manda 100 `move` en 1 segundo recibe avisos y termina desconectado, mientras el otro jugador de la sala no nota nada. El undécimo login seguido en un minuto responde 429.
+
+---
+
+#### S2-09 — Barras de tanques y acción de contaminar · D (`web/`)
+
+**Pasos:**
+1. Dibujar cada tanque del huerto con una barra de contaminación (verde a café según el valor) y el nombre del dueño. Muerto: gris con una planta marchita.
+2. Indicador del embalse arriba de la pantalla, de 0 a 100 %.
+3. Botón de acción contextual (tecla `E`) que cambia según lo que haya cerca: "Hacer tarea", "Limpiar", "Reportar" o, si eres impostor, "Contaminar".
+4. Barra de progreso circular durante las acciones que requieren quedarse quieto.
+5. Aviso al dueño: "¡Tu tanque se está contaminando!" cuando su tanque sube, sin decir quién.
+
+**Criterio de verificación:** en una partida de 3, el impostor ve "Contaminar" junto a un tanque ajeno y los tripulantes no. Al contaminar, el dueño recibe el aviso y todos ven la barra subir.
+
+---
+
+#### S2-10 — Pantalla de reunión y votación · D con E (`web/`)
+
+**Pasos:**
+1. Al entrar en `MEETING`: superponer un panel con el tanque reportado, quién reportó, los 3 últimos visitantes, la lista de jugadores con su color, el chat y una cuenta regresiva.
+2. Votar: tocar un jugador o "Saltar". Mostrar quién ya votó (no a quién).
+3. Los fantasmas ven el chat pero no pueden escribir ni votar.
+4. Pantalla de resultado de 5 segundos y, en `ENDED`, pantalla final con ganador, impostor, monedas ganadas y botón "Volver a la sala".
+
+**Criterio de verificación:** con 4 personas, una reunión completa se puede jugar sin explicar nada: todos entienden quién reportó, chatean, votan y ven el resultado. Los fantasmas no pueden votar aunque lo intenten desde las herramientas del navegador (lo rechaza el servidor).
+
+---
+
+#### S2-11 — Minijuegos de las 3R · D (`web/`)
+
+**Pasos (cada minijuego dura de 3 a 6 segundos):**
+1. **Reducir (cerrar fuga):** girar una válvula manteniendo presionado el clic hasta llenar una barra.
+2. **Reutilizar (agua gris):** arrastrar 3 cubetas al tanque.
+3. **Reciclar (filtrar):** hacer clic en 4 partículas de suciedad que flotan en el agua.
+4. Al terminar, mandar `Interact { completed: true }`. Si el jugador se aleja, se cancela.
+5. Lista de tareas pendientes en una esquina, con la zona donde está cada una.
+
+**Criterio de verificación:** cada minijuego se completa en el tiempo indicado sin instrucciones escritas, y la tarea aparece tachada en la lista. Tres compañeros que no lo programaron completan los 3 al primer intento.
+
+---
+
+#### S2-12 — Gotas de aceite · D (`web/`) con A (`match/`)
+
+**Pasos:**
+1. **A:** durante 15 segundos después de contaminar, el impostor deja una gota cada 1 segundo en su posición. Las gotas van en el snapshot (`oil_drops[] { x, y, color, expires_at_tick }`).
+2. **D:** dibujar las gotas con el color del impostor, desvaneciéndose a medida que se acercan a su vencimiento.
+
+**Criterio de verificación:** tras contaminar, todos ven un rastro de gotas del color del impostor que desaparece a los 15 segundos.
+
+---
+
+#### S2-13 — Litros, expulsiones y despliegue automático · E (`monitor/` e infra)
+
+**Pasos:**
+1. Consumir `task.completed` y `player.ejected`: litros ahorrados (total y por partida activa), tareas por tipo (Reducir, Reutilizar, Reciclar) y expulsiones acertadas contra fallidas.
+2. Mostrar en el panel un contador grande de **litros ahorrados** (el número más vistoso para el jurado) y un gráfico de barras simple de tareas por tipo.
+3. Despliegue automático: un job en GitHub Actions que, al hacer merge a `main`, entra por SSH a la máquina de la nube (clave en los secrets del repo) y corre `git pull && docker compose up -d --build`.
+
+**Criterio de verificación:** completar 3 tareas en una partida sube el contador de litros en el panel en menos de 3 segundos. Un merge a `main` aparece desplegado en la nube en menos de 10 minutos sin que nadie entre a la máquina.
+
+---
+
+## 3. Semana 3 (17 al 23 de octubre): resiliencia, pulido y ensayo
+
+#### S3-01 — Periodo de gracia y `Resume` · A + D
+
+**Pasos:**
+1. **A:** cuando el stream de un jugador se corta, marcarlo `connected: false` y conservar su lugar 90 segundos. Si vuelve, recupera todo. Si no, pasa a fantasma.
+2. **A:** si un desconectado no vota antes de que termine la reunión, su voto cuenta como `skip`.
+3. **A:** al recibir `Join` de alguien que ya está en la sala, reemplazar su canal de salida y mandarle de inmediato un snapshot completo (con chat y estado de la reunión).
+4. **D:** al cargar la página, si `session.ts` tiene `matchId`, ir directo a la partida en lugar de al lobby.
+
+**Criterio de verificación:** prueba manual de la tabla 6.4 de `architecture.md`: desactivar el wifi de un jugador 30 segundos y al volver está en la misma posición, con su rol y sus tareas. Recargar la página a mitad de una reunión vuelve a la reunión con el chat completo.
+
+---
+
+#### S3-02 — Instantáneas y pausa · A + C
+
+**Pasos:**
+1. Tabla `snapshots (match_id UUID PRIMARY KEY, tick BIGINT, state JSONB, updated_at TIMESTAMPTZ)`.
+2. Cada 2 segundos y en cada cambio de fase, la goroutine de la sala serializa su estado y hace `INSERT ... ON CONFLICT (match_id) DO UPDATE`. La escritura va en **otra goroutine**, para que la base de datos lenta no frene el ticker.
+3. Al arrancar `match`: buscar partidas con `ended_at IS NULL` y snapshot, recrear su sala en pausa y esperar a que los jugadores se reconecten.
+4. Si no queda ningún jugador conectado, la sala se pausa: el ticker sigue, pero no suma contaminación ni tiempo.
+5. **C:** el gateway, al reconectar un jugador, reabre el stream `Play` y reintenta con espera creciente si `match` todavía está arrancando.
+
+**Criterio de verificación:** en plena partida, `docker compose restart match`: en menos de 15 segundos todos los navegadores vuelven a la misma partida, con a lo sumo 2 segundos de movimiento perdidos, y el tiempo restante de la partida no avanzó mientras `match` estaba caído.
+
+---
+
+#### S3-03 — Ningún resultado se pierde · B + E
+
+**Pasos:**
+1. Revisar que exchange, colas y mensajes sean durables y persistentes (sección 0.7), y que `players` haga `ack` solo después del `COMMIT`.
+2. `match` usa publisher confirms; si RabbitMQ no confirma, guarda el evento en una tabla `outbox` y lo reintenta cada 5 segundos.
+3. Probar: matar `players` con `docker compose kill players` **en medio** de procesar un mensaje (con un `sleep` temporal de prueba) y comprobar que al volver se procesa una sola vez.
+
+**Criterio de verificación:** las tres pruebas pasan: (a) `players` apagado durante el fin de partida, (b) RabbitMQ reiniciado durante el fin de partida y (c) `players` muerto a mitad de un mensaje. En las tres, las monedas se suman exactamente una vez.
+
+---
+
+#### S3-04 — Chat sin conexión y panel de desconectados · C + E
+
+**Pasos:**
+1. **Web (con D de revisor):** los mensajes de chat escritos sin conexión se guardan en una cola en memoria con `client_msg_id` (UUID) y se envían al reconectar.
+2. **C (match y gateway):** descartar un `Chat` con un `client_msg_id` ya visto en esa partida.
+3. **E:** mostrar en el panel cuántos jugadores están en periodo de gracia y su cuenta regresiva.
+
+**Criterio de verificación:** escribir 2 mensajes sin wifi, reactivarlo, y los 2 aparecen una sola vez para todos. El panel muestra al jugador desconectado y desaparece cuando vuelve.
+
+---
+
+#### S3-05 — Sabotajes y visión limitada (si el resto está listo) · D + B
+
+**Solo se empieza si S3-01 a S3-04 están en `main`.**
+
+**Pasos:**
+1. **Tubería rota:** el impostor la activa; 30 segundos para que 2 jugadores la arreglen en dos puntos a la vez, o todos los tanques suben 20 puntos.
+2. **Vapor:** reduce la visión de todos a la mitad hasta que alguien lo arregla en la planta.
+3. Tiempo de espera compartido de 40 segundos, uno activo a la vez, y ninguno en los primeros 30 segundos ni durante reuniones.
+4. **Visión limitada (D):** dibujar el canvas con una máscara oscura y un círculo de visión de 300 unidades alrededor del jugador; los demás jugadores fuera del círculo no se dibujan.
+
+**Criterio de verificación:** cada sabotaje se puede activar, se ve igual que un evento aleatorio y se puede arreglar. Tras un sabotaje, el siguiente no se puede activar antes de 40 segundos.
+
+---
+
+#### S3-06 — Batería de pruebas de resiliencia · Todos (jueves 22)
+
+**Pasos:**
+1. En la máquina de la nube, correr las 5 pruebas de la tabla 6.4 de `architecture.md`, más desconectar de la red la laptop de un jugador y, si el proveedor lo permite, la red de la máquina virtual.
+2. Anotar cada resultado en `docs/resiliencia.md`: prueba, resultado esperado, resultado real y captura de pantalla.
+3. Cualquier prueba que falle se corrige el mismo día; es lo que el profe va a probar.
+
+**Criterio de verificación:** `docs/resiliencia.md` tiene las 7 pruebas en verde, con capturas.
+
+---
+
+#### S3-07 — Ensayo general · Todos (viernes 23)
+
+**Pasos:**
+1. Guion de 10 minutos: el juego (3 min), la arquitectura con el diagrama (3 min), los 5 patrones demostrados en vivo (3 min) y preguntas.
+2. Demostraciones en vivo: el jurado escanea el QR y juega; apagar `players` y mostrar el Circuit Breaker y el panel; cortar el wifi de un jugador y mostrar que vuelve.
+3. Plan B: video de 2 minutos grabado el jueves por si falla la red de la sala.
+4. Dos ensayos completos cronometrados.
+
+**Criterio de verificación:** los dos ensayos terminan en 10 minutos o menos, todas las demostraciones en vivo funcionaron al menos una vez, y cualquiera de los 5 puede explicar cualquier parte de la arquitectura (por eso se rotaron los revisores).

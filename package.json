@@ -1,0 +1,9 @@
+{
+  "name": "beneath-the-surface",
+  "private": true,
+  "workspaces": [
+    "messages",
+    "web",
+    "gateway"
+  ]
+}
