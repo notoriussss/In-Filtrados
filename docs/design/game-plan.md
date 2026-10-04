@@ -178,17 +178,9 @@ Con los 5 primeros se cumple el mínimo; el 6 y el 7 salen casi gratis.
   - Secuencia: unirse a una sala, contaminar un tanque, reportar y votar, fin de partida y guardado de la cosecha
   - Clases o modelo de datos de cada servicio
 
-## 6. Reparto propuesto para 5 personas
+## 6. Reparto
 
-| Persona | Responsable de | Además |
-|---|---|---|
-| 1 | Motor de partida en Go (salas, tick, agua y contaminación, emergencias, votación, chat) | UML de secuencia de la partida, BD #1 |
-| 2 | Servicio de jugadores en Rust (login, cosechas, monedas, parcela personal, ranking) | Esquema de BD #2 |
-| 3 | Frontend TypeScript (mapa, movimiento, tareas, reuniones, tienda) | Arte y sonido |
-| 4 | Gateway NestJS (REST, WebSocket, JWT, circuit breaker, rate limit, Swagger) | Dueño de los `.proto` |
-| 5 | Monitor Python + DevOps (docker compose, CI/CD) | UML de despliegue |
-
-Cada persona escribe en el informe el patrón que vive en su parte.
+Ninguna parte tiene dueño: los 5 trabajan en todo. Cómo se organiza el equipo está en `docs/team-plan.md`. En el informe, cada patrón se explica junto al servicio donde vive.
 
 ## 7. Orden sugerido
 

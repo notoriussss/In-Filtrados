@@ -1,10 +1,10 @@
 # Bajo la Superficie: tareas detalladas
 
 Cada tarea dice **qué archivos tocar, qué construir paso a paso y cómo se verifica que está terminada**.
-Complementa a `team-plan.md` (quién y cuándo) y a `architecture.md` (por qué).
+Complementa a `team-plan.md` (cómo se organiza el equipo y cuándo) y a `architecture.md` (por qué).
 Fecha: 3 de octubre de 2026.
 
-> Las personas se llaman **A, B, C, D y E**. Código en inglés; documentación en español.
+> Nadie es dueño de una carpeta: todos trabajan en todo y cada quien toma la siguiente tarea libre. Código en inglés; documentación en español.
 > Cada tarea tiene un id (`S1-08`). Úsenlo en el nombre de la rama y del PR: `feat/S1-08-room-loop`.
 
 ---
@@ -124,7 +124,7 @@ El WebSocket se abre en `/ws?token=<token>`.
 ### 0.8 Listo significa (vale para todas las tareas)
 
 Una tarea solo está terminada cuando, además de su criterio de verificación:
-1. Está en `main` por PR, revisado por el revisor de esa carpeta, con el CI en verde.
+1. Está en `main` por PR, revisado por alguien que no lo escribió, con el CI en verde.
 2. Tiene al menos una prueba automática si tiene lógica (un `if`, un ciclo o un cálculo).
 3. `docker compose up --build` desde cero sigue levantando todo.
 4. Si cambió un acuerdo de esta sección, el documento se actualizó en el mismo PR.
@@ -135,23 +135,23 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ### Sábado y domingo: la base
 
-#### S1-01 — Monorepo base · A
+#### S1-01 — Monorepo base
 
 **Por qué:** todos necesitan clonar lo mismo el sábado en la tarde para empezar en paralelo.
 
 **Pasos:**
 1. Crear el repo `beneath-the-surface` en GitHub e invitar a los 5. Proteger `main`: PR obligatorio, 1 aprobación y CI en verde.
-2. Crear todas las carpetas de `architecture.md` sección 7, más `shared/`. Cada carpeta de servicio lleva un `README.md` de 3 líneas: qué es, cómo correrlo solo y quién es el dueño.
+2. Crear todas las carpetas de `architecture.md` sección 7, más `shared/`. Cada carpeta de servicio lleva un `README.md` de 3 líneas: qué es y cómo correrlo solo. Ninguna carpeta tiene dueño.
 3. `package.json` en la raíz con `"workspaces": ["web", "gateway", "messages"]` y el paquete `messages` llamado `@beneath-the-surface/messages`, con `src/index.ts` exportando los tipos de la sección 0.5.
 4. `.gitignore` para Node, Go, Rust y Python (`node_modules/`, `target/`, `__pycache__/`, `.env`).
-5. `.github/CODEOWNERS` con el dueño de cada carpeta y `proto/` asignado a dos personas.
+5. `.github/pull_request_template.md` con la lista de "Listo" de la sección 0.8.
 6. `README.md` raíz con: requisitos (Docker, Node 20, Go 1.22, Rust estable, Python 3.12), `cp .env.example .env` y `docker compose up --build`.
 
 **Criterio de verificación:** cualquier persona del equipo clona el repo en una máquina limpia, corre `npm install` en la raíz sin errores y puede importar `@beneath-the-surface/messages` desde `gateway/` y `web/`. Un push directo a `main` es rechazado por GitHub.
 
 ---
 
-#### S1-02 — Contratos gRPC v0 · B
+#### S1-02 — Contratos gRPC v0
 
 **Por qué:** `match`, `players` y `gateway` no pueden hablarse sin el contrato, y es lo que más bloquea.
 
@@ -202,11 +202,11 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 4. Rust: `players/build.rs` con `tonic_build::compile_protos("../proto/players.proto")`.
 5. NestJS no genera nada: carga los `.proto` con `@grpc/proto-loader` al arrancar.
 
-**Criterio de verificación:** `cd match && go build ./...` y `cd players && cargo build` compilan usando los tipos generados. Dos personas más (quien hace `match` y quien hace `gateway`) aprobaron el PR del `.proto`.
+**Criterio de verificación:** `cd match && go build ./...` y `cd players && cargo build` compilan usando los tipos generados. Al menos dos personas más aprobaron el PR del `.proto`.
 
 ---
 
-#### S1-03 — `docker compose` de todo el sistema · C
+#### S1-03 — `docker compose` de todo el sistema
 
 **Por qué:** desde el lunes todos prueban contra el sistema completo, no contra su servicio solo.
 
@@ -225,7 +225,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S1-04 — Mapa en canvas · D
+#### S1-04 — Mapa en canvas
 
 **Por qué:** es lo primero que se ve, y define el `map.json` que también usa Go.
 
@@ -243,7 +243,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S1-05 — CI en GitHub Actions · E
+#### S1-05 — CI en GitHub Actions
 
 **Por qué:** sin CI, el `main` se rompe el primer día y nadie sabe quién fue.
 
@@ -262,7 +262,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S1-06 — `/health` en los 5 servicios · E
+#### S1-06 — `/health` en los 5 servicios
 
 **Por qué:** es la base del patrón Health Endpoint Monitoring y del panel.
 
@@ -281,7 +281,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ### Lunes 5: la rebanada vertical
 
-#### S1-07 — Conectar todo de punta a punta · Todos, en una llamada
+#### S1-07 — Conectar todo de punta a punta · todos, en una llamada
 
 **Por qué:** es la forma más rápida de encontrar los errores de integración, y todos entienden el flujo completo.
 
@@ -297,7 +297,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ### Martes a viernes: cada uno su servicio
 
-#### S1-08 — La sala como goroutine con ticker · A (`match/`)
+#### S1-08 — La sala como goroutine con ticker (`match/`)
 
 **Por qué:** es el corazón del juego; todo lo de la semana 2 se monta encima.
 
@@ -319,7 +319,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S1-09 — `CreateRoom`, `JoinRoom` y stream `Play` · A (`match/`)
+#### S1-09 — `CreateRoom`, `JoinRoom` y stream `Play` (`match/`)
 
 **Archivos:** `match/internal/grpc/server.go`, `match/cmd/match/main.go`.
 
@@ -338,7 +338,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S1-10 — Colisiones con el mapa · A (`match/`)
+#### S1-10 — Colisiones con el mapa (`match/`)
 
 **Archivos:** `match/internal/room/mapdata.go`, `match/internal/room/collision.go` y su test.
 
@@ -351,7 +351,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S1-11 — Guardar partidas y publicar eventos · A (`match/`)
+#### S1-11 — Guardar partidas y publicar eventos (`match/`)
 
 **Archivos:** `match/migrations/0001_init.sql`, `match/internal/db/queries.sql` (sqlc), `match/internal/events/publisher.go`.
 
@@ -383,7 +383,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S1-12 — Cuentas: registro, login y tokens · B (`players/`)
+#### S1-12 — Cuentas: registro, login y tokens (`players/`)
 
 **Archivos:** `players/migrations/0001_init.sql`, `players/src/accounts.rs`, `players/src/grpc.rs`, `players/src/main.rs`.
 
@@ -414,7 +414,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S1-13 — Perfil del jugador · B (`players/`)
+#### S1-13 — Perfil del jugador (`players/`)
 
 **Archivos:** `players/src/progress.rs` y `proto/players.proto` (agregar `GetProfile` si no quedó en S1-02).
 
@@ -426,7 +426,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S1-14 — Consumidor idempotente de `match.finished` · B (`players/`)
+#### S1-14 — Consumidor idempotente de `match.finished` (`players/`)
 
 **Por qué:** demuestra Publisher-Subscriber y la entrega "al menos una vez" sin duplicados (D5).
 
@@ -457,7 +457,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S1-15 — REST de autenticación y salas · C (`gateway/`)
+#### S1-15 — REST de autenticación y salas (`gateway/`)
 
 **Archivos:** `gateway/src/auth/auth.controller.ts`, `gateway/src/auth/auth.guard.ts`, `gateway/src/game/rooms.controller.ts`, `gateway/src/clients/players.client.ts`, `gateway/src/clients/match.client.ts`.
 
@@ -471,7 +471,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S1-16 — WebSocket ↔ stream `Play` · C (`gateway/`)
+#### S1-16 — WebSocket ↔ stream `Play` (`gateway/`)
 
 **Archivos:** `gateway/src/game/game.gateway.ts`, `gateway/src/main.ts`.
 
@@ -488,7 +488,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S1-17 — Retry y Circuit Breaker en los clientes gRPC · C (`gateway/`)
+#### S1-17 — Retry y Circuit Breaker en los clientes gRPC (`gateway/`)
 
 **Por qué:** es el patrón 5, y es el que se demuestra en vivo apagando `players`.
 
@@ -504,7 +504,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S1-18 — Pantallas de login, sala de espera y partida · D (`web/`)
+#### S1-18 — Pantallas de login, sala de espera y partida (`web/`)
 
 **Archivos:** `web/src/screens/login.ts`, `web/src/screens/lobby.ts`, `web/src/screens/game.ts`, `web/src/api.ts`, `web/src/session.ts`.
 
@@ -520,7 +520,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S1-19 — Moverse y ver a los demás · D (`web/`)
+#### S1-19 — Moverse y ver a los demás (`web/`)
 
 **Archivos:** `web/src/net/socket.ts`, `web/src/input.ts`, `web/src/canvas/renderPlayers.ts`, `web/src/screens/game.ts`.
 
@@ -534,7 +534,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S1-20 — Reconexión básica del WebSocket · D (`web/`)
+#### S1-20 — Reconexión básica del WebSocket (`web/`)
 
 **Archivos:** `web/src/net/socket.ts`.
 
@@ -549,7 +549,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S1-21 — Panel de salud del monitor · E (`monitor/`)
+#### S1-21 — Panel de salud del monitor (`monitor/`)
 
 **Archivos:** `monitor/app/main.py`, `monitor/app/health.py`, `monitor/app/dashboard/index.html`, `monitor/pyproject.toml`.
 
@@ -565,7 +565,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S1-22 — Eventos en el panel · E (`monitor/`)
+#### S1-22 — Eventos en el panel (`monitor/`)
 
 **Archivos:** `monitor/app/events.py`, `monitor/app/dashboard/index.html`.
 
@@ -579,7 +579,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S1-23 — Desplegar en la nube · E (infraestructura)
+#### S1-23 — Desplegar en la nube (infraestructura)
 
 **Archivos:** `deploy/README.md` y `deploy/setup.sh`.
 
@@ -598,7 +598,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 > Los mensajes nuevos de WebSocket se agregan en `messages/src/index.ts` y los de gRPC en `proto/match.proto`, en **un solo PR al inicio de la semana** (S2-01), para que nadie se bloquee esperando el contrato.
 
-#### S2-01 — Contrato v1 del juego · C con A (`proto/` y `messages/`)
+#### S2-01 — Contrato v1 del juego (`proto/` y `messages/`)
 
 **Pasos:**
 1. Nuevas acciones en `ClientAction` y `ClientMessage`: `Start`, `Interact { station_id }` (hacer tarea o limpiar tanque), `Contaminate { tank_slot }`, `Report { tank_slot }`, `Vote { target_player_id | skip }` y `Chat { client_msg_id, text }`.
@@ -606,11 +606,11 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 3. Nuevo evento `MatchEnded { winner, impostor_id }`.
 4. Ver el rol del impostor **solo en su propio snapshot**: el gateway jamás debe recibir el rol de otros.
 
-**Criterio de verificación:** el PR lo aprueban A, C y D. `match`, `players`, `gateway` y `web` compilan con el contrato nuevo antes del lunes 12 al mediodía.
+**Criterio de verificación:** el PR lo aprueban al menos dos personas. `match`, `players`, `gateway` y `web` compilan con el contrato nuevo antes del lunes 12 al mediodía.
 
 ---
 
-#### S2-02 — Roles e impostor · A (`match/`)
+#### S2-02 — Roles e impostor (`match/`)
 
 **Pasos:**
 1. Al pasar a `PLAYING`, elegir 1 impostor al azar (`crypto/rand`). Con 7 o más jugadores, 2 impostores.
@@ -622,7 +622,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S2-03 — Tanques, contaminación y limpieza · A (`match/`)
+#### S2-03 — Tanques, contaminación y limpieza (`match/`)
 
 **Pasos:**
 1. Cada tanque tiene `contamination` de 0 a 100.
@@ -636,7 +636,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S2-04 — Tareas de las 3R y embalse · A (`match/`)
+#### S2-04 — Tareas de las 3R y embalse (`match/`)
 
 **Pasos:**
 1. Las estaciones de `map.json` tienen tipo `reduce` (cerrar fuga), `reuse` (recoger agua gris o de lluvia) o `recycle` (filtrar en la planta).
@@ -649,7 +649,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S2-05 — Reportar, reunión y votación · A (`match/`) con C (chat)
+#### S2-05 — Reportar, reunión y votación (`match/`)
 
 **Pasos:**
 1. `Report { tank_slot }`: solo sobre un tanque `dead`, a 60 unidades o menos, y por un jugador vivo. Pasa a fase `MEETING` y teletransporta a todos a la plaza.
@@ -663,7 +663,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S2-06 — Fin de partida real · A (`match/`)
+#### S2-06 — Fin de partida real (`match/`)
 
 **Pasos:**
 1. Ganan los tripulantes si el embalse llega a 100 **o** todos los impostores fueron expulsados.
@@ -676,19 +676,19 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S2-07 — Monedas y estadísticas · B (`players/`)
+#### S2-07 — Monedas y estadísticas (`players/`)
 
 **Pasos:**
 1. Ajustar el consumidor a la fórmula definitiva: `coins_earned = harvest + 20 si ganó su equipo`.
 2. Agregar `times_impostor` y `wins_as_impostor` a `players` (migración nueva, nunca editar una vieja).
 3. `GetProfile` devuelve también esas dos estadísticas.
-4. Ayudar a A con tests de integración de `match` (es el revisor de `players` esta semana, pero `match` es lo más pesado).
+4. Tests de integración de `match` con `players`.
 
 **Criterio de verificación:** después de una partida como impostor ganada, el perfil muestra `times_impostor: 1`, `wins_as_impostor: 1` y las monedas correctas. Repetir el evento no cambia nada.
 
 ---
 
-#### S2-08 — Mensajes nuevos y límite de velocidad en el gateway · C (`gateway/`)
+#### S2-08 — Mensajes nuevos y límite de velocidad en el gateway (`gateway/`)
 
 **Pasos:**
 1. Reenviar todas las acciones nuevas de S2-01 al stream `Play`, validando cada una (tipos, rangos y largo del chat).
@@ -699,7 +699,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S2-09 — Barras de tanques y acción de contaminar · D (`web/`)
+#### S2-09 — Barras de tanques y acción de contaminar (`web/`)
 
 **Pasos:**
 1. Dibujar cada tanque del huerto con una barra de contaminación (verde a café según el valor) y el nombre del dueño. Muerto: gris con una planta marchita.
@@ -712,7 +712,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S2-10 — Pantalla de reunión y votación · D con E (`web/`)
+#### S2-10 — Pantalla de reunión y votación (`web/`)
 
 **Pasos:**
 1. Al entrar en `MEETING`: superponer un panel con el tanque reportado, quién reportó, los 3 últimos visitantes, la lista de jugadores con su color, el chat y una cuenta regresiva.
@@ -724,7 +724,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S2-11 — Minijuegos de las 3R · D (`web/`)
+#### S2-11 — Minijuegos de las 3R (`web/`)
 
 **Pasos (cada minijuego dura de 3 a 6 segundos):**
 1. **Reducir (cerrar fuga):** girar una válvula manteniendo presionado el clic hasta llenar una barra.
@@ -737,17 +737,17 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S2-12 — Gotas de aceite · D (`web/`) con A (`match/`)
+#### S2-12 — Gotas de aceite (`web/` y `match/`)
 
 **Pasos:**
-1. **A:** durante 15 segundos después de contaminar, el impostor deja una gota cada 1 segundo en su posición. Las gotas van en el snapshot (`oil_drops[] { x, y, color, expires_at_tick }`).
-2. **D:** dibujar las gotas con el color del impostor, desvaneciéndose a medida que se acercan a su vencimiento.
+1. **`match`:** durante 15 segundos después de contaminar, el impostor deja una gota cada 1 segundo en su posición. Las gotas van en el snapshot (`oil_drops[] { x, y, color, expires_at_tick }`).
+2. **`web`:** dibujar las gotas con el color del impostor, desvaneciéndose a medida que se acercan a su vencimiento.
 
 **Criterio de verificación:** tras contaminar, todos ven un rastro de gotas del color del impostor que desaparece a los 15 segundos.
 
 ---
 
-#### S2-13 — Litros, expulsiones y despliegue automático · E (`monitor/` e infra)
+#### S2-13 — Litros, expulsiones y despliegue automático (`monitor/` e infra)
 
 **Pasos:**
 1. Consumir `task.completed` y `player.ejected`: litros ahorrados (total y por partida activa), tareas por tipo (Reducir, Reutilizar, Reciclar) y expulsiones acertadas contra fallidas.
@@ -760,32 +760,32 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ## 3. Semana 3 (17 al 23 de octubre): resiliencia, pulido y ensayo
 
-#### S3-01 — Periodo de gracia y `Resume` · A + D
+#### S3-01 — Periodo de gracia y `Resume` · en pareja
 
 **Pasos:**
-1. **A:** cuando el stream de un jugador se corta, marcarlo `connected: false` y conservar su lugar 90 segundos. Si vuelve, recupera todo. Si no, pasa a fantasma.
-2. **A:** si un desconectado no vota antes de que termine la reunión, su voto cuenta como `skip`.
-3. **A:** al recibir `Join` de alguien que ya está en la sala, reemplazar su canal de salida y mandarle de inmediato un snapshot completo (con chat y estado de la reunión).
-4. **D:** al cargar la página, si `session.ts` tiene `matchId`, ir directo a la partida en lugar de al lobby.
+1. **`match`:** cuando el stream de un jugador se corta, marcarlo `connected: false` y conservar su lugar 90 segundos. Si vuelve, recupera todo. Si no, pasa a fantasma.
+2. **`match`:** si un desconectado no vota antes de que termine la reunión, su voto cuenta como `skip`.
+3. **`match`:** al recibir `Join` de alguien que ya está en la sala, reemplazar su canal de salida y mandarle de inmediato un snapshot completo (con chat y estado de la reunión).
+4. **`web`:** al cargar la página, si `session.ts` tiene `matchId`, ir directo a la partida en lugar de al lobby.
 
 **Criterio de verificación:** prueba manual de la tabla 6.4 de `architecture.md`: desactivar el wifi de un jugador 30 segundos y al volver está en la misma posición, con su rol y sus tareas. Recargar la página a mitad de una reunión vuelve a la reunión con el chat completo.
 
 ---
 
-#### S3-02 — Instantáneas y pausa · A + C
+#### S3-02 — Instantáneas y pausa · en pareja
 
 **Pasos:**
 1. Tabla `snapshots (match_id UUID PRIMARY KEY, tick BIGINT, state JSONB, updated_at TIMESTAMPTZ)`.
 2. Cada 2 segundos y en cada cambio de fase, la goroutine de la sala serializa su estado y hace `INSERT ... ON CONFLICT (match_id) DO UPDATE`. La escritura va en **otra goroutine**, para que la base de datos lenta no frene el ticker.
 3. Al arrancar `match`: buscar partidas con `ended_at IS NULL` y snapshot, recrear su sala en pausa y esperar a que los jugadores se reconecten.
 4. Si no queda ningún jugador conectado, la sala se pausa: el ticker sigue, pero no suma contaminación ni tiempo.
-5. **C:** el gateway, al reconectar un jugador, reabre el stream `Play` y reintenta con espera creciente si `match` todavía está arrancando.
+5. **`gateway`:** el gateway, al reconectar un jugador, reabre el stream `Play` y reintenta con espera creciente si `match` todavía está arrancando.
 
 **Criterio de verificación:** en plena partida, `docker compose restart match`: en menos de 15 segundos todos los navegadores vuelven a la misma partida, con a lo sumo 2 segundos de movimiento perdidos, y el tiempo restante de la partida no avanzó mientras `match` estaba caído.
 
 ---
 
-#### S3-03 — Ningún resultado se pierde · B + E
+#### S3-03 — Ningún resultado se pierde · en pareja
 
 **Pasos:**
 1. Revisar que exchange, colas y mensajes sean durables y persistentes (sección 0.7), y que `players` haga `ack` solo después del `COMMIT`.
@@ -796,18 +796,18 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S3-04 — Chat sin conexión y panel de desconectados · C + E
+#### S3-04 — Chat sin conexión y panel de desconectados · en pareja
 
 **Pasos:**
-1. **Web (con D de revisor):** los mensajes de chat escritos sin conexión se guardan en una cola en memoria con `client_msg_id` (UUID) y se envían al reconectar.
-2. **C (match y gateway):** descartar un `Chat` con un `client_msg_id` ya visto en esa partida.
-3. **E:** mostrar en el panel cuántos jugadores están en periodo de gracia y su cuenta regresiva.
+1. **`web`:** los mensajes de chat escritos sin conexión se guardan en una cola en memoria con `client_msg_id` (UUID) y se envían al reconectar.
+2. **`match` y `gateway`:** descartar un `Chat` con un `client_msg_id` ya visto en esa partida.
+3. **`monitor`:** mostrar en el panel cuántos jugadores están en periodo de gracia y su cuenta regresiva.
 
 **Criterio de verificación:** escribir 2 mensajes sin wifi, reactivarlo, y los 2 aparecen una sola vez para todos. El panel muestra al jugador desconectado y desaparece cuando vuelve.
 
 ---
 
-#### S3-05 — Sabotajes y visión limitada (si el resto está listo) · D + B
+#### S3-05 — Sabotajes y visión limitada (si el resto está listo) · en pareja
 
 **Solo se empieza si S3-01 a S3-04 están en `main`.**
 
@@ -821,7 +821,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S3-06 — Batería de pruebas de resiliencia · Todos (jueves 22)
+#### S3-06 — Batería de pruebas de resiliencia · todos (jueves 22)
 
 **Pasos:**
 1. En la máquina de la nube, correr las 5 pruebas de la tabla 6.4 de `architecture.md`, más desconectar de la red la laptop de un jugador y, si el proveedor lo permite, la red de la máquina virtual.
@@ -832,7 +832,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S3-07 — Ensayo general · Todos (viernes 23)
+#### S3-07 — Ensayo general · todos (viernes 23)
 
 **Pasos:**
 1. Guion de 10 minutos: el juego (3 min), la arquitectura con el diagrama (3 min), los 5 patrones demostrados en vivo (3 min) y preguntas.
@@ -840,4 +840,4 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 3. Plan B: video de 2 minutos grabado el jueves por si falla la red de la sala.
 4. Dos ensayos completos cronometrados.
 
-**Criterio de verificación:** los dos ensayos terminan en 10 minutos o menos, todas las demostraciones en vivo funcionaron al menos una vez, y cualquiera de los 5 puede explicar cualquier parte de la arquitectura (por eso se rotaron los revisores).
+**Criterio de verificación:** los dos ensayos terminan en 10 minutos o menos, todas las demostraciones en vivo funcionaron al menos una vez, y cualquiera de los 5 puede explicar cualquier parte de la arquitectura (por eso todos trabajaron en todo).

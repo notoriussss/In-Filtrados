@@ -7,11 +7,11 @@ Une en un solo lugar lo que está repartido en los otros documentos:
 |---|---|
 | `architecture.md` | Por qué el sistema es así: servicios, decisiones y patrones |
 | `deployment-lab.md` | Dónde corre cada servicio en el laboratorio |
-| `team-plan.md` | Quién hace qué y cómo se organiza el equipo |
+| `team-plan.md` | Qué entra, qué se corta y cómo se organiza el equipo |
 | `tasks.md` | El paso a paso de cada tarea, con su id (`S1-08`) |
 | **Este documento** | En qué orden se hace todo y cuándo se considera terminada cada fase |
 
-Fecha: 4 de octubre de 2026. Las personas son **A, B, C, D y E**, igual que en `team-plan.md`.
+Fecha: 4 de octubre de 2026. Nadie es dueño de una carpeta: todos trabajan en todo y cada quien toma la siguiente tarea libre (`team-plan.md`, sección 2).
 
 ---
 
@@ -39,16 +39,16 @@ oct   3  4  5 | 6  7  8  9 | 10 ... 16 | 17 ... 22 | 23 24
 
 **Objetivo:** que los 5 puedan trabajar en paralelo sin pisarse, y saber desde el primer día si el laboratorio sirve.
 
-| Qué | Quién | Tarea |
-|---|---|---|
-| Monorepo con la estructura de `architecture.md` | A | S1-01 |
-| Contratos gRPC v0 (`match.proto`, `players.proto`) | B | S1-02 |
-| `docker-compose.yml` con todos los servicios, 2 PostgreSQL y RabbitMQ | C | S1-03 |
-| Mapa en canvas | D | S1-04 |
-| CI en GitHub Actions y `/health` en los 5 servicios | E | S1-05, S1-06 |
-| **Prueba previa del laboratorio** con 2 laptops y 1 PC | E (con quien pueda ir) | `deployment-lab.md`, sección 7 |
-| Preguntas al profe | A | `team-plan.md`, sección 7 |
-| Rebanada vertical: navegador → gateway → `match` → navegador | Todos, en llamada | S1-07 |
+| Qué | Tarea |
+|---|---|
+| Monorepo con la estructura de `architecture.md` | S1-01 |
+| Contratos gRPC v0 (`match.proto`, `players.proto`) | S1-02 |
+| `docker-compose.yml` con todos los servicios, 2 PostgreSQL y RabbitMQ | S1-03 |
+| Mapa en canvas | S1-04 |
+| CI en GitHub Actions y `/health` en los 5 servicios | S1-05, S1-06 |
+| **Prueba previa del laboratorio** con 2 laptops y 1 PC (va quien pueda) | `deployment-lab.md`, sección 7 |
+| Preguntas al profe | `team-plan.md`, sección 7 |
+| Rebanada vertical en llamada, con todos: navegador → gateway → `match` → navegador | S1-07 |
 
 **Preguntas para el profe (lunes 5):**
 1. ¿Las laptops del equipo cuentan como las máquinas separadas?
@@ -69,14 +69,14 @@ oct   3  4  5 | 6  7  8  9 | 10 ... 16 | 17 ... 22 | 23 24
 
 **Objetivo:** que cada servicio haga su trabajo mínimo y que todos estén conectados. Todo corre en una sola máquina con `docker compose up`.
 
-| Servicio | Dueño | Qué queda listo | Tareas |
-|---|---|---|---|
-| `match/` (Go) | A | Goroutine por sala a 20 Hz, `CreateRoom`, `JoinRoom`, stream `Play`, colisiones, publicar `match.started` y `match.finished` | S1-08 a S1-11 |
-| `players/` (Rust) | B | Registro y login con `argon2`, tokens JWT, perfil con monedas, consumidor idempotente | S1-12 a S1-14 |
-| `gateway/` (NestJS) | C | REST de auth y salas, puente WebSocket ↔ `Play`, Retry y Circuit Breaker | S1-15 a S1-17 |
-| `web/` (TS + canvas) | D | Login, sala de espera, partida, moverse y ver a los demás, reconexión básica | S1-18 a S1-20 |
-| `monitor/` (Python) | E | Panel de salud y contadores con eventos | S1-21, S1-22 |
-| Infra | E | `deploy/compose/n1.yml` … `n5.yml` y `lab.env.example` (reemplaza a S1-23 "desplegar en la nube") | S1-23 |
+| Servicio | Qué queda listo | Tareas |
+|---|---|---|
+| `match/` (Go) | Goroutine por sala a 20 Hz, `CreateRoom`, `JoinRoom`, stream `Play`, colisiones, publicar `match.started` y `match.finished` | S1-08 a S1-11 |
+| `players/` (Rust) | Registro y login con `argon2`, tokens JWT, perfil con monedas, consumidor idempotente | S1-12 a S1-14 |
+| `gateway/` (NestJS) | REST de auth y salas, puente WebSocket ↔ `Play`, Retry y Circuit Breaker | S1-15 a S1-17 |
+| `web/` (TS + canvas) | Login, sala de espera, partida, moverse y ver a los demás, reconexión básica | S1-18 a S1-20 |
+| `monitor/` (Python) | Panel de salud y contadores con eventos | S1-21, S1-22 |
+| Infra | `deploy/compose/n1.yml` … `n5.yml` y `lab.env.example` (reemplaza a S1-23 "desplegar en la nube") | S1-23 |
 
 **Patrones que ya quedan funcionando:** API Gateway, Database per Service, Publisher-Subscriber y Health Endpoint Monitoring. El Circuit Breaker queda programado; se demuestra en la fase 3.
 
@@ -93,14 +93,14 @@ oct   3  4  5 | 6  7  8  9 | 10 ... 16 | 17 ... 22 | 23 24
 
 **Objetivo:** jugar una partida entera de principio a fin, y correrla por primera vez repartida en las 5 laptops.
 
-| Servicio | Dueño | Qué queda listo | Tareas |
-|---|---|---|---|
-| Contratos | C con A | `proto/` y `messages/` v1 del juego | S2-01 |
-| `match/` | A | Roles e impostor, tanques y contaminación, tareas de las 3R, reportar, reunión, votación, fin de partida | S2-02 a S2-06 |
-| `players/` | B | Monedas según resultado, estadísticas; ayuda a A con pruebas | S2-07 |
-| `gateway/` | C | Mensajes nuevos, chat de reunión, límite de velocidad; **heartbeat** de 2 s / 5 s con el navegador y keepalive gRPC | S2-08 |
-| `web/` | D | Barras de tanques, contaminar, reunión y votación, minijuegos de las 3R, gotas de aceite; **heartbeat** del lado del navegador | S2-09 a S2-12 |
-| `monitor/` + infra | E | Litros ahorrados, expulsiones; `check-network.ps1` y `seed.ps1` | S2-13 |
+| Servicio | Qué queda listo | Tareas |
+|---|---|---|
+| Contratos | `proto/` y `messages/` v1 del juego | S2-01 |
+| `match/` | Roles e impostor, tanques y contaminación, tareas de las 3R, reportar, reunión, votación, fin de partida | S2-02 a S2-06 |
+| `players/` | Monedas según resultado, estadísticas | S2-07 |
+| `gateway/` | Mensajes nuevos, chat de reunión, límite de velocidad; **heartbeat** de 2 s / 5 s con el navegador y keepalive gRPC | S2-08 |
+| `web/` | Barras de tanques, contaminar, reunión y votación, minijuegos de las 3R, gotas de aceite; **heartbeat** del lado del navegador | S2-09 a S2-12 |
+| `monitor/` + infra | Litros ahorrados, expulsiones; `check-network.ps1` y `seed.ps1` | S2-13 |
 
 > El heartbeat se adelanta a esta fase porque es pequeño y sin él ninguna prueba de desconexión en el laboratorio funciona.
 
@@ -123,15 +123,15 @@ oct   3  4  5 | 6  7  8  9 | 10 ... 16 | 17 ... 22 | 23 24
 
 **Objetivo:** pasar la prueba del profe: desconectar cualquier máquina y que, al reconectarla, todo siga exactamente donde estaba.
 
-En parejas cruzadas, como en `team-plan.md`, sección 5:
+En parejas, como en `team-plan.md`, sección 5:
 
-| Pareja | Qué queda listo | Tarea |
-|---|---|---|
-| A + D | `Resume` con la foto completa, volver tras recargar la página, **pausar la sala cuando se desconecta cualquier jugador** y gracia configurable (`RECONNECT_GRACE_SECONDS`) | S3-01 |
-| A + C | Instantáneas cada 2 s en `snapshots` y restaurarlas al arrancar; JWT validado con la clave pública en gateway y `match` | S3-02 |
-| B + E | **Outbox en `match`** (tabla `outbox` + publicador), ack solo después de guardar en Rust; A revisa el código de Go | S3-03 |
-| C + E | Cola de chat sin conexión con ids únicos; jugadores desconectados en el panel | S3-04 |
-| D + B | Sabotajes y visión limitada, **solo si lo anterior está listo** | S3-05 |
+| Qué queda listo | Tarea |
+|---|---|
+| `Resume` con la foto completa, volver tras recargar la página, **pausar la sala cuando se desconecta cualquier jugador** y gracia configurable (`RECONNECT_GRACE_SECONDS`) | S3-01 |
+| Instantáneas cada 2 s en `snapshots` y restaurarlas al arrancar; JWT validado con la clave pública en gateway y `match` | S3-02 |
+| **Outbox en `match`** (tabla `outbox` + publicador), ack solo después de guardar en Rust | S3-03 |
+| Cola de chat sin conexión con ids únicos; jugadores desconectados en el panel | S3-04 |
+| Sabotajes y visión limitada, **solo si lo anterior está listo** | S3-05 |
 
 **Jueves 22: batería de pruebas en el laboratorio (S3-06).** Se corre completa la tabla de `deployment-lab.md`, sección 9, con las 5 laptops:
 
@@ -158,13 +158,11 @@ En parejas cruzadas, como en `team-plan.md`, sección 5:
 
 **Objetivo:** que la presentación salga igual que en los ensayos.
 
-| Qué | Quién |
-|---|---|
-| Presentación y guion de la demo | C y D |
-| Diagramas UML al día (componentes, secuencias, despliegue con las 5 laptops) | B y E |
-| `architecture.md` al día con los cambios de `deployment-lab.md`, sección 11 | A |
-| Datos de prueba con `seed.ps1` y QR para el jurado | E |
-| Ensayo general, dos veces, con la demo de desconexión incluida (S3-07) | Todos |
+- Presentación y guion de la demo.
+- Diagramas UML al día (componentes, secuencias, despliegue con las 5 laptops).
+- `architecture.md` al día con los cambios de `deployment-lab.md`, sección 11.
+- Datos de prueba con `seed.ps1` y QR para el jurado.
+- Ensayo general, dos veces, con la demo de desconexión incluida (S3-07).
 
 **Guion sugerido de la demo (10 minutos):**
 1. Arquitectura en una lámina: 5 servicios, 4 lenguajes, 5 laptops.

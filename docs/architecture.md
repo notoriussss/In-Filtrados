@@ -365,7 +365,7 @@ beneath-the-surface/
 │
 ├── .github/
 │   ├── workflows/ci.yml        compila y prueba solo lo que cambió
-│   └── CODEOWNERS              quién revisa cada carpeta
+│   └── pull_request_template.md
 │
 ├── docker-compose.yml          levanta todo: 5 servicios, 2 PostgreSQL y RabbitMQ
 ├── .env.example                contraseñas y puertos de ejemplo
@@ -378,7 +378,7 @@ beneath-the-surface/
 - **Docker:** como Go y Rust necesitan la carpeta `proto/`, en el `docker-compose.yml` su contexto de construcción es la raíz del repo y se indica el `Dockerfile` de cada carpeta.
 - **npm workspaces:** `web`, `gateway` y `messages` comparten un solo `npm install`, y el gateway y la web importan los tipos de `messages` sin copiarlos.
 - **CI:** el workflow usa filtros por carpeta (`paths`), así que un cambio en `monitor/` no recompila Rust.
-- **Reparto del equipo:** son 5 carpetas de servicio para 5 personas. Cada una puede ser dueña de una carpeta en `CODEOWNERS`, y `proto/` la revisan entre todos porque es el contrato compartido.
+- **Reparto del equipo:** ninguna carpeta tiene dueño; los 5 trabajan en todas. Los cambios a `proto/` los revisan al menos dos personas, porque es el contrato compartido.
 
 ---
 
