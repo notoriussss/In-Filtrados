@@ -42,6 +42,12 @@ Puertos: `docs/tasks.md` 0.1. Despliegue en 5 laptops: `docs/deployment-lab.md`.
 | `monitor/` | `ruff check && pytest` |
 | Todo | `docker compose up --build` desde cero levanta los contenedores sanos |
 
+## CI/CD
+
+- **CI** (`.github/workflows/ci.yml`): en cada PR y en cada push a `main`, corre los comandos de la tabla anterior solo para lo que cambió. Un cambio en `proto/` o `shared/` corre `match`, `players` y el job de Node. Un servicio que todavía no tiene proyecto (`go.mod`, `Cargo.toml` o `pyproject.toml`) se salta. El job `compose` corre `docker compose build` siempre que exista `docker-compose.yml`.
+- **CD** (`.github/workflows/cd.yml`): cuando el CI de `main` sale en verde, publica una imagen por servicio en `ghcr.io/<dueño-del-repo>/bajo-la-superficie-<servicio>` con las etiquetas `latest` y el SHA del commit. Las laptops del laboratorio solo hacen `docker compose pull && docker compose up -d`.
+- Todos los `Dockerfile` se construyen con la raíz del repo como contexto: `docker build -f match/Dockerfile .`.
+
 ## Flujo de trabajo
 
 - Rama por tarea con su id: `feat/S1-08-room-loop`, `fix/S2-03-vote-timeout`. Commits pequeños en inglés.
