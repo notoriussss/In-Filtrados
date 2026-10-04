@@ -9,7 +9,7 @@ export type ClientMessage =
 // Gateway -> browser
 export type ServerMessage =
   | { type: 'snapshot'; tick: number; phase: Phase; players: PlayerView[] }
-  | { type: 'error'; code: ErrorCode; message: string };
+  | { type: 'error'; code: ErrorCode; message: string }; // message is shown to the player: Spanish
 
 export type Phase = 'LOBBY' | 'PLAYING' | 'MEETING' | 'ENDED';
 

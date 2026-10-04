@@ -48,7 +48,7 @@ docker compose up --build   # http://localhost:8080
 
 ## Cómo trabajamos
 
-- Código en inglés; documentación y conversación en español.
+- Solo el código va en inglés. El título del juego, los textos de la interfaz, los mensajes al jugador y la documentación van en español.
 - Ninguna carpeta tiene dueño: todos trabajan en todo.
 - Una rama por tarea con su id: `feat/S1-08-room-loop`. Nada entra a `main` sin PR, revisión y CI en verde.
 - Las reglas completas, también para asistentes de IA, están en [`AGENTS.md`](AGENTS.md).

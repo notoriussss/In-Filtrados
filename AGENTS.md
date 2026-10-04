@@ -9,7 +9,7 @@ El *porqué* de todo está en `docs/architecture.md`; el *cómo* de cada tarea, 
 
 ## Reglas que no se rompen
 
-1. **Idioma:** todo el código en inglés (carpetas, archivos, variables, tablas, eventos, mensajes gRPC, commits). Documentación y comentarios para el equipo en español, con los nombres de código tal cual.
+1. **Idioma:** solo el código va en inglés (carpetas, archivos, variables, tablas, eventos, mensajes gRPC, códigos de error, commits). **Todo lo que ve el jugador va en español:** el título del juego (*Bajo la Superficie*), los textos de la interfaz, los avisos y los mensajes de error que se muestran. La documentación y los comentarios para el equipo también van en español, con los nombres de código tal cual.
 2. **El servidor manda.** `match` es la única autoridad del estado de la partida. `web` solo manda intenciones (dirección, acción) y dibuja lo que recibe. Nunca muevas lógica del juego al navegador.
 3. **Database per Service.** `match` solo habla con `match-db` y `players` solo con `players-db`. Ningún servicio lee la base de otro: los datos se piden por gRPC o se escuchan como eventos.
 4. **Contratos en un solo lugar.** gRPC en `proto/`, mensajes WebSocket en `messages/src/index.ts`, mapa en `shared/map.json`, eventos en `docs/tasks.md` 0.7. Nunca copies estos tipos dentro de un servicio. Para cambiarlos, usa la skill `change-contract`.
