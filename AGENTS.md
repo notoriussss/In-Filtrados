@@ -4,7 +4,7 @@ Guía para cualquier persona o asistente de IA (Claude Code, Codex, Copilot, Cur
 
 ## El proyecto
 
-**Bajo la Superficie**: juego multijugador tipo Among Us sobre las 3R aplicadas al agua, para la materia Computación en la Nube. Equipo de 5 (A a E), entrega alrededor del 24 de octubre de 2026.
+**Bajo la Superficie**: juego multijugador tipo Among Us sobre las 3R aplicadas al agua, para la materia Computación en la Nube. Equipo de 5, entrega alrededor del 24 de octubre de 2026.
 El *porqué* de todo está en `docs/architecture.md`; el *cómo* de cada tarea, en `docs/tasks.md`. Si este archivo y los docs no coinciden, mandan los docs y se corrige este archivo.
 
 ## Reglas que no se rompen
@@ -20,15 +20,15 @@ El *porqué* de todo está en `docs/architecture.md`; el *cómo* de cada tarea, 
 
 ## Mapa del repo
 
-| Carpeta | Stack | Dueño |
-|---|---|---|
-| `web/` | TypeScript, canvas, Vite, nginx | D |
-| `gateway/` | NestJS, `@grpc/proto-loader`, sin base de datos | C |
-| `match/` | Go, gRPC, pgx + sqlc, una goroutine por sala sin mutex | A |
-| `players/` | Rust: tokio, tonic, sqlx, lapin, argon2 y axum para `/health` | B |
-| `monitor/` | Python, FastAPI | E |
-| `proto/`, `messages/`, `shared/` | Contratos compartidos | Todos |
-| `docs/` | Planes vigentes | Quien cambie una decisión, en el mismo PR |
+| Carpeta | Stack |
+|---|---|
+| `web/` | TypeScript, canvas, Vite, nginx |
+| `gateway/` | NestJS, `@grpc/proto-loader`, sin base de datos |
+| `match/` | Go, gRPC, pgx + sqlc, una goroutine por sala sin mutex |
+| `players/` | Rust: tokio, tonic, sqlx, lapin, argon2 y axum para `/health` |
+| `monitor/` | Python, FastAPI |
+| `proto/`, `messages/`, `shared/` | Contratos compartidos |
+| `docs/` | Planes vigentes |
 
 Puertos: `docs/tasks.md` 0.1. Despliegue en 5 laptops: `docs/deployment-lab.md`.
 
@@ -45,7 +45,8 @@ Puertos: `docs/tasks.md` 0.1. Despliegue en 5 laptops: `docs/deployment-lab.md`.
 ## Flujo de trabajo
 
 - Rama por tarea con su id: `feat/S1-08-room-loop`, `fix/S2-03-vote-timeout`. Commits pequeños en inglés.
-- PR hacia `main` con la plantilla, revisado por el revisor de esa carpeta en la semana (`docs/team-plan.md`, sección 2) y con CI en verde.
+- **Ninguna carpeta tiene dueño:** todos trabajan en todo. Cualquiera puede tomar cualquier tarea y revisar cualquier PR.
+- PR hacia `main` con la plantilla, revisado por al menos otra persona del equipo y con CI en verde.
 - "Listo" significa lo de `docs/tasks.md` 0.8: en `main` por PR, al menos una prueba si hay lógica, `docker compose up --build` sigue funcionando y docs actualizados si cambió un acuerdo.
 - No agregues dependencias, servicios ni patrones que no estén en `docs/architecture.md` sin hablarlo con el equipo.
 
@@ -57,4 +58,4 @@ Están en `.claude/skills/`. Cualquier asistente puede leerlas como instruccione
 |---|---|
 | `start-task` | Empezar o cerrar una tarea de `docs/tasks.md`: rama, contexto, criterio de verificación y PR |
 | `change-contract` | Cambiar `proto/`, `messages/`, `shared/map.json`, un evento de RabbitMQ, un puerto o `/health` |
-| `review-pr` | Revisar el PR de otra carpeta como revisor de la semana |
+| `review-pr` | Revisar el PR de un compañero |

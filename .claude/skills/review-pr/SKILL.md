@@ -1,6 +1,6 @@
 ---
 name: review-pr
-description: Use when reviewing a teammate's pull request as the weekly reviewer of a folder. Checks the PR against its task in docs/tasks.md, the shared agreements and the architecture rules in AGENTS.md.
+description: Use when reviewing a teammate's pull request. Checks the PR against its task in docs/tasks.md, the shared agreements and the architecture rules in AGENTS.md.
 ---
 
 # Revisar un PR

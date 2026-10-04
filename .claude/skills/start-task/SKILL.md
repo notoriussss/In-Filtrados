@@ -11,6 +11,6 @@ description: Use when starting or finishing a task from docs/tasks.md (ids like 
 4. **Implementa solo lo que pide la tarea**, en la carpeta de su servicio. Si necesitas cambiar un contrato compartido, para y usa la skill `change-contract`.
 5. **Verifica** con el comando de la carpeta (tabla "Comandos por servicio" de `AGENTS.md`) y luego con el criterio de verificación de la tarea tal como está escrito. Si hay lógica (un `if`, un ciclo o un cálculo), deja al menos una prueba automática.
 6. **Comprueba el sistema completo:** `docker compose up --build` y que `docker compose ps` muestre todo `running` o `healthy`.
-7. **Abre el PR** con la plantilla, el id en el título (`S1-08: room goroutine with ticker`) y pide revisión al revisor de esa carpeta esta semana (`docs/team-plan.md`, sección 2).
+7. **Abre el PR** con la plantilla, el id en el título (`S1-08: room goroutine with ticker`) y pide revisión a otra persona del equipo.
 
 No marques la tarea como lista si algún paso del criterio de verificación no se corrió; di cuál falta.
