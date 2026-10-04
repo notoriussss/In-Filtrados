@@ -214,7 +214,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 **Pasos:**
 1. Servicios: `web`, `gateway`, `match`, `players`, `monitor`, `match-db`, `players-db` y `rabbitmq` (imagen `rabbitmq:3-management`), con los puertos de la sección 0.1.
-2. `match` y `players` se construyen con `context: .` (la raíz) y `dockerfile: match/Dockerfile`, porque necesitan `proto/` y `shared/`.
+2. **Todos** los servicios se construyen con `context: .` (la raíz) y `dockerfile: <servicio>/Dockerfile`, porque necesitan `proto/`, `messages/` o `shared/`. El CD de GitHub Actions construye las imágenes igual.
 3. Cada base de datos con su propio volumen (`match-db-data`, `players-db-data`) y `healthcheck` con `pg_isready`.
 4. `depends_on` con `condition: service_healthy` hacia la base de datos y RabbitMQ.
 5. `.env.example` con todas las variables: `MATCH_DB_URL`, `PLAYERS_DB_URL`, `RABBITMQ_URL`, `MATCH_GRPC_ADDR=match:50051`, `PLAYERS_GRPC_ADDR=players:50052`, `MAP_PATH=/app/shared/map.json`, y usuarios y contraseñas de Postgres y RabbitMQ.
