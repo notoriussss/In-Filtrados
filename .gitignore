@@ -12,6 +12,10 @@ __pycache__/
 # Secrets and local config
 .env
 lab.env
+# Binaries
+*.exe
+match/match
+
 # Editors and OS
 .vscode/
 .idea/
