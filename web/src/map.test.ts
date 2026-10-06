@@ -9,9 +9,9 @@ describe('shared/map.json', () => {
     expect(gameMap.height).toBe(1200);
   });
 
-  it('has the acequia ring plus the 7 zones of the game plan', () => {
+  it('has the stream ring plus the 7 zones of the game plan', () => {
     expect(gameMap.zones.map((z) => z.id)).toEqual([
-      'acequia',
+      'stream',
       'reservoir',
       'rooftops',
       'plaza',

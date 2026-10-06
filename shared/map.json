@@ -11,7 +11,7 @@
     { "x": 850, "y": 640, "w": 630, "h": 40 }
   ],
   "zones": [
-    { "id": "acequia", "name": "Acequia", "x": 0, "y": 0, "w": 1600, "h": 1200, "color": "#9cc8e0" },
+    { "id": "stream", "name": "Arroyo", "x": 0, "y": 0, "w": 1600, "h": 1200, "color": "#9cc8e0" },
     { "id": "reservoir", "name": "Embalse comunitario", "x": 600, "y": 120, "w": 400, "h": 200, "color": "#5b9bd0" },
     { "id": "rooftops", "name": "Techos con barriles", "x": 120, "y": 280, "w": 380, "h": 340, "color": "#c29a74" },
     { "id": "plaza", "name": "Plaza central", "x": 650, "y": 360, "w": 300, "h": 260, "color": "#d9c27a" },
