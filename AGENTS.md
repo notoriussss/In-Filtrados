@@ -44,8 +44,9 @@ Puertos: `docs/tasks.md` 0.1. Despliegue en 5 laptops: `docs/deployment-lab.md`.
 
 ## CI/CD
 
-- **CI** (`.github/workflows/ci.yml`): en cada PR y en cada push a `develop` y a `main`, corre los comandos de la tabla anterior solo para lo que cambió. Un cambio en `proto/`, `shared/` o en el propio `ci.yml` corre `match`, `players` y el job de Node. Un servicio que todavía no tiene proyecto (`go.mod`, `Cargo.toml` o `pyproject.toml`) se salta.
-- **CD** (`.github/workflows/cd.yml`): apagado mientras Docker está pospuesto (pedido del profesor). Solo se puede lanzar a mano y no publica nada. Cuando vuelva Docker, se recupera la publicación de imágenes desde el commit f6b3ed1.
+- **CI** (`.github/workflows/ci.yml`): en cada PR y en cada push a `develop` y a `main`, corre los comandos de la tabla anterior solo para lo que cambió. Un cambio en `proto/`, `shared/` o en el propio `ci.yml` corre `match`, `players` y el job de Node. Un servicio que todavía no tiene proyecto (`go.mod`, `Cargo.toml` o `pyproject.toml`) se salta. El job `compose` corre `docker compose build` siempre que exista `docker-compose.yml`.
+- **CD** (`.github/workflows/cd.yml`): cuando el CI de `main` sale en verde, publica una imagen por servicio en `ghcr.io/<dueño-del-repo>/in-filtrados-<servicio>` con las etiquetas `latest` y el SHA del commit. Las laptops del laboratorio solo hacen `docker compose pull && docker compose up -d`.
+- Todos los `Dockerfile` se construyen con la raíz del repo como contexto: `docker build -f match/Dockerfile .`.
 
 ## Flujo de trabajo
 
