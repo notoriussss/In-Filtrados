@@ -3,15 +3,21 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, develop]
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# dorny/paths-filter reads the PR's changed files through the API; without
+# pull-requests: read it fails with "Resource not accessible by integration".
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
-  # Decides which services to check: the folder changed (or a shared contract did)
-  # and the project already exists. Services that are not scaffolded yet are skipped.
+  # Decides which services to check: the folder changed (or a shared contract or this
+  # workflow did) and the project already exists. Services not scaffolded yet are skipped.
   changes:
     runs-on: ubuntu-latest
     outputs:
@@ -19,14 +25,13 @@ jobs:
       players: ${{ steps.exists.outputs.players }}
       node: ${{ steps.exists.outputs.node }}
       monitor: ${{ steps.exists.outputs.monitor }}
-      compose: ${{ steps.exists.outputs.compose }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
         id: filter
         with:
           filters: |
-            contracts: ['proto/**', 'shared/**']
+            contracts: ['proto/**', 'shared/**', '.github/workflows/ci.yml']
             match: ['match/**']
             players: ['players/**']
             node: ['web/**', 'gateway/**', 'messages/**', 'package.json', 'package-lock.json']
@@ -45,7 +50,6 @@ jobs:
           echo "players=$(run "$(either "$PLAYERS" "$CONTRACTS")" players/Cargo.toml)" >> "$GITHUB_OUTPUT"
           echo "node=$(run "$(either "$NODE" "$CONTRACTS")" package.json)" >> "$GITHUB_OUTPUT"
           echo "monitor=$(run "$MONITOR" monitor/pyproject.toml)" >> "$GITHUB_OUTPUT"
-          echo "compose=$(run true docker-compose.yml)" >> "$GITHUB_OUTPUT"
 
   match:
     needs: changes
@@ -117,13 +121,3 @@ jobs:
       - run: pip install -e .[dev]
       - run: ruff check
       - run: pytest
-
-  # Every image must still build, whatever changed.
-  compose:
-    needs: changes
-    if: needs.changes.outputs.compose == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: cp .env.example .env
-      - run: docker compose build

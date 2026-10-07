@@ -44,16 +44,15 @@ Puertos: `docs/tasks.md` 0.1. Despliegue en 5 laptops: `docs/deployment-lab.md`.
 
 ## CI/CD
 
-- **CI** (`.github/workflows/ci.yml`): en cada PR y en cada push a `main`, corre los comandos de la tabla anterior solo para lo que cambió. Un cambio en `proto/` o `shared/` corre `match`, `players` y el job de Node. Un servicio que todavía no tiene proyecto (`go.mod`, `Cargo.toml` o `pyproject.toml`) se salta. El job `compose` corre `docker compose build` siempre que exista `docker-compose.yml`.
-- **CD** (`.github/workflows/cd.yml`): cuando el CI de `main` sale en verde, publica una imagen por servicio en `ghcr.io/<dueño-del-repo>/bajo-la-superficie-<servicio>` con las etiquetas `latest` y el SHA del commit. Las laptops del laboratorio solo hacen `docker compose pull && docker compose up -d`.
-- Todos los `Dockerfile` se construyen con la raíz del repo como contexto: `docker build -f match/Dockerfile .`.
+- **CI** (`.github/workflows/ci.yml`): en cada PR y en cada push a `develop` y a `main`, corre los comandos de la tabla anterior solo para lo que cambió. Un cambio en `proto/`, `shared/` o en el propio `ci.yml` corre `match`, `players` y el job de Node. Un servicio que todavía no tiene proyecto (`go.mod`, `Cargo.toml` o `pyproject.toml`) se salta.
+- **CD** (`.github/workflows/cd.yml`): apagado mientras Docker está pospuesto (pedido del profesor). Solo se puede lanzar a mano y no publica nada. Cuando vuelva Docker, se recupera la publicación de imágenes desde el commit f6b3ed1.
 
 ## Flujo de trabajo
 
 - Rama por tarea con su id: `feat/S1-08-room-loop`, `fix/S2-03-vote-timeout`. Commits pequeños en inglés.
 - **Ninguna carpeta tiene dueño:** todos trabajan en todo. Cualquiera puede tomar cualquier tarea y revisar cualquier PR.
-- PR hacia `main` con la plantilla, revisado por al menos otra persona del equipo y con CI en verde.
-- "Listo" significa lo de `docs/tasks.md` 0.8: en `main` por PR, al menos una prueba si hay lógica, `docker compose up --build` sigue funcionando y docs actualizados si cambió un acuerdo.
+- PR hacia `develop` (la rama de trabajo) con la plantilla, revisado por al menos otra persona del equipo y con CI en verde.
+- "Listo" significa lo de `docs/tasks.md` 0.8: en `develop` por PR, al menos una prueba si hay lógica, `docker compose up --build` sigue funcionando y docs actualizados si cambió un acuerdo.
 - No agregues dependencias, servicios ni patrones que no estén en `docs/architecture.md` sin hablarlo con el equipo.
 
 ## Skills del repo
