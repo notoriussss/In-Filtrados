@@ -1,4 +1,4 @@
-use axum::{http::StatusCode, response::IntoResponse, Json};
+use axum::{http::StatusCode, Json};
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, env, time::Duration};
 use tokio::net::TcpStream;
@@ -72,10 +72,7 @@ pub fn build_health_response(
     (status_code, response)
 }
 
-pub async fn health_handler() -> impl IntoResponse {
-    let rabbit_url = env::var("RABBITMQ_URL")
-        .unwrap_or_else(|_| "amqp://guest:guest@localhost:5672/".to_string());
-
+pub async fn health_handler() -> (StatusCode, Json<HealthResponse>) {
     let db_future = async {
         match env::var("PLAYERS_DB_URL") {
             Ok(url) => check_tcp(&url).await,
@@ -83,7 +80,14 @@ pub async fn health_handler() -> impl IntoResponse {
         }
     };
 
-    let (db_res, rabbit_res) = tokio::join!(db_future, check_tcp(&rabbit_url));
+    let rabbit_future = async {
+        match env::var("RABBITMQ_URL") {
+            Ok(url) => check_tcp(&url).await,
+            Err(_) => Err("fail: RABBITMQ_URL not set".to_string()),
+        }
+    };
+
+    let (db_res, rabbit_res) = tokio::join!(db_future, rabbit_future);
     let (status_code, response) = build_health_response(db_res, rabbit_res);
 
     (status_code, Json(response))
@@ -136,16 +140,18 @@ mod tests {
     #[tokio::test]
     async fn test_health_handler_missing_env() {
         env::remove_var("PLAYERS_DB_URL");
-        let db_res = match env::var("PLAYERS_DB_URL") {
-            Ok(url) => check_tcp(&url).await,
-            Err(_) => Err("fail: PLAYERS_DB_URL not set".to_string()),
-        };
-        let (status_code, response) = build_health_response(db_res, Ok(()));
+        env::remove_var("RABBITMQ_URL");
+        let (status_code, Json(response)) = health_handler().await;
         assert_eq!(status_code, StatusCode::SERVICE_UNAVAILABLE);
         assert_eq!(response.status, "degraded");
+        assert_eq!(response.service, "players");
         assert_eq!(
             response.checks.get("db").unwrap(),
             "fail: PLAYERS_DB_URL not set"
+        );
+        assert_eq!(
+            response.checks.get("rabbitmq").unwrap(),
+            "fail: RABBITMQ_URL not set"
         );
     }
 }
