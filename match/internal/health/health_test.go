@@ -69,3 +69,19 @@ func TestHealthHandler_StatusDegraded(t *testing.T) {
 		t.Errorf("unexpected db check value: %s", resp.Checks["db"])
 	}
 }
+
+func TestDefaultChecker_MissingEnv(t *testing.T) {
+	t.Setenv("MATCH_DB_URL", "")
+	t.Setenv("RABBITMQ_URL", "")
+
+	checker := &DefaultChecker{}
+	ctx := context.Background()
+
+	if err := checker.CheckDB(ctx); err == nil || err.Error() != "MATCH_DB_URL not set" {
+		t.Errorf("expected MATCH_DB_URL not set error, got: %v", err)
+	}
+
+	if err := checker.CheckRabbitMQ(ctx); err == nil || err.Error() != "RABBITMQ_URL not set" {
+		t.Errorf("expected RABBITMQ_URL not set error, got: %v", err)
+	}
+}

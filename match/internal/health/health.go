@@ -37,7 +37,7 @@ func (c *DefaultChecker) CheckDB(ctx context.Context) error {
 func (c *DefaultChecker) CheckRabbitMQ(ctx context.Context) error {
 	rabbitUrl := os.Getenv("RABBITMQ_URL")
 	if rabbitUrl == "" {
-		rabbitUrl = "amqp://guest:guest@localhost:5672/"
+		return fmt.Errorf("RABBITMQ_URL not set")
 	}
 	hostPort := extractHostPort(rabbitUrl, "localhost:5672")
 	return pingTCP(ctx, hostPort)
@@ -61,6 +61,9 @@ func extractHostPort(rawUrl, defaultAddr string) string {
 		return defaultAddr
 	}
 	if !strings.Contains(s, ":") {
+		if idx := strings.LastIndex(defaultAddr, ":"); idx != -1 {
+			return s + defaultAddr[idx:]
+		}
 		return s + ":5432"
 	}
 	return s
