@@ -233,7 +233,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 **Pasos:**
 1. Crear el proyecto con Vite (plantilla `vanilla-ts`), sin frameworks de juego.
-2. Escribir `shared/map.json` con el formato de la sección 0.3: las 7 zonas del plan del juego, el canal con 3 puentes como paredes con huecos, la acequia en anillo y los 5 lugares de tanques en el huerto.
+2. Escribir `shared/map.json` con el formato de la sección 0.3: las 7 zonas del plan del juego, el canal con 3 puentes como paredes con huecos, el arroyo en anillo y los 5 lugares de tanques en el huerto.
 3. `renderMap(ctx, map, camera)`: zonas como rectángulos de color con su nombre, paredes en gris oscuro y estaciones y tanques como círculos.
 4. `camera.ts`: la cámara sigue a un punto y convierte coordenadas del mundo a pantalla. Por ahora sigue al centro del mapa y se mueve con las flechas, solo para probar.
 5. `nginx.conf`: servir `dist/` y reenviar `/api/` y `/ws` a `gateway:3000`, este último con los encabezados de WebSocket (`Upgrade` y `Connection`).
