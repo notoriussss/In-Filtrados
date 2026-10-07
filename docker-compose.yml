@@ -1,0 +1,9 @@
+# Only web for now (S1-04); S1-03 adds the rest of the services.
+services:
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+    ports:
+      - "8080:80"
+    restart: unless-stopped
