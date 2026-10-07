@@ -1,6 +1,6 @@
 syntax = "proto3";
 package match.v1;
-option go_package = "github.com/notoriussss/bajo-la-superficie/match/gen/matchv1";
+option go_package = "github.com/notoriussss/in-filtrados/match/gen/matchv1";
 
 service Match {
   rpc CreateRoom(CreateRoomRequest) returns (Room);

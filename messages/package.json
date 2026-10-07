@@ -1,5 +1,5 @@
 {
-  "name": "@bajo-la-superficie/messages",
+  "name": "@in-filtrados/messages",
   "version": "0.0.0",
   "private": true,
   "description": "WebSocket message types shared by web and gateway",

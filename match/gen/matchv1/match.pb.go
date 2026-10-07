@@ -772,7 +772,7 @@ const file_match_proto_rawDesc = "" +
 	"\n" +
 	"CreateRoom\x12\x1b.match.v1.CreateRoomRequest\x1a\x0e.match.v1.Room\x125\n" +
 	"\bJoinRoom\x12\x19.match.v1.JoinRoomRequest\x1a\x0e.match.v1.Room\x129\n" +
-	"\x04Play\x12\x16.match.v1.ClientAction\x1a\x15.match.v1.ServerEvent(\x010\x01B=Z;github.com/notoriussss/bajo-la-superficie/match/gen/matchv1b\x06proto3"
+	"\x04Play\x12\x16.match.v1.ClientAction\x1a\x15.match.v1.ServerEvent(\x010\x01B7Z5github.com/notoriussss/in-filtrados/match/gen/matchv1b\x06proto3"
 
 var (
 	file_match_proto_rawDescOnce sync.Once

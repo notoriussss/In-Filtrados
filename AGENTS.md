@@ -4,12 +4,12 @@ Guía para cualquier persona o asistente de IA (Claude Code, Codex, Copilot, Cur
 
 ## El proyecto
 
-**Bajo la Superficie**: juego multijugador tipo Among Us sobre las 3R aplicadas al agua, para la materia Computación en la Nube. Equipo de 5, entrega alrededor del 24 de octubre de 2026.
+**In-Filtrados**: juego multijugador tipo Among Us sobre las 3R aplicadas al agua, para la materia Computación en la Nube. Equipo de 5, entrega alrededor del 24 de octubre de 2026.
 El *porqué* de todo está en `docs/architecture.md`; el *cómo* de cada tarea, en `docs/tasks.md`. Si este archivo y los docs no coinciden, mandan los docs y se corrige este archivo.
 
 ## Reglas que no se rompen
 
-1. **Idioma:** solo el código va en inglés (carpetas, archivos, variables, tablas, eventos, mensajes gRPC, códigos de error, commits). La excepción es el nombre del proyecto, que va en español: `bajo-la-superficie`. **Todo lo que ve el jugador va en español:** el título del juego (*Bajo la Superficie*), los textos de la interfaz, los avisos y los mensajes de error que se muestran. La documentación y los comentarios para el equipo también van en español, con los nombres de código tal cual.
+1. **Idioma:** solo el código va en inglés (carpetas, archivos, variables, tablas, eventos, mensajes gRPC, códigos de error, commits). La excepción es el nombre del proyecto, que va en español: `in-filtrados`. **Todo lo que ve el jugador va en español:** el título del juego (*In-Filtrados*), los textos de la interfaz, los avisos y los mensajes de error que se muestran. La documentación y los comentarios para el equipo también van en español, con los nombres de código tal cual.
 2. **El servidor manda.** `match` es la única autoridad del estado de la partida. `web` solo manda intenciones (dirección, acción) y dibuja lo que recibe. Nunca muevas lógica del juego al navegador.
 3. **Database per Service.** `match` solo habla con `match-db` y `players` solo con `players-db`. Ningún servicio lee la base de otro: los datos se piden por gRPC o se escuchan como eventos.
 4. **Contratos en un solo lugar.** gRPC en `proto/`, mensajes WebSocket en `messages/src/index.ts`, mapa en `shared/map.json`, eventos en `docs/tasks.md` 0.7. Nunca copies estos tipos dentro de un servicio. Para cambiarlos, usa la skill `change-contract`.

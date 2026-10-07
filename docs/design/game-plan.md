@@ -1,6 +1,6 @@
-# Bajo la Superficie — plan del proyecto
+# In-Filtrados — plan del proyecto
 
-**Bajo la Superficie** es un juego multijugador tipo Among Us con farmeo, sobre las 3R (Reducir, Reutilizar, Reciclar) aplicadas al **agua**.
+**In-Filtrados** es un juego multijugador tipo Among Us con farmeo, sobre las 3R (Reducir, Reutilizar, Reciclar) aplicadas al **agua**.
 Proyecto de Computación en la Nube, equipo de 5 personas.
 
 > Estado: ideas en discusión, todavía sin código. El juego recoge lo que el equipo ha ido eligiendo; la arquitectura, los lenguajes y el reparto son una **propuesta** que falta confirmar.
