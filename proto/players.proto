@@ -1,6 +1,6 @@
 syntax = "proto3";
 package players.v1;
-option go_package = "github.com/notoriussss/bajo-la-superficie/players/gen/playersv1";
+option go_package = "github.com/notoriussss/in-filtrados/players/gen/playersv1";
 
 service Players {
   rpc Register(RegisterRequest)       returns (Player);

@@ -1,4 +1,4 @@
-# Bajo la Superficie: despliegue en la red del laboratorio
+# In-Filtrados: despliegue en la red del laboratorio
 
 Complementa a `architecture.md`. Ese documento describe **qué** hace cada servicio; este describe **dónde** corre cada uno y **cómo** se conectan las máquinas en el laboratorio.
 Fecha: 4 de octubre de 2026 (revisión 2).

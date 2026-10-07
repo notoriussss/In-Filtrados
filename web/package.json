@@ -11,7 +11,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@bajo-la-superficie/messages": "*"
+    "@in-filtrados/messages": "*"
   },
   "devDependencies": {
     "typescript": "^7.0.2",

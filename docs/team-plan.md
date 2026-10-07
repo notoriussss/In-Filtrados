@@ -1,4 +1,4 @@
-# Bajo la Superficie: plan del equipo (3 semanas)
+# In-Filtrados: plan del equipo (3 semanas)
 
 Cómo se organizan 5 personas que van a tocar todo el proyecto, con **3 semanas** para terminar.
 Se apoya en `architecture.md`: los nombres de carpetas, eventos y contratos son los de ese documento.

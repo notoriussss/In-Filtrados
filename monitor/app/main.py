@@ -1,6 +1,6 @@
 from fastapi import FastAPI, status
 
-app = FastAPI(title="Bajo la Superficie - Monitor Service")
+app = FastAPI(title="In-Filtrados - Monitor Service")
 
 
 @app.get("/health", status_code=status.HTTP_200_OK)

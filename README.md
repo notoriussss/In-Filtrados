@@ -1,4 +1,4 @@
-# Bajo la Superficie
+# In-Filtrados
 
 Juego multijugador tipo Among Us sobre las 3R (Reducir, Reutilizar, Reciclar) aplicadas al **agua**: una granja comunitaria en sequía donde uno de los jugadores, el Contaminador, ensucia el agua de los demás en secreto.
 Proyecto de Computación en la Nube (equipo de 5). Entrega alrededor del 24 de octubre de 2026.
@@ -13,7 +13,7 @@ Proyecto de Computación en la Nube (equipo de 5). Entrega alrededor del 24 de o
 | `players/` | Rust | Cuentas, monedas y progreso |
 | `monitor/` | Python (FastAPI) | `/health` de todos, eventos y panel |
 | `proto/` | Protobuf | Contratos gRPC compartidos |
-| `messages/` | TypeScript | Tipos de los mensajes WebSocket (`@bajo-la-superficie/messages`) |
+| `messages/` | TypeScript | Tipos de los mensajes WebSocket (`@in-filtrados/messages`) |
 | `shared/` | JSON | `map.json`, usado por `match` y `web` |
 
 Middleware: gRPC entre servicios y RabbitMQ para eventos. Dos PostgreSQL, uno por cada servicio con datos.
