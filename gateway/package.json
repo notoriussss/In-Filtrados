@@ -6,7 +6,7 @@
     "build": "tsc",
     "start": "ts-node src/main.ts",
     "start:dev": "ts-node-dev src/main.ts",
-    "lint": "echo \"linting gateway...\"",
+    "lint": "tsc --noEmit",
     "test": "echo \"testing gateway...\""
   },
   "dependencies": {

@@ -1,14 +1,10 @@
-use axum::{
-    http::StatusCode,
-    response::IntoResponse,
-    Json,
-};
-use serde::Serialize;
+use axum::{http::StatusCode, response::IntoResponse, Json};
+use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, env, time::Duration};
 use tokio::net::TcpStream;
 use tokio::time::timeout;
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct HealthResponse {
     pub status: String,
     pub service: String,
@@ -39,23 +35,16 @@ fn extract_host_port(raw_url: &str) -> String {
         s = &s[..pos];
     }
     if !s.contains(':') {
-        format!("{}:5434", s)
+        format!("{}:5432", s)
     } else {
         s.to_string()
     }
 }
 
-pub async fn health_handler() -> impl IntoResponse {
-    let db_url = env::var("PLAYERS_DB_URL")
-        .unwrap_or_else(|_| "postgres://postgres:postgres@localhost:5434/players_db".to_string());
-    let rabbit_url = env::var("RABBITMQ_URL")
-        .unwrap_or_else(|_| "amqp://guest:guest@localhost:5672/".to_string());
-
-    let (db_res, rabbit_res) = tokio::join!(
-        check_tcp(&db_url),
-        check_tcp(&rabbit_url)
-    );
-
+pub fn build_health_response(
+    db_res: Result<(), String>,
+    rabbit_res: Result<(), String>,
+) -> (StatusCode, HealthResponse) {
     let mut checks = HashMap::new();
     checks.insert(
         "db".to_string(),
@@ -80,5 +69,83 @@ pub async fn health_handler() -> impl IntoResponse {
         checks,
     };
 
+    (status_code, response)
+}
+
+pub async fn health_handler() -> impl IntoResponse {
+    let rabbit_url = env::var("RABBITMQ_URL")
+        .unwrap_or_else(|_| "amqp://guest:guest@localhost:5672/".to_string());
+
+    let db_future = async {
+        match env::var("PLAYERS_DB_URL") {
+            Ok(url) => check_tcp(&url).await,
+            Err(_) => Err("fail: PLAYERS_DB_URL not set".to_string()),
+        }
+    };
+
+    let (db_res, rabbit_res) = tokio::join!(db_future, check_tcp(&rabbit_url));
+    let (status_code, response) = build_health_response(db_res, rabbit_res);
+
     (status_code, Json(response))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_extract_host_port() {
+        assert_eq!(
+            extract_host_port("postgres://user:pass@localhost:5432/players_db"),
+            "localhost:5432"
+        );
+        assert_eq!(
+            extract_host_port("postgres://user:pass@db-host/players_db"),
+            "db-host:5432"
+        );
+        assert_eq!(
+            extract_host_port("amqp://guest:guest@localhost:5672/"),
+            "localhost:5672"
+        );
+    }
+
+    #[test]
+    fn test_build_health_response_ok() {
+        let (status_code, response) = build_health_response(Ok(()), Ok(()));
+        assert_eq!(status_code, StatusCode::OK);
+        assert_eq!(response.status, "ok");
+        assert_eq!(response.service, "players");
+        assert_eq!(response.checks.get("db").unwrap(), "ok");
+        assert_eq!(response.checks.get("rabbitmq").unwrap(), "ok");
+    }
+
+    #[test]
+    fn test_build_health_response_degraded() {
+        let (status_code, response) =
+            build_health_response(Err("fail: connection refused".to_string()), Ok(()));
+        assert_eq!(status_code, StatusCode::SERVICE_UNAVAILABLE);
+        assert_eq!(response.status, "degraded");
+        assert_eq!(response.service, "players");
+        assert_eq!(
+            response.checks.get("db").unwrap(),
+            "fail: connection refused"
+        );
+        assert_eq!(response.checks.get("rabbitmq").unwrap(), "ok");
+    }
+
+    #[tokio::test]
+    async fn test_health_handler_missing_env() {
+        env::remove_var("PLAYERS_DB_URL");
+        let db_res = match env::var("PLAYERS_DB_URL") {
+            Ok(url) => check_tcp(&url).await,
+            Err(_) => Err("fail: PLAYERS_DB_URL not set".to_string()),
+        };
+        let (status_code, response) = build_health_response(db_res, Ok(()));
+        assert_eq!(status_code, StatusCode::SERVICE_UNAVAILABLE);
+        assert_eq!(response.status, "degraded");
+        assert_eq!(
+            response.checks.get("db").unwrap(),
+            "fail: PLAYERS_DB_URL not set"
+        );
+    }
 }

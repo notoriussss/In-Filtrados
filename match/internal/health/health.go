@@ -28,9 +28,9 @@ type DefaultChecker struct{}
 func (c *DefaultChecker) CheckDB(ctx context.Context) error {
 	dbUrl := os.Getenv("MATCH_DB_URL")
 	if dbUrl == "" {
-		dbUrl = "postgres://postgres:postgres@localhost:5433/match_db?sslmode=disable"
+		return fmt.Errorf("MATCH_DB_URL not set")
 	}
-	hostPort := extractHostPort(dbUrl, "localhost:5433")
+	hostPort := extractHostPort(dbUrl, "localhost:5432")
 	return pingTCP(ctx, hostPort)
 }
 
