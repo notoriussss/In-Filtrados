@@ -47,6 +47,17 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - |
+        if [ ! -f /var/lib/rabbitmq/.erlang.cookie ]; then
+          umask 077
+          head -c 32 /dev/urandom | base64 > /var/lib/rabbitmq/.erlang.cookie
+        fi
+        chown rabbitmq:rabbitmq /var/lib/rabbitmq/.erlang.cookie
+        chmod 600 /var/lib/rabbitmq/.erlang.cookie
+        exec /usr/local/bin/docker-entrypoint.sh rabbitmq-server
     healthcheck:
       test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
       interval: 10s
