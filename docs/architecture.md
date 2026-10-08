@@ -1,4 +1,4 @@
-# Bajo la Superficie: decisiones de arquitectura
+# In-Filtrados: decisiones de arquitectura
 
 Juego estilo Among Us sobre el agua y las 3R. Equipo de 5 personas.
 Fundamento: clases CEN-02, CEN-03 y CEN-04 (Introducción a los Sistemas Distribuidos).
@@ -297,7 +297,7 @@ Si al equipo del servidor se le quita la red pero no se apaga, Go, Rust y las ba
 Un solo repositorio con una carpeta por servicio. Cada carpeta es independiente: tiene su propio `Dockerfile`, sus dependencias y sus pruebas, así que sigue siendo microservicios aunque viva en un repo.
 
 ```
-bajo-la-superficie/
+in-filtrados/
 ├── proto/                      contratos gRPC, la única fuente de verdad
 │   ├── match.proto
 │   └── players.proto

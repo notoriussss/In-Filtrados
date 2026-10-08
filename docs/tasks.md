@@ -1,4 +1,4 @@
-# Bajo la Superficie: tareas detalladas
+# In-Filtrados: tareas detalladas
 
 Cada tarea dice **qué archivos tocar, qué construir paso a paso y cómo se verifica que está terminada**.
 Complementa a `team-plan.md` (cómo se organiza el equipo y cuándo) y a `architecture.md` (por qué).
@@ -140,14 +140,14 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 **Por qué:** todos necesitan clonar lo mismo el sábado en la tarde para empezar en paralelo.
 
 **Pasos:**
-1. Crear el repo `bajo-la-superficie` en GitHub e invitar a los 5. Proteger `main`: PR obligatorio, 1 aprobación y CI en verde.
+1. Crear el repo `in-filtrados` en GitHub e invitar a los 5. Proteger `main`: PR obligatorio, 1 aprobación y CI en verde.
 2. Crear todas las carpetas de `architecture.md` sección 7, más `shared/`. Cada carpeta de servicio lleva un `README.md` de 3 líneas: qué es y cómo correrlo solo. Ninguna carpeta tiene dueño.
-3. `package.json` en la raíz con `"workspaces": ["web", "gateway", "messages"]` y el paquete `messages` llamado `@bajo-la-superficie/messages`, con `src/index.ts` exportando los tipos de la sección 0.5.
+3. `package.json` en la raíz con `"workspaces": ["web", "gateway", "messages"]` y el paquete `messages` llamado `@in-filtrados/messages`, con `src/index.ts` exportando los tipos de la sección 0.5.
 4. `.gitignore` para Node, Go, Rust y Python (`node_modules/`, `target/`, `__pycache__/`, `.env`).
 5. `.github/pull_request_template.md` con la lista de "Listo" de la sección 0.8.
 6. `README.md` raíz con: requisitos (Docker, Node 20, Go 1.22, Rust estable, Python 3.12), `cp .env.example .env` y `docker compose up --build`.
 
-**Criterio de verificación:** cualquier persona del equipo clona el repo en una máquina limpia, corre `npm install` en la raíz sin errores y puede importar `@bajo-la-superficie/messages` desde `gateway/` y `web/`. Un push directo a `main` es rechazado por GitHub.
+**Criterio de verificación:** cualquier persona del equipo clona el repo en una máquina limpia, corre `npm install` en la raíz sin errores y puede importar `@in-filtrados/messages` desde `gateway/` y `web/`. Un push directo a `main` es rechazado por GitHub.
 
 ---
 
@@ -162,7 +162,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
    ```proto
    syntax = "proto3";
    package match.v1;
-   option go_package = "github.com/<org>/bajo-la-superficie/match/gen/matchv1";
+   option go_package = "github.com/<org>/in-filtrados/match/gen/matchv1";
 
    service Match {
      rpc CreateRoom(CreateRoomRequest) returns (Room);
@@ -233,7 +233,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 **Pasos:**
 1. Crear el proyecto con Vite (plantilla `vanilla-ts`), sin frameworks de juego.
-2. Escribir `shared/map.json` con el formato de la sección 0.3: las 7 zonas del plan del juego, el canal con 3 puentes como paredes con huecos, la acequia en anillo y los 5 lugares de tanques en el huerto.
+2. Escribir `shared/map.json` con el formato de la sección 0.3: las 7 zonas del plan del juego, el canal con 3 puentes como paredes con huecos, el arroyo en anillo y los 5 lugares de tanques en el huerto.
 3. `renderMap(ctx, map, camera)`: zonas como rectángulos de color con su nombre, paredes en gris oscuro y estaciones y tanques como círculos.
 4. `camera.ts`: la cámara sigue a un punto y convierte coordenadas del mundo a pantalla. Por ahora sigue al centro del mapa y se mueve con las flechas, solo para probar.
 5. `nginx.conf`: servir `dist/` y reenviar `/api/` y `/ws` a `gateway:3000`, este último con los encabezados de WebSocket (`Upgrade` y `Connection`).

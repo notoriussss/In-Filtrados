@@ -9,9 +9,14 @@ __pycache__/
 .venv/
 .pytest_cache/
 .ruff_cache/
+*.egg-info/
 # Secrets and local config
 .env
 lab.env
+# Binaries
+*.exe
+match/match
+
 # Editors and OS
 .vscode/
 .idea/

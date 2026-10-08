@@ -4,12 +4,12 @@ Guía para cualquier persona o asistente de IA (Claude Code, Codex, Copilot, Cur
 
 ## El proyecto
 
-**Bajo la Superficie**: juego multijugador tipo Among Us sobre las 3R aplicadas al agua, para la materia Computación en la Nube. Equipo de 5, entrega alrededor del 24 de octubre de 2026.
+**In-Filtrados**: juego multijugador tipo Among Us sobre las 3R aplicadas al agua, para la materia Computación en la Nube. Equipo de 5, entrega alrededor del 24 de octubre de 2026.
 El *porqué* de todo está en `docs/architecture.md`; el *cómo* de cada tarea, en `docs/tasks.md`. Si este archivo y los docs no coinciden, mandan los docs y se corrige este archivo.
 
 ## Reglas que no se rompen
 
-1. **Idioma:** solo el código va en inglés (carpetas, archivos, variables, tablas, eventos, mensajes gRPC, códigos de error, commits). La excepción es el nombre del proyecto, que va en español: `bajo-la-superficie`. **Todo lo que ve el jugador va en español:** el título del juego (*Bajo la Superficie*), los textos de la interfaz, los avisos y los mensajes de error que se muestran. La documentación y los comentarios para el equipo también van en español, con los nombres de código tal cual.
+1. **Idioma:** solo el código va en inglés (carpetas, archivos, variables, tablas, eventos, mensajes gRPC, códigos de error, commits). La excepción es el nombre del proyecto, que va en español: `in-filtrados`. **Todo lo que ve el jugador va en español:** el título del juego (*In-Filtrados*), los textos de la interfaz, los avisos y los mensajes de error que se muestran. La documentación y los comentarios para el equipo también van en español, con los nombres de código tal cual.
 2. **El servidor manda.** `match` es la única autoridad del estado de la partida. `web` solo manda intenciones (dirección, acción) y dibuja lo que recibe. Nunca muevas lógica del juego al navegador.
 3. **Database per Service.** `match` solo habla con `match-db` y `players` solo con `players-db`. Ningún servicio lee la base de otro: los datos se piden por gRPC o se escuchan como eventos.
 4. **Contratos en un solo lugar.** gRPC en `proto/`, mensajes WebSocket en `messages/src/index.ts`, mapa en `shared/map.json`, eventos en `docs/tasks.md` 0.7. Nunca copies estos tipos dentro de un servicio. Para cambiarlos, usa la skill `change-contract`.
@@ -17,6 +17,8 @@ El *porqué* de todo está en `docs/architecture.md`; el *cómo* de cada tarea, 
 6. **Todo servicio expone `GET /health`** con el formato de `docs/tasks.md` 0.2: 200 o 503, `checks` por dependencia y timeout de 1 s por revisión.
 7. **Timeouts y reintentos** en toda llamada por red. El gateway envuelve sus clientes gRPC con Retry y Circuit Breaker.
 8. **Configuración por variables de entorno**, nunca IPs ni contraseñas en el código. Los valores de ejemplo van en `.env.example`; `.env` y `lab.env` no se suben.
+9. **Cero strings 'mágicos' en retornos y errores (Constantes dedicadas).** Todo código de error (`MATCH_NOT_FOUND`, `BAD_MESSAGE`, `SERVICE_UNAVAILABLE`) y todo mensaje retornado al cliente o usuario (`"La partida no existe"`, `"El servidor de la partida no responde"`, `"Falta el playerId"`, etc.) **DEBE definirse como constante en un archivo separado dedicado** dentro de cada servicio (por ejemplo, `messages.go`, `*.constants.ts`, `errors.rs`, etc.). Queda estrictamente prohibido hardcodear literales de string en las respuestas o eventos de error.
+10. **Estilo de programación multilínea obligatorio (Legibilidad en pantallas pequeñas).** En todos los lenguajes del repositorio (Go, TypeScript, Rust, Python), cualquier sentencia, firma de función, instanciación de objeto/struct o llamada encadenada que supere ~80 caracteres **DEBE dividirse en múltiples líneas** con sangría limpia y consistente. Evita líneas largas horizontales para que el código sea inmediatamente legible en pantallas pequeñas y vistas divididas de editor.
 
 ## Mapa del repo
 
@@ -44,16 +46,16 @@ Puertos: `docs/tasks.md` 0.1. Despliegue en 5 laptops: `docs/deployment-lab.md`.
 
 ## CI/CD
 
-- **CI** (`.github/workflows/ci.yml`): en cada PR y en cada push a `main`, corre los comandos de la tabla anterior solo para lo que cambió. Un cambio en `proto/` o `shared/` corre `match`, `players` y el job de Node. Un servicio que todavía no tiene proyecto (`go.mod`, `Cargo.toml` o `pyproject.toml`) se salta. El job `compose` corre `docker compose build` siempre que exista `docker-compose.yml`.
-- **CD** (`.github/workflows/cd.yml`): cuando el CI de `main` sale en verde, publica una imagen por servicio en `ghcr.io/<dueño-del-repo>/bajo-la-superficie-<servicio>` con las etiquetas `latest` y el SHA del commit. Las laptops del laboratorio solo hacen `docker compose pull && docker compose up -d`.
+- **CI** (`.github/workflows/ci.yml`): en cada PR y en cada push a `develop` y a `main`, corre los comandos de la tabla anterior solo para lo que cambió. Un cambio en `proto/`, `shared/` o en el propio `ci.yml` corre `match`, `players` y el job de Node. Un servicio que todavía no tiene proyecto (`go.mod`, `Cargo.toml` o `pyproject.toml`) se salta. El job `compose` corre `docker compose build` siempre que exista `docker-compose.yml`.
+- **CD** (`.github/workflows/cd.yml`): cuando el CI de `main` sale en verde, publica una imagen por servicio en `ghcr.io/<dueño-del-repo>/in-filtrados-<servicio>` con las etiquetas `latest` y el SHA del commit. Las laptops del laboratorio solo hacen `docker compose pull && docker compose up -d`.
 - Todos los `Dockerfile` se construyen con la raíz del repo como contexto: `docker build -f match/Dockerfile .`.
 
 ## Flujo de trabajo
 
 - Rama por tarea con su id: `feat/S1-08-room-loop`, `fix/S2-03-vote-timeout`. Commits pequeños en inglés.
 - **Ninguna carpeta tiene dueño:** todos trabajan en todo. Cualquiera puede tomar cualquier tarea y revisar cualquier PR.
-- PR hacia `main` con la plantilla, revisado por al menos otra persona del equipo y con CI en verde.
-- "Listo" significa lo de `docs/tasks.md` 0.8: en `main` por PR, al menos una prueba si hay lógica, `docker compose up --build` sigue funcionando y docs actualizados si cambió un acuerdo.
+- PR hacia `develop` (la rama de trabajo) con la plantilla, revisado por al menos otra persona del equipo y con CI en verde.
+- "Listo" significa lo de `docs/tasks.md` 0.8: en `develop` por PR, al menos una prueba si hay lógica, `docker compose up --build` sigue funcionando y docs actualizados si cambió un acuerdo.
 - No agregues dependencias, servicios ni patrones que no estén en `docs/architecture.md` sin hablarlo con el equipo.
 
 ## Skills del repo

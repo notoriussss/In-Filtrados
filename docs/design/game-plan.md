@@ -1,6 +1,6 @@
-# Bajo la Superficie — plan del proyecto
+# In-Filtrados — plan del proyecto
 
-**Bajo la Superficie** es un juego multijugador tipo Among Us con farmeo, sobre las 3R (Reducir, Reutilizar, Reciclar) aplicadas al **agua**.
+**In-Filtrados** es un juego multijugador tipo Among Us con farmeo, sobre las 3R (Reducir, Reutilizar, Reciclar) aplicadas al **agua**.
 Proyecto de Computación en la Nube, equipo de 5 personas.
 
 > Estado: ideas en discusión, todavía sin código. El juego recoge lo que el equipo ha ido eligiendo; la arquitectura, los lenguajes y el reparto son una **propuesta** que falta confirmar.
@@ -33,7 +33,7 @@ Seis zonas y una opcional. El huerto queda abajo y el agua arriba y a los lados,
 ~~~~ puente O ~~~~~ puente C ~~~~~ puente E ~~~~~   <- canal
 [ Cuarto de    ]   [  Huerto  ]   [ Lavadero     ]
 [ bombas       ]   [+invernad.]   [ (sábanas)    ]
-     una acequia rodea todo el mapa como un anillo
+     un arroyo rodea todo el mapa como un anillo
 ```
 
 | Zona | Ubicación | Qué pasa ahí | Emergencia |
@@ -49,7 +49,7 @@ Seis zonas y una opcional. El huerto queda abajo y el agua arriba y a los lados,
 
 ### Cómo se recorre el mapa (para que sea divertido, como el de Among Us)
 1. **Un canal con solo 3 puentes.** El canal parte el mapa en dos: el agua arriba y el huerto abajo. Todos tienen que cruzar por los puentes, así que ahí se ven y nacen las coartadas ("te vi en el puente norte"). Sabotaje: el impostor puede **cerrar una compuerta** y bloquear un puente durante un rato.
-2. **Pasillos en anillo, sin callejones sin salida.** Una acequia rodea el mapa y une todas las zonas en círculo, con un atajo por la plaza. Siempre hay dos caminos: se puede escapar, perseguir o dar la vuelta para no ser visto.
+2. **Pasillos en anillo, sin callejones sin salida.** Un arroyo rodea el mapa y une todas las zonas en círculo, con un atajo por la plaza. Siempre hay dos caminos: se puede escapar, perseguir o dar la vuelta para no ser visto.
 3. **Visión limitada.** Cada jugador solo ve un círculo a su alrededor. Sabotaje: **"¡vapor en la planta!"**, que reduce la visión de todos hasta que alguien lo arregla.
 4. **Salas que dan información.**
    - **Torre de agua** (junto a la plaza): desde arriba se ve el huerto en vivo, como las cámaras de Among Us.

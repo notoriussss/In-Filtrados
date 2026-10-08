@@ -1,0 +1,70 @@
+syntax = "proto3";
+package match.v1;
+option go_package = "github.com/notoriussss/in-filtrados/match/gen/matchv1";
+
+service Match {
+  rpc CreateRoom(CreateRoomRequest) returns (Room);
+  rpc JoinRoom(JoinRoomRequest) returns (Room);
+  rpc Play(stream ClientAction) returns (stream ServerEvent);
+}
+
+message CreateRoomRequest {
+  string player_id    = 1;
+  string display_name = 2;
+}
+message JoinRoomRequest {
+  string room_code    = 1;
+  string player_id    = 2;
+  string display_name = 3;
+}
+message Room {
+  string room_code = 1;
+  string match_id  = 2;
+}
+
+message ClientAction {
+  oneof action {
+    Join join = 1;
+    Move move = 2;
+  }
+}
+message Join {
+  string match_id   = 1;
+  string player_id  = 2;
+  int64  last_tick  = 3;
+}
+message Move {
+  int32 dx = 1;
+  int32 dy = 2;
+}
+
+message ServerEvent {
+  oneof event {
+    Snapshot snapshot = 1;
+    Error    error    = 2;
+  }
+}
+enum Phase {
+  LOBBY   = 0;
+  PLAYING = 1;
+  MEETING = 2;
+  ENDED   = 3;
+}
+message Snapshot {
+  int64              tick    = 1;
+  Phase              phase   = 2;
+  repeated PlayerView players = 3;
+}
+message PlayerView {
+  string id        = 1;
+  string name      = 2;
+  string color     = 3;
+  float  x         = 4;
+  float  y         = 5;
+  bool   connected = 6;
+  bool   alive     = 7;
+}
+message Error {
+  string code    = 1;
+  string message = 2;
+}

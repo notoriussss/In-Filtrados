@@ -3,15 +3,21 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, develop]
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# dorny/paths-filter reads the PR's changed files through the API; without
+# pull-requests: read it fails with "Resource not accessible by integration".
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
-  # Decides which services to check: the folder changed (or a shared contract did)
-  # and the project already exists. Services that are not scaffolded yet are skipped.
+  # Decides which services to check: the folder changed (or a shared contract or this
+  # workflow did) and the project already exists. Services not scaffolded yet are skipped.
   changes:
     runs-on: ubuntu-latest
     outputs:
@@ -26,7 +32,7 @@ jobs:
         id: filter
         with:
           filters: |
-            contracts: ['proto/**', 'shared/**']
+            contracts: ['proto/**', 'shared/**', '.github/workflows/ci.yml']
             match: ['match/**']
             players: ['players/**']
             node: ['web/**', 'gateway/**', 'messages/**', 'package.json', 'package-lock.json']

@@ -33,7 +33,7 @@ jobs:
         run: |
           if [ ! -f "${{ matrix.service }}/Dockerfile" ]; then echo "skip=true" >> "$GITHUB_OUTPUT"; exit 0; fi
           owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-          echo "name=ghcr.io/$owner/bajo-la-superficie-${{ matrix.service }}" >> "$GITHUB_OUTPUT"
+          echo "name=ghcr.io/$owner/in-filtrados-${{ matrix.service }}" >> "$GITHUB_OUTPUT"
       - if: steps.image.outputs.skip != 'true'
         uses: docker/login-action@v3
         with:
