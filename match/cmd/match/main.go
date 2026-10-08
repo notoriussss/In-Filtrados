@@ -34,7 +34,7 @@ func main() {
 		log.Fatalf("map: %v", err)
 	}
 	// S1-07: one fixed room called DEV. S1-09 replaces it with CreateRoom and JoinRoom.
-	dev := room.New("DEV", m)
+	dev := room.NewRoom("DEV", "DEV", m)
 	go dev.Run(ctx)
 
 	lis, err := net.Listen("tcp", ":"+grpcPort)

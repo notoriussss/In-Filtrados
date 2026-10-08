@@ -76,7 +76,7 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 			return err
 		}
 		if mv := msg.GetMove(); mv != nil {
-			s.dev.Act(room.Action{
+			s.dev.Act(room.PlayerAction{
 				PlayerID: playerID,
 				DX:       mv.GetDx(),
 				DY:       mv.GetDy(),
