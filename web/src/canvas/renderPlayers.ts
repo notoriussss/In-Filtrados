@@ -1,4 +1,4 @@
-﻿import type { PlayerView } from '@in-filtrados/messages';
+import type { PlayerView } from '@in-filtrados/messages';
 import { type Camera, worldToScreen } from './camera';
 
 const PLAYER_RADIUS = 16; // docs/tasks.md 0.4

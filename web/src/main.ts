@@ -1,4 +1,4 @@
-﻿import './style.css';
+import './style.css';
 import type { PlayerView } from '@in-filtrados/messages';
 import { gameMap } from './map';
 import { type Camera, clampCamera, createCamera } from './canvas/camera';

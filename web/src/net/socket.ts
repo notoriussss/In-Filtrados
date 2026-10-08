@@ -1,4 +1,4 @@
-﻿import type { ClientMessage, ServerMessage } from '@in-filtrados/messages';
+import type { ClientMessage, ServerMessage } from '@in-filtrados/messages';
 
 // S1-07: connects to /ws on the same host (nginx or Vite forward it to the gateway).
 // S1-20 adds automatic reconnection.
