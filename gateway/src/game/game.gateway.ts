@@ -4,6 +4,7 @@ import type { IncomingMessage } from 'http';
 import type { WebSocket } from 'ws';
 import type { ClientMessage, ServerMessage } from '@in-filtrados/messages';
 import { createMatchClient, type PlayStream } from './match.client';
+import { ERROR_CODES, ERROR_MESSAGES } from './game.constants';
 
 // S1-07: WebSocket /ws?playerId=<id> without a token, one Play stream per socket.
 // S1-16 replaces playerId with the token and adds the error handling of the final version.
@@ -20,8 +21,8 @@ export class GameGateway implements OnGatewayConnection {
     if (!playerId) {
       send(socket, {
         type: 'error',
-        code: 'BAD_MESSAGE',
-        message: 'Falta el playerId',
+        code: ERROR_CODES.BAD_MESSAGE,
+        message: ERROR_MESSAGES.MISSING_PLAYER_ID,
       });
       socket.close(4000);
       return;
@@ -80,8 +81,8 @@ export class GameGateway implements OnGatewayConnection {
       this.logger.warn(`play ${playerId}: ${err.message}`);
       send(socket, {
         type: 'error',
-        code: 'SERVICE_UNAVAILABLE',
-        message: 'El servidor de la partida no responde',
+        code: ERROR_CODES.SERVICE_UNAVAILABLE,
+        message: ERROR_MESSAGES.MATCH_SERVICE_UNAVAILABLE,
       });
       socket.close(1011);
     });

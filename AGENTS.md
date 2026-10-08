@@ -17,6 +17,8 @@ El *porqué* de todo está en `docs/architecture.md`; el *cómo* de cada tarea, 
 6. **Todo servicio expone `GET /health`** con el formato de `docs/tasks.md` 0.2: 200 o 503, `checks` por dependencia y timeout de 1 s por revisión.
 7. **Timeouts y reintentos** en toda llamada por red. El gateway envuelve sus clientes gRPC con Retry y Circuit Breaker.
 8. **Configuración por variables de entorno**, nunca IPs ni contraseñas en el código. Los valores de ejemplo van en `.env.example`; `.env` y `lab.env` no se suben.
+9. **Cero strings 'mágicos' en retornos y errores (Constantes dedicadas).** Todo código de error (`MATCH_NOT_FOUND`, `BAD_MESSAGE`, `SERVICE_UNAVAILABLE`) y todo mensaje retornado al cliente o usuario (`"La partida no existe"`, `"El servidor de la partida no responde"`, `"Falta el playerId"`, etc.) **DEBE definirse como constante en un archivo separado dedicado** dentro de cada servicio (por ejemplo, `messages.go`, `*.constants.ts`, `errors.rs`, etc.). Queda estrictamente prohibido hardcodear literales de string en las respuestas o eventos de error.
+10. **Estilo de programación multilínea obligatorio (Legibilidad en pantallas pequeñas).** En todos los lenguajes del repositorio (Go, TypeScript, Rust, Python), cualquier sentencia, firma de función, instanciación de objeto/struct o llamada encadenada que supere ~80 caracteres **DEBE dividirse en múltiples líneas** con sangría limpia y consistente. Evita líneas largas horizontales para que el código sea inmediatamente legible en pantallas pequeñas y vistas divididas de editor.
 
 ## Mapa del repo
 
