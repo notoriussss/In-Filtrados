@@ -1,4 +1,5 @@
-# Only web for now (S1-04); S1-03 adds the rest of the services.
+name: in-filtrados
+
 services:
   web:
     build:
@@ -7,3 +8,122 @@ services:
     ports:
       - "8080:80"
     restart: unless-stopped
+
+  match-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${MATCH_DB_NAME}
+      POSTGRES_USER: ${MATCH_DB_USER}
+      POSTGRES_PASSWORD: ${MATCH_DB_PASSWORD}
+    ports:
+      - "5433:5432"
+    volumes:
+      - match-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\"" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  players-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${PLAYERS_DB_NAME}
+      POSTGRES_USER: ${PLAYERS_DB_USER}
+      POSTGRES_PASSWORD: ${PLAYERS_DB_PASSWORD}
+    ports:
+      - "5434:5432"
+    volumes:
+      - players-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\"" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    # Asegura que .erlang.cookie exista con permisos 600 y propietario adecuado
+    # para evitar fallos de inicio en Docker Desktop / Windows y entornos con volúmenes montados.
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - |
+        if [ ! -f /var/lib/rabbitmq/.erlang.cookie ]; then
+          umask 077
+          head -c 32 /dev/urandom | base64 > /var/lib/rabbitmq/.erlang.cookie
+        fi
+        chown rabbitmq:rabbitmq /var/lib/rabbitmq/.erlang.cookie
+        chmod 600 /var/lib/rabbitmq/.erlang.cookie
+        exec /usr/local/bin/docker-entrypoint.sh rabbitmq-server
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "-q", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+  monitor:
+    build:
+      context: .
+      dockerfile: monitor/Dockerfile
+    environment:
+      RABBITMQ_URL: ${RABBITMQ_URL}
+    ports:
+      - "8000:8000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    environment:
+      PORT: "3000"
+      MATCH_GRPC_ADDR: ${MATCH_GRPC_ADDR}
+      PLAYERS_GRPC_ADDR: ${PLAYERS_GRPC_ADDR}
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+  match:
+    build:
+      context: .
+      dockerfile: match/Dockerfile
+    environment:
+      HTTP_PORT: "8081"
+      MATCH_DB_URL: ${MATCH_DB_URL}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      MAP_PATH: ${MAP_PATH}
+    ports:
+      - "8081:8081"
+    depends_on:
+      match-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+  players:
+    build:
+      context: .
+      dockerfile: players/Dockerfile
+    environment:
+      HTTP_PORT: "8082"
+      PLAYERS_DB_URL: ${PLAYERS_DB_URL}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+    ports:
+      - "8082:8082"
+    depends_on:
+      players-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    restart: unless-stopped
+volumes:
+  match-db-data:
+  players-db-data:
