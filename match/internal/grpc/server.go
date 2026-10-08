@@ -12,14 +12,6 @@ import (
 	"github.com/notoriussss/in-filtrados/match/internal/room"
 )
 
-const (
-	errCodeMatchNotFound = "MATCH_NOT_FOUND"
-	errMsgMatchNotFound  = "La partida no existe"
-
-	errCodeBadMessage     = "BAD_MESSAGE"
-	errMsgFirstMustBeJoin = "El primer mensaje debe ser join"
-)
-
 type Server struct {
 	matchv1.UnimplementedMatchServer
 	dev *room.Room
@@ -36,17 +28,10 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 	}
 	join := first.GetJoin()
 	if join == nil || join.GetPlayerId() == "" {
-		return stream.Send(badMessage(errMsgFirstMustBeJoin))
+		return stream.Send(badMessage(ErrMsgFirstMustBeJoin))
 	}
 	if join.GetMatchId() != s.dev.Code {
-		return stream.Send(&matchv1.ServerEvent{
-			Event: &matchv1.ServerEvent_Error{
-				Error: &matchv1.Error{
-					Code:    errCodeMatchNotFound,
-					Message: errMsgMatchNotFound,
-				},
-			},
-		})
+		return stream.Send(matchNotFoundError())
 	}
 
 	playerID := join.GetPlayerId()
@@ -97,16 +82,5 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 				DY:       mv.GetDy(),
 			})
 		}
-	}
-}
-
-func badMessage(msg string) *matchv1.ServerEvent {
-	return &matchv1.ServerEvent{
-		Event: &matchv1.ServerEvent_Error{
-			Error: &matchv1.Error{
-				Code:    errCodeBadMessage,
-				Message: msg,
-			},
-		},
 	}
 }
