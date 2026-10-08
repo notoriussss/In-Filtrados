@@ -22,7 +22,11 @@ func main() {
 	grpcPort := getenv("GRPC_PORT", "50051")
 	mapPath := getenv("MAP_PATH", "../shared/map.json")
 
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	ctx, stop := signal.NotifyContext(
+		context.Background(),
+		os.Interrupt,
+		syscall.SIGTERM,
+	)
 	defer stop()
 
 	m, err := room.LoadMap(mapPath)
@@ -38,7 +42,10 @@ func main() {
 		log.Fatalf("grpc listen: %v", err)
 	}
 	grpcServer := grpc.NewServer()
-	matchv1.RegisterMatchServer(grpcServer, matchgrpc.NewServer(dev))
+	matchv1.RegisterMatchServer(
+		grpcServer,
+		matchgrpc.NewServer(dev),
+	)
 	go func() {
 		log.Printf("match gRPC listening on :%s", grpcPort)
 		if err := grpcServer.Serve(lis); err != nil {

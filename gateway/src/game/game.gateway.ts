@@ -13,9 +13,16 @@ export class GameGateway implements OnGatewayConnection {
   private readonly match = createMatchClient();
 
   handleConnection(socket: WebSocket, req: IncomingMessage): void {
-    const playerId = new URL(req.url ?? '', 'http://localhost').searchParams.get('playerId');
+    const playerId = new URL(
+      req.url ?? '',
+      'http://localhost',
+    ).searchParams.get('playerId');
     if (!playerId) {
-      send(socket, { type: 'error', code: 'BAD_MESSAGE', message: 'Falta el playerId' });
+      send(socket, {
+        type: 'error',
+        code: 'BAD_MESSAGE',
+        message: 'Falta el playerId',
+      });
       socket.close(4000);
       return;
     }
@@ -26,7 +33,12 @@ export class GameGateway implements OnGatewayConnection {
       const msg = parse(raw.toString());
       if (!msg) return;
       if (msg.type === 'join' && !stream) {
-        stream = this.openPlay(socket, playerId, msg.matchId, msg.lastTick);
+        stream = this.openPlay(
+          socket,
+          playerId,
+          msg.matchId,
+          msg.lastTick,
+        );
       } else if (msg.type === 'move' && stream) {
         stream.write({ move: { dx: msg.dx, dy: msg.dy } });
       }
@@ -38,21 +50,39 @@ export class GameGateway implements OnGatewayConnection {
     });
   }
 
-  private openPlay(socket: WebSocket, playerId: string, matchId: string, lastTick: number): PlayStream {
+  private openPlay(
+    socket: WebSocket,
+    playerId: string,
+    matchId: string,
+    lastTick: number,
+  ): PlayStream {
     const stream = this.match.play();
     stream.write({ join: { matchId, playerId, lastTick } });
 
     stream.on('data', (ev: any) => {
       if (ev.event === 'snapshot') {
         const s = ev.snapshot;
-        send(socket, { type: 'snapshot', tick: s.tick, phase: s.phase, players: s.players });
+        send(socket, {
+          type: 'snapshot',
+          tick: s.tick,
+          phase: s.phase,
+          players: s.players,
+        });
       } else if (ev.event === 'error') {
-        send(socket, { type: 'error', code: ev.error.code, message: ev.error.message });
+        send(socket, {
+          type: 'error',
+          code: ev.error.code,
+          message: ev.error.message,
+        });
       }
     });
     stream.on('error', (err) => {
       this.logger.warn(`play ${playerId}: ${err.message}`);
-      send(socket, { type: 'error', code: 'SERVICE_UNAVAILABLE', message: 'El servidor de la partida no responde' });
+      send(socket, {
+        type: 'error',
+        code: 'SERVICE_UNAVAILABLE',
+        message: 'El servidor de la partida no responde',
+      });
       socket.close(1011);
     });
     stream.on('end', () => socket.close());
@@ -69,10 +99,16 @@ function parse(raw: string): ClientMessage | null {
   try {
     const msg = JSON.parse(raw);
     if (msg?.type === 'join' && typeof msg.matchId === 'string') {
-      return { type: 'join', matchId: msg.matchId, lastTick: Number(msg.lastTick) || 0 };
+      return {
+        type: 'join',
+        matchId: msg.matchId,
+        lastTick: Number(msg.lastTick) || 0,
+      };
     }
     if (msg?.type === 'move') {
-      return { type: 'move', dx: Math.sign(Number(msg.dx) || 0) as -1 | 0 | 1, dy: Math.sign(Number(msg.dy) || 0) as -1 | 0 | 1 };
+      const dx = Math.sign(Number(msg.dx) || 0) as -1 | 0 | 1;
+      const dy = Math.sign(Number(msg.dy) || 0) as -1 | 0 | 1;
+      return { type: 'move', dx, dy };
     }
   } catch {
     // not JSON

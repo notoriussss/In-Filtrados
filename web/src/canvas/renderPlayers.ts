@@ -3,7 +3,12 @@ import { type Camera, worldToScreen } from './camera';
 
 const PLAYER_RADIUS = 16; // docs/tasks.md 0.4
 
-export function renderPlayers(ctx: CanvasRenderingContext2D, players: PlayerView[], camera: Camera, meId: string): void {
+export function renderPlayers(
+  ctx: CanvasRenderingContext2D,
+  players: PlayerView[],
+  camera: Camera,
+  meId: string,
+): void {
   for (const p of players) {
     const s = worldToScreen(camera, p.x, p.y);
     ctx.globalAlpha = p.connected ? 1 : 0.35;

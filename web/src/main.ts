@@ -8,14 +8,22 @@ import { connect } from './net/socket';
 
 const canvas = document.querySelector<HTMLCanvasElement>('#game')!;
 const ctx = canvas.getContext('2d')!;
-let camera: Camera = createCamera(gameMap, window.innerWidth, window.innerHeight);
+let camera: Camera = createCamera(
+  gameMap,
+  window.innerWidth,
+  window.innerHeight,
+);
 
 // S1-07: random id per tab, no login yet. The server decides every position.
-const meId = Math.random().toString(36).slice(2, 10); // randomUUID needs https outside localhost
+// randomUUID needs https outside localhost, so Math.random is used here.
+const meId = Math.random().toString(36).slice(2, 10);
 let players: PlayerView[] = [];
 const send = connect(meId, (msg) => {
-  if (msg.type === 'snapshot') players = msg.players;
-  else console.warn(msg.code, msg.message);
+  if (msg.type === 'snapshot') {
+    players = msg.players;
+  } else {
+    console.warn(msg.code, msg.message);
+  }
 });
 
 function resize(): void {
@@ -23,18 +31,35 @@ function resize(): void {
   canvas.width = Math.round(window.innerWidth * dpr);
   canvas.height = Math.round(window.innerHeight * dpr);
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  camera = clampCamera({ ...camera, viewWidth: window.innerWidth, viewHeight: window.innerHeight }, gameMap);
+  camera = clampCamera(
+    {
+      ...camera,
+      viewWidth: window.innerWidth,
+      viewHeight: window.innerHeight,
+    },
+    gameMap,
+  );
 }
 
 // The arrows only send the direction, and only when it changes.
 const pressed = new Set<string>();
-const ARROWS = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
+const ARROWS = new Set([
+  'ArrowUp',
+  'ArrowDown',
+  'ArrowLeft',
+  'ArrowRight',
+]);
 let lastDx = 0;
 let lastDy = 0;
 
 function sendDirection(): void {
-  const dx = (Number(pressed.has('ArrowRight')) - Number(pressed.has('ArrowLeft'))) as -1 | 0 | 1;
-  const dy = (Number(pressed.has('ArrowDown')) - Number(pressed.has('ArrowUp'))) as -1 | 0 | 1;
+  const right = Number(pressed.has('ArrowRight'));
+  const left = Number(pressed.has('ArrowLeft'));
+  const down = Number(pressed.has('ArrowDown'));
+  const up = Number(pressed.has('ArrowUp'));
+  const dx = (right - left) as -1 | 0 | 1;
+  const dy = (down - up) as -1 | 0 | 1;
+
   if (dx === lastDx && dy === lastDy) return;
   lastDx = dx;
   lastDy = dy;
@@ -60,7 +85,9 @@ window.addEventListener('resize', resize);
 // One full redraw per animation frame: no partial updates, so no flicker.
 function frame(): void {
   const me = players.find((p) => p.id === meId);
-  if (me) camera = clampCamera({ ...camera, x: me.x, y: me.y }, gameMap);
+  if (me) {
+    camera = clampCamera({ ...camera, x: me.x, y: me.y }, gameMap);
+  }
 
   ctx.fillStyle = '#1b2a33';
   ctx.fillRect(0, 0, camera.viewWidth, camera.viewHeight);
