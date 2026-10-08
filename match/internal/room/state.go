@@ -1,9 +1,6 @@
 package room
 
 import (
-	"encoding/json"
-	"fmt"
-	"os"
 	"time"
 
 	"github.com/notoriussss/in-filtrados/match/gen/matchv1"
@@ -26,28 +23,6 @@ var colors = []string{
 	"#911eb4",
 	"#46f0f0",
 	"#f032e6",
-}
-
-// Map holds the parts of shared/map.json that the room needs for now.
-type Map struct {
-	Width  float32 `json:"width"`
-	Height float32 `json:"height"`
-	Spawn  struct {
-		X float32 `json:"x"`
-		Y float32 `json:"y"`
-	} `json:"spawn"`
-}
-
-func LoadMap(path string) (*Map, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("read map: %w", err)
-	}
-	var m Map
-	if err := json.Unmarshal(data, &m); err != nil {
-		return nil, fmt.Errorf("parse map: %w", err)
-	}
-	return &m, nil
 }
 
 // Join registers a player; Out receives the snapshots for that player.
@@ -84,7 +59,7 @@ func clampDir(v int32) int32 {
 	return 0
 }
 
-func clamp(v, lo, hi float32) float32 {
+func clamp(v, lo, hi float64) float64 {
 	if v < lo {
 		return lo
 	}

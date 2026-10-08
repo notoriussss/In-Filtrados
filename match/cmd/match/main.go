@@ -31,7 +31,7 @@ func main() {
 
 	m, err := room.LoadMap(mapPath)
 	if err != nil {
-		log.Fatalf("map: %v", err)
+		log.Fatalf("load map %s: %v", mapPath, err)
 	}
 	// S1-07: one fixed room called DEV. S1-09 replaces it with CreateRoom and JoinRoom.
 	dev := room.NewRoom("DEV", "DEV", m)

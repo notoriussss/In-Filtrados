@@ -73,13 +73,14 @@ func (r *Room) addPlayer(j Join) {
 		p.out = j.Out
 		return
 	}
+	x, y := r.m.SpawnPoint(r.order)
 	r.players[j.PlayerID] = &player{
 		view: &matchv1.PlayerView{
 			Id:        j.PlayerID,
 			Name:      j.PlayerID,
 			Color:     colors[r.order%len(colors)],
-			X:         r.m.Spawn.X,
-			Y:         r.m.Spawn.Y,
+			X:         float32(x),
+			Y:         float32(y),
 			Connected: true,
 			Alive:     true,
 		},
@@ -100,20 +101,16 @@ func (r *Room) removePlayer(l Leave) {
 	p.out = nil
 }
 
-// step moves every player by its direction. Walls come in S1-10; for now it
-// only keeps them on the map.
+// step moves every player by its direction, stopping at walls (collision.go).
 func (r *Room) step() {
 	for _, p := range r.players {
-		p.view.X = clamp(
-			p.view.X+float32(p.dx*stepPerTick),
-			playerRadius,
-			r.m.Width-playerRadius,
+		nx, ny := r.m.Move(
+			float64(p.view.X),
+			float64(p.view.Y),
+			float64(p.dx*stepPerTick),
+			float64(p.dy*stepPerTick),
 		)
-		p.view.Y = clamp(
-			p.view.Y+float32(p.dy*stepPerTick),
-			playerRadius,
-			r.m.Height-playerRadius,
-		)
+		p.view.X, p.view.Y = float32(nx), float32(ny)
 	}
 }
 

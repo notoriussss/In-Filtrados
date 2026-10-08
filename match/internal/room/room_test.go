@@ -11,9 +11,11 @@ import (
 )
 
 func testMap() *Map {
-	m := &Map{Width: 1600, Height: 1200}
-	m.Spawn.X, m.Spawn.Y = 800, 500
-	return m
+	return &Map{
+		Width:  1600,
+		Height: 1200,
+		Spawn:  Point{X: 800, Y: 500},
+	}
 }
 
 func startRoom(t *testing.T) *Room {
@@ -79,10 +81,12 @@ func TestTwoPlayersSeeEachOtherMove(t *testing.T) {
 		t.Fatalf("b should see 2 players, got %v", last)
 	}
 	pa, pb := findPlayer(last, "a"), findPlayer(last, "b")
-	if pa.X <= 800 || pa.Y != 500 {
+	ax, ay := testMap().SpawnPoint(0)
+	bx, by := testMap().SpawnPoint(1)
+	if float64(pa.X) <= ax || float64(pa.Y) != ay {
 		t.Errorf("a should have moved right, got (%v, %v)", pa.X, pa.Y)
 	}
-	if pb.X != 800 || pb.Y != 500 {
+	if float64(pb.X) != bx || float64(pb.Y) != by {
 		t.Errorf("b should not move, got (%v, %v)", pb.X, pb.Y)
 	}
 }
