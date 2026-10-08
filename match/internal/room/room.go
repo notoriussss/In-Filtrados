@@ -20,7 +20,16 @@ const (
 	playerRadius = 16
 )
 
-var colors = []string{"#e6194b", "#3cb44b", "#ffe119", "#4363d8", "#f58231", "#911eb4", "#46f0f0", "#f032e6"}
+var colors = []string{
+	"#e6194b",
+	"#3cb44b",
+	"#ffe119",
+	"#4363d8",
+	"#f58231",
+	"#911eb4",
+	"#46f0f0",
+	"#f032e6",
+}
 
 // Map holds the parts of shared/map.json that S1-07 needs.
 type Map struct {
@@ -149,8 +158,16 @@ func (r *Room) addPlayer(j Join) {
 // step moves every player by its direction. Walls come in S1-10; for now it only keeps them on the map.
 func (r *Room) step() {
 	for _, p := range r.players {
-		p.view.X = clamp(p.view.X+float32(p.dx*stepPerTick), playerRadius, r.m.Width-playerRadius)
-		p.view.Y = clamp(p.view.Y+float32(p.dy*stepPerTick), playerRadius, r.m.Height-playerRadius)
+		p.view.X = clamp(
+			p.view.X+float32(p.dx*stepPerTick),
+			playerRadius,
+			r.m.Width-playerRadius,
+		)
+		p.view.Y = clamp(
+			p.view.Y+float32(p.dy*stepPerTick),
+			playerRadius,
+			r.m.Height-playerRadius,
+		)
 	}
 }
 
@@ -160,7 +177,11 @@ func (r *Room) broadcast() {
 	for _, p := range r.players {
 		views = append(views, proto.Clone(p.view).(*matchv1.PlayerView))
 	}
-	snap := &matchv1.Snapshot{Tick: r.tick, Phase: matchv1.Phase_LOBBY, Players: views}
+	snap := &matchv1.Snapshot{
+		Tick:    r.tick,
+		Phase:   matchv1.Phase_LOBBY,
+		Players: views,
+	}
 	for _, p := range r.players {
 		if p.out == nil {
 			continue
