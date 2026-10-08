@@ -47,6 +47,8 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    # Asegura que .erlang.cookie exista con permisos 600 y propietario adecuado
+    # para evitar fallos de inicio en Docker Desktop / Windows y entornos con volúmenes montados.
     entrypoint:
       - /bin/sh
       - -ec
