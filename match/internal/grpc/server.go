@@ -12,6 +12,14 @@ import (
 	"github.com/notoriussss/in-filtrados/match/internal/room"
 )
 
+const (
+	errCodeMatchNotFound = "MATCH_NOT_FOUND"
+	errMsgMatchNotFound  = "La partida no existe"
+
+	errCodeBadMessage     = "BAD_MESSAGE"
+	errMsgFirstMustBeJoin = "El primer mensaje debe ser join"
+)
+
 type Server struct {
 	matchv1.UnimplementedMatchServer
 	dev *room.Room
@@ -28,12 +36,17 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 	}
 	join := first.GetJoin()
 	if join == nil || join.GetPlayerId() == "" {
-		return stream.Send(badMessage("El primer mensaje debe ser join"))
+		return stream.Send(badMessage(errMsgFirstMustBeJoin))
 	}
 	if join.GetMatchId() != s.dev.Code {
-		return stream.Send(&matchv1.ServerEvent{Event: &matchv1.ServerEvent_Error{
-			Error: &matchv1.Error{Code: "MATCH_NOT_FOUND", Message: "La partida no existe"},
-		}})
+		return stream.Send(&matchv1.ServerEvent{
+			Event: &matchv1.ServerEvent_Error{
+				Error: &matchv1.Error{
+					Code:    errCodeMatchNotFound,
+					Message: errMsgMatchNotFound,
+				},
+			},
+		})
 	}
 
 	playerID := join.GetPlayerId()
@@ -55,7 +68,12 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 		for {
 			select {
 			case snap := <-out:
-				if err := stream.Send(&matchv1.ServerEvent{Event: &matchv1.ServerEvent_Snapshot{Snapshot: snap}}); err != nil {
+				event := &matchv1.ServerEvent{
+					Event: &matchv1.ServerEvent_Snapshot{
+						Snapshot: snap,
+					},
+				}
+				if err := stream.Send(event); err != nil {
 					return
 				}
 			case <-ctx.Done():
@@ -73,13 +91,22 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 			return err
 		}
 		if mv := msg.GetMove(); mv != nil {
-			s.dev.Act(room.Action{PlayerID: playerID, DX: mv.GetDx(), DY: mv.GetDy()})
+			s.dev.Act(room.Action{
+				PlayerID: playerID,
+				DX:       mv.GetDx(),
+				DY:       mv.GetDy(),
+			})
 		}
 	}
 }
 
 func badMessage(msg string) *matchv1.ServerEvent {
-	return &matchv1.ServerEvent{Event: &matchv1.ServerEvent_Error{
-		Error: &matchv1.Error{Code: "BAD_MESSAGE", Message: msg},
-	}}
+	return &matchv1.ServerEvent{
+		Event: &matchv1.ServerEvent_Error{
+			Error: &matchv1.Error{
+				Code:    errCodeBadMessage,
+				Message: msg,
+			},
+		},
+	}
 }
