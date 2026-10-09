@@ -195,7 +195,7 @@ func TestJoinRoomFull(t *testing.T) {
 			},
 		})
 		require.NoError(t, err)
-		
+
 		// Esperar al primer snapshot para asegurar que se procesó el Join internamente
 		_, err = stream.Recv()
 		require.NoError(t, err)
