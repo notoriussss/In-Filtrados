@@ -42,3 +42,14 @@ func (g *Registry) Remove(code string) {
 	defer g.mu.Unlock()
 	delete(g.rooms, code)
 }
+
+// AddIfFree agrega la sala solo si su código no está ocupado.
+func (g *Registry) AddIfFree(r *Room) bool {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	if _, taken := g.rooms[r.Code]; taken {
+		return false
+	}
+	g.rooms[r.Code] = r
+	return true
+}

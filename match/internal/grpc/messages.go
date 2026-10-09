@@ -22,6 +22,9 @@ const (
 // maxPlayers es el límite de jugadores por sala (RESOURCE_EXHAUSTED).
 const maxPlayers = 10
 
+// maxCodeAttempts es cuántos códigos prueba CreateRoom antes de rendirse.
+const maxCodeAttempts = 10
+
 func matchNotFoundError() *matchv1.ServerEvent {
 	return &matchv1.ServerEvent{
 		Event: &matchv1.ServerEvent_Error{
