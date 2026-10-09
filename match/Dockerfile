@@ -11,6 +11,7 @@ FROM debian:bookworm-slim AS runtime
 
 WORKDIR /app
 COPY --from=build /out/match /app/match
+COPY match/migrations/ /app/migrations/
 COPY shared/ /app/shared/
 
 EXPOSE 8081 50051

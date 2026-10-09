@@ -5,23 +5,50 @@ import (
 	"errors"
 	"io"
 	"log"
+	"time"
 
 	"github.com/google/uuid"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/notoriussss/in-filtrados/match/gen/matchv1"
+	"github.com/notoriussss/in-filtrados/match/internal/events"
 	"github.com/notoriussss/in-filtrados/match/internal/room"
 )
 
 type Server struct {
 	matchv1.UnimplementedMatchServer
-	registry *room.Registry
-	m        *room.Map
+	registry      *room.Registry
+	m             *room.Map
+	publisher     events.Publisher
+	store         room.MatchStore
+	matchDuration time.Duration
 }
 
-func NewServer(reg *room.Registry, m *room.Map) *Server {
-	return &Server{registry: reg, m: m}
+// ServerOption configura el servidor gRPC.
+type ServerOption func(*Server)
+
+// WithPublisher publica match.started y match.finished.
+func WithPublisher(publisher events.Publisher) ServerOption {
+	return func(s *Server) { s.publisher = publisher }
+}
+
+// WithStore guarda las partidas en PostgreSQL.
+func WithStore(store room.MatchStore) ServerOption {
+	return func(s *Server) { s.store = store }
+}
+
+// WithMatchDuration acorta la partida; los tests la usan.
+func WithMatchDuration(duration time.Duration) ServerOption {
+	return func(s *Server) { s.matchDuration = duration }
+}
+
+func NewServer(reg *room.Registry, m *room.Map, opts ...ServerOption) *Server {
+	s := &Server{registry: reg, m: m}
+	for _, opt := range opts {
+		opt(s)
+	}
+	return s
 }
 
 func (s *Server) CreateRoom(
@@ -35,7 +62,7 @@ func (s *Server) CreateRoom(
 			log.Printf("createRoom: error generando código: %v", err)
 			return nil, status.Error(codes.Internal, ErrMsgCodeGen)
 		}
-		r := room.NewRoom(code, matchID, s.m)
+		r := room.NewRoom(code, matchID, s.m, s.roomOptions(req.GetPlayerId())...)
 		if !s.registry.AddIfFree(r) {
 			continue // código ocupado: probar otro
 		}
@@ -45,6 +72,21 @@ func (s *Server) CreateRoom(
 		return &matchv1.Room{RoomCode: code, MatchId: matchID}, nil
 	}
 	return nil, status.Error(codes.Internal, ErrMsgCodeGen)
+}
+
+// roomOptions arma las opciones de la sala con las dependencias del server.
+func (s *Server) roomOptions(creatorID string) []room.Option {
+	opts := []room.Option{room.WithCreator(creatorID)}
+	if s.publisher != nil {
+		opts = append(opts, room.WithPublisher(s.publisher))
+	}
+	if s.store != nil {
+		opts = append(opts, room.WithStore(s.store))
+	}
+	if s.matchDuration > 0 {
+		opts = append(opts, room.WithMatchDuration(s.matchDuration))
+	}
+	return opts
 }
 
 func (s *Server) JoinRoom(
@@ -124,12 +166,16 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 		if err != nil {
 			return err
 		}
-		if mv := msg.GetMove(); mv != nil {
+		switch {
+		case msg.GetMove() != nil:
+			mv := msg.GetMove()
 			r.Act(room.PlayerAction{
 				PlayerID: playerID,
 				DX:       mv.GetDx(),
 				DY:       mv.GetDy(),
 			})
+		case msg.GetStart() != nil:
+			r.Act(room.PlayerAction{PlayerID: playerID, Start: true})
 		}
 	}
 }

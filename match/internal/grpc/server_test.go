@@ -21,7 +21,10 @@ import (
 
 const bufSize = 1024 * 1024
 
-func setupServer(t *testing.T) (matchv1.MatchClient, func()) {
+func setupServer(
+	t *testing.T,
+	opts ...matchgrpc.ServerOption,
+) (matchv1.MatchClient, func()) {
 	t.Helper()
 	lis := bufconn.Listen(bufSize)
 	s := grpc.NewServer()
@@ -31,7 +34,7 @@ func setupServer(t *testing.T) (matchv1.MatchClient, func()) {
 	require.NoError(t, err)
 
 	reg := room.NewRegistry()
-	matchv1.RegisterMatchServer(s, matchgrpc.NewServer(reg, m))
+	matchv1.RegisterMatchServer(s, matchgrpc.NewServer(reg, m, opts...))
 
 	go func() {
 		if err := s.Serve(lis); err != nil && err != grpc.ErrServerStopped {
