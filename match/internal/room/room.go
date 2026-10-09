@@ -3,6 +3,7 @@ package room
 
 import (
 	"context"
+	"sync/atomic"
 	"time"
 
 	"google.golang.org/protobuf/proto"
@@ -24,6 +25,9 @@ type Room struct {
 	joins   chan Join
 	leaves  chan Leave
 	actions chan PlayerAction
+
+	// connectedCount es actualizado atomicamente por la goroutine de la sala.
+	connectedCount atomic.Int32
 }
 
 func NewRoom(code string, matchID string, m *Map) *Room {
@@ -73,6 +77,7 @@ func (r *Room) addPlayer(j Join) {
 		p.out = j.Out
 		return
 	}
+	r.connectedCount.Add(1)
 	x, y := r.m.SpawnPoint(r.order)
 	r.players[j.PlayerID] = &player{
 		view: &matchv1.PlayerView{
@@ -135,4 +140,10 @@ func (r *Room) broadcast() {
 		default:
 		}
 	}
+}
+
+// PlayerCount devuelve cuántos jugadores hay en la sala.
+// Es seguro llamarlo desde otras goroutines.
+func (r *Room) PlayerCount() int {
+	return int(r.connectedCount.Load())
 }
