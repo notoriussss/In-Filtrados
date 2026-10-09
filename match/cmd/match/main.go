@@ -35,6 +35,10 @@ func main() {
 	}
 	// S1-09: CreateRoom crea las salas dinámicamente; no hay sala fija.
 	reg := room.NewRegistry()
+	// Sala fija DEV mientras web no crea salas (S1-16 y S1-18 la quitan).
+	dev := room.NewRoom("DEV", "DEV", m)
+	reg.Add(dev)
+	go dev.Run(ctx)
 
 	lis, err := net.Listen("tcp", ":"+grpcPort)
 	if err != nil {
