@@ -28,20 +28,23 @@ func (s *Server) CreateRoom(
 	ctx context.Context,
 	req *matchv1.CreateRoomRequest,
 ) (*matchv1.Room, error) {
-	code, err := room.GenerateCode()
-	if err != nil {
-		log.Printf("createRoom: error generando código: %v", err)
-		return nil, status.Error(
-			codes.Internal,
-			ErrMsgCodeGen,
-		)
-	}
 	matchID := uuid.New().String()
-	r := room.NewRoom(code, matchID, s.m)
-	s.registry.Add(r)
-	go r.Run(context.Background()) // goroutine de la sala, dura independientemente del RPC
-	log.Printf("createRoom: código=%s matchId=%s", code, matchID)
-	return &matchv1.Room{RoomCode: code, MatchId: matchID}, nil
+	for i := 0; i < maxCodeAttempts; i++ {
+		code, err := room.GenerateCode()
+		if err != nil {
+			log.Printf("createRoom: error generando código: %v", err)
+			return nil, status.Error(codes.Internal, ErrMsgCodeGen)
+		}
+		r := room.NewRoom(code, matchID, s.m)
+		if !s.registry.AddIfFree(r) {
+			continue // código ocupado: probar otro
+		}
+		// La sala vive más que el RPC que la creó.
+		go r.Run(context.Background())
+		log.Printf("createRoom: código=%s matchId=%s", code, matchID)
+		return &matchv1.Room{RoomCode: code, MatchId: matchID}, nil
+	}
+	return nil, status.Error(codes.Internal, ErrMsgCodeGen)
 }
 
 func (s *Server) JoinRoom(
@@ -89,7 +92,8 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 	}()
 
 	// Sender goroutine: the only one that calls stream.Send from here on.
-	// Play waits for it before returning, because Send is not allowed after Play returns.
+	// Play waits for it before returning, because Send is not allowed
+	// after Play returns.
 	ctx, cancel := context.WithCancel(stream.Context())
 	sent := make(chan struct{})
 	defer func() { cancel(); <-sent }()
