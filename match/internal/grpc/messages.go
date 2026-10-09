@@ -14,7 +14,16 @@ const (
 const (
 	ErrMsgMatchNotFound   = "La partida no existe"
 	ErrMsgFirstMustBeJoin = "El primer mensaje debe ser join"
+	ErrMsgRoomNotFound    = "La sala no existe"
+	ErrMsgRoomFull        = "La sala ya tiene el máximo de jugadores"
+	ErrMsgCodeGen         = "Error generando código de sala"
 )
+
+// maxPlayers es el límite de jugadores por sala (RESOURCE_EXHAUSTED).
+const maxPlayers = 10
+
+// maxCodeAttempts es cuántos códigos prueba CreateRoom antes de rendirse.
+const maxCodeAttempts = 10
 
 func matchNotFoundError() *matchv1.ServerEvent {
 	return &matchv1.ServerEvent{
