@@ -33,9 +33,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("load map %s: %v", mapPath, err)
 	}
-	// S1-07: one fixed room called DEV. S1-09 replaces it with CreateRoom and JoinRoom.
-	dev := room.NewRoom("DEV", "DEV", m)
-	go dev.Run(ctx)
+	// S1-09: CreateRoom crea las salas dinámicamente; no hay sala fija.
+	reg := room.NewRegistry()
 
 	lis, err := net.Listen("tcp", ":"+grpcPort)
 	if err != nil {
@@ -44,7 +43,7 @@ func main() {
 	grpcServer := grpc.NewServer()
 	matchv1.RegisterMatchServer(
 		grpcServer,
-		matchgrpc.NewServer(dev),
+		matchgrpc.NewServer(reg, m),
 	)
 	go func() {
 		log.Printf("match gRPC listening on :%s", grpcPort)

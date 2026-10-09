@@ -1,5 +1,3 @@
-// Package grpc implements the Match service from proto/match.proto.
-// S1-07: only Play, against the fixed room DEV. S1-09 adds CreateRoom and JoinRoom here.
 package grpc
 
 import (
@@ -8,17 +6,62 @@ import (
 	"io"
 	"log"
 
+	"github.com/google/uuid"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/notoriussss/in-filtrados/match/gen/matchv1"
 	"github.com/notoriussss/in-filtrados/match/internal/room"
 )
 
 type Server struct {
 	matchv1.UnimplementedMatchServer
-	dev *room.Room
+	registry *room.Registry
+	m        *room.Map
 }
 
-func NewServer(dev *room.Room) *Server {
-	return &Server{dev: dev}
+func NewServer(reg *room.Registry, m *room.Map) *Server {
+	return &Server{registry: reg, m: m}
+}
+
+func (s *Server) CreateRoom(
+	ctx context.Context,
+	req *matchv1.CreateRoomRequest,
+) (*matchv1.Room, error) {
+	code, err := room.GenerateCode()
+	if err != nil {
+		log.Printf("createRoom: error generando código: %v", err)
+		return nil, status.Error(
+			codes.Internal,
+			ErrMsgCodeGen,
+		)
+	}
+	matchID := uuid.New().String()
+	r := room.NewRoom(code, matchID, s.m)
+	s.registry.Add(r)
+	go r.Run(ctx) // goroutine de la sala, dura hasta que el contexto se cancele
+	log.Printf("createRoom: código=%s matchId=%s", code, matchID)
+	return &matchv1.Room{RoomCode: code, MatchId: matchID}, nil
+}
+
+func (s *Server) JoinRoom(
+	ctx context.Context,
+	req *matchv1.JoinRoomRequest,
+) (*matchv1.Room, error) {
+	r, ok := s.registry.Get(req.GetRoomCode())
+	if !ok {
+		return nil, status.Error(codes.NotFound, ErrMsgRoomNotFound)
+	}
+	if r.PlayerCount() >= maxPlayers {
+		return nil, status.Error(
+			codes.ResourceExhausted,
+			ErrMsgRoomFull,
+		)
+	}
+	return &matchv1.Room{
+		RoomCode: r.Code,
+		MatchId:  r.MatchID,
+	}, nil
 }
 
 func (s *Server) Play(stream matchv1.Match_PlayServer) error {
@@ -30,17 +73,19 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 	if join == nil || join.GetPlayerId() == "" {
 		return stream.Send(badMessage(ErrMsgFirstMustBeJoin))
 	}
-	if join.GetMatchId() != s.dev.Code {
+
+	r, ok := s.registry.Get(join.GetMatchId())
+	if !ok {
 		return stream.Send(matchNotFoundError())
 	}
 
 	playerID := join.GetPlayerId()
 	out := make(chan *matchv1.Snapshot, 8)
-	s.dev.Join(room.Join{PlayerID: playerID, Out: out})
-	log.Printf("play: %s joined %s", playerID, s.dev.Code)
+	r.Join(room.Join{PlayerID: playerID, Out: out})
+	log.Printf("play: %s joined %s", playerID, r.Code)
 	defer func() {
-		s.dev.Leave(room.Leave{PlayerID: playerID, Out: out})
-		log.Printf("play: %s left %s", playerID, s.dev.Code)
+		r.Leave(room.Leave{PlayerID: playerID, Out: out})
+		log.Printf("play: %s left %s", playerID, r.Code)
 	}()
 
 	// Sender goroutine: the only one that calls stream.Send from here on.
@@ -76,7 +121,7 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 			return err
 		}
 		if mv := msg.GetMove(); mv != nil {
-			s.dev.Act(room.PlayerAction{
+			r.Act(room.PlayerAction{
 				PlayerID: playerID,
 				DX:       mv.GetDx(),
 				DY:       mv.GetDy(),
