@@ -26,6 +26,17 @@ func (g *Registry) Get(code string) (*Room, bool) {
 	return r, ok
 }
 
+func (g *Registry) GetByMatchID(matchID string) (*Room, bool) {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	for _, r := range g.rooms {
+		if r.MatchID == matchID {
+			return r, true
+		}
+	}
+	return nil, false
+}
+
 func (g *Registry) Remove(code string) {
 	g.mu.Lock()
 	defer g.mu.Unlock()

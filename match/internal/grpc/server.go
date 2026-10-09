@@ -39,7 +39,7 @@ func (s *Server) CreateRoom(
 	matchID := uuid.New().String()
 	r := room.NewRoom(code, matchID, s.m)
 	s.registry.Add(r)
-	go r.Run(ctx) // goroutine de la sala, dura hasta que el contexto se cancele
+	go r.Run(context.Background()) // goroutine de la sala, dura independientemente del RPC
 	log.Printf("createRoom: código=%s matchId=%s", code, matchID)
 	return &matchv1.Room{RoomCode: code, MatchId: matchID}, nil
 }
@@ -74,7 +74,7 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 		return stream.Send(badMessage(ErrMsgFirstMustBeJoin))
 	}
 
-	r, ok := s.registry.Get(join.GetMatchId())
+	r, ok := s.registry.GetByMatchID(join.GetMatchId())
 	if !ok {
 		return stream.Send(matchNotFoundError())
 	}
