@@ -11,6 +11,10 @@ const (
 	stepPerTick  = 10                    // 200 units per second
 	playerRadius = 16
 	actionBuffer = 256
+
+	// S1-11: empezar y terminar la partida.
+	minPlayersToStart = 2
+	depsTimeout       = 2 * time.Second
 )
 
 // colors are the 8 fixed player colors, given in order of arrival.
@@ -37,10 +41,11 @@ type Leave struct {
 	Out      chan *matchv1.Snapshot
 }
 
-// PlayerAction is the last direction a player sent.
+// PlayerAction es la última acción que mandó un jugador: moverse o empezar.
 type PlayerAction struct {
 	PlayerID string
 	DX, DY   int32
+	Start    bool
 }
 
 type player struct {

@@ -18,9 +18,9 @@ func testMap() *Map {
 	}
 }
 
-func startRoom(t *testing.T) *Room {
+func startRoom(t *testing.T, opts ...Option) *Room {
 	t.Helper()
-	r := NewRoom("TEST", "match-1", testMap())
+	r := NewRoom("TEST", "match-1", testMap(), opts...)
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
 	go r.Run(ctx)
