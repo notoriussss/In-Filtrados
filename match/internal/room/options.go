@@ -35,3 +35,8 @@ func WithMatchDuration(duration time.Duration) Option {
 		}
 	}
 }
+
+// WithEventLog anota en event_log lo que pasa con los tanques (S2-03).
+func WithEventLog(eventLog EventLog) Option {
+	return func(r *Room) { r.eventLog = eventLog }
+}

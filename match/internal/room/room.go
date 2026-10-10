@@ -37,6 +37,8 @@ type Room struct {
 	participants  []PlayerInfo
 	tanks         []*tank
 	rnd           io.Reader // azar de los roles: crypto/rand
+	startTick     int64
+	eventLog      EventLog
 
 	joins   chan Join
 	leaves  chan Leave
@@ -114,7 +116,16 @@ func (r *Room) handleAction(a PlayerAction) {
 		r.startMatch(a.PlayerID)
 		return
 	}
-	if p, ok := r.players[a.PlayerID]; ok {
+	p, ok := r.players[a.PlayerID]
+	if !ok {
+		return
+	}
+	switch {
+	case a.Contaminate:
+		r.startContaminate(a.PlayerID, p, a.TankSlot)
+	case a.Clean:
+		r.startClean(p, a.TankSlot)
+	default:
 		p.dx, p.dy = clampDir(a.DX), clampDir(a.DY)
 	}
 }
@@ -192,6 +203,7 @@ func (r *Room) startMatch(playerID string) {
 	}
 	r.phase = matchv1.Phase_PLAYING
 	r.startedAt = time.Now()
+	r.startTick = r.tick
 	r.tanks = r.buildTanks()
 	r.participants = r.snapshotParticipants()
 
@@ -363,6 +375,9 @@ func (r *Room) step() {
 		)
 		p.view.X, p.view.Y = float32(nx), float32(ny)
 	}
+	if r.phase == matchv1.Phase_PLAYING {
+		r.stepTanks()
+	}
 }
 
 // broadcast never blocks: if a player's channel is full, that snapshot is
@@ -406,8 +421,10 @@ func (r *Room) tankViews() []*matchv1.TankView {
 	views := make([]*matchv1.TankView, 0, len(r.tanks))
 	for _, t := range r.tanks {
 		views = append(views, &matchv1.TankView{
-			Slot:    t.slot,
-			OwnerId: t.ownerID,
+			Slot:          t.slot,
+			OwnerId:       t.ownerID,
+			Contamination: t.contamination,
+			Dead:          t.dead,
 		})
 	}
 	return views

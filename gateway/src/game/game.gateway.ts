@@ -3,9 +3,18 @@ import { OnGatewayConnection, WebSocketGateway } from '@nestjs/websockets';
 import type { IncomingMessage } from 'http';
 import type { RawData, WebSocket } from 'ws';
 import { status } from '@grpc/grpc-js';
-import type { ClientMessage, ServerMessage } from '@in-filtrados/messages';
+import type {
+  ClientMessage,
+  InteractMessage,
+  ServerMessage,
+} from '@in-filtrados/messages';
 import { MatchClient, type PlayStream } from '../clients/match.client';
-import { ERROR_CODES, ERROR_MESSAGES } from './game.constants';
+import {
+  ERROR_CODES,
+  ERROR_MESSAGES,
+  MAX_STATION_ID_LENGTH,
+  MAX_TANK_SLOT,
+} from './game.constants';
 import { PlayersClient } from '../clients/players.client';
 import { type GrpcServerEvent, toServerMessage } from './server-events';
 
@@ -73,6 +82,10 @@ export class GameGateway implements OnGatewayConnection {
         stream.write({ move: { dx: msg.dx, dy: msg.dy } });
       } else if (msg.type === 'start' && stream) {
         stream.write({ start: {} });
+      } else if (msg.type === 'contaminate' && stream) {
+        stream.write({ contaminate: { tankSlot: msg.tankSlot } });
+      } else if (msg.type === 'interact' && stream) {
+        stream.write({ interact: toGrpcInteract(msg) });
       }
     };
 
@@ -178,8 +191,52 @@ function parse(raw: string): ClientMessage | null {
     if (msg?.type === 'start') {
       return { type: 'start' };
     }
+    if (msg?.type === 'contaminate' && isSlot(msg.tankSlot)) {
+      return { type: 'contaminate', tankSlot: msg.tankSlot };
+    }
+    if (msg?.type === 'interact') {
+      return parseInteract(msg);
+    }
   } catch {
     // not JSON
   }
   return null;
+}
+
+// S2-03: interact sobre un tanque (limpiar) o una estación (S2-04).
+function parseInteract(msg: {
+  stationId?: unknown;
+  tankSlot?: unknown;
+  completed?: unknown;
+}): InteractMessage | null {
+  if (isSlot(msg.tankSlot)) {
+    return { type: 'interact', tankSlot: msg.tankSlot };
+  }
+  if (
+    typeof msg.stationId === 'string' &&
+    msg.stationId.length > 0 &&
+    msg.stationId.length <= MAX_STATION_ID_LENGTH
+  ) {
+    return {
+      type: 'interact',
+      stationId: msg.stationId,
+      completed: msg.completed === true,
+    };
+  }
+  return null;
+}
+
+function toGrpcInteract(msg: InteractMessage): object {
+  if ('tankSlot' in msg) {
+    return { tankSlot: msg.tankSlot };
+  }
+  return { stationId: msg.stationId, completed: msg.completed ?? false };
+}
+
+function isSlot(value: unknown): value is number {
+  return (
+    Number.isInteger(value) &&
+    (value as number) >= 0 &&
+    (value as number) <= MAX_TANK_SLOT
+  );
 }

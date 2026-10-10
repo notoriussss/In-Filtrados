@@ -8,6 +8,15 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type EventLog struct {
+	ID       int64
+	MatchID  pgtype.UUID
+	Tick     int64
+	PlayerID pgtype.UUID
+	Kind     string
+	TankSlot int32
+}
+
 type Match struct {
 	ID        pgtype.UUID
 	RoomCode  string

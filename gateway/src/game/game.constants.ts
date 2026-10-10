@@ -15,3 +15,7 @@ export const ERROR_MESSAGES = {
   MATCH_SERVICE_UNAVAILABLE: 'El servidor de la partida no responde',
   MALFORMED_MESSAGE: 'Mensaje inválido o malformado',
 } as const;
+
+// Límites de validación de las acciones del juego (S2-01).
+export const MAX_TANK_SLOT = 9; // hasta 10 jugadores por sala
+export const MAX_STATION_ID_LENGTH = 64;

@@ -19,6 +19,17 @@ const (
 	// S2-02: roles y tanques.
 	twoImpostorsFrom = 7  // con 7 o más jugadores hay 2 impostores
 	noTank           = -1 // jugadores que llegaron después del último tanque
+
+	// S2-03: tanques (los tiempos van en ticks de 50 ms).
+	tankRange           = 40  // unidades para contaminar, limpiar o visitar
+	maxContamination    = 100 // a 100 el tanque muere
+	contaminateTicks    = 60  // 3 s quieto
+	contaminateAmount   = 35
+	contaminateCooldown = 400 // 20 s entre contaminaciones
+	cleanTicks          = 40  // 2 s quieto
+	cleanAmount         = 15
+	impostorDriftTicks  = 100 // el tanque del impostor sube solo cada 5 s
+	impostorDriftAmount = 1
 )
 
 // colors are the 8 fixed player colors, given in order of arrival.
@@ -51,11 +62,15 @@ type Name struct {
 	DisplayName string
 }
 
-// PlayerAction es la última acción que mandó un jugador: moverse o empezar.
+// PlayerAction es la última acción que mandó un jugador: moverse, empezar,
+// contaminar o limpiar el tanque TankSlot.
 type PlayerAction struct {
-	PlayerID string
-	DX, DY   int32
-	Start    bool
+	PlayerID    string
+	DX, DY      int32
+	Start       bool
+	Contaminate bool
+	Clean       bool
+	TankSlot    int32
 }
 
 type player struct {
@@ -65,13 +80,28 @@ type player struct {
 
 	role     matchv1.Role // NO_ROLE hasta que empieza la partida
 	tankSlot int          // noTank si no le tocó tanque
+
+	// S2-03: acción en curso, espera para contaminar y tanques cercanos.
+	pending         *tankAction
+	nextContaminate int64
+	nearTanks       map[int32]bool
+}
+
+// tankAction es contaminar o limpiar: termina cuando pasan ticksLeft
+// ticks sin que el jugador se mueva.
+type tankAction struct {
+	kind      string // LogContaminate o LogClean
+	slot      int32
+	ticksLeft int
 }
 
 // tank es un tanque del huerto con su dueño (S2-02).
 type tank struct {
-	slot    int32
-	ownerID string
-	x, y    float64
+	slot          int32
+	ownerID       string
+	x, y          float64
+	contamination int32 // 0 a 100
+	dead          bool
 }
 
 func clampDir(v int32) int32 {

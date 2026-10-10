@@ -12,3 +12,8 @@ VALUES ($1, $2, $3, $4);
 UPDATE matches
 SET ended_at = now(), winner = $2
 WHERE id = $1;
+
+-- name: InsertEvent :exec
+-- S2-03: una fila de event_log (contaminar, limpiar o visitar un tanque).
+INSERT INTO event_log (match_id, tick, player_id, kind, tank_slot)
+VALUES ($1, $2, $3, $4, $5);

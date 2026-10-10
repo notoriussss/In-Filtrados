@@ -68,7 +68,12 @@ func main() {
 	go dev.Run(ctx)
 
 	store := matchdb.NewStore(pool)
-	serverOpts := []matchgrpc.ServerOption{matchgrpc.WithStore(store)}
+	eventLog := matchdb.NewEventLogWriter(pool)
+	go eventLog.Run(ctx)
+	serverOpts := []matchgrpc.ServerOption{
+		matchgrpc.WithStore(store),
+		matchgrpc.WithEventLog(eventLog),
+	}
 	if publisher != nil {
 		serverOpts = append(serverOpts, matchgrpc.WithPublisher(publisher))
 	}
