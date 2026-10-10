@@ -30,6 +30,12 @@ const (
 	cleanAmount         = 15
 	impostorDriftTicks  = 100 // el tanque del impostor sube solo cada 5 s
 	impostorDriftAmount = 1
+	
+	// S2-04: tareas 3R
+	tasksPerPlayer = 4
+	taskMinTicks   = 60 // 3 s
+	taskRadius     = 40
+	reservoirMax   = 100
 )
 
 // colors are the 8 fixed player colors, given in order of arrival.
@@ -85,6 +91,11 @@ type player struct {
 	pending         *tankAction
 	nextContaminate int64
 	nearTanks       map[int32]bool
+
+	// S2-04: Tasks
+	tasksCompleted int
+	assignedTasks  map[string]bool
+	taskStartTick  int64
 }
 
 // tankAction es contaminar o limpiar: termina cuando pasan ticksLeft

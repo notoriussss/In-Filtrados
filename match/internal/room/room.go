@@ -39,6 +39,7 @@ type Room struct {
 	rnd           io.Reader // azar de los roles: crypto/rand
 	startTick     int64
 	eventLog      EventLog
+	reservoir     int32 // S2-04
 
 	joins   chan Join
 	leaves  chan Leave
@@ -205,6 +206,8 @@ func (r *Room) startMatch(playerID string) {
 	r.startedAt = time.Now()
 	r.startTick = r.tick
 	r.tanks = r.buildTanks()
+	r.assignTasks() // S2-04
+	r.reservoir = 0
 	r.participants = r.snapshotParticipants()
 
 	ctx, cancel := context.WithTimeout(context.Background(), depsTimeout)
@@ -404,11 +407,16 @@ func (r *Room) broadcast() {
 			continue
 		}
 		snap := &matchv1.Snapshot{
-			Tick:    r.tick,
-			Phase:   r.phase,
-			Players: views,
-			Tanks:   tanks,
-			MyRole:  p.role,
+			Tick:      r.tick,
+			Phase:     r.phase,
+			Players:   views,
+			Tanks:     tanks,
+			Reservoir: r.reservoir,
+			MyRole:    p.role,
+			MyTaskProgress: &matchv1.TaskProgress{
+				Completed: int32(p.tasksCompleted),
+				Total:     int32(len(p.assignedTasks)),
+			},
 		}
 		select {
 		case p.out <- snap:
