@@ -582,7 +582,12 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 **Archivos:** `monitor/app/main.py`, `monitor/app/health.py`, `monitor/app/dashboard/index.html`, `monitor/pyproject.toml`.
 
 **Pasos:**
-1. FastAPI con una tarea en segundo plano (`asyncio`, arrancada en el `lifespan`) que cada 5 segundos consulta en paralelo, con `httpx.AsyncClient` y un timeout de 2 segundos, el `/health` de `web`, `gateway`, `match` y `players`, y que comprueba ambas bases de datos y RabbitMQ con una conexión directa.
+1. FastAPI con una tarea en segundo plano (`asyncio`, arrancada en el
+   `lifespan`) que cada 5 segundos consulta en paralelo, con
+   `httpx.AsyncClient` y un timeout de 2 segundos, el `/health` de `web`,
+   `gateway`, `match` y `players`, comprueba RabbitMQ con una conexión
+   directa y supervisa las bases de datos de forma indirecta a través de los
+   `checks.db` reportados por `match` y `players`.
 2. Guardar en memoria el último resultado de cada uno: estado, latencia en ms, hora de la última respuesta correcta y los últimos 20 resultados.
 3. `GET /api/status` devuelve todo eso en JSON.
 4. `GET /` sirve `index.html`: una tarjeta por servicio en verde, amarillo (`degraded`) o rojo (sin respuesta), con la latencia y "caído desde hace X s". Se actualiza sola cada 2 segundos con `fetch`.
