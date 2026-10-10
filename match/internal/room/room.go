@@ -421,7 +421,7 @@ func (r *Room) broadcast() {
 			MyRole:    p.role,
 			MyTaskProgress: &matchv1.TaskProgress{
 				Completed: int32(p.tasksCompleted),
-				Total:     int32(len(p.assignedTasks)),
+				Total:     int32(len(p.assignedTasks) + p.tasksCompleted),
 			},
 		}
 		select {

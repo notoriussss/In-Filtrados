@@ -98,9 +98,10 @@ type player struct {
 	nearTanks       map[int32]bool
 
 	// S2-04: Tasks
-	tasksCompleted int
-	assignedTasks  map[string]bool
-	taskStartTick  int64
+	tasksCompleted     int
+	assignedTasks      map[string]bool
+	taskStartTick      int64
+	currentTaskStation string
 }
 
 // tankAction es contaminar o limpiar: termina cuando pasan ticksLeft

@@ -53,6 +53,7 @@ func (r *Room) assignTasks() {
 		}
 		p.tasksCompleted = 0
 		p.taskStartTick = 0
+		p.currentTaskStation = ""
 	}
 }
 
@@ -69,6 +70,7 @@ func (r *Room) startTask(playerID string, p *player, stationID string) {
 	}
 	// Empezar a contar el tiempo.
 	p.taskStartTick = r.tick
+	p.currentTaskStation = stationID
 }
 
 func (r *Room) completeTask(playerID string, p *player, stationID string) {
@@ -78,19 +80,25 @@ func (r *Room) completeTask(playerID string, p *player, stationID string) {
 	if !p.assignedTasks[stationID] {
 		return
 	}
+	if p.currentTaskStation != stationID {
+		return
+	}
 	// Validar tiempo: deben pasar al menos taskMinTicks (3s)
 	if p.taskStartTick == 0 || r.tick-p.taskStartTick < taskMinTicks {
 		return
 	}
 	s := r.stationAt(stationID)
 	if s == nil || !nearStation(p, s) {
+		p.taskStartTick = 0
+		p.currentTaskStation = ""
 		return
 	}
-	
+
 	// Completado con éxito
 	delete(p.assignedTasks, stationID)
 	p.tasksCompleted++
 	p.taskStartTick = 0
+	p.currentTaskStation = ""
 
 	if p.role == matchv1.Role_IMPOSTOR {
 		// El impostor finge la tarea, no suma al embalse ni publica evento.
