@@ -1,7 +1,8 @@
 import type { ClientMessage, ServerMessage } from '@in-filtrados/messages';
 import { session } from '../session';
 
-// Close codes (S1-20): a normal close, invalid token or replaced session never retries.
+// Close codes (S1-20): a normal close, invalid token or
+// replaced session never retries.
 export const CLOSE_NORMAL = 1000;
 export const CLOSE_UNAUTHORIZED = 4001;
 export const CLOSE_REPLACED = 4002;
@@ -18,7 +19,8 @@ export function reconnectDelay(attempt: number): number {
 
 export type SocketStatus =
   | { state: 'connected' }
-  | { state: 'reconnecting'; attempt: number };
+  | { state: 'reconnecting'; attempt: number }
+  | { state: 'replaced' };
 
 // The parts of WebSocket that GameSocket uses; tests pass a fake.
 export interface SocketLike {
@@ -127,7 +129,12 @@ export class GameSocket {
         this.opts.onUnauthorized?.();
         return;
       }
-      if (e.code === CLOSE_NORMAL || e.code === CLOSE_REPLACED) {
+      if (e.code === CLOSE_REPLACED) {
+        this.closed = true;
+        this.emitStatus({ state: 'replaced' });
+        return;
+      }
+      if (e.code === CLOSE_NORMAL) {
         this.closed = true;
         return;
       }

@@ -164,12 +164,13 @@ describe('GameSocket', () => {
 
   it('con un cierre 4002 no se reintenta y la sesión sigue', () => {
     session.saveSession({ token: 't', playerId: 'p', username: 'u' });
-    const { sockets, timers } = setup();
+    const { sockets, timers, statuses } = setup();
     sockets[0].open();
     sockets[0].drop(CLOSE_REPLACED);
     expect(timers).toHaveLength(0);
     expect(session.loadSession()).not.toBeNull();
     expect(session.loadSession()?.token).toBe('t');
+    expect(statuses).toContainEqual({ state: 'replaced' });
   });
 
   it('goes back to login on 4001 and does not retry', () => {

@@ -19,4 +19,5 @@ export const ERROR_MESSAGES = {
 // Avisos de la conexión con el servidor de juego (S1-20).
 export const CONNECTION_MESSAGES = {
   reconnecting: (attempt: number) => `Reconectando… (intento ${attempt})`,
+  SESSION_REPLACED: 'Abriste el juego en otra pestaña',
 } as const;
