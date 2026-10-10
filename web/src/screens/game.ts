@@ -10,7 +10,10 @@ import {
 import { Interpolator } from '../net/interpolation';
 import { DirectionInput } from '../input';
 import { session } from '../session';
-import { CONNECTION_MESSAGES } from '../constants';
+import {
+  CONNECTION_MESSAGES,
+  ERROR_CODES,
+} from '../constants';
 
 let animationFrame: number;
 
@@ -53,6 +56,16 @@ export function mountGame(
     if (msg.type === 'snapshot') {
       interpolator.push(msg.tick, msg.players, performance.now());
     } else if (msg.type === 'error') {
+      if (msg.code === ERROR_CODES.MATCH_NOT_FOUND) {
+        session.saveSession({
+          ...currentSession,
+          matchId: '',
+          roomCode: undefined,
+          isCreator: false,
+        });
+        show('lobby');
+        return;
+      }
       console.warn(msg.code, msg.message);
     }
   });

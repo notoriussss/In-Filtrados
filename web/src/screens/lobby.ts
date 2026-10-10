@@ -1,6 +1,10 @@
 import { api } from '../api';
 import { session } from '../session';
-import { CONNECTION_MESSAGES, ERROR_MESSAGES } from '../constants';
+import {
+  CONNECTION_MESSAGES,
+  ERROR_CODES,
+  ERROR_MESSAGES,
+} from '../constants';
 import { type GameSocket, openGameSocket } from '../net/socket';
 import type { PlayerView } from '@in-filtrados/messages';
 
@@ -117,10 +121,10 @@ export function mountLobby(
           show('game');
         }
       } else if (msg.type === 'error') {
-        if (msg.code === 'UNAUTHORIZED') {
+        if (msg.code === ERROR_CODES.UNAUTHORIZED) {
           session.clearSession();
           show('login');
-        } else if (msg.code === 'MATCH_NOT_FOUND') {
+        } else if (msg.code === ERROR_CODES.MATCH_NOT_FOUND) {
           session.saveSession({
             ...currentSession!,
             matchId: '',
