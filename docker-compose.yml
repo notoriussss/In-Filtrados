@@ -74,6 +74,8 @@ services:
       dockerfile: monitor/Dockerfile
     environment:
       RABBITMQ_URL: ${RABBITMQ_URL}
+      MATCH_DB_URL: ${MATCH_DB_URL}
+      PLAYERS_DB_URL: ${PLAYERS_DB_URL}
     ports:
       - "8000:8000"
     depends_on:
