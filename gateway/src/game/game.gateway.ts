@@ -43,7 +43,7 @@ export class GameGateway implements OnGatewayConnection {
     let stream: PlayStream | null = null;
     let playerId: string | null = null;
 
-    socket.on('message', (raw) => {
+    socket.on('message', (raw: RawData) => {
       if (!isAuthenticated) {
         messageQueue.push(raw);
         return;
@@ -51,7 +51,7 @@ export class GameGateway implements OnGatewayConnection {
       processMessage(raw);
     });
 
-    const processMessage = (raw: any) => {
+    const processMessage = (raw: RawData) => {
       const msg = parse(raw.toString());
       if (!msg) {
         send(socket, {
@@ -89,8 +89,8 @@ export class GameGateway implements OnGatewayConnection {
     try {
       const res = await this.players.validateToken(token);
       playerId = res.playerId;
-    } catch (err: any) {
-      if (err.code === status.UNAUTHENTICATED) {
+    } catch (err) {
+      if ((err as { code?: number }).code === status.UNAUTHENTICATED) {
         send(socket, {
           type: 'error',
           code: ERROR_CODES.UNAUTHORIZED,
