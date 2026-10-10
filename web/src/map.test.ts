@@ -36,10 +36,14 @@ describe('shared/map.json', () => {
     expect(inside(plaza, gameMap.spawn.x, gameMap.spawn.y)).toBe(true);
   });
 
-  it('has 5 tank slots, all in the garden', () => {
+  it('has 10 tank slots, all in the garden', () => {
     const garden = gameMap.zones.find((z) => z.id === 'garden')!;
-    expect(gameMap.tanks.map((t) => t.slot)).toEqual([0, 1, 2, 3, 4]);
-    for (const tank of gameMap.tanks) expect(inside(garden, tank.x, tank.y)).toBe(true);
+    expect(gameMap.tanks.map((t) => t.slot)).toEqual([
+      0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+    ]);
+    for (const tank of gameMap.tanks) {
+      expect(inside(garden, tank.x, tank.y)).toBe(true);
+    }
   });
 
   it('crosses the canal only through 3 bridges', () => {
