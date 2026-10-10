@@ -27,6 +27,12 @@ message ClientAction {
     Join join = 1;
     Move move = 2;
     Start start = 3;
+    // S2-01: acciones del juego completo.
+    Interact    interact    = 4;
+    Contaminate contaminate = 5;
+    Report      report      = 6;
+    Vote        vote        = 7;
+    Chat        chat        = 8;
   }
 }
 message Join {
@@ -41,10 +47,41 @@ message Move {
 // Start: la manda el creador para pasar de LOBBY a PLAYING.
 message Start {}
 
+// Interact: hacer una tarea en una estación o limpiar un tanque.
+// completed lo manda el navegador al terminar el minijuego (S2-04).
+message Interact {
+  oneof target {
+    string station_id = 1;
+    int32  tank_slot  = 3;
+  }
+  bool completed = 2;
+}
+// Contaminate: solo el impostor, junto a un tanque (S2-03).
+message Contaminate {
+  int32 tank_slot = 1;
+}
+// Report: reportar un tanque muerto; abre la reunión (S2-05).
+message Report {
+  int32 tank_slot = 1;
+}
+// Vote: votar por un jugador o saltar el voto (S2-05).
+message Vote {
+  oneof choice {
+    string target_player_id = 1;
+    bool   skip             = 2;
+  }
+}
+// Chat: solo en la reunión. client_msg_id evita duplicados al reintentar.
+message Chat {
+  string client_msg_id = 1;
+  string text          = 2;
+}
+
 message ServerEvent {
   oneof event {
     Snapshot snapshot = 1;
     Error    error    = 2;
+    MatchEnded match_ended = 3;
   }
 }
 enum Phase {
@@ -53,10 +90,51 @@ enum Phase {
   MEETING = 2;
   ENDED   = 3;
 }
+enum Role {
+  NO_ROLE  = 0; // en LOBBY todavía no hay roles
+  CREW     = 1;
+  IMPOSTOR = 2;
+}
 message Snapshot {
   int64              tick    = 1;
   Phase              phase   = 2;
   repeated PlayerView players = 3;
+  // S2-01: estado del juego completo.
+  repeated TankView tanks     = 4;
+  int32             reservoir = 5; // 0 a 100
+  // my_role es solo el del destinatario: nunca viaja el rol de otro.
+  Role         my_role          = 6;
+  TaskProgress my_task_progress = 7;
+  Meeting      meeting          = 8; // solo en MEETING
+  repeated ChatMessage chat     = 9; // últimos 30 mensajes
+}
+message TankView {
+  int32  slot          = 1;
+  string owner_id      = 2;
+  int32  contamination = 3; // 0 a 100
+  bool   dead          = 4;
+}
+message TaskProgress {
+  int32 completed = 1;
+  int32 total     = 2;
+}
+message Meeting {
+  string          reporter_id   = 1;
+  int32           tank_slot     = 2;
+  repeated string last_visitors = 3; // últimos 3 jugadores distintos
+  repeated string votes_cast    = 4; // quién ya votó, nunca por quién
+  int64           ends_at_tick  = 5;
+}
+message ChatMessage {
+  string id        = 1; // client_msg_id
+  string player_id = 2;
+  string text      = 3;
+  int64  tick      = 4;
+}
+// MatchEnded: fin de la partida. impostor_ids tiene 2 con 7 o más jugadores.
+message MatchEnded {
+  string          winner       = 1; // "crew" o "impostor"
+  repeated string impostor_ids = 2;
 }
 message PlayerView {
   string id        = 1;

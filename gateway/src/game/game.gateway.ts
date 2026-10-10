@@ -7,6 +7,7 @@ import type { ClientMessage, ServerMessage } from '@in-filtrados/messages';
 import { MatchClient, type PlayStream } from '../clients/match.client';
 import { ERROR_CODES, ERROR_MESSAGES } from './game.constants';
 import { PlayersClient } from '../clients/players.client';
+import { type GrpcServerEvent, toServerMessage } from './server-events';
 
 // WebSocket /ws?token=...; one Play stream per player
 @WebSocketGateway({ path: '/ws' })
@@ -129,22 +130,9 @@ export class GameGateway implements OnGatewayConnection {
     const stream = this.match.play();
     stream.write({ join: { matchId, playerId, lastTick } });
 
-    stream.on('data', (ev: any) => {
-      if (ev.event === 'snapshot') {
-        const s = ev.snapshot;
-        send(socket, {
-          type: 'snapshot',
-          tick: s.tick,
-          phase: s.phase,
-          players: s.players,
-        });
-      } else if (ev.event === 'error') {
-        send(socket, {
-          type: 'error',
-          code: ev.error.code,
-          message: ev.error.message,
-        });
-      }
+    stream.on('data', (ev: GrpcServerEvent) => {
+      const msg = toServerMessage(ev);
+      if (msg) send(socket, msg);
     });
     stream.on('error', (err) => {
       this.logger.warn(`play ${playerId}: ${err.message}`);

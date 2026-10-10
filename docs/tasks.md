@@ -93,6 +93,33 @@ export type ErrorCode = 'UNAUTHORIZED' | 'MATCH_NOT_FOUND' | 'SERVICE_UNAVAILABL
 
 En la semana 2 se agregan mensajes; se agregan aquí, nunca se duplican en `web` o `gateway`.
 
+**Contrato v1 (S2-01).** Se suman sin romper lo anterior; el archivo completo está en `messages/src/index.ts` y su espejo gRPC en `proto/match.proto`:
+
+```ts
+// Navegador → gateway (además de join, move y start)
+  | { type: 'interact'; stationId: string; completed?: boolean } // tarea
+  | { type: 'interact'; tankSlot: number }                        // limpiar tanque
+  | { type: 'contaminate'; tankSlot: number }                     // solo el impostor
+  | { type: 'report'; tankSlot: number }                          // tanque muerto
+  | { type: 'vote'; targetPlayerId: string | null }               // null = saltar
+  | { type: 'chat'; clientMsgId: string; text: string }           // solo en MEETING
+
+// Gateway → navegador
+  | { type: 'matchEnded'; winner: 'crew' | 'impostor'; impostorIds: string[] }
+
+// Campos nuevos del snapshot
+tanks: { slot, ownerId, contamination /* 0 a 100 */, dead }[];
+reservoir: number;                 // 0 a 100
+myRole: 'NO_ROLE' | 'CREW' | 'IMPOSTOR'; // solo el del destinatario
+myTaskProgress: { completed, total };
+meeting: { reporterId, tankSlot, lastVisitors[], votesCast[], endsAtTick } | null;
+chat: { id, playerId, text, tick }[]; // últimos 30
+```
+
+- `myRole` viaja **solo en el snapshot de su dueño**: `match` arma un snapshot por jugador y el gateway nunca recibe el rol de otro.
+- `votesCast` dice quién ya votó, nunca por quién.
+- `impostorIds` es una lista porque con 7 o más jugadores hay 2 impostores.
+
 ### 0.6 REST del gateway
 
 | Método y ruta | Cuerpo | Respuesta |
