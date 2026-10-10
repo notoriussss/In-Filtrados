@@ -1,13 +1,175 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+:root {
+  --bg-color: #1b2a33;
+  --panel-bg: rgba(20, 30, 38, 0.9);
+  --text-main: #f0f0f0;
+  --text-muted: #9aa5b1;
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --secondary: #4b5563;
+  --secondary-hover: #374151;
+  --error: #ef4444;
+}
+
 html,
 body {
   margin: 0;
   height: 100%;
   overflow: hidden;
-  background: #1b2a33;
+  background: var(--bg-color);
+  font-family: 'Inter', sans-serif;
+  color: var(--text-main);
 }
 
 #game {
   display: block;
   width: 100vw;
   height: 100vh;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
+
+/* Screens overlays */
+.screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 10;
+  background: var(--bg-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.screen[hidden] {
+  display: none !important;
+}
+
+/* Forms & Panels */
+.panel {
+  background: var(--panel-bg);
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+
+h1 {
+  margin-top: 0;
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+h2 {
+  margin-top: 0;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Inputs & Buttons */
+input {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.button-group {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+button {
+  flex: 1;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+button.primary {
+  background: var(--primary);
+  color: white;
+}
+
+button.primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+button.secondary {
+  background: var(--secondary);
+  color: white;
+}
+
+button.secondary:hover:not(:disabled) {
+  background: var(--secondary-hover);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Typography elements */
+.error-msg {
+  color: var(--error);
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+  min-height: 1.25rem;
+}
+
+.room-code {
+  font-size: 3rem;
+  font-family: monospace;
+  font-weight: bold;
+  letter-spacing: 4px;
+  color: var(--primary);
+  margin: 1rem 0 2rem;
+}
+
+/* Player List */
+.player-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 2rem 0;
+  text-align: left;
+}
+
+.player-list li {
+  padding: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.player-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
 }
