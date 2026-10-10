@@ -22,6 +22,7 @@ type Room struct {
 
 	m       *Map
 	players map[string]*player
+	names   map[string]string
 	order   int
 	phase   matchv1.Phase
 	tick    int64
@@ -36,6 +37,7 @@ type Room struct {
 	joins   chan Join
 	leaves  chan Leave
 	actions chan PlayerAction
+	nameCh  chan Name
 
 	// connectedCount es actualizado atomicamente por la goroutine de la sala.
 	connectedCount atomic.Int32
@@ -47,11 +49,13 @@ func NewRoom(code string, matchID string, m *Map, opts ...Option) *Room {
 		MatchID:       matchID,
 		m:             m,
 		players:       make(map[string]*player),
+		names:         make(map[string]string),
 		phase:         matchv1.Phase_LOBBY,
 		matchDuration: defaultMatchDuration,
 		joins:         make(chan Join),
 		leaves:        make(chan Leave),
 		actions:       make(chan PlayerAction, actionBuffer),
+		nameCh:        make(chan Name),
 	}
 	for _, opt := range opts {
 		opt(r)
@@ -59,11 +63,12 @@ func NewRoom(code string, matchID string, m *Map, opts ...Option) *Room {
 	return r
 }
 
-// These three methods are called from other goroutines;
+// These methods are called from other goroutines;
 // they only send to channels.
 func (r *Room) Join(j Join)        { r.joins <- j }
 func (r *Room) Leave(l Leave)      { r.leaves <- l }
 func (r *Room) Act(a PlayerAction) { r.actions <- a }
+func (r *Room) SetName(n Name)     { r.nameCh <- n }
 
 func (r *Room) Run(ctx context.Context) {
 	ticker := time.NewTicker(tickInterval)
@@ -76,6 +81,8 @@ func (r *Room) Run(ctx context.Context) {
 			r.removePlayer(l)
 		case a := <-r.actions:
 			r.handleAction(a)
+		case n := <-r.nameCh:
+			r.setName(n)
 		case <-ticker.C:
 			r.step()
 			r.tick++
@@ -83,6 +90,16 @@ func (r *Room) Run(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		}
+	}
+}
+
+func (r *Room) setName(n Name) {
+	if n.DisplayName == "" {
+		return
+	}
+	r.names[n.PlayerID] = n.DisplayName
+	if p, ok := r.players[n.PlayerID]; ok {
+		p.view.Name = n.DisplayName
 	}
 }
 
@@ -105,10 +122,14 @@ func (r *Room) addPlayer(j Join) {
 	}
 	r.connectedCount.Add(1)
 	x, y := r.m.SpawnPoint(r.order)
+	name := r.names[j.PlayerID]
+	if name == "" {
+		name = j.PlayerID
+	}
 	r.players[j.PlayerID] = &player{
 		view: &matchv1.PlayerView{
 			Id:        j.PlayerID,
-			Name:      j.PlayerID,
+			Name:      name,
 			Color:     colors[r.order%len(colors)],
 			X:         float32(x),
 			Y:         float32(y),

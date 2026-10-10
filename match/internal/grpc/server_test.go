@@ -95,7 +95,7 @@ func TestCreateJoinPlay(t *testing.T) {
 		Action: &matchv1.ClientAction_Join{
 			Join: &matchv1.Join{
 				MatchId:  matchID,
-				PlayerId: "player-A",
+				PlayerId: "player-creator",
 			},
 		},
 	})
@@ -110,7 +110,7 @@ func TestCreateJoinPlay(t *testing.T) {
 		Action: &matchv1.ClientAction_Join{
 			Join: &matchv1.Join{
 				MatchId:  matchID,
-				PlayerId: "player-B",
+				PlayerId: "player-joiner",
 			},
 		},
 	})
@@ -139,16 +139,18 @@ func TestCreateJoinPlay(t *testing.T) {
 	}
 	require.GreaterOrEqual(t, count, 18)
 
-	// Verificamos que ambos están conectados
+	// Verificamos que ambos están conectados y tienen el nombre esperado
 	require.Len(t, lastSnap.Players, 2)
 	playersByID := make(map[string]*matchv1.PlayerView)
 	for _, p := range lastSnap.Players {
 		playersByID[p.Id] = p
 	}
-	require.True(t, playersByID["player-A"].Connected)
-	require.True(t, playersByID["player-B"].Connected)
+	require.True(t, playersByID["player-creator"].Connected)
+	require.Equal(t, "Creator", playersByID["player-creator"].Name)
+	require.True(t, playersByID["player-joiner"].Connected)
+	require.Equal(t, "Joiner", playersByID["player-joiner"].Name)
 
-	// 4. Cerrar stream B y validar que player-A recibe snapshot
+	// 4. Cerrar stream B y validar que player-creator recibe snapshot
 	// con connected: false
 	cancelB()
 
@@ -162,7 +164,7 @@ func TestCreateJoinPlay(t *testing.T) {
 		snap := ev.GetSnapshot()
 		require.NotNil(t, snap)
 		for _, p := range snap.Players {
-			if p.Id == "player-B" && !p.Connected {
+			if p.Id == "player-joiner" && !p.Connected {
 				disconnected = true
 				break
 			}
@@ -174,7 +176,7 @@ func TestCreateJoinPlay(t *testing.T) {
 	require.True(
 		t,
 		disconnected,
-		"Player B should appear disconnected to Player A",
+		"Player Joiner should appear disconnected to Player Creator",
 	)
 }
 

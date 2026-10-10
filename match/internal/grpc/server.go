@@ -73,6 +73,10 @@ func (s *Server) CreateRoom(
 		}
 		// La sala vive más que el RPC que la creó.
 		go r.Run(context.Background())
+		r.SetName(room.Name{
+			PlayerID:    req.GetPlayerId(),
+			DisplayName: req.GetDisplayName(),
+		})
 		log.Printf("createRoom: código=%s matchId=%s", code, matchID)
 		return &matchv1.Room{RoomCode: code, MatchId: matchID}, nil
 	}
@@ -108,6 +112,10 @@ func (s *Server) JoinRoom(
 			ErrMsgRoomFull,
 		)
 	}
+	r.SetName(room.Name{
+		PlayerID:    req.GetPlayerId(),
+		DisplayName: req.GetDisplayName(),
+	})
 	return &matchv1.Room{
 		RoomCode: r.Code,
 		MatchId:  r.MatchID,

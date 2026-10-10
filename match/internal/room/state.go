@@ -41,6 +41,12 @@ type Leave struct {
 	Out      chan *matchv1.Snapshot
 }
 
+// Name dice cómo se llama un jugador (viene de CreateRoom o JoinRoom).
+type Name struct {
+	PlayerID    string
+	DisplayName string
+}
+
 // PlayerAction es la última acción que mandó un jugador: moverse o empezar.
 type PlayerAction struct {
 	PlayerID string
