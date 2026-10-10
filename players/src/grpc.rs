@@ -5,13 +5,15 @@
 
 use sqlx::PgPool;
 use tonic::{Request, Response, Status};
+use uuid::Uuid;
 
 use crate::accounts::{self, AccountError};
 use crate::messages::{
     ERR_MSG_ALREADY_EXISTS, ERR_MSG_INTERNAL, ERR_MSG_INVALID_CREDENTIALS,
     ERR_MSG_INVALID_PASSWORD, ERR_MSG_INVALID_TOKEN, ERR_MSG_INVALID_USERNAME,
-    ERR_MSG_NOT_IMPLEMENTED,
+    ERR_MSG_PLAYER_NOT_FOUND,
 };
+use crate::progress::{self, ProfileError};
 
 pub mod players_v1 {
     tonic::include_proto!("players.v1");
@@ -84,12 +86,25 @@ impl Players for PlayersService {
         }))
     }
 
-    /// S1-13 implementa el perfil; por ahora solo avisa que no existe.
     async fn get_profile(
         &self,
-        _request: Request<PlayerIdRequest>,
+        request: Request<PlayerIdRequest>,
     ) -> Result<Response<Profile>, Status> {
-        Err(Status::unimplemented(ERR_MSG_NOT_IMPLEMENTED))
+        let input = request.into_inner();
+        // Un id que no es UUID no puede existir: también es NOT_FOUND.
+        let player_id = Uuid::parse_str(&input.player_id)
+            .map_err(|_| Status::not_found(ERR_MSG_PLAYER_NOT_FOUND))?;
+        let profile = progress::get_profile(&self.pool, player_id)
+            .await
+            .map_err(status_from_profile)?;
+
+        Ok(Response::new(Profile {
+            player_id: profile.player_id.to_string(),
+            username: profile.username,
+            coins: profile.coins,
+            matches_played: profile.matches_played,
+            wins: profile.wins,
+        }))
     }
 }
 
@@ -118,6 +133,17 @@ fn status_from(error: AccountError) -> Status {
             Status::internal(ERR_MSG_INTERNAL)
         }
         AccountError::Internal => Status::internal(ERR_MSG_INTERNAL),
+    }
+}
+
+/// Traduce un error del perfil al código gRPC que espera el gateway.
+fn status_from_profile(error: ProfileError) -> Status {
+    match error {
+        ProfileError::NotFound => Status::not_found(ERR_MSG_PLAYER_NOT_FOUND),
+        ProfileError::Database(error) => {
+            eprintln!("players: error de base de datos: {}", error);
+            Status::internal(ERR_MSG_INTERNAL)
+        }
     }
 }
 
@@ -171,14 +197,18 @@ mod tests {
         format!("u_{}", &suffix[..8])
     }
 
-    async fn register_player(service: &PlayersService, username: &str) {
+    async fn register_player(
+        service: &PlayersService,
+        username: &str,
+    ) -> Player {
         service
             .register(Request::new(RegisterRequest {
                 username: username.to_string(),
                 password: TEST_PASSWORD.to_string(),
             }))
             .await
-            .expect("el registro debería funcionar");
+            .expect("el registro debería funcionar")
+            .into_inner()
     }
 
     #[tokio::test]
@@ -430,5 +460,47 @@ mod tests {
 
         assert_eq!(status.code(), Code::Unauthenticated);
         assert_eq!(status.message(), ERR_MSG_INVALID_TOKEN);
+    }
+
+    #[tokio::test]
+    async fn new_player_profile_starts_at_zero() {
+        let Some(pool) = test_pool().await else {
+            return;
+        };
+        let service = PlayersService::new(pool);
+        let username = unique_username();
+        let player = register_player(&service, &username).await;
+
+        let profile = service
+            .get_profile(Request::new(PlayerIdRequest {
+                player_id: player.player_id.clone(),
+            }))
+            .await
+            .expect("el perfil debería existir")
+            .into_inner();
+
+        assert_eq!(profile.player_id, player.player_id);
+        assert_eq!(profile.username, username);
+        assert_eq!(profile.coins, 0);
+        assert_eq!(profile.matches_played, 0);
+        assert_eq!(profile.wins, 0);
+    }
+
+    #[tokio::test]
+    async fn unknown_player_profile_is_not_found() {
+        let Some(pool) = test_pool().await else {
+            return;
+        };
+        let service = PlayersService::new(pool);
+
+        for player_id in [Uuid::new_v4().to_string(), "no-es-uuid".into()] {
+            let status = service
+                .get_profile(Request::new(PlayerIdRequest { player_id }))
+                .await
+                .unwrap_err();
+
+            assert_eq!(status.code(), Code::NotFound);
+            assert_eq!(status.message(), ERR_MSG_PLAYER_NOT_FOUND);
+        }
     }
 }
