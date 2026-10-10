@@ -6,6 +6,7 @@ import pytest
 from app.health import HealthMonitor
 from app.messages import (
     DETAIL_AMQP_OK,
+    DETAIL_DB_DOWN,
     DETAIL_OK,
     DETAIL_PARENT_DOWN,
     DETAIL_TIMEOUT,
@@ -262,17 +263,25 @@ async def test_db_ok_when_parent_reports_ok(monkeypatch):
 async def test_db_down_and_incident_when_parent_reports_fail(monkeypatch):
     monitor = HealthMonitor()
     _, checks = simulate_checks(monkeypatch, monitor)
-    checks["match"]["db"] = "fail: connection refused"
+    raw_error = (
+        "fail: failed to connect to `user=postgres database=postgres`: "
+        "127.0.0.1:55433 (localhost): dial error: connection refused"
+    )
+    checks["match"]["db"] = raw_error
 
     await monitor.scan(None)
 
     assert monitor.services["match-db"]["status"] == STATE_DOWN
-    assert (
-        monitor.services["match-db"]["detail"]
-        == "fail: connection refused"
-    )
+    expected_detail = DETAIL_DB_DOWN.format(parent="match")
+    assert monitor.services["match-db"]["detail"] == expected_detail
+    # Comprobar que no se exponen credenciales ni IPs en el detalle
+    assert raw_error not in monitor.services["match-db"]["detail"]
+    assert "user=postgres" not in monitor.services["match-db"]["detail"]
+    assert "127.0.0.1" not in monitor.services["match-db"]["detail"]
+
     assert len(monitor.incidents) == 1
     assert monitor.incidents[0]["service"] == "match-db"
+    assert monitor.incidents[0]["detail"] == expected_detail
 
 
 @pytest.mark.asyncio
