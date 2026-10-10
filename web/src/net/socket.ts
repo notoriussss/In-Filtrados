@@ -1,9 +1,11 @@
 import type { ClientMessage, ServerMessage } from '@in-filtrados/messages';
 import { session } from '../session';
 
-// Close codes (S1-20): a normal close or an invalid token never retries.
+// Close codes (S1-20): a normal close, invalid token or
+// replaced session never retries.
 export const CLOSE_NORMAL = 1000;
 export const CLOSE_UNAUTHORIZED = 4001;
+export const CLOSE_REPLACED = 4002;
 
 // Waits between reconnection attempts: 0.5 s, 1 s, 2 s, 4 s, 8 s and
 // then every 10 s, with no limit.
@@ -17,7 +19,8 @@ export function reconnectDelay(attempt: number): number {
 
 export type SocketStatus =
   | { state: 'connected' }
-  | { state: 'reconnecting'; attempt: number };
+  | { state: 'reconnecting'; attempt: number }
+  | { state: 'replaced' };
 
 // The parts of WebSocket that GameSocket uses; tests pass a fake.
 export interface SocketLike {
@@ -95,7 +98,6 @@ export class GameSocket {
 
     ws.addEventListener('open', () => {
       if (ws !== this.ws) return;
-      this.attempt = 0;
       this.send({
         type: 'join',
         matchId: session.loadSession()?.matchId || this.opts.matchId,
@@ -112,7 +114,10 @@ export class GameSocket {
       } catch {
         return;
       }
-      if (msg.type === 'snapshot') this.lastTick = msg.tick;
+      if (msg.type === 'snapshot') {
+        this.attempt = 0;
+        this.lastTick = msg.tick;
+      }
       this.messageHandlers.forEach((handler) => handler(msg));
     });
 
@@ -124,6 +129,11 @@ export class GameSocket {
         this.closed = true;
         session.clearSession();
         this.opts.onUnauthorized?.();
+        return;
+      }
+      if (e.code === CLOSE_REPLACED) {
+        this.closed = true;
+        this.emitStatus({ state: 'replaced' });
         return;
       }
       if (e.code === CLOSE_NORMAL) {

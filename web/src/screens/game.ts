@@ -10,12 +10,19 @@ import {
 import { Interpolator } from '../net/interpolation';
 import { DirectionInput } from '../input';
 import { session } from '../session';
-import { CONNECTION_MESSAGES } from '../constants';
+import {
+  CONNECTION_MESSAGES,
+  ERROR_CODES,
+  ERROR_MESSAGES,
+} from '../constants';
 
 let animationFrame: number;
 
 export function mountGame(
-  show: (screen: 'login' | 'register' | 'lobby' | 'game') => void
+  show: (
+    screen: 'login' | 'register' | 'lobby' | 'game',
+    initialError?: string,
+  ) => void,
 ): void {
   const canvas = document.querySelector<HTMLCanvasElement>('#game')!;
   const ctx = canvas.getContext('2d')!;
@@ -53,6 +60,16 @@ export function mountGame(
     if (msg.type === 'snapshot') {
       interpolator.push(msg.tick, msg.players, performance.now());
     } else if (msg.type === 'error') {
+      if (msg.code === ERROR_CODES.MATCH_NOT_FOUND) {
+        session.saveSession({
+          ...currentSession,
+          matchId: '',
+          roomCode: undefined,
+          isCreator: false,
+        });
+        show('lobby', ERROR_MESSAGES.MATCH_NOT_FOUND);
+        return;
+      }
       console.warn(msg.code, msg.message);
     }
   });
@@ -93,7 +110,17 @@ export function mountGame(
     renderMap(ctx, gameMap, camera);
     renderPlayers(ctx, players, camera, meId);
     if (status.state === 'reconnecting') {
-      renderReconnecting(ctx, camera, status.attempt);
+      renderOverlayMessage(
+        ctx,
+        camera,
+        CONNECTION_MESSAGES.reconnecting(status.attempt),
+      );
+    } else if (status.state === 'replaced') {
+      renderOverlayMessage(
+        ctx,
+        camera,
+        CONNECTION_MESSAGES.SESSION_REPLACED,
+      );
     }
     animationFrame = requestAnimationFrame(frame);
   }
@@ -119,11 +146,11 @@ export function unmountGame(): void {
   }
 }
 
-// Aviso sobre el canvas mientras el socket reconecta (S1-20).
-function renderReconnecting(
+// Aviso sobre el canvas mientras el socket reconecta o es reemplazado (S1-20).
+function renderOverlayMessage(
   ctx: CanvasRenderingContext2D,
   camera: Camera,
-  attempt: number,
+  text: string,
 ): void {
   ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
   ctx.fillRect(0, 0, camera.viewWidth, camera.viewHeight);
@@ -132,7 +159,7 @@ function renderReconnecting(
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(
-    CONNECTION_MESSAGES.reconnecting(attempt),
+    text,
     camera.viewWidth / 2,
     camera.viewHeight / 2,
   );

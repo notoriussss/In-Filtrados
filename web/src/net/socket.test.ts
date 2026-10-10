@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ClientMessage } from '@in-filtrados/messages';
 import {
   CLOSE_NORMAL,
+  CLOSE_REPLACED,
   CLOSE_UNAUTHORIZED,
   GameSocket,
   type SocketLike,
@@ -34,7 +35,7 @@ class FakeSocket implements SocketLike {
   send(data: string): void {
     this.sent.push(JSON.parse(data));
   }
-  close(): void {}
+  close(): void { }
 
   open(): void {
     this.readyState = 1;
@@ -67,7 +68,7 @@ function setup() {
       return s;
     },
     setTimer: (fn, ms) => timers.push({ fn, ms }),
-    clearTimer: () => {},
+    clearTimer: () => { },
     onUnauthorized: () => unauthorized++,
   });
   gs.onStatus((s) => statuses.push(s));
@@ -129,10 +130,31 @@ describe('GameSocket', () => {
     ]);
     expect(statuses.at(-1)).toEqual({ state: 'reconnecting', attempt: 7 });
 
-    // Once it connects again, the count starts over.
+    // Once it receives a snapshot again, the count starts over.
     sockets[7].open();
+    sockets[7].receive(snapshot(1));
     sockets[7].drop(1011);
     expect(timers.at(-1)!.ms).toBe(500);
+  });
+
+  it('grows backoff when it drops before any snapshot', () => {
+    const { sockets, timers } = setup();
+    // Intento 1: abre y se cierra de inmediato
+    sockets[0].open();
+    sockets[0].drop(1011);
+    expect(timers.map((t) => t.ms)).toEqual([500]);
+
+    // Intento 2: reintento abre y se cierra de nuevo
+    timers[0].fn();
+    sockets[1].open();
+    sockets[1].drop(1011);
+    expect(timers.map((t) => t.ms)).toEqual([500, 1000]);
+
+    // Intento 3: reintento abre y se cierra de nuevo
+    timers[1].fn();
+    sockets[2].open();
+    sockets[2].drop(1011);
+    expect(timers.map((t) => t.ms)).toEqual([500, 1000, 2000]);
   });
 
   it('joins the matchId saved in the session', () => {
@@ -159,6 +181,17 @@ describe('GameSocket', () => {
     sockets[0].open();
     sockets[0].drop(CLOSE_NORMAL);
     expect(timers).toHaveLength(0);
+  });
+
+  it('con un cierre 4002 no se reintenta y la sesión sigue', () => {
+    session.saveSession({ token: 't', playerId: 'p', username: 'u' });
+    const { sockets, timers, statuses } = setup();
+    sockets[0].open();
+    sockets[0].drop(CLOSE_REPLACED);
+    expect(timers).toHaveLength(0);
+    expect(session.loadSession()).not.toBeNull();
+    expect(session.loadSession()?.token).toBe('t');
+    expect(statuses).toContainEqual({ state: 'replaced' });
   });
 
   it('goes back to login on 4001 and does not retry', () => {

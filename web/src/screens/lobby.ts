@@ -1,11 +1,19 @@
 import { api } from '../api';
 import { session } from '../session';
-import { CONNECTION_MESSAGES, ERROR_MESSAGES } from '../constants';
+import {
+  CONNECTION_MESSAGES,
+  ERROR_CODES,
+  ERROR_MESSAGES,
+} from '../constants';
 import { type GameSocket, openGameSocket } from '../net/socket';
 import type { PlayerView } from '@in-filtrados/messages';
 
 export function mountLobby(
-  show: (screen: 'login' | 'register' | 'lobby' | 'game') => void
+  show: (
+    screen: 'login' | 'register' | 'lobby' | 'game',
+    initialError?: string,
+  ) => void,
+  initialError?: string,
 ): void {
   const container = document.getElementById('screen-lobby')!;
   const currentSession = session.loadSession();
@@ -93,6 +101,10 @@ export function mountLobby(
     errorDiv.textContent = '';
   }
 
+  if (initialError) {
+    showError(initialError);
+  }
+
   let socket: GameSocket | null = null;
 
   function connectToRoom(token: string, matchId: string) {
@@ -104,6 +116,8 @@ export function mountLobby(
     socket.onStatus((status) => {
       if (status.state === 'reconnecting') {
         showError(CONNECTION_MESSAGES.reconnecting(status.attempt));
+      } else if (status.state === 'replaced') {
+        showError(CONNECTION_MESSAGES.SESSION_REPLACED);
       } else {
         clearError();
       }
@@ -117,19 +131,19 @@ export function mountLobby(
           show('game');
         }
       } else if (msg.type === 'error') {
-        if (msg.code === 'UNAUTHORIZED') {
+        if (msg.code === ERROR_CODES.UNAUTHORIZED) {
           session.clearSession();
           show('login');
-        } else if (msg.code === 'MATCH_NOT_FOUND') {
+        } else if (msg.code === ERROR_CODES.MATCH_NOT_FOUND) {
           session.saveSession({
             ...currentSession!,
             matchId: '',
             roomCode: undefined,
-            isCreator: false
+            isCreator: false,
           });
           actionsDiv.hidden = false;
           roomInfoDiv.hidden = true;
-          showError(msg.message);
+          showError(ERROR_MESSAGES.MATCH_NOT_FOUND);
         } else {
           showError(msg.message);
         }
