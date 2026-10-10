@@ -101,6 +101,37 @@ func TestMatchFinishedPayloadUsesContractKeys(t *testing.T) {
 	}
 }
 
+func TestPlayerEjectedPayloadUsesContractKeys(t *testing.T) {
+	event := NewPlayerEjected("match-1", "p1", true)
+	if event.EventID == "" {
+		t.Error("el evento debe llevar event_id")
+	}
+
+	raw, err := json.Marshal(event)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+
+	var decoded map[string]any
+	if err := json.Unmarshal(raw, &decoded); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+
+	for _, key := range []string{
+		"event_id",
+		"match_id",
+		"player_id",
+		"was_impostor",
+	} {
+		if _, ok := decoded[key]; !ok {
+			t.Errorf("falta la clave %q en player.ejected", key)
+		}
+	}
+	if decoded["was_impostor"] != true {
+		t.Errorf("was_impostor inesperado: %v", decoded["was_impostor"])
+	}
+}
+
 // Sin RabbitMQ el publicador devuelve error al instante; el servicio sigue.
 func TestPublishWithoutRabbitReturnsNotConnected(t *testing.T) {
 	publisher := NewAMQPPublisher("amqp://guest:guest@127.0.0.1:1/")

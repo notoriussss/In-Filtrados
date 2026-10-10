@@ -44,6 +44,15 @@ const (
 	pointsReuse    = 4
 	pointsRecycle  = 5
 	litersPerPoint = 100
+
+	// S2-05: reunión, chat y votación
+	reportRange        = 60  // unidades para reportar tanque muerto
+	meetingVotingTicks = 900 // 45 s para discutir y votar
+	meetingResultTicks = 100 // 5 s de resultado antes de PLAYING
+	chatMaxChars       = 200 // caracteres máximos por mensaje de chat
+	chatCooldownTicks  = 20  // 1 s entre mensajes de chat
+	chatHistoryLimit   = 30  // mensajes guardados en snapshot
+	maxLastVisitors    = 3   // visitantes máximos en el reporte
 )
 
 var taskPoints = map[string]int32{
@@ -83,7 +92,7 @@ type Name struct {
 }
 
 // PlayerAction es la última acción que mandó un jugador: moverse, empezar,
-// contaminar o limpiar el tanque TankSlot.
+// contaminar, limpiar, hacer tarea, reportar, votar o chatear.
 type PlayerAction struct {
 	PlayerID     string
 	DX, DY       int32
@@ -94,6 +103,15 @@ type PlayerAction struct {
 	InteractTask bool
 	StationID    string
 	Completed    bool
+
+	// S2-05: Report, Vote, Chat
+	Report        bool
+	Vote          bool
+	VoteTargetID  string
+	VoteSkip      bool
+	Chat          bool
+	ChatMessageID string
+	ChatText      string
 }
 
 type player struct {
@@ -114,6 +132,34 @@ type player struct {
 	assignedTasks  map[string]bool
 	taskStartTick  int64
 	taskStation    string
+
+	// S2-05: Chat
+	lastChatTick int64
+}
+
+// meetingState guarda el estado de la reunión activa (S2-05).
+type meetingState struct {
+	reporterID   string
+	tankSlot     int32
+	lastVisitors []string
+	votes        map[string]voteChoice // voterID -> choice
+	votingEndsAt int64                 // tick donde vence la votación
+	resultEndsAt int64                 // tick donde termina resultado
+	votingClosed bool
+	ejectedID    string
+	wasImpostor  bool
+}
+
+type voteChoice struct {
+	targetID string
+	skip     bool
+}
+
+type chatEntry struct {
+	id       string
+	playerID string
+	text     string
+	tick     int64
 }
 
 // tankAction es contaminar o limpiar: termina cuando pasan ticksLeft
