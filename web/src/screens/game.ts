@@ -9,7 +9,7 @@ import { session } from '../session';
 let animationFrame: number;
 
 export function mountGame(
-  show: (screen: 'login' | 'lobby' | 'game') => void
+  show: (screen: 'login' | 'register' | 'lobby' | 'game') => void
 ): void {
   const canvas = document.querySelector<HTMLCanvasElement>('#game')!;
   const ctx = canvas.getContext('2d')!;

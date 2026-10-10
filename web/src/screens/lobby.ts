@@ -5,7 +5,7 @@ import { connect } from '../net/socket';
 import type { PlayerView } from '@in-filtrados/messages';
 
 export function mountLobby(
-  show: (screen: 'login' | 'lobby' | 'game') => void
+  show: (screen: 'login' | 'register' | 'lobby' | 'game') => void
 ): void {
   const container = document.getElementById('screen-lobby')!;
   const currentSession = session.loadSession();

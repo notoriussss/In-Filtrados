@@ -3,7 +3,7 @@ import { session } from '../session';
 import { MENSAJES_ERROR } from '../constants';
 
 export function mountLogin(
-  show: (screen: 'login' | 'lobby' | 'game') => void
+  show: (screen: 'login' | 'register' | 'lobby' | 'game') => void
 ): void {
   const container = document.getElementById('screen-login')!;
   
@@ -28,7 +28,7 @@ export function mountLogin(
         />
         <div class="button-group">
           <button type="submit" id="btn-login" class="primary">Entrar</button>
-          <button type="button" id="btn-register" class="secondary">
+          <button type="button" id="btn-go-register" class="secondary">
             Crear cuenta
           </button>
         </div>
@@ -40,7 +40,7 @@ export function mountLogin(
   const usernameInput = document.getElementById('username') as HTMLInputElement;
   const passwordInput = document.getElementById('password') as HTMLInputElement;
   const errorDiv = document.getElementById('login-error') as HTMLDivElement;
-  const btnRegister = document.getElementById('btn-register') as HTMLButtonElement;
+  const btnGoRegister = document.getElementById('btn-go-register') as HTMLButtonElement;
 
   function showError(msg: string) {
     errorDiv.textContent = msg;
@@ -74,32 +74,7 @@ export function mountLogin(
     }
   });
 
-  btnRegister.addEventListener('click', async () => {
-    clearError();
-    if (!form.checkValidity()) {
-      form.reportValidity();
-      return;
-    }
-
-    const username = usernameInput.value.trim();
-    const password = passwordInput.value;
-
-    try {
-      await api.register(username, password);
-      const res = await api.login(username, password);
-      session.saveSession({
-        token: res.token,
-        playerId: res.playerId,
-        username: res.username,
-      });
-      show('lobby');
-    } catch (err: any) {
-      const msg = err.message || '';
-      if (msg.includes('409') || msg.toLowerCase().includes('already_exists')) {
-        showError(MENSAJES_ERROR.USUARIO_YA_EXISTE);
-      } else {
-        showError(msg || MENSAJES_ERROR.SERVICIO_NO_DISPONIBLE);
-      }
-    }
+  btnGoRegister.addEventListener('click', () => {
+    show('register');
   });
 }
