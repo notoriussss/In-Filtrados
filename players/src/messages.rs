@@ -12,4 +12,4 @@ pub const ERR_MSG_INVALID_CREDENTIALS: &str =
     "Usuario o contraseña incorrectos";
 pub const ERR_MSG_INVALID_TOKEN: &str = "Token inválido o vencido";
 pub const ERR_MSG_INTERNAL: &str = "Error interno del servidor";
-pub const ERR_MSG_NOT_IMPLEMENTED: &str = "Función no implementada todavía";
+pub const ERR_MSG_PLAYER_NOT_FOUND: &str = "El jugador no existe";

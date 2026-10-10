@@ -9,6 +9,7 @@ mod consumer;
 mod grpc;
 mod health;
 mod messages;
+mod progress;
 
 use axum::{routing::get, Router};
 use sqlx::postgres::PgPoolOptions;
