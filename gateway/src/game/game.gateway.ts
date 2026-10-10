@@ -69,6 +69,10 @@ export class GameGateway implements OnGatewayConnection {
     socket.on('close', () => {
       if (playerId) {
         this.logger.log(`ws close ${playerId}`);
+        const current = this.activeSockets.get(playerId);
+        if (current === socket) {
+          this.activeSockets.delete(playerId);
+        }
       }
       stream?.end();
     });
