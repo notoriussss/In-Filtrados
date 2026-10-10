@@ -39,6 +39,7 @@ type Room struct {
 	rnd           io.Reader // azar de los roles: crypto/rand
 	startTick     int64
 	eventLog      EventLog
+	reservoir     int32 // S2-04
 
 	joins   chan Join
 	leaves  chan Leave
@@ -125,6 +126,12 @@ func (r *Room) handleAction(a PlayerAction) {
 		r.startContaminate(a.PlayerID, p, a.TankSlot)
 	case a.Clean:
 		r.startClean(p, a.TankSlot)
+	case a.InteractTask:
+		if !a.Completed {
+			r.startTask(a.PlayerID, p, a.StationID)
+		} else {
+			r.completeTask(a.PlayerID, p, a.StationID)
+		}
 	default:
 		p.dx, p.dy = clampDir(a.DX), clampDir(a.DY)
 	}
@@ -205,6 +212,11 @@ func (r *Room) startMatch(playerID string) {
 	r.startedAt = time.Now()
 	r.startTick = r.tick
 	r.tanks = r.buildTanks()
+	if err := r.assignTasks(); err != nil {
+		log.Printf("room %s: no se pudo asignar tareas: %v", r.Code, err)
+		return
+	}
+	r.reservoir = 0
 	r.participants = r.snapshotParticipants()
 
 	ctx, cancel := context.WithTimeout(context.Background(), depsTimeout)
@@ -404,11 +416,16 @@ func (r *Room) broadcast() {
 			continue
 		}
 		snap := &matchv1.Snapshot{
-			Tick:    r.tick,
-			Phase:   r.phase,
-			Players: views,
-			Tanks:   tanks,
-			MyRole:  p.role,
+			Tick:      r.tick,
+			Phase:     r.phase,
+			Players:   views,
+			Tanks:     tanks,
+			Reservoir: r.reservoir,
+			MyRole:    p.role,
+			MyTaskProgress: &matchv1.TaskProgress{
+				Completed: int32(p.tasksCompleted),
+				Total:     int32(len(p.assignedTasks) + p.tasksCompleted),
+			},
 		}
 		select {
 		case p.out <- snap:

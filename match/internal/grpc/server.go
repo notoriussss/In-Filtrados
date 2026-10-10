@@ -212,19 +212,27 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 	}
 }
 
-// interactAction traduce Interact: sobre un tanque es limpiar (S2-03).
-// Las estaciones de tareas llegan con S2-04 y por ahora se ignoran.
+// interactAction traduce Interact: sobre un tanque es limpiar (S2-03),
+// y sobre una estación es una tarea (S2-04).
 func interactAction(
 	playerID string,
 	interact *matchv1.Interact,
 ) (room.PlayerAction, bool) {
-	target, ok := interact.GetTarget().(*matchv1.Interact_TankSlot)
-	if !ok {
+	switch target := interact.GetTarget().(type) {
+	case *matchv1.Interact_TankSlot:
+		return room.PlayerAction{
+			PlayerID: playerID,
+			Clean:    true,
+			TankSlot: target.TankSlot,
+		}, true
+	case *matchv1.Interact_StationId:
+		return room.PlayerAction{
+			PlayerID:     playerID,
+			InteractTask: true,
+			StationID:    target.StationId,
+			Completed:    interact.GetCompleted(),
+		}, true
+	default:
 		return room.PlayerAction{}, false
 	}
-	return room.PlayerAction{
-		PlayerID: playerID,
-		Clean:    true,
-		TankSlot: target.TankSlot,
-	}, true
 }

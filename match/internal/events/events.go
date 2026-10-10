@@ -11,9 +11,10 @@ import (
 
 // Exchange y routing keys del contrato (docs/tasks.md 0.7).
 const (
-	ExchangeName       = "game.events"
-	RoutingKeyStarted  = "match.started"
-	RoutingKeyFinished = "match.finished"
+	ExchangeName            = "game.events"
+	RoutingKeyStarted       = "match.started"
+	RoutingKeyFinished      = "match.finished"
+	RoutingKeyTaskCompleted = "task.completed"
 )
 
 // Roles y ganadores de match.finished (docs/tasks.md 0.7).
@@ -44,6 +45,15 @@ type MatchFinished struct {
 	FinishedAt string         `json:"finished_at"`
 	Winner     string         `json:"winner"`
 	Players    []PlayerResult `json:"players"`
+}
+
+// TaskCompleted es el evento `task.completed` de docs/tasks.md 0.7.
+type TaskCompleted struct {
+	EventID     string `json:"event_id"`
+	MatchID     string `json:"match_id"`
+	PlayerID    string `json:"player_id"`
+	TaskType    string `json:"task_type"`
+	LitersSaved int32  `json:"liters_saved"`
 }
 
 // PlayerResult es el resultado de un jugador dentro de `match.finished`.
@@ -83,6 +93,22 @@ func NewMatchFinished(
 		FinishedAt: formatTime(finishedAt),
 		Winner:     winner,
 		Players:    players,
+	}
+}
+
+// NewTaskCompleted arma el evento con un `event_id` nuevo.
+func NewTaskCompleted(
+	matchID string,
+	playerID string,
+	taskType string,
+	litersSaved int32,
+) TaskCompleted {
+	return TaskCompleted{
+		EventID:     uuid.New().String(),
+		MatchID:     matchID,
+		PlayerID:    playerID,
+		TaskType:    taskType,
+		LitersSaved: litersSaved,
 	}
 }
 
