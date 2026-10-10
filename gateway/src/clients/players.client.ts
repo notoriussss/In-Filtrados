@@ -1,55 +1,80 @@
-import * as path from 'path';
+import { Injectable } from '@nestjs/common';
 import * as grpc from '@grpc/grpc-js';
-import * as protoLoader from '@grpc/proto-loader';
+import { loadPackage, requireAddr, unary } from './grpc';
+import { createBreaker, guarded } from './resilience';
 
-const PROTO_PATH = path.join(
-  __dirname,
-  '..',
-  '..',
-  '..',
-  'proto',
-  'players.proto',
-);
-
-const definition = protoLoader.loadSync(PROTO_PATH, {
-  keepCase: false, // Convierte snake_case a camelCase (player_id -> playerId)
-  longs: Number,
-  enums: String,
-  defaults: true,
-  oneofs: true,
-});
-
-const loaded = grpc.loadPackageDefinition(definition) as any;
-
-export interface ValidateTokenResponse {
+export type PlayerReply = {
   playerId: string;
   username: string;
-}
+};
 
-let client: any = null;
+export type TokenReply = {
+  token: string;
+  playerId: string;
+  username: string;
+};
 
-function getClient() {
-  if (!client) {
-    const addr = process.env.PLAYERS_GRPC_ADDR;
-    if (!addr) {
-      throw new Error('PLAYERS_GRPC_ADDR is not set');
-    }
-    client = new loaded.players.v1.Players(
-      addr,
+export type ProfileReply = {
+  playerId: string;
+  username: string;
+  coins: number;
+  matchesPlayed: number;
+  wins: number;
+};
+
+@Injectable()
+export class PlayersClient {
+  private readonly client: any;
+  private readonly breaker = createBreaker('players');
+
+  constructor() {
+    const pkg = loadPackage('players.proto');
+    this.client = new pkg.players.v1.Players(
+      requireAddr('PLAYERS_GRPC_ADDR'),
       grpc.credentials.createInsecure(),
     );
   }
-  return client;
-}
 
-export function validateToken(token: string): Promise<ValidateTokenResponse> {
-  return new Promise((resolve, reject) => {
-    getClient().ValidateToken({ token }, (err: grpc.ServiceError, response: ValidateTokenResponse) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(response);
-      }
-    });
-  });
+  register(
+    username: string,
+    password: string,
+  ): Promise<PlayerReply> {
+    return guarded(
+      this.breaker,
+      () =>
+        unary<PlayerReply>(this.client, 'Register', {
+          username,
+          password,
+        }),
+      false,
+    );
+  }
+
+  login(
+    username: string,
+    password: string,
+  ): Promise<TokenReply> {
+    return guarded(this.breaker, () =>
+      unary<TokenReply>(this.client, 'Login', {
+        username,
+        password,
+      }),
+    );
+  }
+
+  validateToken(token: string): Promise<PlayerReply> {
+    return guarded(this.breaker, () =>
+      unary<PlayerReply>(this.client, 'ValidateToken', {
+        token,
+      }),
+    );
+  }
+
+  getProfile(playerId: string): Promise<ProfileReply> {
+    return guarded(this.breaker, () =>
+      unary<ProfileReply>(this.client, 'GetProfile', {
+        playerId,
+      }),
+    );
+  }
 }
