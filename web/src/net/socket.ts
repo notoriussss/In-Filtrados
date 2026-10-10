@@ -1,9 +1,10 @@
 import type { ClientMessage, ServerMessage } from '@in-filtrados/messages';
 import { session } from '../session';
 
-// Close codes (S1-20): a normal close or an invalid token never retries.
+// Close codes (S1-20): a normal close, invalid token or replaced session never retries.
 export const CLOSE_NORMAL = 1000;
 export const CLOSE_UNAUTHORIZED = 4001;
+export const CLOSE_REPLACED = 4002;
 
 // Waits between reconnection attempts: 0.5 s, 1 s, 2 s, 4 s, 8 s and
 // then every 10 s, with no limit.
@@ -126,7 +127,7 @@ export class GameSocket {
         this.opts.onUnauthorized?.();
         return;
       }
-      if (e.code === CLOSE_NORMAL) {
+      if (e.code === CLOSE_NORMAL || e.code === CLOSE_REPLACED) {
         this.closed = true;
         return;
       }
