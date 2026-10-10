@@ -19,10 +19,14 @@ sqlx       = { version = "0.9", features = [
     "chrono",
 ] }
 argon2     = "0.6"
-uuid       = { version = "1", features = ["v4"] }
+uuid       = { version = "1", features = ["v4", "serde"] }
 chrono     = "0.4"
 getrandom  = "0.4"
 hex        = "0.4"
+lapin      = { version = "4", default-features = false, features = [
+    "default-runtime",
+] }
+futures-lite = "2"
 
 [build-dependencies]
 tonic-build = "0.12"

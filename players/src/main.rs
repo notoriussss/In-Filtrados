@@ -5,6 +5,7 @@
 #![allow(clippy::result_large_err)]
 
 mod accounts;
+mod consumer;
 mod grpc;
 mod health;
 mod messages;
@@ -36,6 +37,16 @@ async fn main() {
         .run(&pool)
         .await
         .expect("no se pudieron aplicar las migraciones");
+
+    // S1-14: el consumidor corre aparte y nunca tumba el servicio.
+    match std::env::var("RABBITMQ_URL") {
+        Ok(url) => {
+            tokio::spawn(consumer::run(pool.clone(), url));
+        }
+        Err(_) => {
+            eprintln!("players: falta RABBITMQ_URL; no se consumirán eventos");
+        }
+    }
 
     let http_port = read_port("HTTP_PORT", HTTP_PORT_DEFAULT);
     let grpc_port = read_port("GRPC_PORT", GRPC_PORT_DEFAULT);
