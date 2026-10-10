@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>In-Filtrados · Monitor</title>
+
+    <style>
+        :root {
+            color-scheme: dark;
+            font-family: system-ui, sans-serif;
+            background: #101827;
+            color: #e8edf5;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            max-width: 1200px;
+            margin: auto;
+            padding: 24px;
+        }
+
+        h1,
+        h2,
+        p {
+            margin-top: 0;
+        }
+
+        .muted {
+            color: #aab7cb;
+        }
+
+        .banner {
+            padding: 14px;
+            margin-bottom: 20px;
+            background: #472129;
+            border: 1px solid #f87171;
+            border-radius: 10px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+        }
+
+        .card {
+            background: #1b2638;
+            border: 1px solid #354158;
+            border-top: 5px solid #94a3b8;
+            border-radius: 12px;
+            padding: 18px;
+        }
+
+        .card.ok {
+            border-top-color: #4ade80;
+        }
+
+        .card.degraded {
+            border-top-color: #facc15;
+        }
+
+        .card.down {
+            border-top-color: #f87171;
+        }
+
+        .card.down .badge {
+            animation: alert-pulse 1.2s infinite;
+        }
+
+        @keyframes alert-pulse {
+            50% {
+                opacity: 0.35;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .card.down .badge {
+                animation: none;
+            }
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .card-header h2 {
+            font-size: 1.15rem;
+            margin: 0;
+        }
+
+        .badge {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #111827;
+            background: #94a3b8;
+            padding: 5px 9px;
+            border-radius: 20px;
+        }
+
+        .ok .badge {
+            background: #4ade80;
+        }
+
+        .degraded .badge {
+            background: #facc15;
+        }
+
+        .down .badge {
+            background: #f87171;
+        }
+
+        dl {
+            margin: 0;
+        }
+
+        dt {
+            color: #aab7cb;
+            font-size: 0.85rem;
+        }
+
+        dd {
+            margin: 3px 0 13px;
+        }
+
+        .detail {
+            font-size: 0.85rem;
+            overflow-wrap: anywhere;
+            min-height: 2.5em;
+        }
+
+        .history {
+            display: flex;
+            gap: 4px;
+            margin-top: 8px;
+        }
+
+        .sample {
+            height: 12px;
+            flex: 1;
+            background: #94a3b8;
+            border-radius: 3px;
+        }
+
+        .sample.ok {
+            background: #4ade80;
+        }
+
+        .sample.degraded {
+            background: #facc15;
+        }
+
+        .sample.down {
+            background: #f87171;
+        }
+
+        #incident-list {
+            padding-left: 22px;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        #incident-list li {
+            margin-bottom: 8px;
+        }
+
+        section {
+            margin-bottom: 28px;
+        }
+
+        [hidden] {
+            display: none !important;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>In-Filtrados · Salud del sistema</h1>
+        <p class="muted">
+            Verde: disponible · Amarillo: degradado · Rojo: fallo
+        </p>
+        <p id="scan-time" class="muted">Esperando primera comprobación…</p>
+    </header>
+
+    <div id="connection-error" class="banner" role="alert" hidden>
+        No se pudo consultar el monitor. Los datos visibles pueden estar
+        desactualizados; esto no significa que todos los servicios estén caídos.
+    </div>
+
+    <section aria-labelledby="incidents-title">
+        <h2 id="incidents-title">Incidentes registrados</h2>
+        <p id="no-incidents" class="muted">Sin incidentes.</p>
+        <ul id="incident-list"></ul>
+    </section>
+
+    <section aria-labelledby="services-title">
+        <h2 id="services-title">Servicios y dependencias</h2>
+        <div id="services" class="grid">
+            <p class="muted">Cargando datos…</p>
+        </div>
+    </section>
+
+    <script>
+        const stateLabels = {
+            ok: "Disponible",
+            degraded: "Degradado",
+            down: "Caído",
+            unknown: "Sin comprobar",
+        };
+
+        const cards = new Map();
+        let latestIncidentSignature = null;
+
+        function safeState(value) {
+            return Object.hasOwn(stateLabels, value) ? value : "unknown";
+        }
+
+        function formatDate(value) {
+            if (!value) return "Sin registro";
+
+            const date = new Date(value);
+            return Number.isNaN(date.getTime())
+                ? "Sin registro"
+                : date.toLocaleString("es");
+        }
+
+        function elapsedSeconds(value) {
+            const timestamp = new Date(value).getTime();
+            if (!Number.isFinite(timestamp)) return null;
+            return Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
+        }
+
+        function addMetric(list, label) {
+            const term = document.createElement("dt");
+            term.textContent = label;
+
+            const value = document.createElement("dd");
+            list.append(term, value);
+            return value;
+        }
+
+        function createCard(name) {
+            const card = document.createElement("article");
+            card.className = "card unknown";
+
+            const header = document.createElement("div");
+            header.className = "card-header";
+
+            const title = document.createElement("h2");
+            title.textContent = name;
+
+            const badge = document.createElement("span");
+            badge.className = "badge";
+            header.append(title, badge);
+
+            const metrics = document.createElement("dl");
+            const latency = addMetric(metrics, "Latencia de comprobación");
+            const lastOk = addMetric(metrics, "Última comprobación OK");
+            const downtime = addMetric(metrics, "Tiempo de caída");
+
+            const detail = document.createElement("p");
+            detail.className = "detail muted";
+
+            const historyLabel = document.createElement("p");
+            historyLabel.className = "muted";
+            historyLabel.textContent = "Últimas 20 comprobaciones";
+
+            const history = document.createElement("div");
+            history.className = "history";
+
+            card.append(header, metrics, detail, historyLabel, history);
+
+            return {
+                card, badge, latency, lastOk, downtime, detail, history,
+                downSince: null,
+            };
+        }
+
+        function updateDowntime(view) {
+            const seconds = view.downSince
+                ? elapsedSeconds(view.downSince)
+                : null;
+
+            view.downtime.textContent = seconds === null
+                ? "Sin caída activa registrada"
+                : `Caído desde hace ${seconds} s`;
+        }
+
+        function renderServices(services) {
+            const container = document.getElementById("services");
+
+            if (cards.size === 0) container.replaceChildren();
+
+            const activeNames = new Set();
+
+            for (const service of services) {
+                const name = String(service.name);
+                activeNames.add(name);
+
+                let view = cards.get(name);
+                if (!view) {
+                    view = createCard(name);
+                    cards.set(name, view);
+                    container.append(view.card);
+                }
+
+                const state = safeState(service.status);
+                view.card.className = `card ${state}`;
+                view.badge.textContent = stateLabels[state];
+
+                view.latency.textContent = Number.isFinite(service.latency_ms)
+                    ? `${service.latency_ms.toFixed(1)} ms`
+                    : "Sin medición";
+
+                view.lastOk.textContent = formatDate(service.last_ok_at);
+                view.detail.textContent = service.detail || "Sin detalle";
+                view.downSince = service.down_since;
+                updateDowntime(view);
+
+                const samples = (service.history || []).slice(-20).map(sample => {
+                    const marker = document.createElement("span");
+                    const sampleState = safeState(sample.status);
+                    marker.className = `sample ${sampleState}`;
+                    marker.title =
+                        `${stateLabels[sampleState]} · ${formatDate(sample.checked_at)}`;
+                    return marker;
+                });
+
+                view.history.replaceChildren(...samples);
+            }
+
+            for (const [name, view] of cards) {
+                if (!activeNames.has(name)) {
+                    view.card.remove();
+                    cards.delete(name);
+                }
+            }
+        }
+
+        function renderIncidents(incidents) {
+            const signature = JSON.stringify(incidents);
+            if (signature === latestIncidentSignature) return;
+            latestIncidentSignature = signature;
+
+            const list = document.getElementById("incident-list");
+            list.replaceChildren();
+
+            document.getElementById("no-incidents").hidden =
+                incidents.length > 0;
+
+            for (const incident of incidents) {
+                const item = document.createElement("li");
+                item.textContent =
+                    `${formatDate(incident.started_at)} — ${incident.service}: ` +
+                    `${incident.detail}`;
+                list.append(item);
+            }
+        }
+
+        async function refresh() {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 4000);
+
+            try {
+                const response = await fetch("/api/status", {
+                    signal: controller.signal,
+                    cache: "no-store",
+                });
+
+                if (!response.ok) throw new Error("Monitor response failed");
+
+                const data = await response.json();
+                if (
+                    !Array.isArray(data.services) ||
+                    !Array.isArray(data.incidents)
+                ) {
+                    throw new Error("Invalid monitor response");
+                }
+
+                renderServices(data.services);
+                renderIncidents(data.incidents);
+
+                document.getElementById("scan-time").textContent =
+                    data.last_scan_at
+                        ? `Última comprobación: ${formatDate(data.last_scan_at)}`
+                        : "Esperando primera comprobación…";
+
+                document.getElementById("connection-error").hidden = false;
+                document.getElementById("connection-error").hidden = true;
+            } catch {
+                document.getElementById("connection-error").hidden = false;
+            } finally {
+                clearTimeout(timeout);
+                // Evita consultas solapadas si el monitor tarda en responder.
+                setTimeout(refresh, 2000);
+            }
+        }
+
+        setInterval(() => {
+            for (const view of cards.values()) updateDowntime(view);
+        }, 1000);
+
+        refresh();
+    </script>
+</body>
+
+</html>
