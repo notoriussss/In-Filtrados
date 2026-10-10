@@ -1,8 +1,8 @@
 import { api } from '../api';
 import { session } from '../session';
-import { ERROR_MESSAGES } from '../constants';
-import { connect } from '../net/socket';
-import type { ClientMessage, PlayerView } from '@in-filtrados/messages';
+import { CONNECTION_MESSAGES, ERROR_MESSAGES } from '../constants';
+import { type GameSocket, openGameSocket } from '../net/socket';
+import type { PlayerView } from '@in-filtrados/messages';
 
 export function mountLobby(
   show: (screen: 'login' | 'register' | 'lobby' | 'game') => void
@@ -93,10 +93,22 @@ export function mountLobby(
     errorDiv.textContent = '';
   }
 
-  let currentSend: ((msg: ClientMessage) => void) | null = null;
+  let socket: GameSocket | null = null;
 
   function connectToRoom(token: string, matchId: string) {
-    currentSend = connect(token, matchId, (msg) => {
+    socket = openGameSocket({
+      token,
+      matchId,
+      onUnauthorized: () => show('login'),
+    });
+    socket.onStatus((status) => {
+      if (status.state === 'reconnecting') {
+        showError(CONNECTION_MESSAGES.reconnecting(status.attempt));
+      } else {
+        clearError();
+      }
+    });
+    socket.onMessage((msg) => {
       if (msg.type === 'snapshot') {
         if (msg.phase === 'LOBBY') {
           updatePlayerList(msg.players);
@@ -123,6 +135,7 @@ export function mountLobby(
         }
       }
     });
+    socket.connect();
   }
 
   if (currentSession.matchId) {
@@ -206,8 +219,6 @@ export function mountLobby(
   }
 
   btnStart.addEventListener('click', () => {
-    if (currentSend) {
-      currentSend({ type: 'start' });
-    }
+    socket?.send({ type: 'start' });
   });
 }

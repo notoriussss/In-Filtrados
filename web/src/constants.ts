@@ -5,3 +5,8 @@ export const ERROR_MESSAGES = {
   SERVICE_UNAVAILABLE: 'El servidor no responde, intenta de nuevo',
   SERVER_ERROR: 'Error del servidor',
 } as const;
+
+// Avisos de la conexión con el servidor de juego (S1-20).
+export const CONNECTION_MESSAGES = {
+  reconnecting: (attempt: number) => `Reconectando… (intento ${attempt})`,
+} as const;

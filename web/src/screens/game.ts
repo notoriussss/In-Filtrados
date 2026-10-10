@@ -3,8 +3,13 @@ import { gameMap } from '../map';
 import { type Camera, clampCamera, createCamera } from '../canvas/camera';
 import { renderMap } from '../canvas/renderMap';
 import { renderPlayers } from '../canvas/renderPlayers';
-import { connect, disconnect } from '../net/socket';
+import {
+  closeGameSocket,
+  openGameSocket,
+  type SocketStatus,
+} from '../net/socket';
 import { session } from '../session';
+import { CONNECTION_MESSAGES } from '../constants';
 
 let animationFrame: number;
 
@@ -28,17 +33,24 @@ export function mountGame(
   let players: PlayerView[] = [];
   const meId = currentSession.playerId;
   
-  const send = connect(
-    currentSession.token,
-    currentSession.matchId,
-    (msg) => {
-      if (msg.type === 'snapshot') {
-        players = msg.players;
-      } else if (msg.type === 'error') {
-        console.warn(msg.code, msg.message);
-      }
+  let status: SocketStatus = { state: 'connected' };
+  const socket = openGameSocket({
+    token: currentSession.token,
+    matchId: currentSession.matchId,
+    onUnauthorized: () => show('login'),
+  });
+  socket.onStatus((s) => {
+    status = s;
+  });
+  socket.onMessage((msg) => {
+    if (msg.type === 'snapshot') {
+      players = msg.players;
+    } else if (msg.type === 'error') {
+      console.warn(msg.code, msg.message);
     }
-  );
+  });
+  socket.connect();
+  const send = socket.send.bind(socket);
 
   function resize(): void {
     const dpr = window.devicePixelRatio || 1;
@@ -106,6 +118,9 @@ export function mountGame(
     ctx.fillRect(0, 0, camera.viewWidth, camera.viewHeight);
     renderMap(ctx, gameMap, camera);
     renderPlayers(ctx, players, camera, meId);
+    if (status.state === 'reconnecting') {
+      renderReconnecting(ctx, camera, status.attempt);
+    }
     animationFrame = requestAnimationFrame(frame);
   }
 
@@ -120,7 +135,7 @@ export function mountGame(
     window.removeEventListener('blur', onBlur);
     window.removeEventListener('resize', resize);
     cancelAnimationFrame(animationFrame);
-    disconnect();
+    closeGameSocket();
   };
 }
 
@@ -130,4 +145,23 @@ export function unmountGame(): void {
     (canvas as any)._cleanup();
     delete (canvas as any)._cleanup;
   }
+}
+
+// Aviso sobre el canvas mientras el socket reconecta (S1-20).
+function renderReconnecting(
+  ctx: CanvasRenderingContext2D,
+  camera: Camera,
+  attempt: number,
+): void {
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+  ctx.fillRect(0, 0, camera.viewWidth, camera.viewHeight);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 28px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(
+    CONNECTION_MESSAGES.reconnecting(attempt),
+    camera.viewWidth / 2,
+    camera.viewHeight / 2,
+  );
 }
