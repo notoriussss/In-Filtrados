@@ -25,6 +25,17 @@ func mapWithTanks() *Map {
 	return m
 }
 
+// mapWithStations es testMap con tanques y 3 estaciones conocidas.
+func mapWithStations() *Map {
+	m := mapWithTanks()
+	m.Stations = []Station{
+		{ID: "leak-1", Type: "reduce", X: 400, Y: 300},
+		{ID: "rain-1", Type: "reuse", X: 600, Y: 300},
+		{ID: "filter-1", Type: "recycle", X: 800, Y: 300},
+	}
+	return m
+}
+
 // waitTicks descarta lo que haya en ch y espera n snapshots nuevos.
 func waitTicks(
 	t *testing.T,
