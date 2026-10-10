@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ClientMessage } from '@in-filtrados/messages';
 import {
   CLOSE_NORMAL,
+  CLOSE_REPLACED,
   CLOSE_UNAUTHORIZED,
   GameSocket,
   type SocketLike,
@@ -34,7 +35,7 @@ class FakeSocket implements SocketLike {
   send(data: string): void {
     this.sent.push(JSON.parse(data));
   }
-  close(): void {}
+  close(): void { }
 
   open(): void {
     this.readyState = 1;
@@ -67,7 +68,7 @@ function setup() {
       return s;
     },
     setTimer: (fn, ms) => timers.push({ fn, ms }),
-    clearTimer: () => {},
+    clearTimer: () => { },
     onUnauthorized: () => unauthorized++,
   });
   gs.onStatus((s) => statuses.push(s));
@@ -159,6 +160,16 @@ describe('GameSocket', () => {
     sockets[0].open();
     sockets[0].drop(CLOSE_NORMAL);
     expect(timers).toHaveLength(0);
+  });
+
+  it('con un cierre 4002 no se reintenta y la sesión sigue', () => {
+    session.saveSession({ token: 't', playerId: 'p', username: 'u' });
+    const { sockets, timers } = setup();
+    sockets[0].open();
+    sockets[0].drop(CLOSE_REPLACED);
+    expect(timers).toHaveLength(0);
+    expect(session.loadSession()).not.toBeNull();
+    expect(session.loadSession()?.token).toBe('t');
   });
 
   it('goes back to login on 4001 and does not retry', () => {
