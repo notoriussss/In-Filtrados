@@ -3,7 +3,7 @@
 
 // Browser -> gateway
 export type ClientMessage =
-  | { type: 'join'; matchId: string; lastTick: number }
+  | { type: 'join'; matchId: string; lastTick: number } // first message after connecting
   | { type: 'move'; dx: -1 | 0 | 1; dy: -1 | 0 | 1 }
   | { type: 'start' }; // solo el creador; match lo valida
 

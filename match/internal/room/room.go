@@ -286,6 +286,15 @@ func (r *Room) broadcast() {
 	for _, p := range r.players {
 		views = append(views, proto.Clone(p.view).(*matchv1.PlayerView))
 	}
+	sort.Slice(views, func(i, j int) bool {
+		if views[i].Id == r.creatorID {
+			return true
+		}
+		if views[j].Id == r.creatorID {
+			return false
+		}
+		return views[i].Id < views[j].Id
+	})
 	snap := &matchv1.Snapshot{
 		Tick:    r.tick,
 		Phase:   r.phase,

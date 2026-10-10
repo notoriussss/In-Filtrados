@@ -1,40 +1,67 @@
 import { Logger } from '@nestjs/common';
 import { OnGatewayConnection, WebSocketGateway } from '@nestjs/websockets';
 import type { IncomingMessage } from 'http';
-import type { WebSocket } from 'ws';
+import type { RawData, WebSocket } from 'ws';
+import { status } from '@grpc/grpc-js';
 import type { ClientMessage, ServerMessage } from '@in-filtrados/messages';
 import { MatchClient, type PlayStream } from '../clients/match.client';
 import { ERROR_CODES, ERROR_MESSAGES } from './game.constants';
+import { PlayersClient } from '../clients/players.client';
 
-// S1-07: WebSocket /ws?playerId=<id> without token, 1 Play stream per socket.
-// S1-16 replaces playerId with token and adds final error handling.
+// WebSocket /ws?token=...; one Play stream per player
 @WebSocketGateway({ path: '/ws' })
 export class GameGateway implements OnGatewayConnection {
   private readonly logger = new Logger(GameGateway.name);
+  private readonly activeSockets = new Map<string, WebSocket>();
 
-  constructor(private readonly match: MatchClient) {}
+  constructor(
+    private readonly match: MatchClient,
+    private readonly players: PlayersClient,
+  ) {}
 
-  handleConnection(socket: WebSocket, req: IncomingMessage): void {
-    const playerId = new URL(
+  async handleConnection(
+    socket: WebSocket,
+    req: IncomingMessage,
+  ): Promise<void> {
+    const token = new URL(
       req.url ?? '',
       'http://localhost',
-    ).searchParams.get('playerId');
-    if (!playerId) {
+    ).searchParams.get('token');
+
+    if (!token) {
       send(socket, {
         type: 'error',
-        code: ERROR_CODES.BAD_MESSAGE,
-        message: ERROR_MESSAGES.MISSING_PLAYER_ID,
+        code: ERROR_CODES.UNAUTHORIZED,
+        message: ERROR_MESSAGES.MISSING_TOKEN,
       });
-      socket.close(4000);
+      socket.close(4001);
       return;
     }
-    this.logger.log(`ws open ${playerId}`);
+
+    let isAuthenticated = false;
+    const messageQueue: RawData[] = [];
     let stream: PlayStream | null = null;
+    let playerId: string | null = null;
 
     socket.on('message', (raw) => {
+      if (!isAuthenticated) {
+        messageQueue.push(raw);
+        return;
+      }
+      processMessage(raw);
+    });
+
+    const processMessage = (raw: any) => {
       const msg = parse(raw.toString());
-      if (!msg) return;
-      if (msg.type === 'join' && !stream) {
+      if (!msg) {
+        send(socket, {
+          type: 'error',
+          code: ERROR_CODES.BAD_MESSAGE,
+          message: ERROR_MESSAGES.MALFORMED_MESSAGE,
+        });
+        return;
+      }
+      if (msg.type === 'join' && !stream && playerId) {
         stream = this.openPlay(
           socket,
           playerId,
@@ -46,12 +73,51 @@ export class GameGateway implements OnGatewayConnection {
       } else if (msg.type === 'start' && stream) {
         stream.write({ start: {} });
       }
-    });
+    };
 
     socket.on('close', () => {
-      this.logger.log(`ws close ${playerId}`);
+      if (playerId) {
+        this.logger.log(`ws close ${playerId}`);
+        const current = this.activeSockets.get(playerId);
+        if (current === socket) {
+          this.activeSockets.delete(playerId);
+        }
+      }
       stream?.end();
     });
+
+    try {
+      const res = await this.players.validateToken(token);
+      playerId = res.playerId;
+    } catch (err: any) {
+      if (err.code === status.UNAUTHENTICATED) {
+        send(socket, {
+          type: 'error',
+          code: ERROR_CODES.UNAUTHORIZED,
+          message: ERROR_MESSAGES.INVALID_TOKEN,
+        });
+        socket.close(4001);
+      } else {
+        send(socket, {
+          type: 'error',
+          code: ERROR_CODES.SERVICE_UNAVAILABLE,
+          message: ERROR_MESSAGES.PLAYERS_SERVICE_UNAVAILABLE,
+        });
+        socket.close(1011);
+      }
+      return;
+    }
+
+    isAuthenticated = true;
+    this.logger.log(`ws open ${playerId}`);
+
+    const existing = this.activeSockets.get(playerId);
+    if (existing) {
+      existing.close(4001);
+    }
+    this.activeSockets.set(playerId, socket);
+
+    messageQueue.forEach(processMessage);
   }
 
   private openPlay(
@@ -111,9 +177,15 @@ function parse(raw: string): ClientMessage | null {
       };
     }
     if (msg?.type === 'move') {
-      const dx = Math.sign(Number(msg.dx) || 0) as -1 | 0 | 1;
-      const dy = Math.sign(Number(msg.dy) || 0) as -1 | 0 | 1;
-      return { type: 'move', dx, dy };
+      const dx = msg.dx;
+      const dy = msg.dy;
+      if (
+        (dx === -1 || dx === 0 || dx === 1) &&
+        (dy === -1 || dy === 0 || dy === 1)
+      ) {
+        return { type: 'move', dx, dy };
+      }
+      return null;
     }
     if (msg?.type === 'start') {
       return { type: 'start' };

@@ -56,7 +56,7 @@ export function createBreaker(
     {
       ...options,
       // Business errors (NOT_FOUND, ALREADY_EXISTS...) do not trip it.
-      errorFilter: (err) => !isTransient(err),
+      errorFilter: (err: any) => !isTransient(err),
     },
   );
 
