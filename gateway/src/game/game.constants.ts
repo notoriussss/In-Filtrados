@@ -13,4 +13,5 @@ export const ERROR_MESSAGES = {
   INVALID_TOKEN: 'Sesión inválida o expirada',
   MISSING_PLAYER_ID: 'Falta el playerId',
   MATCH_SERVICE_UNAVAILABLE: 'El servidor de la partida no responde',
+  MALFORMED_MESSAGE: 'Mensaje inválido o malformado',
 } as const;

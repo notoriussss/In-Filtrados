@@ -46,7 +46,14 @@ export class GameGateway implements OnGatewayConnection {
 
     const processMessage = (raw: any) => {
       const msg = parse(raw.toString());
-      if (!msg) return;
+      if (!msg) {
+        send(socket, {
+          type: 'error',
+          code: ERROR_CODES.BAD_MESSAGE,
+          message: ERROR_MESSAGES.MALFORMED_MESSAGE,
+        });
+        return;
+      }
       if (msg.type === 'join' && !stream && playerId) {
         stream = this.openPlay(
           socket,
@@ -147,9 +154,15 @@ function parse(raw: string): ClientMessage | null {
       };
     }
     if (msg?.type === 'move') {
-      const dx = Math.sign(Number(msg.dx) || 0) as -1 | 0 | 1;
-      const dy = Math.sign(Number(msg.dy) || 0) as -1 | 0 | 1;
-      return { type: 'move', dx, dy };
+      const dx = msg.dx;
+      const dy = msg.dy;
+      if (
+        (dx === -1 || dx === 0 || dx === 1) &&
+        (dy === -1 || dy === 0 || dy === 1)
+      ) {
+        return { type: 'move', dx, dy };
+      }
+      return null;
     }
   } catch {
     // not JSON
