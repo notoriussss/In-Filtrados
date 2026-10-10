@@ -130,10 +130,31 @@ describe('GameSocket', () => {
     ]);
     expect(statuses.at(-1)).toEqual({ state: 'reconnecting', attempt: 7 });
 
-    // Once it connects again, the count starts over.
+    // Once it receives a snapshot again, the count starts over.
     sockets[7].open();
+    sockets[7].receive(snapshot(1));
     sockets[7].drop(1011);
     expect(timers.at(-1)!.ms).toBe(500);
+  });
+
+  it('grows backoff on repeated open and immediate drop without snapshot', () => {
+    const { sockets, timers } = setup();
+    // Intento 1: abre y se cierra de inmediato
+    sockets[0].open();
+    sockets[0].drop(1011);
+    expect(timers.map((t) => t.ms)).toEqual([500]);
+
+    // Intento 2: reintento abre y se cierra de nuevo
+    timers[0].fn();
+    sockets[1].open();
+    sockets[1].drop(1011);
+    expect(timers.map((t) => t.ms)).toEqual([500, 1000]);
+
+    // Intento 3: reintento abre y se cierra de nuevo
+    timers[1].fn();
+    sockets[2].open();
+    sockets[2].drop(1011);
+    expect(timers.map((t) => t.ms)).toEqual([500, 1000, 2000]);
   });
 
   it('joins the matchId saved in the session', () => {

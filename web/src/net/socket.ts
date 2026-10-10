@@ -98,7 +98,6 @@ export class GameSocket {
 
     ws.addEventListener('open', () => {
       if (ws !== this.ws) return;
-      this.attempt = 0;
       this.send({
         type: 'join',
         matchId: session.loadSession()?.matchId || this.opts.matchId,
@@ -115,7 +114,10 @@ export class GameSocket {
       } catch {
         return;
       }
-      if (msg.type === 'snapshot') this.lastTick = msg.tick;
+      if (msg.type === 'snapshot') {
+        this.attempt = 0;
+        this.lastTick = msg.tick;
+      }
       this.messageHandlers.forEach((handler) => handler(msg));
     });
 
