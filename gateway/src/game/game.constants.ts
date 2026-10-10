@@ -19,3 +19,13 @@ export const ERROR_MESSAGES = {
 // Límites de validación de las acciones del juego (S2-01).
 export const MAX_TANK_SLOT = 9; // hasta 10 jugadores por sala
 export const MAX_STATION_ID_LENGTH = 64;
+
+// WebSocket close codes used by the gateway.
+export const WS_CLOSE_CODES = {
+  NORMAL: 1000,
+  SERVICE_UNAVAILABLE: 1011,
+  UNAUTHORIZED: 4001,
+  REPLACED: 4002,
+} as const;
+
+export const WS_CLOSE_REPLACED = WS_CLOSE_CODES.REPLACED;
