@@ -9,7 +9,11 @@ import { type GameSocket, openGameSocket } from '../net/socket';
 import type { PlayerView } from '@in-filtrados/messages';
 
 export function mountLobby(
-  show: (screen: 'login' | 'register' | 'lobby' | 'game') => void
+  show: (
+    screen: 'login' | 'register' | 'lobby' | 'game',
+    initialError?: string,
+  ) => void,
+  initialError?: string,
 ): void {
   const container = document.getElementById('screen-lobby')!;
   const currentSession = session.loadSession();
@@ -97,6 +101,10 @@ export function mountLobby(
     errorDiv.textContent = '';
   }
 
+  if (initialError) {
+    showError(initialError);
+  }
+
   let socket: GameSocket | null = null;
 
   function connectToRoom(token: string, matchId: string) {
@@ -108,6 +116,8 @@ export function mountLobby(
     socket.onStatus((status) => {
       if (status.state === 'reconnecting') {
         showError(CONNECTION_MESSAGES.reconnecting(status.attempt));
+      } else if (status.state === 'replaced') {
+        showError(CONNECTION_MESSAGES.SESSION_REPLACED);
       } else {
         clearError();
       }
@@ -129,11 +139,11 @@ export function mountLobby(
             ...currentSession!,
             matchId: '',
             roomCode: undefined,
-            isCreator: false
+            isCreator: false,
           });
           actionsDiv.hidden = false;
           roomInfoDiv.hidden = true;
-          showError(msg.message);
+          showError(ERROR_MESSAGES.MATCH_NOT_FOUND);
         } else {
           showError(msg.message);
         }

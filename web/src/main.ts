@@ -8,7 +8,7 @@ import { mountGame, unmountGame } from './screens/game';
 type Screen = 'login' | 'register' | 'lobby' | 'game';
 let currentScreen: Screen | null = null;
 
-export function show(screen: Screen): void {
+export function show(screen: Screen, initialError?: string): void {
   if (currentScreen === 'game') unmountGame();
 
   document.getElementById('screen-login')!.hidden = true;
@@ -26,7 +26,7 @@ export function show(screen: Screen): void {
     mountRegister(show);
   } else if (screen === 'lobby') {
     document.getElementById('screen-lobby')!.hidden = false;
-    mountLobby(show);
+    mountLobby(show, initialError);
   } else if (screen === 'game') {
     document.getElementById('game')!.hidden = false;
     mountGame(show);
