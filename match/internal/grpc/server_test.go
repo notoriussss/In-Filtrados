@@ -21,7 +21,10 @@ import (
 
 const bufSize = 1024 * 1024
 
-func setupServer(t *testing.T) (matchv1.MatchClient, func()) {
+func setupServer(
+	t *testing.T,
+	opts ...matchgrpc.ServerOption,
+) (matchv1.MatchClient, func()) {
 	t.Helper()
 	lis := bufconn.Listen(bufSize)
 	s := grpc.NewServer()
@@ -31,7 +34,7 @@ func setupServer(t *testing.T) (matchv1.MatchClient, func()) {
 	require.NoError(t, err)
 
 	reg := room.NewRegistry()
-	matchv1.RegisterMatchServer(s, matchgrpc.NewServer(reg, m))
+	matchv1.RegisterMatchServer(s, matchgrpc.NewServer(reg, m, opts...))
 
 	go func() {
 		if err := s.Serve(lis); err != nil && err != grpc.ErrServerStopped {
@@ -145,7 +148,8 @@ func TestCreateJoinPlay(t *testing.T) {
 	require.True(t, playersByID["player-A"].Connected)
 	require.True(t, playersByID["player-B"].Connected)
 
-	// 4. Cerrar stream B y validar que player-A recibe snapshot con connected: false
+	// 4. Cerrar stream B y validar que player-A recibe snapshot
+	// con connected: false
 	cancelB()
 
 	disconnected := false
@@ -167,7 +171,11 @@ func TestCreateJoinPlay(t *testing.T) {
 			break
 		}
 	}
-	require.True(t, disconnected, "Player B should appear disconnected to Player A")
+	require.True(
+		t,
+		disconnected,
+		"Player B should appear disconnected to Player A",
+	)
 }
 
 func TestJoinRoomFull(t *testing.T) {
@@ -196,7 +204,8 @@ func TestJoinRoomFull(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		// Esperar al primer snapshot para asegurar que se procesó el Join internamente
+		// Esperar al primer snapshot para asegurar que se procesó el
+		// Join internamente
 		_, err = stream.Recv()
 		require.NoError(t, err)
 	}
