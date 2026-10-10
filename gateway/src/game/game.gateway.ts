@@ -14,6 +14,7 @@ import {
   ERROR_MESSAGES,
   MAX_STATION_ID_LENGTH,
   MAX_TANK_SLOT,
+  WS_CLOSE_CODES,
 } from './game.constants';
 import { PlayersClient } from '../clients/players.client';
 import { type GrpcServerEvent, toServerMessage } from './server-events';
@@ -44,7 +45,7 @@ export class GameGateway implements OnGatewayConnection {
         code: ERROR_CODES.UNAUTHORIZED,
         message: ERROR_MESSAGES.MISSING_TOKEN,
       });
-      socket.close(4001);
+      socket.close(WS_CLOSE_CODES.UNAUTHORIZED);
       return;
     }
 
@@ -110,14 +111,14 @@ export class GameGateway implements OnGatewayConnection {
           code: ERROR_CODES.UNAUTHORIZED,
           message: ERROR_MESSAGES.INVALID_TOKEN,
         });
-        socket.close(4001);
+        socket.close(WS_CLOSE_CODES.UNAUTHORIZED);
       } else {
         send(socket, {
           type: 'error',
           code: ERROR_CODES.SERVICE_UNAVAILABLE,
           message: ERROR_MESSAGES.PLAYERS_SERVICE_UNAVAILABLE,
         });
-        socket.close(1011);
+        socket.close(WS_CLOSE_CODES.SERVICE_UNAVAILABLE);
       }
       return;
     }
@@ -127,7 +128,7 @@ export class GameGateway implements OnGatewayConnection {
 
     const existing = this.activeSockets.get(playerId);
     if (existing) {
-      existing.close(4001);
+      existing.close(WS_CLOSE_CODES.REPLACED);
     }
     this.activeSockets.set(playerId, socket);
 
@@ -154,7 +155,7 @@ export class GameGateway implements OnGatewayConnection {
         code: ERROR_CODES.SERVICE_UNAVAILABLE,
         message: ERROR_MESSAGES.MATCH_SERVICE_UNAVAILABLE,
       });
-      socket.close(1011);
+      socket.close(WS_CLOSE_CODES.SERVICE_UNAVAILABLE);
     });
     stream.on('end', () => socket.close());
     return stream;
