@@ -10,6 +10,7 @@ import httpx
 from app.messages import (
     DETAIL_AMQP_CLOSED,
     DETAIL_AMQP_OK,
+    DETAIL_DB_DOWN,
     DETAIL_DEGRADED,
     DETAIL_FAILED,
     DETAIL_NOT_CHECKED,
@@ -18,6 +19,8 @@ from app.messages import (
     DETAIL_TIMEOUT,
     DETAIL_UNKNOWN,
     DETAIL_UNSPECIFIED_DEP,
+    ERROR_UNEXPECTED_HEALTH_RESPONSE,
+    ERROR_UNEXPECTED_SERVICE,
     STATE_DEGRADED,
     STATE_DOWN,
     STATE_OK,
@@ -77,7 +80,7 @@ class HealthMonitor:
         data = response.json()
 
         if data.get("service") != name:
-            raise ValueError("Unexpected service in health response")
+            raise ValueError(ERROR_UNEXPECTED_SERVICE)
 
         checks = data.get("checks", {})
 
@@ -107,7 +110,7 @@ class HealthMonitor:
                 checks,
             )
 
-        raise ValueError("Unexpected health response")
+        raise ValueError(ERROR_UNEXPECTED_HEALTH_RESPONSE)
 
     async def check_rabbitmq(self):
         url = os.environ["RABBITMQ_URL"]
@@ -122,12 +125,9 @@ class HealthMonitor:
     async def measure(self, name, check):
         started = perf_counter()
         try:
-            res = await asyncio.wait_for(check(), timeout=2)
-            if len(res) == 3:
-                state, detail, checks = res
-            else:
-                state, detail = res
-                checks = {}
+            state, detail, checks = await asyncio.wait_for(
+                check(), timeout=2
+            )
         except (TimeoutError, httpx.TimeoutException):
             state, detail, checks = STATE_DOWN, DETAIL_TIMEOUT, {}
         # Aislar fallos por servicio para mantener activo el monitoreo.
@@ -222,7 +222,9 @@ class HealthMonitor:
                     db_detail = DETAIL_OK
                 elif db_check is not None:
                     db_state = STATE_DOWN
-                    db_detail = db_check
+                    db_detail = DETAIL_DB_DOWN.format(
+                        parent=parent_name
+                    )
                 else:
                     db_state = STATE_UNKNOWN
                     db_detail = DETAIL_UNKNOWN
