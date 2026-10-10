@@ -1,5 +1,6 @@
 // Package grpc implements the Match service from proto/match.proto.
-// messages.go defines all constants and helper constructors for gRPC return messages.
+// messages.go defines all constants and helper constructors
+// for gRPC return messages.
 package grpc
 
 import "github.com/notoriussss/in-filtrados/match/gen/matchv1"

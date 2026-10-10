@@ -47,7 +47,11 @@ func TestHealthHandler_StatusOK(t *testing.T) {
 }
 
 func TestHealthHandler_StatusDegraded(t *testing.T) {
-	handler := NewHandler(&mockChecker{dbErr: errors.New("connection refused"), rabbitErr: nil})
+	checker := &mockChecker{
+		dbErr:     errors.New("connection refused"),
+		rabbitErr: nil,
+	}
+	handler := NewHandler(checker)
 	req := httptest.NewRequest(http.MethodGet, "/health", nil)
 	rec := httptest.NewRecorder()
 
@@ -77,11 +81,35 @@ func TestDefaultChecker_MissingEnv(t *testing.T) {
 	checker := &DefaultChecker{}
 	ctx := context.Background()
 
-	if err := checker.CheckDB(ctx); err == nil || err.Error() != "MATCH_DB_URL not set" {
+	if err := checker.CheckDB(ctx); err == nil ||
+		err.Error() != "MATCH_DB_URL not set" {
 		t.Errorf("expected MATCH_DB_URL not set error, got: %v", err)
 	}
 
-	if err := checker.CheckRabbitMQ(ctx); err == nil || err.Error() != "RABBITMQ_URL not set" {
+	if err := checker.CheckRabbitMQ(ctx); err == nil ||
+		err.Error() != "RABBITMQ_URL not set" {
 		t.Errorf("expected RABBITMQ_URL not set error, got: %v", err)
+	}
+}
+
+type mockPingable struct {
+	err error
+}
+
+func (m *mockPingable) Ping(ctx context.Context) error {
+	return m.err
+}
+
+func TestPoolChecker(t *testing.T) {
+	ctx := context.Background()
+	checkerOK := NewPoolChecker(&mockPingable{err: nil})
+	if err := checkerOK.CheckDB(ctx); err != nil {
+		t.Fatalf("expected nil error, got: %v", err)
+	}
+
+	boom := errors.New("db ping failed")
+	checkerErr := NewPoolChecker(&mockPingable{err: boom})
+	if err := checkerErr.CheckDB(ctx); !errors.Is(err, boom) {
+		t.Fatalf("expected boom error, got: %v", err)
 	}
 }

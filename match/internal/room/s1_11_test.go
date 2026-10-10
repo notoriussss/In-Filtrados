@@ -118,7 +118,10 @@ func TestStartNeedsTwoPlayers(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	if got := len(pub.forKey(events.RoutingKeyStarted)); got != 0 {
-		t.Errorf("con un solo jugador no debe publicarse match.started, got %d", got)
+		t.Errorf(
+			"con un solo jugador no debe publicarse match.started, got %d",
+			got,
+		)
 	}
 	if store.starts != 0 {
 		t.Errorf("con un solo jugador no debe guardarse la partida")
@@ -150,7 +153,10 @@ func TestStartIsIgnoredAfterPlaying(t *testing.T) {
 	time.Sleep(100 * time.Millisecond)
 
 	if store.starts != 1 {
-		t.Errorf("start repetido no debe guardar otra partida, got %d", store.starts)
+		t.Errorf(
+			"start repetido no debe guardar otra partida, got %d",
+			store.starts,
+		)
 	}
 	if got := len(pub.forKey(events.RoutingKeyStarted)); got != 1 {
 		t.Errorf("start repetido no debe publicar otro evento, got %d", got)
@@ -193,7 +199,10 @@ func TestStartSavesAndPublishes(t *testing.T) {
 		)
 	}
 	if len(store.startPlayers) != 2 {
-		t.Errorf("deben guardarse 2 participantes, got %d", len(store.startPlayers))
+		t.Errorf(
+			"deben guardarse 2 participantes, got %d",
+			len(store.startPlayers),
+		)
 	}
 
 	started := pub.forKey(events.RoutingKeyStarted)
@@ -208,7 +217,10 @@ func TestStartSavesAndPublishes(t *testing.T) {
 		t.Errorf("evento con datos raros: %+v", event)
 	}
 	if len(event.PlayerIDs) != 2 {
-		t.Errorf("el evento debe llevar 2 jugadores, got %d", len(event.PlayerIDs))
+		t.Errorf(
+			"el evento debe llevar 2 jugadores, got %d",
+			len(event.PlayerIDs),
+		)
 	}
 	if event.EventID == "" || event.StartedAt == "" {
 		t.Errorf("el evento debe llevar event_id y started_at: %+v", event)
@@ -258,10 +270,15 @@ func TestMatchFinishesAfterDuration(t *testing.T) {
 		t.Errorf("el evento debe llevar event_id y finished_at: %+v", event)
 	}
 	if len(event.Players) != 2 {
-		t.Fatalf("el evento debe llevar 2 jugadores, got %d", len(event.Players))
+		t.Fatalf(
+			"el evento debe llevar 2 jugadores, got %d",
+			len(event.Players),
+		)
 	}
 	for _, player := range event.Players {
-		if player.Role != events.RoleCrew || player.Ejected || player.Harvest != 0 {
+		if player.Role != events.RoleCrew ||
+			player.Ejected ||
+			player.Harvest != 0 {
 			t.Errorf("resultado inesperado: %+v", player)
 		}
 	}

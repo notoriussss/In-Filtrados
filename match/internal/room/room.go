@@ -1,4 +1,5 @@
-// Package room runs one match room in a single goroutine (docs/architecture.md).
+// Package room runs one match room in a single goroutine
+// (docs/architecture.md).
 package room
 
 import (
@@ -58,7 +59,8 @@ func NewRoom(code string, matchID string, m *Map, opts ...Option) *Room {
 	return r
 }
 
-// These three methods are called from other goroutines; they only send to channels.
+// These three methods are called from other goroutines;
+// they only send to channels.
 func (r *Room) Join(j Join)        { r.joins <- j }
 func (r *Room) Leave(l Leave)      { r.leaves <- l }
 func (r *Room) Act(a PlayerAction) { r.actions <- a }
@@ -137,7 +139,11 @@ func (r *Room) startMatch(playerID string) {
 		return
 	}
 	if r.creatorID != "" && playerID != r.creatorID {
-		log.Printf("room %s: %s no es el creador; start ignorado", r.Code, playerID)
+		log.Printf(
+			"room %s: %s no es el creador; start ignorado",
+			r.Code,
+			playerID,
+		)
 		return
 	}
 	if r.connectedPlayers() < minPlayersToStart {
@@ -175,7 +181,11 @@ func (r *Room) startMatch(playerID string) {
 		)
 		err := r.publisher.Publish(ctx, events.RoutingKeyStarted, event)
 		if err != nil {
-			log.Printf("room %s: no se pudo publicar match.started: %v", r.Code, err)
+			log.Printf(
+				"room %s: no se pudo publicar match.started: %v",
+				r.Code,
+				err,
+			)
 		}
 	}
 	log.Printf("room %s: partida %s iniciada", r.Code, r.MatchID)
@@ -216,7 +226,11 @@ func (r *Room) finishMatch() {
 		)
 		err := r.publisher.Publish(ctx, events.RoutingKeyFinished, event)
 		if err != nil {
-			log.Printf("room %s: no se pudo publicar match.finished: %v", r.Code, err)
+			log.Printf(
+				"room %s: no se pudo publicar match.finished: %v",
+				r.Code,
+				err,
+			)
 		}
 	}
 	log.Printf("room %s: partida %s terminada (crew)", r.Code, r.MatchID)
@@ -237,7 +251,10 @@ func (r *Room) connectedPlayers() int {
 func (r *Room) snapshotParticipants() []PlayerInfo {
 	infos := make([]PlayerInfo, 0, len(r.players))
 	for id, p := range r.players {
-		infos = append(infos, PlayerInfo{PlayerID: id, DisplayName: p.view.Name})
+		infos = append(infos, PlayerInfo{
+			PlayerID:    id,
+			DisplayName: p.view.Name,
+		})
 	}
 	sort.Slice(infos, func(i, j int) bool {
 		return infos[i].PlayerID < infos[j].PlayerID

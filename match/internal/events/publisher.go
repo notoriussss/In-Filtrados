@@ -84,7 +84,11 @@ func (p *AMQPPublisher) Publish(
 
 	acked, err := confirm.WaitContext(ctx)
 	if err != nil {
-		return fmt.Errorf("publisher: esperando confirm de %s: %w", routingKey, err)
+		return fmt.Errorf(
+			"publisher: esperando confirm de %s: %w",
+			routingKey,
+			err,
+		)
 	}
 	if !acked {
 		return fmt.Errorf("publisher: el broker rechazó %s (nack)", routingKey)

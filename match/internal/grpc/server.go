@@ -62,7 +62,12 @@ func (s *Server) CreateRoom(
 			log.Printf("createRoom: error generando código: %v", err)
 			return nil, status.Error(codes.Internal, ErrMsgCodeGen)
 		}
-		r := room.NewRoom(code, matchID, s.m, s.roomOptions(req.GetPlayerId())...)
+		r := room.NewRoom(
+			code,
+			matchID,
+			s.m,
+			s.roomOptions(req.GetPlayerId())...,
+		)
 		if !s.registry.AddIfFree(r) {
 			continue // código ocupado: probar otro
 		}
