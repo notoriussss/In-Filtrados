@@ -60,7 +60,7 @@ El mapa vive en **`shared/map.json`** (carpeta nueva en la raíz). Lo usan `matc
 
 - `walls`: rectángulos que no se pueden atravesar. El canal es una pared con 3 huecos, que son los puentes.
 - `stations`: dónde se hacen las tareas (`reduce`, `reuse`, `recycle`). Se usan desde la semana 2.
-- `tanks`: los tanques de riego de cada jugador, por número de lugar (`slot`). Se usan desde la semana 2.
+- `tanks`: los tanques de riego de cada jugador, por número de lugar (`slot`, de 0 a 9 para hasta 10 jugadores). Se usan desde la semana 2.
 
 ### 0.4 Reglas de movimiento
 
@@ -261,7 +261,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 **Pasos:**
 1. Crear el proyecto con Vite (plantilla `vanilla-ts`), sin frameworks de juego.
-2. Escribir `shared/map.json` con el formato de la sección 0.3: las 7 zonas del plan del juego, el canal con 3 puentes como paredes con huecos, el arroyo en anillo y los 5 lugares de tanques en el huerto.
+2. Escribir `shared/map.json` con el formato de la sección 0.3: las 7 zonas del plan del juego, el canal con 3 puentes como paredes con huecos, el arroyo en anillo y los 10 lugares de tanques en el huerto (slots 0 a 9 para hasta 10 jugadores).
 3. `renderMap(ctx, map, camera)`: zonas como rectángulos de color con su nombre, paredes en gris oscuro y estaciones y tanques como círculos.
 4. `camera.ts`: la cámara sigue a un punto y convierte coordenadas del mundo a pantalla. Por ahora sigue al centro del mapa y se mueve con las flechas, solo para probar.
 5. `nginx.conf`: servir `dist/` y reenviar `/api/` y `/ws` a `gateway:3000`, este último con los encabezados de WebSocket (`Upgrade` y `Connection`).
@@ -505,12 +505,12 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 **Pasos:**
 1. Usar `@nestjs/platform-ws` (WebSocket puro, sin Socket.IO, para que el navegador use la API nativa).
-2. Al conectar a `/ws?token=...`: validar el token con `players`. Si no es válido, mandar `{type:'error', code:'UNAUTHORIZED'}` y cerrar con el código 4001.
+2. Al conectar a `/ws?token=...`: validar el token con `players`. Si no es válido, mandar `{type:'error', code:'UNAUTHORIZED'}` y cerrar con el código 4001. Si el mismo `playerId` abre una segunda conexión, cerrar la anterior con 4002 (sesión reemplazada).
 3. Al recibir `join`: abrir un stream `Play` con `match`, mandarle `Join` con el `playerId` **del token**, nunca uno que mande el navegador.
 4. Reenviar cada `move` como `Move`, validando que `dx` y `dy` estén en {-1, 0, 1}. Si un mensaje no se puede parsear, `error BAD_MESSAGE` sin cerrar la conexión.
 5. Reenviar cada `Snapshot` al navegador convertido a `ServerMessage`.
 6. Si el WebSocket se cierra, cerrar el stream. Si el stream se cae, mandar `error SERVICE_UNAVAILABLE` y cerrar el WebSocket con el código 1011, para que el navegador se reconecte.
-7. Un jugador = un stream. Si el mismo `playerId` abre un segundo WebSocket, se cierra el anterior.
+7. Un jugador = un stream. Si el mismo `playerId` abre un segundo WebSocket, se cierra el anterior con el código 4002.
 
 **Criterio de verificación:** dos usuarios distintos, en dos navegadores, entran a la misma sala y se ven moverse. Modificar a mano en la consola del navegador el `playerId` no permite mover a otro jugador. Un WebSocket sin token recibe `UNAUTHORIZED` y se cierra.
 
@@ -568,10 +568,10 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 **Pasos:**
 1. Clase `GameSocket` con `connect()`, `send()` y `onMessage()`.
-2. Si la conexión se cierra con un código distinto de 1000 (cierre normal) o 4001 (token inválido), reintentar con espera creciente: 0,5 s, 1 s, 2 s, 4 s, 8 s y luego cada 10 s, indefinidamente.
+2. Si la conexión se cierra con un código distinto de 1000 (cierre normal), 4001 (token inválido) o 4002 (sesión reemplazada), reintentar con espera creciente: 0,5 s, 1 s, 2 s, 4 s, 8 s y luego cada 10 s, indefinidamente.
 3. Mientras reconecta, mostrar sobre el canvas el aviso "Reconectando…" con el número de intento.
 4. Al reconectar, mandar de nuevo `join` con el `matchId` guardado en `session.ts` y el último `tick` recibido.
-5. Si el cierre es 4001, borrar la sesión y volver al login.
+5. Si el cierre es 4001, borrar la sesión y volver al login. Con 4002 (reemplazada), no reintentar y mantener la sesión.
 
 **Criterio de verificación:** en plena partida, `docker compose restart gateway`: el navegador muestra "Reconectando…" y en menos de 10 segundos vuelve a la misma partida sin recargar la página. Lo mismo al desactivar el wifi 20 segundos y reactivarlo (en la semana 1 el personaje puede reaparecer en otra posición; mantener el lugar es la tarea S3-01).
 
