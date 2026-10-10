@@ -22,6 +22,7 @@ type Server struct {
 	m             *room.Map
 	publisher     events.Publisher
 	store         room.MatchStore
+	eventLog      room.EventLog
 	matchDuration time.Duration
 }
 
@@ -36,6 +37,11 @@ func WithPublisher(publisher events.Publisher) ServerOption {
 // WithStore guarda las partidas en PostgreSQL.
 func WithStore(store room.MatchStore) ServerOption {
 	return func(s *Server) { s.store = store }
+}
+
+// WithEventLog anota en event_log lo que pasa con los tanques.
+func WithEventLog(eventLog room.EventLog) ServerOption {
+	return func(s *Server) { s.eventLog = eventLog }
 }
 
 // WithMatchDuration acorta la partida; los tests la usan.
@@ -73,6 +79,10 @@ func (s *Server) CreateRoom(
 		}
 		// La sala vive más que el RPC que la creó.
 		go r.Run(context.Background())
+		r.SetName(room.Name{
+			PlayerID:    req.GetPlayerId(),
+			DisplayName: req.GetDisplayName(),
+		})
 		log.Printf("createRoom: código=%s matchId=%s", code, matchID)
 		return &matchv1.Room{RoomCode: code, MatchId: matchID}, nil
 	}
@@ -87,6 +97,9 @@ func (s *Server) roomOptions(creatorID string) []room.Option {
 	}
 	if s.store != nil {
 		opts = append(opts, room.WithStore(s.store))
+	}
+	if s.eventLog != nil {
+		opts = append(opts, room.WithEventLog(s.eventLog))
 	}
 	if s.matchDuration > 0 {
 		opts = append(opts, room.WithMatchDuration(s.matchDuration))
@@ -108,6 +121,10 @@ func (s *Server) JoinRoom(
 			ErrMsgRoomFull,
 		)
 	}
+	r.SetName(room.Name{
+		PlayerID:    req.GetPlayerId(),
+		DisplayName: req.GetDisplayName(),
+	})
 	return &matchv1.Room{
 		RoomCode: r.Code,
 		MatchId:  r.MatchID,
@@ -181,6 +198,33 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 			})
 		case msg.GetStart() != nil:
 			r.Act(room.PlayerAction{PlayerID: playerID, Start: true})
+		case msg.GetContaminate() != nil:
+			r.Act(room.PlayerAction{
+				PlayerID:    playerID,
+				Contaminate: true,
+				TankSlot:    msg.GetContaminate().GetTankSlot(),
+			})
+		case msg.GetInteract() != nil:
+			if action, ok := interactAction(playerID, msg.GetInteract()); ok {
+				r.Act(action)
+			}
 		}
 	}
+}
+
+// interactAction traduce Interact: sobre un tanque es limpiar (S2-03).
+// Las estaciones de tareas llegan con S2-04 y por ahora se ignoran.
+func interactAction(
+	playerID string,
+	interact *matchv1.Interact,
+) (room.PlayerAction, bool) {
+	target, ok := interact.GetTarget().(*matchv1.Interact_TankSlot)
+	if !ok {
+		return room.PlayerAction{}, false
+	}
+	return room.PlayerAction{
+		PlayerID: playerID,
+		Clean:    true,
+		TankSlot: target.TankSlot,
+	}, true
 }

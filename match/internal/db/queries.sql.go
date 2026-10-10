@@ -29,18 +29,24 @@ func (q *Queries) CreateMatch(ctx context.Context, arg CreateMatchParams) error 
 }
 
 const createParticipant = `-- name: CreateParticipant :exec
-INSERT INTO participants (match_id, player_id, display_name)
-VALUES ($1, $2, $3)
+INSERT INTO participants (match_id, player_id, display_name, role)
+VALUES ($1, $2, $3, $4)
 `
 
 type CreateParticipantParams struct {
 	MatchID     pgtype.UUID
 	PlayerID    pgtype.UUID
 	DisplayName string
+	Role        string
 }
 
 func (q *Queries) CreateParticipant(ctx context.Context, arg CreateParticipantParams) error {
-	_, err := q.db.Exec(ctx, createParticipant, arg.MatchID, arg.PlayerID, arg.DisplayName)
+	_, err := q.db.Exec(ctx, createParticipant,
+		arg.MatchID,
+		arg.PlayerID,
+		arg.DisplayName,
+		arg.Role,
+	)
 	return err
 }
 
@@ -57,5 +63,30 @@ type FinishMatchParams struct {
 
 func (q *Queries) FinishMatch(ctx context.Context, arg FinishMatchParams) error {
 	_, err := q.db.Exec(ctx, finishMatch, arg.ID, arg.Winner)
+	return err
+}
+
+const insertEvent = `-- name: InsertEvent :exec
+INSERT INTO event_log (match_id, tick, player_id, kind, tank_slot)
+VALUES ($1, $2, $3, $4, $5)
+`
+
+type InsertEventParams struct {
+	MatchID  pgtype.UUID
+	Tick     int64
+	PlayerID pgtype.UUID
+	Kind     string
+	TankSlot int32
+}
+
+// S2-03: una fila de event_log (contaminar, limpiar o visitar un tanque).
+func (q *Queries) InsertEvent(ctx context.Context, arg InsertEventParams) error {
+	_, err := q.db.Exec(ctx, insertEvent,
+		arg.MatchID,
+		arg.Tick,
+		arg.PlayerID,
+		arg.Kind,
+		arg.TankSlot,
+	)
 	return err
 }

@@ -4,6 +4,8 @@ package room
 
 import (
 	"context"
+	"crypto/rand"
+	"io"
 	"log"
 	"sort"
 	"sync/atomic"
@@ -22,6 +24,7 @@ type Room struct {
 
 	m       *Map
 	players map[string]*player
+	names   map[string]string
 	order   int
 	phase   matchv1.Phase
 	tick    int64
@@ -32,10 +35,15 @@ type Room struct {
 	matchDuration time.Duration
 	startedAt     time.Time
 	participants  []PlayerInfo
+	tanks         []*tank
+	rnd           io.Reader // azar de los roles: crypto/rand
+	startTick     int64
+	eventLog      EventLog
 
 	joins   chan Join
 	leaves  chan Leave
 	actions chan PlayerAction
+	nameCh  chan Name
 
 	// connectedCount es actualizado atomicamente por la goroutine de la sala.
 	connectedCount atomic.Int32
@@ -47,11 +55,14 @@ func NewRoom(code string, matchID string, m *Map, opts ...Option) *Room {
 		MatchID:       matchID,
 		m:             m,
 		players:       make(map[string]*player),
+		names:         make(map[string]string),
 		phase:         matchv1.Phase_LOBBY,
 		matchDuration: defaultMatchDuration,
 		joins:         make(chan Join),
 		leaves:        make(chan Leave),
 		actions:       make(chan PlayerAction, actionBuffer),
+		nameCh:        make(chan Name),
+		rnd:           rand.Reader,
 	}
 	for _, opt := range opts {
 		opt(r)
@@ -59,11 +70,12 @@ func NewRoom(code string, matchID string, m *Map, opts ...Option) *Room {
 	return r
 }
 
-// These three methods are called from other goroutines;
+// These methods are called from other goroutines;
 // they only send to channels.
 func (r *Room) Join(j Join)        { r.joins <- j }
 func (r *Room) Leave(l Leave)      { r.leaves <- l }
 func (r *Room) Act(a PlayerAction) { r.actions <- a }
+func (r *Room) SetName(n Name)     { r.nameCh <- n }
 
 func (r *Room) Run(ctx context.Context) {
 	ticker := time.NewTicker(tickInterval)
@@ -76,6 +88,8 @@ func (r *Room) Run(ctx context.Context) {
 			r.removePlayer(l)
 		case a := <-r.actions:
 			r.handleAction(a)
+		case n := <-r.nameCh:
+			r.setName(n)
 		case <-ticker.C:
 			r.step()
 			r.tick++
@@ -86,13 +100,32 @@ func (r *Room) Run(ctx context.Context) {
 	}
 }
 
+func (r *Room) setName(n Name) {
+	if n.DisplayName == "" {
+		return
+	}
+	r.names[n.PlayerID] = n.DisplayName
+	if p, ok := r.players[n.PlayerID]; ok {
+		p.view.Name = n.DisplayName
+	}
+}
+
 // handleAction aplica Start o el movimiento del jugador.
 func (r *Room) handleAction(a PlayerAction) {
 	if a.Start {
 		r.startMatch(a.PlayerID)
 		return
 	}
-	if p, ok := r.players[a.PlayerID]; ok {
+	p, ok := r.players[a.PlayerID]
+	if !ok {
+		return
+	}
+	switch {
+	case a.Contaminate:
+		r.startContaminate(a.PlayerID, p, a.TankSlot)
+	case a.Clean:
+		r.startClean(p, a.TankSlot)
+	default:
 		p.dx, p.dy = clampDir(a.DX), clampDir(a.DY)
 	}
 }
@@ -105,10 +138,19 @@ func (r *Room) addPlayer(j Join) {
 	}
 	r.connectedCount.Add(1)
 	x, y := r.m.SpawnPoint(r.order)
+	name := r.names[j.PlayerID]
+	if name == "" {
+		name = j.PlayerID
+	}
+	tankSlot := noTank
+	if r.order < len(r.m.Tanks) {
+		tankSlot = r.order
+	}
 	r.players[j.PlayerID] = &player{
+		tankSlot: tankSlot,
 		view: &matchv1.PlayerView{
 			Id:        j.PlayerID,
-			Name:      j.PlayerID,
+			Name:      name,
 			Color:     colors[r.order%len(colors)],
 			X:         float32(x),
 			Y:         float32(y),
@@ -155,8 +197,14 @@ func (r *Room) startMatch(playerID string) {
 		return
 	}
 
+	if err := r.assignRoles(); err != nil {
+		log.Printf("room %s: no se pudo empezar: %v", r.Code, err)
+		return
+	}
 	r.phase = matchv1.Phase_PLAYING
 	r.startedAt = time.Now()
+	r.startTick = r.tick
+	r.tanks = r.buildTanks()
 	r.participants = r.snapshotParticipants()
 
 	ctx, cancel := context.WithTimeout(context.Background(), depsTimeout)
@@ -213,7 +261,7 @@ func (r *Room) finishMatch() {
 		for _, p := range r.participants {
 			results = append(results, events.PlayerResult{
 				PlayerID: p.PlayerID,
-				Role:     events.RoleCrew,
+				Role:     p.Role,
 				Ejected:  false,
 				Harvest:  0,
 			})
@@ -236,6 +284,55 @@ func (r *Room) finishMatch() {
 	log.Printf("room %s: partida %s terminada (crew)", r.Code, r.MatchID)
 }
 
+// assignRoles elige los impostores entre todos los jugadores de la sala;
+// el resto queda como tripulante.
+func (r *Room) assignRoles() error {
+	ids := make([]string, 0, len(r.players))
+	for id := range r.players {
+		ids = append(ids, id)
+	}
+	sort.Strings(ids)
+	impostors, err := pickImpostors(ids, r.rnd)
+	if err != nil {
+		return err
+	}
+	for id, p := range r.players {
+		p.role = matchv1.Role_CREW
+		if impostors[id] {
+			p.role = matchv1.Role_IMPOSTOR
+		}
+	}
+	return nil
+}
+
+// buildTanks crea un tanque por cada jugador que recibió lugar en el huerto.
+func (r *Room) buildTanks() []*tank {
+	tanks := make([]*tank, 0, len(r.m.Tanks))
+	for id, p := range r.players {
+		if p.tankSlot == noTank {
+			continue
+		}
+		spot := r.m.Tanks[p.tankSlot]
+		tanks = append(tanks, &tank{
+			slot:    spot.Slot,
+			ownerID: id,
+			x:       spot.X,
+			y:       spot.Y,
+		})
+	}
+	sort.Slice(tanks, func(i, j int) bool {
+		return tanks[i].slot < tanks[j].slot
+	})
+	return tanks
+}
+
+func roleName(role matchv1.Role) string {
+	if role == matchv1.Role_IMPOSTOR {
+		return events.RoleImpostor
+	}
+	return events.RoleCrew
+}
+
 // connectedPlayers cuenta los jugadores con un stream abierto.
 func (r *Room) connectedPlayers() int {
 	count := 0
@@ -254,6 +351,7 @@ func (r *Room) snapshotParticipants() []PlayerInfo {
 		infos = append(infos, PlayerInfo{
 			PlayerID:    id,
 			DisplayName: p.view.Name,
+			Role:        roleName(p.role),
 		})
 	}
 	sort.Slice(infos, func(i, j int) bool {
@@ -277,6 +375,9 @@ func (r *Room) step() {
 		)
 		p.view.X, p.view.Y = float32(nx), float32(ny)
 	}
+	if r.phase == matchv1.Phase_PLAYING {
+		r.stepTanks()
+	}
 }
 
 // broadcast never blocks: if a player's channel is full, that snapshot is
@@ -286,20 +387,47 @@ func (r *Room) broadcast() {
 	for _, p := range r.players {
 		views = append(views, proto.Clone(p.view).(*matchv1.PlayerView))
 	}
-	snap := &matchv1.Snapshot{
-		Tick:    r.tick,
-		Phase:   r.phase,
-		Players: views,
-	}
+	sort.Slice(views, func(i, j int) bool {
+		if views[i].Id == r.creatorID {
+			return true
+		}
+		if views[j].Id == r.creatorID {
+			return false
+		}
+		return views[i].Id < views[j].Id
+	})
+	tanks := r.tankViews()
+	// Un snapshot por jugador: my_role es solo el suyo. Players y tanks se
+	// comparten porque nadie los modifica después de enviarlos.
 	for _, p := range r.players {
 		if p.out == nil {
 			continue
+		}
+		snap := &matchv1.Snapshot{
+			Tick:    r.tick,
+			Phase:   r.phase,
+			Players: views,
+			Tanks:   tanks,
+			MyRole:  p.role,
 		}
 		select {
 		case p.out <- snap:
 		default:
 		}
 	}
+}
+
+func (r *Room) tankViews() []*matchv1.TankView {
+	views := make([]*matchv1.TankView, 0, len(r.tanks))
+	for _, t := range r.tanks {
+		views = append(views, &matchv1.TankView{
+			Slot:          t.slot,
+			OwnerId:       t.ownerID,
+			Contamination: t.contamination,
+			Dead:          t.dead,
+		})
+	}
+	return views
 }
 
 // PlayerCount devuelve cuántos jugadores hay en la sala.

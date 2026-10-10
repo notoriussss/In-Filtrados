@@ -275,11 +275,18 @@ func TestMatchFinishesAfterDuration(t *testing.T) {
 			len(event.Players),
 		)
 	}
+	impostors := 0
 	for _, player := range event.Players {
-		if player.Role != events.RoleCrew ||
-			player.Ejected ||
-			player.Harvest != 0 {
+		if player.Role == events.RoleImpostor {
+			impostors++
+		} else if player.Role != events.RoleCrew {
+			t.Errorf("rol inesperado: %+v", player)
+		}
+		if player.Ejected || player.Harvest != 0 {
 			t.Errorf("resultado inesperado: %+v", player)
 		}
+	}
+	if impostors != 1 {
+		t.Errorf("debe haber 1 impostor (S2-02), got %d", impostors)
 	}
 }

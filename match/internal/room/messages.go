@@ -13,4 +13,6 @@ var (
 const (
 	msgReadMap  = "read map"
 	msgParseMap = "parse map"
+
+	msgPickImpostors = "pick impostors"
 )

@@ -1,0 +1,238 @@
+import { api } from '../api';
+import { session } from '../session';
+import {
+  CONNECTION_MESSAGES,
+  ERROR_CODES,
+  ERROR_MESSAGES,
+} from '../constants';
+import { type GameSocket, openGameSocket } from '../net/socket';
+import type { PlayerView } from '@in-filtrados/messages';
+
+export function mountLobby(
+  show: (
+    screen: 'login' | 'register' | 'lobby' | 'game',
+    initialError?: string,
+  ) => void,
+  initialError?: string,
+): void {
+  const container = document.getElementById('screen-lobby')!;
+  const currentSession = session.loadSession();
+
+  if (!currentSession || !currentSession.token) {
+    show('login');
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="panel">
+      <h2>Sala de espera</h2>
+      <div id="lobby-error" class="error-msg"></div>
+      
+      <div id="lobby-actions">
+        <button
+          id="btn-create-room"
+          class="primary"
+          style="margin-bottom: 1rem;"
+        >
+          Crear sala
+        </button>
+        
+        <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+          <input 
+            type="text" 
+            id="room-code-input" 
+            placeholder="Código de sala" 
+            style="margin-bottom: 0;" 
+          />
+          <button id="btn-join-room" class="secondary">Unirse</button>
+        </div>
+      </div>
+
+      <div id="lobby-room-info" hidden>
+        <p style="margin-bottom: 0.5rem; color: var(--text-muted);">
+          Código de la sala
+        </p>
+        <div id="room-code-display" class="room-code">----</div>
+        
+        <h3 style="text-align: left; margin-bottom: 0.5rem;">Jugadores</h3>
+        <ul id="player-list" class="player-list"></ul>
+        
+        <button id="btn-start-game" class="primary" hidden disabled>
+          Empezar partida
+        </button>
+      </div>
+    </div>
+  `;
+
+  const errorDiv = document.getElementById(
+    'lobby-error'
+  ) as HTMLDivElement;
+  const actionsDiv = document.getElementById(
+    'lobby-actions'
+  ) as HTMLDivElement;
+  const roomInfoDiv = document.getElementById(
+    'lobby-room-info'
+  ) as HTMLDivElement;
+  const codeDisplay = document.getElementById(
+    'room-code-display'
+  ) as HTMLDivElement;
+  const playerList = document.getElementById(
+    'player-list'
+  ) as HTMLUListElement;
+
+  const btnCreate = document.getElementById(
+    'btn-create-room'
+  ) as HTMLButtonElement;
+  const btnJoin = document.getElementById(
+    'btn-join-room'
+  ) as HTMLButtonElement;
+  const codeInput = document.getElementById(
+    'room-code-input'
+  ) as HTMLInputElement;
+  const btnStart = document.getElementById(
+    'btn-start-game'
+  ) as HTMLButtonElement;
+
+  function showError(msg: string) {
+    errorDiv.textContent = msg;
+  }
+
+  function clearError() {
+    errorDiv.textContent = '';
+  }
+
+  if (initialError) {
+    showError(initialError);
+  }
+
+  let socket: GameSocket | null = null;
+
+  function connectToRoom(token: string, matchId: string) {
+    socket = openGameSocket({
+      token,
+      matchId,
+      onUnauthorized: () => show('login'),
+    });
+    socket.onStatus((status) => {
+      if (status.state === 'reconnecting') {
+        showError(CONNECTION_MESSAGES.reconnecting(status.attempt));
+      } else if (status.state === 'replaced') {
+        showError(CONNECTION_MESSAGES.SESSION_REPLACED);
+      } else {
+        clearError();
+      }
+    });
+    socket.onMessage((msg) => {
+      if (msg.type === 'snapshot') {
+        if (msg.phase === 'LOBBY') {
+          updatePlayerList(msg.players);
+          checkStartCondition(msg.players);
+        } else if (msg.phase === 'PLAYING') {
+          show('game');
+        }
+      } else if (msg.type === 'error') {
+        if (msg.code === ERROR_CODES.UNAUTHORIZED) {
+          session.clearSession();
+          show('login');
+        } else if (msg.code === ERROR_CODES.MATCH_NOT_FOUND) {
+          session.saveSession({
+            ...currentSession!,
+            matchId: '',
+            roomCode: undefined,
+            isCreator: false,
+          });
+          actionsDiv.hidden = false;
+          roomInfoDiv.hidden = true;
+          showError(ERROR_MESSAGES.MATCH_NOT_FOUND);
+        } else {
+          showError(msg.message);
+        }
+      }
+    });
+    socket.connect();
+  }
+
+  if (currentSession.matchId) {
+    actionsDiv.hidden = true;
+    roomInfoDiv.hidden = false;
+    codeDisplay.textContent = currentSession.roomCode ?? '...';
+    connectToRoom(currentSession.token, currentSession.matchId);
+  }
+
+  btnCreate.addEventListener('click', async () => {
+    clearError();
+    try {
+      const res = await api.createRoom(currentSession.token);
+      session.saveSession({
+        ...currentSession,
+        matchId: res.matchId,
+        roomCode: res.roomCode,
+        isCreator: true,
+      });
+      actionsDiv.hidden = true;
+      roomInfoDiv.hidden = false;
+      codeDisplay.textContent = res.roomCode;
+      connectToRoom(currentSession.token, res.matchId);
+    } catch (err: any) {
+      showError(err.message || ERROR_MESSAGES.SERVICE_UNAVAILABLE);
+    }
+  });
+
+  btnJoin.addEventListener('click', async () => {
+    clearError();
+    const code = codeInput.value.trim().toUpperCase();
+    if (!code) return;
+
+    try {
+      const res = await api.joinRoom(currentSession.token, code);
+      session.saveSession({
+        ...currentSession,
+        matchId: res.matchId,
+        roomCode: res.roomCode,
+        isCreator: false,
+      });
+      actionsDiv.hidden = true;
+      roomInfoDiv.hidden = false;
+      codeDisplay.textContent = res.roomCode;
+      connectToRoom(currentSession.token, res.matchId);
+    } catch (err: any) {
+      const msg = err.message || '';
+      if (
+        msg.includes('404') ||
+        msg.toLowerCase().includes('not_found')
+      ) {
+        showError(ERROR_MESSAGES.ROOM_NOT_FOUND);
+      } else {
+        showError(msg || ERROR_MESSAGES.SERVICE_UNAVAILABLE);
+      }
+    }
+  });
+
+  let lastHTML = '';
+  function updatePlayerList(players: PlayerView[] = []) {
+    const safePlayers = players || [];
+    const html = safePlayers.map(p => `
+      <li>
+        <span class="player-color" style="background: ${p.color}"></span>
+        <span>${p.name} ${!p.connected ? '(Desconectado)' : ''}</span>
+      </li>
+    `).join('');
+    
+    if (lastHTML !== html) {
+      playerList.innerHTML = html;
+      lastHTML = html;
+    }
+  }
+
+  function checkStartCondition(players: PlayerView[] = []) {
+    const safePlayers = players || [];
+    const isCreator = session.loadSession()?.isCreator ?? false;
+    btnStart.hidden = !isCreator;
+    const connected = safePlayers.filter((p) => p.connected).length;
+    btnStart.disabled = connected < 2;
+  }
+
+  btnStart.addEventListener('click', () => {
+    socket?.send({ type: 'start' });
+  });
+}

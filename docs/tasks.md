@@ -60,7 +60,7 @@ El mapa vive en **`shared/map.json`** (carpeta nueva en la raíz). Lo usan `matc
 
 - `walls`: rectángulos que no se pueden atravesar. El canal es una pared con 3 huecos, que son los puentes.
 - `stations`: dónde se hacen las tareas (`reduce`, `reuse`, `recycle`). Se usan desde la semana 2.
-- `tanks`: los tanques de riego de cada jugador, por número de lugar (`slot`). Se usan desde la semana 2.
+- `tanks`: los tanques de riego de cada jugador, por número de lugar (`slot`, de 0 a 9 para hasta 10 jugadores). Se usan desde la semana 2.
 
 ### 0.4 Reglas de movimiento
 
@@ -75,7 +75,8 @@ El mapa vive en **`shared/map.json`** (carpeta nueva en la raíz). Lo usan `matc
 // Navegador → gateway
 export type ClientMessage =
   | { type: 'join'; matchId: string; lastTick: number }   // primer mensaje al conectar
-  | { type: 'move'; dx: -1 | 0 | 1; dy: -1 | 0 | 1 };
+  | { type: 'move'; dx: -1 | 0 | 1; dy: -1 | 0 | 1 }
+  | { type: 'start' };                                     // solo el creador; match lo valida
 
 // Gateway → navegador
 export type ServerMessage =
@@ -91,6 +92,33 @@ export type ErrorCode = 'UNAUTHORIZED' | 'MATCH_NOT_FOUND' | 'SERVICE_UNAVAILABL
 ```
 
 En la semana 2 se agregan mensajes; se agregan aquí, nunca se duplican en `web` o `gateway`.
+
+**Contrato v1 (S2-01).** Se suman sin romper lo anterior; el archivo completo está en `messages/src/index.ts` y su espejo gRPC en `proto/match.proto`:
+
+```ts
+// Navegador → gateway (además de join, move y start)
+  | { type: 'interact'; stationId: string; completed?: boolean } // tarea
+  | { type: 'interact'; tankSlot: number }                        // limpiar tanque
+  | { type: 'contaminate'; tankSlot: number }                     // solo el impostor
+  | { type: 'report'; tankSlot: number }                          // tanque muerto
+  | { type: 'vote'; targetPlayerId: string | null }               // null = saltar
+  | { type: 'chat'; clientMsgId: string; text: string }           // solo en MEETING
+
+// Gateway → navegador
+  | { type: 'matchEnded'; winner: 'crew' | 'impostor'; impostorIds: string[] }
+
+// Campos nuevos del snapshot
+tanks: { slot, ownerId, contamination /* 0 a 100 */, dead }[];
+reservoir: number;                 // 0 a 100
+myRole: 'NO_ROLE' | 'CREW' | 'IMPOSTOR'; // solo el del destinatario
+myTaskProgress: { completed, total };
+meeting: { reporterId, tankSlot, lastVisitors[], votesCast[], endsAtTick } | null;
+chat: { id, playerId, text, tick }[]; // últimos 30
+```
+
+- `myRole` viaja **solo en el snapshot de su dueño**: `match` arma un snapshot por jugador y el gateway nunca recibe el rol de otro.
+- `votesCast` dice quién ya votó, nunca por quién.
+- `impostorIds` es una lista porque con 7 o más jugadores hay 2 impostores.
 
 ### 0.6 REST del gateway
 
@@ -233,7 +261,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 **Pasos:**
 1. Crear el proyecto con Vite (plantilla `vanilla-ts`), sin frameworks de juego.
-2. Escribir `shared/map.json` con el formato de la sección 0.3: las 7 zonas del plan del juego, el canal con 3 puentes como paredes con huecos, el arroyo en anillo y los 5 lugares de tanques en el huerto.
+2. Escribir `shared/map.json` con el formato de la sección 0.3: las 7 zonas del plan del juego, el canal con 3 puentes como paredes con huecos, el arroyo en anillo y los 10 lugares de tanques en el huerto (slots 0 a 9 para hasta 10 jugadores).
 3. `renderMap(ctx, map, camera)`: zonas como rectángulos de color con su nombre, paredes en gris oscuro y estaciones y tanques como círculos.
 4. `camera.ts`: la cámara sigue a un punto y convierte coordenadas del mundo a pantalla. Por ahora sigue al centro del mapa y se mueve con las flechas, solo para probar.
 5. `nginx.conf`: servir `dist/` y reenviar `/api/` y `/ws` a `gateway:3000`, este último con los encabezados de WebSocket (`Upgrade` y `Connection`).
@@ -477,12 +505,12 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 **Pasos:**
 1. Usar `@nestjs/platform-ws` (WebSocket puro, sin Socket.IO, para que el navegador use la API nativa).
-2. Al conectar a `/ws?token=...`: validar el token con `players`. Si no es válido, mandar `{type:'error', code:'UNAUTHORIZED'}` y cerrar con el código 4001.
+2. Al conectar a `/ws?token=...`: validar el token con `players`. Si no es válido, mandar `{type:'error', code:'UNAUTHORIZED'}` y cerrar con el código 4001. Si el mismo `playerId` abre una segunda conexión, cerrar la anterior con 4002 (sesión reemplazada).
 3. Al recibir `join`: abrir un stream `Play` con `match`, mandarle `Join` con el `playerId` **del token**, nunca uno que mande el navegador.
 4. Reenviar cada `move` como `Move`, validando que `dx` y `dy` estén en {-1, 0, 1}. Si un mensaje no se puede parsear, `error BAD_MESSAGE` sin cerrar la conexión.
 5. Reenviar cada `Snapshot` al navegador convertido a `ServerMessage`.
 6. Si el WebSocket se cierra, cerrar el stream. Si el stream se cae, mandar `error SERVICE_UNAVAILABLE` y cerrar el WebSocket con el código 1011, para que el navegador se reconecte.
-7. Un jugador = un stream. Si el mismo `playerId` abre un segundo WebSocket, se cierra el anterior.
+7. Un jugador = un stream. Si el mismo `playerId` abre un segundo WebSocket, se cierra el anterior con el código 4002.
 
 **Criterio de verificación:** dos usuarios distintos, en dos navegadores, entran a la misma sala y se ven moverse. Modificar a mano en la consola del navegador el `playerId` no permite mover a otro jugador. Un WebSocket sin token recibe `UNAUTHORIZED` y se cierra.
 
@@ -540,10 +568,10 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 **Pasos:**
 1. Clase `GameSocket` con `connect()`, `send()` y `onMessage()`.
-2. Si la conexión se cierra con un código distinto de 1000 (cierre normal) o 4001 (token inválido), reintentar con espera creciente: 0,5 s, 1 s, 2 s, 4 s, 8 s y luego cada 10 s, indefinidamente.
+2. Si la conexión se cierra con un código distinto de 1000 (cierre normal), 4001 (token inválido) o 4002 (sesión reemplazada), reintentar con espera creciente: 0,5 s, 1 s, 2 s, 4 s, 8 s y luego cada 10 s, indefinidamente.
 3. Mientras reconecta, mostrar sobre el canvas el aviso "Reconectando…" con el número de intento.
 4. Al reconectar, mandar de nuevo `join` con el `matchId` guardado en `session.ts` y el último `tick` recibido.
-5. Si el cierre es 4001, borrar la sesión y volver al login.
+5. Si el cierre es 4001, borrar la sesión y volver al login. Con 4002 (reemplazada), no reintentar y mantener la sesión.
 
 **Criterio de verificación:** en plena partida, `docker compose restart gateway`: el navegador muestra "Reconectando…" y en menos de 10 segundos vuelve a la misma partida sin recargar la página. Lo mismo al desactivar el wifi 20 segundos y reactivarlo (en la semana 1 el personaje puede reaparecer en otra posición; mantener el lugar es la tarea S3-01).
 
@@ -554,7 +582,12 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 **Archivos:** `monitor/app/main.py`, `monitor/app/health.py`, `monitor/app/dashboard/index.html`, `monitor/pyproject.toml`.
 
 **Pasos:**
-1. FastAPI con una tarea en segundo plano (`asyncio`, arrancada en el `lifespan`) que cada 5 segundos consulta en paralelo, con `httpx.AsyncClient` y un timeout de 2 segundos, el `/health` de `web`, `gateway`, `match` y `players`, y que comprueba ambas bases de datos y RabbitMQ con una conexión directa.
+1. FastAPI con una tarea en segundo plano (`asyncio`, arrancada en el
+   `lifespan`) que cada 5 segundos consulta en paralelo, con
+   `httpx.AsyncClient` y un timeout de 2 segundos, el `/health` de `web`,
+   `gateway`, `match` y `players`, comprueba RabbitMQ con una conexión
+   directa y supervisa las bases de datos de forma indirecta a través de los
+   `checks.db` reportados por `match` y `players`.
 2. Guardar en memoria el último resultado de cada uno: estado, latencia en ms, hora de la última respuesta correcta y los últimos 20 resultados.
 3. `GET /api/status` devuelve todo eso en JSON.
 4. `GET /` sirve `index.html`: una tarjeta por servicio en verde, amarillo (`degraded`) o rojo (sin respuesta), con la latencia y "caído desde hace X s". Se actualiza sola cada 2 segundos con `fetch`.

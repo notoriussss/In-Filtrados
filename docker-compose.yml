@@ -74,6 +74,10 @@ services:
       dockerfile: monitor/Dockerfile
     environment:
       RABBITMQ_URL: ${RABBITMQ_URL}
+      WEB_HEALTH_URL: ${WEB_HEALTH_URL}
+      GATEWAY_HEALTH_URL: ${GATEWAY_HEALTH_URL}
+      MATCH_HEALTH_URL: ${MATCH_HEALTH_URL}
+      PLAYERS_HEALTH_URL: ${PLAYERS_HEALTH_URL}
     ports:
       - "8000:8000"
     depends_on:

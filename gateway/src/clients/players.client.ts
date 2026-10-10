@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as grpc from '@grpc/grpc-js';
 import { loadPackage, requireAddr, unary } from './grpc';
+import { createBreaker, guarded } from './resilience';
 
 export type PlayerReply = {
   playerId: string;
@@ -24,6 +25,7 @@ export type ProfileReply = {
 @Injectable()
 export class PlayersClient {
   private readonly client: any;
+  private readonly breaker = createBreaker('players');
 
   constructor() {
     const pkg = loadPackage('players.proto');
@@ -37,31 +39,42 @@ export class PlayersClient {
     username: string,
     password: string,
   ): Promise<PlayerReply> {
-    return unary<PlayerReply>(this.client, 'Register', {
-      username,
-      password,
-    });
+    return guarded(
+      this.breaker,
+      () =>
+        unary<PlayerReply>(this.client, 'Register', {
+          username,
+          password,
+        }),
+      false,
+    );
   }
 
   login(
     username: string,
     password: string,
   ): Promise<TokenReply> {
-    return unary<TokenReply>(this.client, 'Login', {
-      username,
-      password,
-    });
+    return guarded(this.breaker, () =>
+      unary<TokenReply>(this.client, 'Login', {
+        username,
+        password,
+      }),
+    );
   }
 
   validateToken(token: string): Promise<PlayerReply> {
-    return unary<PlayerReply>(this.client, 'ValidateToken', {
-      token,
-    });
+    return guarded(this.breaker, () =>
+      unary<PlayerReply>(this.client, 'ValidateToken', {
+        token,
+      }),
+    );
   }
 
   getProfile(playerId: string): Promise<ProfileReply> {
-    return unary<ProfileReply>(this.client, 'GetProfile', {
-      playerId,
-    });
+    return guarded(this.breaker, () =>
+      unary<ProfileReply>(this.client, 'GetProfile', {
+        playerId,
+      }),
+    );
   }
 }
