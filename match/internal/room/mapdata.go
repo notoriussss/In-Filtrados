@@ -26,12 +26,20 @@ type Rect struct {
 	H float64 `json:"h"`
 }
 
+// TankSpot is where a garden tank stands (docs/tasks.md 0.3).
+type TankSpot struct {
+	Slot int32   `json:"slot"`
+	X    float64 `json:"x"`
+	Y    float64 `json:"y"`
+}
+
 // Map holds the parts of shared/map.json that the room needs for now.
 type Map struct {
-	Width  float64 `json:"width"`
-	Height float64 `json:"height"`
-	Spawn  Point   `json:"spawn"`
-	Walls  []Rect  `json:"walls"`
+	Width  float64    `json:"width"`
+	Height float64    `json:"height"`
+	Spawn  Point      `json:"spawn"`
+	Walls  []Rect     `json:"walls"`
+	Tanks  []TankSpot `json:"tanks"`
 }
 
 // LoadMap reads and checks the map. The service must not start without it.

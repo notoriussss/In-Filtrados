@@ -5,8 +5,8 @@ INSERT INTO matches (id, room_code, started_at)
 VALUES ($1, $2, now());
 
 -- name: CreateParticipant :exec
-INSERT INTO participants (match_id, player_id, display_name)
-VALUES ($1, $2, $3);
+INSERT INTO participants (match_id, player_id, display_name, role)
+VALUES ($1, $2, $3, $4);
 
 -- name: FinishMatch :exec
 UPDATE matches

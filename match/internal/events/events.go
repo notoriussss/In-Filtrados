@@ -16,10 +16,11 @@ const (
 	RoutingKeyFinished = "match.finished"
 )
 
-// Valores temporales de la semana 1 (docs/tasks.md S1-11).
+// Roles y ganadores de match.finished (docs/tasks.md 0.7).
 const (
-	RoleCrew   = "crew"
-	WinnerCrew = "crew"
+	RoleCrew     = "crew"
+	RoleImpostor = "impostor"
+	WinnerCrew   = "crew"
 )
 
 // Publisher publica un evento en el exchange `game.events`.

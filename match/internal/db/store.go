@@ -62,6 +62,7 @@ func (s *Store) StartMatch(
 			MatchID:     id,
 			PlayerID:    toPgUUID(playerID),
 			DisplayName: player.DisplayName,
+			Role:        player.Role,
 		})
 		if err != nil {
 			return fmt.Errorf("store: insertando participante: %w", err)

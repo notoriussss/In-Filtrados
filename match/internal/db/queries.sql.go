@@ -29,18 +29,24 @@ func (q *Queries) CreateMatch(ctx context.Context, arg CreateMatchParams) error 
 }
 
 const createParticipant = `-- name: CreateParticipant :exec
-INSERT INTO participants (match_id, player_id, display_name)
-VALUES ($1, $2, $3)
+INSERT INTO participants (match_id, player_id, display_name, role)
+VALUES ($1, $2, $3, $4)
 `
 
 type CreateParticipantParams struct {
 	MatchID     pgtype.UUID
 	PlayerID    pgtype.UUID
 	DisplayName string
+	Role        string
 }
 
 func (q *Queries) CreateParticipant(ctx context.Context, arg CreateParticipantParams) error {
-	_, err := q.db.Exec(ctx, createParticipant, arg.MatchID, arg.PlayerID, arg.DisplayName)
+	_, err := q.db.Exec(ctx, createParticipant,
+		arg.MatchID,
+		arg.PlayerID,
+		arg.DisplayName,
+		arg.Role,
+	)
 	return err
 }
 

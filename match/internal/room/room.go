@@ -4,6 +4,8 @@ package room
 
 import (
 	"context"
+	"crypto/rand"
+	"io"
 	"log"
 	"sort"
 	"sync/atomic"
@@ -33,6 +35,8 @@ type Room struct {
 	matchDuration time.Duration
 	startedAt     time.Time
 	participants  []PlayerInfo
+	tanks         []*tank
+	rnd           io.Reader // azar de los roles: crypto/rand
 
 	joins   chan Join
 	leaves  chan Leave
@@ -56,6 +60,7 @@ func NewRoom(code string, matchID string, m *Map, opts ...Option) *Room {
 		leaves:        make(chan Leave),
 		actions:       make(chan PlayerAction, actionBuffer),
 		nameCh:        make(chan Name),
+		rnd:           rand.Reader,
 	}
 	for _, opt := range opts {
 		opt(r)
@@ -126,7 +131,12 @@ func (r *Room) addPlayer(j Join) {
 	if name == "" {
 		name = j.PlayerID
 	}
+	tankSlot := noTank
+	if r.order < len(r.m.Tanks) {
+		tankSlot = r.order
+	}
 	r.players[j.PlayerID] = &player{
+		tankSlot: tankSlot,
 		view: &matchv1.PlayerView{
 			Id:        j.PlayerID,
 			Name:      name,
@@ -176,8 +186,13 @@ func (r *Room) startMatch(playerID string) {
 		return
 	}
 
+	if err := r.assignRoles(); err != nil {
+		log.Printf("room %s: no se pudo empezar: %v", r.Code, err)
+		return
+	}
 	r.phase = matchv1.Phase_PLAYING
 	r.startedAt = time.Now()
+	r.tanks = r.buildTanks()
 	r.participants = r.snapshotParticipants()
 
 	ctx, cancel := context.WithTimeout(context.Background(), depsTimeout)
@@ -234,7 +249,7 @@ func (r *Room) finishMatch() {
 		for _, p := range r.participants {
 			results = append(results, events.PlayerResult{
 				PlayerID: p.PlayerID,
-				Role:     events.RoleCrew,
+				Role:     p.Role,
 				Ejected:  false,
 				Harvest:  0,
 			})
@@ -257,6 +272,55 @@ func (r *Room) finishMatch() {
 	log.Printf("room %s: partida %s terminada (crew)", r.Code, r.MatchID)
 }
 
+// assignRoles elige los impostores entre todos los jugadores de la sala;
+// el resto queda como tripulante.
+func (r *Room) assignRoles() error {
+	ids := make([]string, 0, len(r.players))
+	for id := range r.players {
+		ids = append(ids, id)
+	}
+	sort.Strings(ids)
+	impostors, err := pickImpostors(ids, r.rnd)
+	if err != nil {
+		return err
+	}
+	for id, p := range r.players {
+		p.role = matchv1.Role_CREW
+		if impostors[id] {
+			p.role = matchv1.Role_IMPOSTOR
+		}
+	}
+	return nil
+}
+
+// buildTanks crea un tanque por cada jugador que recibió lugar en el huerto.
+func (r *Room) buildTanks() []*tank {
+	tanks := make([]*tank, 0, len(r.m.Tanks))
+	for id, p := range r.players {
+		if p.tankSlot == noTank {
+			continue
+		}
+		spot := r.m.Tanks[p.tankSlot]
+		tanks = append(tanks, &tank{
+			slot:    spot.Slot,
+			ownerID: id,
+			x:       spot.X,
+			y:       spot.Y,
+		})
+	}
+	sort.Slice(tanks, func(i, j int) bool {
+		return tanks[i].slot < tanks[j].slot
+	})
+	return tanks
+}
+
+func roleName(role matchv1.Role) string {
+	if role == matchv1.Role_IMPOSTOR {
+		return events.RoleImpostor
+	}
+	return events.RoleCrew
+}
+
 // connectedPlayers cuenta los jugadores con un stream abierto.
 func (r *Room) connectedPlayers() int {
 	count := 0
@@ -275,6 +339,7 @@ func (r *Room) snapshotParticipants() []PlayerInfo {
 		infos = append(infos, PlayerInfo{
 			PlayerID:    id,
 			DisplayName: p.view.Name,
+			Role:        roleName(p.role),
 		})
 	}
 	sort.Slice(infos, func(i, j int) bool {
@@ -316,20 +381,36 @@ func (r *Room) broadcast() {
 		}
 		return views[i].Id < views[j].Id
 	})
-	snap := &matchv1.Snapshot{
-		Tick:    r.tick,
-		Phase:   r.phase,
-		Players: views,
-	}
+	tanks := r.tankViews()
+	// Un snapshot por jugador: my_role es solo el suyo. Players y tanks se
+	// comparten porque nadie los modifica después de enviarlos.
 	for _, p := range r.players {
 		if p.out == nil {
 			continue
+		}
+		snap := &matchv1.Snapshot{
+			Tick:    r.tick,
+			Phase:   r.phase,
+			Players: views,
+			Tanks:   tanks,
+			MyRole:  p.role,
 		}
 		select {
 		case p.out <- snap:
 		default:
 		}
 	}
+}
+
+func (r *Room) tankViews() []*matchv1.TankView {
+	views := make([]*matchv1.TankView, 0, len(r.tanks))
+	for _, t := range r.tanks {
+		views = append(views, &matchv1.TankView{
+			Slot:    t.slot,
+			OwnerId: t.ownerID,
+		})
+	}
+	return views
 }
 
 // PlayerCount devuelve cuántos jugadores hay en la sala.

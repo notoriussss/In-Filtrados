@@ -15,6 +15,10 @@ const (
 	// S1-11: empezar y terminar la partida.
 	minPlayersToStart = 2
 	depsTimeout       = 2 * time.Second
+
+	// S2-02: roles y tanques.
+	twoImpostorsFrom = 7  // con 7 o más jugadores hay 2 impostores
+	noTank           = -1 // jugadores que llegaron después del último tanque
 )
 
 // colors are the 8 fixed player colors, given in order of arrival.
@@ -58,6 +62,16 @@ type player struct {
 	view   *matchv1.PlayerView
 	dx, dy int32
 	out    chan *matchv1.Snapshot
+
+	role     matchv1.Role // NO_ROLE hasta que empieza la partida
+	tankSlot int          // noTank si no le tocó tanque
+}
+
+// tank es un tanque del huerto con su dueño (S2-02).
+type tank struct {
+	slot    int32
+	ownerID string
+	x, y    float64
 }
 
 func clampDir(v int32) int32 {

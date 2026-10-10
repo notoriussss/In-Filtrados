@@ -6,6 +6,7 @@ import "context"
 type PlayerInfo struct {
 	PlayerID    string
 	DisplayName string
+	Role        string // events.RoleCrew o events.RoleImpostor
 }
 
 // MatchStore guarda el inicio y el fin de las partidas (PostgreSQL).
