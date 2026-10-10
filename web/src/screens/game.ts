@@ -1,4 +1,3 @@
-import type { PlayerView } from '@in-filtrados/messages';
 import { gameMap } from '../map';
 import { type Camera, clampCamera, createCamera } from '../canvas/camera';
 import { renderMap } from '../canvas/renderMap';
@@ -8,6 +7,8 @@ import {
   openGameSocket,
   type SocketStatus,
 } from '../net/socket';
+import { Interpolator } from '../net/interpolation';
+import { DirectionInput } from '../input';
 import { session } from '../session';
 import { CONNECTION_MESSAGES } from '../constants';
 
@@ -30,9 +31,9 @@ export function mountGame(
     return;
   }
 
-  let players: PlayerView[] = [];
+  const interpolator = new Interpolator();
   const meId = currentSession.playerId;
-  
+
   let status: SocketStatus = { state: 'connected' };
   const socket = openGameSocket({
     token: currentSession.token,
@@ -40,11 +41,17 @@ export function mountGame(
     onUnauthorized: () => show('login'),
   });
   socket.onStatus((s) => {
+    // The server stops a player whose stream dropped: after reconnecting,
+    // send again the direction of the keys still held.
+    if (s.state === 'connected' && status.state === 'reconnecting') {
+      const { dx, dy } = input.current();
+      if (dx !== 0 || dy !== 0) send({ type: 'move', dx, dy });
+    }
     status = s;
   });
   socket.onMessage((msg) => {
     if (msg.type === 'snapshot') {
-      players = msg.players;
+      interpolator.push(msg.tick, msg.players, performance.now());
     } else if (msg.type === 'error') {
       console.warn(msg.code, msg.message);
     }
@@ -67,48 +74,15 @@ export function mountGame(
     );
   }
 
-  const pressed = new Set<string>();
-  const ARROWS = new Set(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']);
-  let lastDx = 0;
-  let lastDy = 0;
-
-  function sendDirection(): void {
-    const right = Number(pressed.has('ArrowRight'));
-    const left = Number(pressed.has('ArrowLeft'));
-    const down = Number(pressed.has('ArrowDown'));
-    const up = Number(pressed.has('ArrowUp'));
-    const dx = (right - left) as -1 | 0 | 1;
-    const dy = (down - up) as -1 | 0 | 1;
-
-    if (dx === lastDx && dy === lastDy) return;
-    lastDx = dx;
-    lastDy = dy;
+  // S1-19: move goes out only when the direction changes.
+  const input = new DirectionInput(({ dx, dy }) => {
     send({ type: 'move', dx, dy });
-  }
-
-  function onKeyDown(e: KeyboardEvent) {
-    if (!ARROWS.has(e.key)) return;
-    e.preventDefault();
-    pressed.add(e.key);
-    sendDirection();
-  }
-
-  function onKeyUp(e: KeyboardEvent) {
-    pressed.delete(e.key);
-    sendDirection();
-  }
-
-  function onBlur() {
-    pressed.clear();
-    sendDirection();
-  }
-
-  window.addEventListener('keydown', onKeyDown);
-  window.addEventListener('keyup', onKeyUp);
-  window.addEventListener('blur', onBlur);
+  });
+  const detachInput = input.attach(window);
   window.addEventListener('resize', resize);
 
   function frame(): void {
+    const players = interpolator.playersAt(performance.now());
     const me = players.find((p) => p.id === meId);
     if (me) {
       camera = clampCamera({ ...camera, x: me.x, y: me.y }, gameMap);
@@ -130,9 +104,7 @@ export function mountGame(
   // Guardamos las funciones de limpieza en canvas como hack temporal 
   // para poder limpiar los event listeners en unmountGame.
   (canvas as any)._cleanup = () => {
-    window.removeEventListener('keydown', onKeyDown);
-    window.removeEventListener('keyup', onKeyUp);
-    window.removeEventListener('blur', onBlur);
+    detachInput();
     window.removeEventListener('resize', resize);
     cancelAnimationFrame(animationFrame);
     closeGameSocket();
