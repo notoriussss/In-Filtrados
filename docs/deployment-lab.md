@@ -144,7 +144,7 @@ JWT_PUBLIC_KEY_FILE=keys/jwt.pub       # en N1 y N2
 RECONNECT_GRACE_SECONDS=600
 
 # Health endpoints para el monitor (N5)
-WEB_HEALTH_URL=http://${EDGE_HOST}/health
+WEB_HEALTH_URL=http://${EDGE_HOST}:8080/health
 GATEWAY_HEALTH_URL=http://${EDGE_HOST}:3000/health
 MATCH_HEALTH_URL=http://${MATCH_HOST}:8081/health
 PLAYERS_HEALTH_URL=http://${PLAYERS_HOST}:8082/health
