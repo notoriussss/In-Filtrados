@@ -27,5 +27,3 @@ export const WS_CLOSE_CODES = {
   UNAUTHORIZED: 4001,
   REPLACED: 4002,
 } as const;
-
-export const WS_CLOSE_REPLACED = WS_CLOSE_CODES.REPLACED;

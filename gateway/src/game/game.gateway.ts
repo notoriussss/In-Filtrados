@@ -157,7 +157,7 @@ export class GameGateway implements OnGatewayConnection {
       });
       socket.close(WS_CLOSE_CODES.SERVICE_UNAVAILABLE);
     });
-    stream.on('end', () => socket.close());
+    stream.on('end', () => socket.close(WS_CLOSE_CODES.NORMAL));
     return stream;
   }
 }
