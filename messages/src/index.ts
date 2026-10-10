@@ -4,7 +4,8 @@
 // Browser -> gateway
 export type ClientMessage =
   | { type: 'join'; matchId: string; lastTick: number } // first message after connecting
-  | { type: 'move'; dx: -1 | 0 | 1; dy: -1 | 0 | 1 };
+  | { type: 'move'; dx: -1 | 0 | 1; dy: -1 | 0 | 1 }
+  | { type: 'start' };
 
 // Gateway -> browser
 export type ServerMessage =

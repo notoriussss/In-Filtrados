@@ -67,6 +67,8 @@ export class GameGateway implements OnGatewayConnection {
         );
       } else if (msg.type === 'move' && stream) {
         stream.write({ move: { dx: msg.dx, dy: msg.dy } });
+      } else if (msg.type === 'start' && stream) {
+        stream.write({ start: {} });
       }
     };
 
@@ -171,6 +173,9 @@ function parse(raw: string): ClientMessage | null {
         return { type: 'move', dx, dy };
       }
       return null;
+    }
+    if (msg?.type === 'start') {
+      return { type: 'start' };
     }
   } catch {
     // not JSON

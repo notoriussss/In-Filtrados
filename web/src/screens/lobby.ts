@@ -129,6 +129,16 @@ export function mountLobby(
         if (msg.code === 'UNAUTHORIZED') {
           session.clearSession();
           show('login');
+        } else if (msg.code === 'MATCH_NOT_FOUND') {
+          session.saveSession({
+            token: currentSession!.token,
+            playerId: currentSession!.playerId,
+            username: currentSession!.username,
+            matchId: ''
+          });
+          actionsDiv.hidden = false;
+          roomInfoDiv.hidden = true;
+          showError(msg.message);
         } else {
           showError(msg.message);
         }
@@ -136,20 +146,25 @@ export function mountLobby(
     });
   }
 
-  function updatePlayerList(players: PlayerView[]) {
-    playerList.innerHTML = '';
-    for (const p of players) {
-      const li = document.createElement('li');
-      li.innerHTML = `
+  let lastHTML = '';
+  function updatePlayerList(players: PlayerView[] = []) {
+    const safePlayers = players || [];
+    const html = safePlayers.map(p => `
+      <li>
         <span class="player-color" style="background: ${p.color}"></span>
         <span>${p.name} ${!p.connected ? '(Desconectado)' : ''}</span>
-      `;
-      playerList.appendChild(li);
+      </li>
+    `).join('');
+    
+    if (lastHTML !== html) {
+      playerList.innerHTML = html;
+      lastHTML = html;
     }
   }
 
-  function checkStartCondition(players: PlayerView[]) {
-    if (players.length > 0 && players[0].id === currentSession?.playerId) {
+  function checkStartCondition(players: PlayerView[] = []) {
+    const safePlayers = players || [];
+    if (safePlayers.length > 0 && safePlayers[0].id === currentSession?.playerId) {
       btnStart.hidden = false;
       btnStart.disabled = players.length < 2;
     } else {
