@@ -1,12 +1,12 @@
 import { api } from '../api';
 import { session } from '../session';
-import { MENSAJES_ERROR } from '../constants';
+import { ERROR_MESSAGES } from '../constants';
 
 export function mountRegister(
   show: (screen: 'login' | 'register' | 'lobby' | 'game') => void
 ): void {
   const container = document.getElementById('screen-register')!;
-  
+
   container.innerHTML = `
     <div class="panel">
       <h1>Crear Cuenta</h1>
@@ -39,10 +39,18 @@ export function mountRegister(
   `;
 
   const form = document.getElementById('register-form') as HTMLFormElement;
-  const usernameInput = document.getElementById('reg-username') as HTMLInputElement;
-  const passwordInput = document.getElementById('reg-password') as HTMLInputElement;
-  const errorDiv = document.getElementById('register-error') as HTMLDivElement;
-  const btnBack = document.getElementById('btn-back-login') as HTMLButtonElement;
+  const usernameInput = document.getElementById(
+    'reg-username'
+  ) as HTMLInputElement;
+  const passwordInput = document.getElementById(
+    'reg-password'
+  ) as HTMLInputElement;
+  const errorDiv = document.getElementById(
+    'register-error'
+  ) as HTMLDivElement;
+  const btnBack = document.getElementById(
+    'btn-back-login'
+  ) as HTMLButtonElement;
 
   function showError(msg: string) {
     errorDiv.textContent = msg;
@@ -69,10 +77,13 @@ export function mountRegister(
       show('lobby');
     } catch (err: any) {
       const msg = err.message || '';
-      if (msg.includes('409') || msg.toLowerCase().includes('already_exists')) {
-        showError(MENSAJES_ERROR.USUARIO_YA_EXISTE);
+      if (
+        msg.includes('409') ||
+        msg.toLowerCase().includes('already_exists')
+      ) {
+        showError(ERROR_MESSAGES.USER_ALREADY_EXISTS);
       } else {
-        showError(msg || MENSAJES_ERROR.SERVICIO_NO_DISPONIBLE);
+        showError(msg || ERROR_MESSAGES.SERVICE_UNAVAILABLE);
       }
     }
   });

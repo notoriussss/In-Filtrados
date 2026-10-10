@@ -1,6 +1,7 @@
-export const MENSAJES_ERROR = {
-  USUARIO_O_CONTRASENA_INCORRECTOS: 'Usuario o contraseña incorrectos',
-  USUARIO_YA_EXISTE: 'Ese usuario ya existe',
-  SALA_NO_ENCONTRADA: 'La sala no existe',
-  SERVICIO_NO_DISPONIBLE: 'El servidor no responde, intenta de nuevo',
+export const ERROR_MESSAGES = {
+  INVALID_CREDENTIALS: 'Usuario o contraseña incorrectos',
+  USER_ALREADY_EXISTS: 'Ese usuario ya existe',
+  ROOM_NOT_FOUND: 'La sala no existe',
+  SERVICE_UNAVAILABLE: 'El servidor no responde, intenta de nuevo',
+  SERVER_ERROR: 'Error del servidor',
 } as const;

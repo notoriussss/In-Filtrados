@@ -1,3 +1,5 @@
+import { ERROR_MESSAGES } from './constants';
+
 export interface AuthResponse {
   token: string;
   playerId: string;
@@ -37,7 +39,7 @@ async function apiFetch<T>(
   });
 
   if (!response.ok) {
-    let errorMessage = 'Error del servidor';
+    let errorMessage: string = ERROR_MESSAGES.SERVER_ERROR;
     try {
       const errorData = await response.json();
       // Tomamos el mensaje de error del backend, o un genérico

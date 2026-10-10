@@ -6,8 +6,8 @@ import type { ClientMessage, ServerMessage } from '@in-filtrados/messages';
 import { MatchClient, type PlayStream } from '../clients/match.client';
 import { ERROR_CODES, ERROR_MESSAGES } from './game.constants';
 
-// S1-07: WebSocket /ws?playerId=<id> without a token, one Play stream per socket.
-// S1-16 replaces playerId with the token and adds the error handling of the final version.
+// S1-07: WebSocket /ws?playerId=<id> without token, 1 Play stream per socket.
+// S1-16 replaces playerId with token and adds final error handling.
 @WebSocketGateway({ path: '/ws' })
 export class GameGateway implements OnGatewayConnection {
   private readonly logger = new Logger(GameGateway.name);
@@ -43,6 +43,8 @@ export class GameGateway implements OnGatewayConnection {
         );
       } else if (msg.type === 'move' && stream) {
         stream.write({ move: { dx: msg.dx, dy: msg.dy } });
+      } else if (msg.type === 'start' && stream) {
+        stream.write({ start: {} });
       }
     });
 
@@ -96,7 +98,8 @@ function send(socket: WebSocket, msg: ServerMessage): void {
   if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(msg));
 }
 
-// Only the two messages of messages/src/index.ts get through; anything else is ignored.
+// Only messages from messages/src/index.ts get through;
+// anything else is ignored.
 function parse(raw: string): ClientMessage | null {
   try {
     const msg = JSON.parse(raw);
@@ -111,6 +114,9 @@ function parse(raw: string): ClientMessage | null {
       const dx = Math.sign(Number(msg.dx) || 0) as -1 | 0 | 1;
       const dy = Math.sign(Number(msg.dy) || 0) as -1 | 0 | 1;
       return { type: 'move', dx, dy };
+    }
+    if (msg?.type === 'start') {
+      return { type: 'start' };
     }
   } catch {
     // not JSON

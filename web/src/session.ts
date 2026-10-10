@@ -3,6 +3,8 @@ export interface SessionData {
   playerId: string;
   username: string;
   matchId?: string;
+  roomCode?: string;
+  isCreator?: boolean;
 }
 
 const STORAGE_KEY = 'in-filtrados-session';

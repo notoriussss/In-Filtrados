@@ -1,8 +1,8 @@
 import { api } from '../api';
 import { session } from '../session';
-import { MENSAJES_ERROR } from '../constants';
+import { ERROR_MESSAGES } from '../constants';
 import { connect } from '../net/socket';
-import type { PlayerView } from '@in-filtrados/messages';
+import type { ClientMessage, PlayerView } from '@in-filtrados/messages';
 
 export function mountLobby(
   show: (screen: 'login' | 'register' | 'lobby' | 'game') => void
@@ -21,7 +21,11 @@ export function mountLobby(
       <div id="lobby-error" class="error-msg"></div>
       
       <div id="lobby-actions">
-        <button id="btn-create-room" class="primary" style="margin-bottom: 1rem;">
+        <button
+          id="btn-create-room"
+          class="primary"
+          style="margin-bottom: 1rem;"
+        >
           Crear sala
         </button>
         
@@ -52,16 +56,34 @@ export function mountLobby(
     </div>
   `;
 
-  const errorDiv = document.getElementById('lobby-error') as HTMLDivElement;
-  const actionsDiv = document.getElementById('lobby-actions') as HTMLDivElement;
-  const roomInfoDiv = document.getElementById('lobby-room-info') as HTMLDivElement;
-  const codeDisplay = document.getElementById('room-code-display') as HTMLDivElement;
-  const playerList = document.getElementById('player-list') as HTMLUListElement;
-  
-  const btnCreate = document.getElementById('btn-create-room') as HTMLButtonElement;
-  const btnJoin = document.getElementById('btn-join-room') as HTMLButtonElement;
-  const codeInput = document.getElementById('room-code-input') as HTMLInputElement;
-  const btnStart = document.getElementById('btn-start-game') as HTMLButtonElement;
+  const errorDiv = document.getElementById(
+    'lobby-error'
+  ) as HTMLDivElement;
+  const actionsDiv = document.getElementById(
+    'lobby-actions'
+  ) as HTMLDivElement;
+  const roomInfoDiv = document.getElementById(
+    'lobby-room-info'
+  ) as HTMLDivElement;
+  const codeDisplay = document.getElementById(
+    'room-code-display'
+  ) as HTMLDivElement;
+  const playerList = document.getElementById(
+    'player-list'
+  ) as HTMLUListElement;
+
+  const btnCreate = document.getElementById(
+    'btn-create-room'
+  ) as HTMLButtonElement;
+  const btnJoin = document.getElementById(
+    'btn-join-room'
+  ) as HTMLButtonElement;
+  const codeInput = document.getElementById(
+    'room-code-input'
+  ) as HTMLInputElement;
+  const btnStart = document.getElementById(
+    'btn-start-game'
+  ) as HTMLButtonElement;
 
   function showError(msg: string) {
     errorDiv.textContent = msg;
@@ -71,50 +93,7 @@ export function mountLobby(
     errorDiv.textContent = '';
   }
 
-  if (currentSession.matchId) {
-    actionsDiv.hidden = true;
-    roomInfoDiv.hidden = false;
-    codeDisplay.textContent = '...';
-    connectToRoom(currentSession.token, currentSession.matchId);
-  }
-
-  btnCreate.addEventListener('click', async () => {
-    clearError();
-    try {
-      const res = await api.createRoom(currentSession.token);
-      session.saveSession({ ...currentSession, matchId: res.matchId });
-      actionsDiv.hidden = true;
-      roomInfoDiv.hidden = false;
-      codeDisplay.textContent = res.roomCode;
-      connectToRoom(currentSession.token, res.matchId);
-    } catch (err: any) {
-      showError(err.message || MENSAJES_ERROR.SERVICIO_NO_DISPONIBLE);
-    }
-  });
-
-  btnJoin.addEventListener('click', async () => {
-    clearError();
-    const code = codeInput.value.trim().toUpperCase();
-    if (!code) return;
-
-    try {
-      const res = await api.joinRoom(currentSession.token, code);
-      session.saveSession({ ...currentSession, matchId: res.matchId });
-      actionsDiv.hidden = true;
-      roomInfoDiv.hidden = false;
-      codeDisplay.textContent = res.roomCode;
-      connectToRoom(currentSession.token, res.matchId);
-    } catch (err: any) {
-      const msg = err.message || '';
-      if (msg.includes('404') || msg.toLowerCase().includes('not_found')) {
-        showError(MENSAJES_ERROR.SALA_NO_ENCONTRADA);
-      } else {
-        showError(msg || MENSAJES_ERROR.SERVICIO_NO_DISPONIBLE);
-      }
-    }
-  });
-
-  let currentSend: ((msg: any) => void) | null = null;
+  let currentSend: ((msg: ClientMessage) => void) | null = null;
 
   function connectToRoom(token: string, matchId: string) {
     currentSend = connect(token, matchId, (msg) => {
@@ -136,6 +115,62 @@ export function mountLobby(
     });
   }
 
+  if (currentSession.matchId) {
+    actionsDiv.hidden = true;
+    roomInfoDiv.hidden = false;
+    codeDisplay.textContent = currentSession.roomCode ?? '...';
+    connectToRoom(currentSession.token, currentSession.matchId);
+  }
+
+  btnCreate.addEventListener('click', async () => {
+    clearError();
+    try {
+      const res = await api.createRoom(currentSession.token);
+      session.saveSession({
+        ...currentSession,
+        matchId: res.matchId,
+        roomCode: res.roomCode,
+        isCreator: true,
+      });
+      actionsDiv.hidden = true;
+      roomInfoDiv.hidden = false;
+      codeDisplay.textContent = res.roomCode;
+      connectToRoom(currentSession.token, res.matchId);
+    } catch (err: any) {
+      showError(err.message || ERROR_MESSAGES.SERVICE_UNAVAILABLE);
+    }
+  });
+
+  btnJoin.addEventListener('click', async () => {
+    clearError();
+    const code = codeInput.value.trim().toUpperCase();
+    if (!code) return;
+
+    try {
+      const res = await api.joinRoom(currentSession.token, code);
+      session.saveSession({
+        ...currentSession,
+        matchId: res.matchId,
+        roomCode: res.roomCode,
+        isCreator: false,
+      });
+      actionsDiv.hidden = true;
+      roomInfoDiv.hidden = false;
+      codeDisplay.textContent = res.roomCode;
+      connectToRoom(currentSession.token, res.matchId);
+    } catch (err: any) {
+      const msg = err.message || '';
+      if (
+        msg.includes('404') ||
+        msg.toLowerCase().includes('not_found')
+      ) {
+        showError(ERROR_MESSAGES.ROOM_NOT_FOUND);
+      } else {
+        showError(msg || ERROR_MESSAGES.SERVICE_UNAVAILABLE);
+      }
+    }
+  });
+
   function updatePlayerList(players: PlayerView[]) {
     playerList.innerHTML = '';
     for (const p of players) {
@@ -149,17 +184,15 @@ export function mountLobby(
   }
 
   function checkStartCondition(players: PlayerView[]) {
-    if (players.length > 0 && players[0].id === currentSession?.playerId) {
-      btnStart.hidden = false;
-      btnStart.disabled = players.length < 2;
-    } else {
-      btnStart.hidden = true;
-    }
+    const isCreator = session.loadSession()?.isCreator ?? false;
+    btnStart.hidden = !isCreator;
+    const connected = players.filter((p) => p.connected).length;
+    btnStart.disabled = connected < 2;
   }
 
   btnStart.addEventListener('click', () => {
     if (currentSend) {
-      currentSend({ type: 'start' } as any);
+      currentSend({ type: 'start' });
     }
   });
 }

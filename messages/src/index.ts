@@ -3,13 +3,14 @@
 
 // Browser -> gateway
 export type ClientMessage =
-  | { type: 'join'; matchId: string; lastTick: number } // first message after connecting
-  | { type: 'move'; dx: -1 | 0 | 1; dy: -1 | 0 | 1 };
+  | { type: 'join'; matchId: string; lastTick: number }
+  | { type: 'move'; dx: -1 | 0 | 1; dy: -1 | 0 | 1 }
+  | { type: 'start' }; // solo el creador; match lo valida
 
 // Gateway -> browser
 export type ServerMessage =
   | { type: 'snapshot'; tick: number; phase: Phase; players: PlayerView[] }
-  | { type: 'error'; code: ErrorCode; message: string }; // message is shown to the player: Spanish
+  | { type: 'error'; code: ErrorCode; message: string };
 
 export type Phase = 'LOBBY' | 'PLAYING' | 'MEETING' | 'ENDED';
 
@@ -23,4 +24,8 @@ export type PlayerView = {
   alive: boolean;
 };
 
-export type ErrorCode = 'UNAUTHORIZED' | 'MATCH_NOT_FOUND' | 'SERVICE_UNAVAILABLE' | 'BAD_MESSAGE';
+export type ErrorCode =
+  | 'UNAUTHORIZED'
+  | 'MATCH_NOT_FOUND'
+  | 'SERVICE_UNAVAILABLE'
+  | 'BAD_MESSAGE';
