@@ -7,7 +7,7 @@ import (
 	"github.com/notoriussss/in-filtrados/match/gen/matchv1"
 )
 
-// mapWithTanks es testMap con los 5 tanques del huerto de shared/map.json.
+// mapWithTanks es testMap con los 10 tanques del huerto de shared/map.json.
 func mapWithTanks() *Map {
 	m := testMap()
 	m.Tanks = []TankSpot{
@@ -16,6 +16,11 @@ func mapWithTanks() *Map {
 		{Slot: 2, X: 800, Y: 1040},
 		{Slot: 3, X: 880, Y: 1040},
 		{Slot: 4, X: 960, Y: 1040},
+		{Slot: 5, X: 640, Y: 960},
+		{Slot: 6, X: 720, Y: 960},
+		{Slot: 7, X: 800, Y: 960},
+		{Slot: 8, X: 880, Y: 960},
+		{Slot: 9, X: 960, Y: 960},
 	}
 	return m
 }
