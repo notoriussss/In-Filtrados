@@ -193,7 +193,8 @@
 
     <div id="connection-error" class="banner" role="alert" hidden>
         No se pudo consultar el monitor. Los datos visibles pueden estar
-        desactualizados; esto no significa que todos los servicios estén caídos.
+        desactualizados; esto no significa que todos los servicios
+        estén caídos.
     </div>
 
     <section aria-labelledby="incidents-title">
@@ -326,12 +327,15 @@
                 view.downSince = service.down_since;
                 updateDowntime(view);
 
-                const samples = (service.history || []).slice(-20).map(sample => {
+                const historyList =
+                    (service.history || []).slice(-20);
+                const samples = historyList.map(sample => {
                     const marker = document.createElement("span");
                     const sampleState = safeState(sample.status);
                     marker.className = `sample ${sampleState}`;
                     marker.title =
-                        `${stateLabels[sampleState]} · ${formatDate(sample.checked_at)}`;
+                        `${stateLabels[sampleState]} · ` +
+                        `${formatDate(sample.checked_at)}`;
                     return marker;
                 });
 
@@ -360,8 +364,8 @@
             for (const incident of incidents) {
                 const item = document.createElement("li");
                 item.textContent =
-                    `${formatDate(incident.started_at)} — ${incident.service}: ` +
-                    `${incident.detail}`;
+                    `${formatDate(incident.started_at)} — ` +
+                    `${incident.service}: ${incident.detail}`;
                 list.append(item);
             }
         }
@@ -391,7 +395,8 @@
 
                 document.getElementById("scan-time").textContent =
                     data.last_scan_at
-                        ? `Última comprobación: ${formatDate(data.last_scan_at)}`
+                        ? "Última comprobación: " +
+                          `${formatDate(data.last_scan_at)}`
                         : "Esperando primera comprobación…";
 
                 document.getElementById("connection-error").hidden = false;
