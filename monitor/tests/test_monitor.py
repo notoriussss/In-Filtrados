@@ -4,6 +4,16 @@ import httpx
 import pytest
 
 from app.health import HealthMonitor
+from app.messages import (
+    DETAIL_AMQP_OK,
+    DETAIL_OK,
+    DETAIL_PARENT_DOWN,
+    DETAIL_TIMEOUT,
+    STATE_DEGRADED,
+    STATE_DOWN,
+    STATE_OK,
+    STATE_UNKNOWN,
+)
 
 
 @pytest.mark.asyncio
@@ -13,7 +23,7 @@ from app.health import HealthMonitor
         (
             200,
             {"service": "players", "status": "ok", "checks": {}},
-            "ok",
+            STATE_OK,
         ),
         (
             503,
@@ -22,17 +32,17 @@ from app.health import HealthMonitor
                 "status": "degraded",
                 "checks": {"db": "fail"},
             },
-            "degraded",
+            STATE_DEGRADED,
         ),
         (
             500,
             {"service": "players", "status": "error"},
-            "down",
+            STATE_DOWN,
         ),
         (
             200,
             {"service": "other", "status": "ok"},
-            "down",
+            STATE_DOWN,
         ),
     ],
 )
@@ -52,7 +62,7 @@ async def test_http_states(http_code, payload, expected):
             ),
         )
 
-    name, state, _, latency = result
+    name, state, _, latency, *_ = result
     assert name == "players"
     assert state == expected
     assert latency >= 0
@@ -75,8 +85,8 @@ async def test_http_timeout():
             ),
         )
 
-    assert result[1] == "down"
-    assert result[2] == "Check timed out"
+    assert result[1] == STATE_DOWN
+    assert result[2] == DETAIL_TIMEOUT
 
 
 @pytest.mark.asyncio
@@ -86,9 +96,9 @@ async def test_connection_error_hides_secrets():
     async def failing_check():
         raise ConnectionError("password=do-not-expose")
 
-    result = await monitor.measure("match-db", failing_check)
+    result = await monitor.measure("match", failing_check)
 
-    assert result[1] == "down"
+    assert result[1] == STATE_DOWN
     assert "do-not-expose" not in result[2]
 
 
@@ -101,22 +111,30 @@ async def test_async_timeout():
 
     result = await monitor.measure("rabbitmq", failing_check)
 
-    assert result[1] == "down"
-    assert result[2] == "Check timed out"
+    assert result[1] == STATE_DOWN
+    assert result[2] == DETAIL_TIMEOUT
 
 
 def simulate_checks(monkeypatch, monitor):
     states = {}
+    checks_by_service = {
+        "match": {"db": "ok"},
+        "players": {"db": "ok"},
+    }
 
     async def fake_http(client, name, url):
-        return states.get(name, "ok"), "Simulated HTTP check"
+        return (
+            states.get(name, STATE_OK),
+            DETAIL_OK,
+            checks_by_service.get(name, {}),
+        )
 
-    async def fake_connection(name, variable):
-        return states.get(name, "ok"), "Simulated connection check"
+    async def fake_rabbitmq():
+        return states.get("rabbitmq", STATE_OK), DETAIL_AMQP_OK, {}
 
     monkeypatch.setattr(monitor, "check_http", fake_http)
-    monkeypatch.setattr(monitor, "check_connection", fake_connection)
-    return states
+    monkeypatch.setattr(monitor, "check_rabbitmq", fake_rabbitmq)
+    return states, checks_by_service
 
 
 @pytest.mark.asyncio
@@ -132,7 +150,7 @@ async def test_scan_returns_seven_services(monkeypatch):
     assert snapshot["incidents"] == []
 
     for service in snapshot["services"]:
-        assert service["status"] == "ok"
+        assert service["status"] == STATE_OK
         assert service["last_ok_at"] is not None
         assert len(service["history"]) == 1
 
@@ -140,12 +158,12 @@ async def test_scan_returns_seven_services(monkeypatch):
 @pytest.mark.asyncio
 async def test_degraded_does_not_create_down_incident(monkeypatch):
     monitor = HealthMonitor()
-    states = simulate_checks(monkeypatch, monitor)
-    states["gateway"] = "degraded"
+    states, _ = simulate_checks(monkeypatch, monitor)
+    states["gateway"] = STATE_DEGRADED
 
     await monitor.scan(None)
 
-    assert monitor.services["gateway"]["status"] == "degraded"
+    assert monitor.services["gateway"]["status"] == STATE_DEGRADED
     assert monitor.services["gateway"]["down_since"] is None
     assert monitor.snapshot()["incidents"] == []
 
@@ -153,12 +171,12 @@ async def test_degraded_does_not_create_down_incident(monkeypatch):
 @pytest.mark.asyncio
 async def test_down_recovery_and_new_incident(monkeypatch):
     monitor = HealthMonitor()
-    states = simulate_checks(monkeypatch, monitor)
+    states, _ = simulate_checks(monkeypatch, monitor)
 
     await monitor.scan(None)
     last_ok = monitor.services["players"]["last_ok_at"]
 
-    states["players"] = "down"
+    states["players"] = STATE_DOWN
     await monitor.scan(None)
     down_since = monitor.services["players"]["down_since"]
 
@@ -172,14 +190,14 @@ async def test_down_recovery_and_new_incident(monkeypatch):
     assert len(monitor.incidents) == 1
 
     # Recuperación: elimina la caída activa, conserva el historial.
-    states["players"] = "ok"
+    states["players"] = STATE_OK
     await monitor.scan(None)
     assert monitor.services["players"]["down_since"] is None
-    assert monitor.services["players"]["status"] == "ok"
+    assert monitor.services["players"]["status"] == STATE_OK
     assert len(monitor.incidents) == 1
 
     # Una caída nueva genera otro incidente.
-    states["players"] = "down"
+    states["players"] = STATE_DOWN
     await monitor.scan(None)
     assert len(monitor.incidents) == 2
 
@@ -197,25 +215,6 @@ async def test_history_keeps_latest_twenty_results(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_database_connection_is_closed(monkeypatch):
-    monitor = HealthMonitor()
-    connection = AsyncMock()
-    connection.fetchval.return_value = 1
-
-    monkeypatch.setenv("MATCH_DB_URL", "postgresql://example")
-    monkeypatch.setattr(
-        "app.health.asyncpg.connect",
-        AsyncMock(return_value=connection),
-    )
-
-    state, _ = await monitor.check_connection("match-db", "MATCH_DB_URL")
-
-    assert state == "ok"
-    connection.fetchval.assert_awaited_once_with("SELECT 1")
-    connection.close.assert_awaited_once()
-
-
-@pytest.mark.asyncio
 async def test_rabbitmq_connection_is_closed(monkeypatch):
     monitor = HealthMonitor()
     connection = AsyncMock()
@@ -227,20 +226,68 @@ async def test_rabbitmq_connection_is_closed(monkeypatch):
         AsyncMock(return_value=connection),
     )
 
-    state, _ = await monitor.check_connection("rabbitmq", "RABBITMQ_URL")
+    state, _, _ = await monitor.check_rabbitmq()
 
-    assert state == "ok"
+    assert state == STATE_OK
     connection.close.assert_awaited_once()
 
 
 @pytest.mark.asyncio
 async def test_missing_configuration_reports_down(monkeypatch):
     monitor = HealthMonitor()
-    monkeypatch.delenv("MATCH_DB_URL", raising=False)
+    monkeypatch.delenv("RABBITMQ_URL", raising=False)
 
     result = await monitor.measure(
-        "match-db",
-        lambda: monitor.check_connection("match-db", "MATCH_DB_URL"),
+        "rabbitmq",
+        monitor.check_rabbitmq,
     )
 
-    assert result[1] == "down"
+    assert result[1] == STATE_DOWN
+
+
+@pytest.mark.asyncio
+async def test_db_ok_when_parent_reports_ok(monkeypatch):
+    monitor = HealthMonitor()
+    _, checks = simulate_checks(monkeypatch, monitor)
+    checks["match"]["db"] = "ok"
+
+    await monitor.scan(None)
+
+    assert monitor.services["match-db"]["status"] == STATE_OK
+    assert monitor.services["match-db"]["detail"] == DETAIL_OK
+    assert monitor.services["match-db"]["latency_ms"] is None
+
+
+@pytest.mark.asyncio
+async def test_db_down_and_incident_when_parent_reports_fail(monkeypatch):
+    monitor = HealthMonitor()
+    _, checks = simulate_checks(monkeypatch, monitor)
+    checks["match"]["db"] = "fail: connection refused"
+
+    await monitor.scan(None)
+
+    assert monitor.services["match-db"]["status"] == STATE_DOWN
+    assert (
+        monitor.services["match-db"]["detail"]
+        == "fail: connection refused"
+    )
+    assert len(monitor.incidents) == 1
+    assert monitor.incidents[0]["service"] == "match-db"
+
+
+@pytest.mark.asyncio
+async def test_db_unknown_without_incident_when_parent_down(monkeypatch):
+    monitor = HealthMonitor()
+    states, _ = simulate_checks(monkeypatch, monitor)
+    states["match"] = STATE_DOWN
+
+    await monitor.scan(None)
+
+    assert monitor.services["match-db"]["status"] == STATE_UNKNOWN
+    assert (
+        monitor.services["match-db"]["detail"]
+        == DETAIL_PARENT_DOWN
+    )
+    # Solo el servicio padre match registra incidente por caída, no match-db
+    assert len(monitor.incidents) == 1
+    assert monitor.incidents[0]["service"] == "match"
