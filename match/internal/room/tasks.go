@@ -1,10 +1,13 @@
 package room
 
 import (
+	"context"
 	"crypto/rand"
+	"log"
 	"math/big"
 
 	"github.com/notoriussss/in-filtrados/match/gen/matchv1"
+	"github.com/notoriussss/in-filtrados/match/internal/events"
 )
 
 // pickRandomStations chooses exactly count unique station IDs from the map.
@@ -88,6 +91,34 @@ func (r *Room) completeTask(playerID string, p *player, stationID string) {
 	delete(p.assignedTasks, stationID)
 	p.tasksCompleted++
 	p.taskStartTick = 0
+
+	if p.role == matchv1.Role_IMPOSTOR {
+		// El impostor finge la tarea, no suma al embalse ni publica evento.
+		return
+	}
+
+	points := int32(0)
+	switch s.Type {
+	case "reduce":
+		points = 3
+	case "reuse":
+		points = 4
+	case "recycle":
+		points = 5
+	}
+
+	if points > 0 {
+		r.reservoir = min(r.reservoir+points, reservoirMax)
+
+		if r.publisher != nil {
+			ctx, cancel := context.WithTimeout(context.Background(), depsTimeout)
+			defer cancel()
+			event := events.NewTaskCompleted(r.MatchID, playerID, s.Type, points*100)
+			if err := r.publisher.Publish(ctx, events.RoutingKeyTaskCompleted, event); err != nil {
+				log.Printf("room %s: no se pudo publicar task.completed: %v", r.Code, err)
+			}
+		}
+	}
 }
 
 func (r *Room) stationAt(id string) *Station {
