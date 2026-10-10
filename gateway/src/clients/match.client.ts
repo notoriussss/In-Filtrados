@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as grpc from '@grpc/grpc-js';
 import { loadPackage, requireAddr, unary } from './grpc';
+import { createBreaker, guarded } from './resilience';
 
 export type PlayStream = grpc.ClientDuplexStream<unknown, any>;
 
@@ -12,6 +13,7 @@ export type RoomReply = {
 @Injectable()
 export class MatchClient {
   private readonly client: any;
+  private readonly breaker = createBreaker('match');
 
   constructor() {
     const pkg = loadPackage('match.proto');
@@ -25,10 +27,12 @@ export class MatchClient {
     playerId: string,
     displayName: string,
   ): Promise<RoomReply> {
-    return unary<RoomReply>(this.client, 'CreateRoom', {
-      playerId,
-      displayName,
-    });
+    return guarded(this.breaker, () =>
+      unary<RoomReply>(this.client, 'CreateRoom', {
+        playerId,
+        displayName,
+      }),
+    );
   }
 
   joinRoom(
@@ -36,11 +40,13 @@ export class MatchClient {
     playerId: string,
     displayName: string,
   ): Promise<RoomReply> {
-    return unary<RoomReply>(this.client, 'JoinRoom', {
-      roomCode,
-      playerId,
-      displayName,
-    });
+    return guarded(this.breaker, () =>
+      unary<RoomReply>(this.client, 'JoinRoom', {
+        roomCode,
+        playerId,
+        displayName,
+      }),
+    );
   }
 
   play(): PlayStream {
