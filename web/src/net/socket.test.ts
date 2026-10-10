@@ -137,7 +137,7 @@ describe('GameSocket', () => {
     expect(timers.at(-1)!.ms).toBe(500);
   });
 
-  it('grows backoff on repeated open and immediate drop without snapshot', () => {
+  it('grows backoff when it drops before any snapshot', () => {
     const { sockets, timers } = setup();
     // Intento 1: abre y se cierra de inmediato
     sockets[0].open();
