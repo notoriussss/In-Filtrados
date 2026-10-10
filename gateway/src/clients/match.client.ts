@@ -1,36 +1,49 @@
-import * as path from 'path';
+import { Injectable } from '@nestjs/common';
 import * as grpc from '@grpc/grpc-js';
-import * as protoLoader from '@grpc/proto-loader';
-
-// Loads proto/match.proto at startup; nothing is generated (docs/tasks.md S1-02).
-// From src/ (ts-node) and from dist/ (Docker) the proto folder is two levels up.
-const PROTO_PATH = path.join(
-  __dirname,
-  '..',
-  '..',
-  '..',
-  'proto',
-  'match.proto',
-);
-
-const definition = protoLoader.loadSync(PROTO_PATH, {
-  keepCase: false, // player_id -> playerId
-  longs: Number, // tick arrives as a number
-  enums: String, // phase arrives as 'LOBBY', 'PLAYING'...
-  defaults: true, // connected: false is sent too
-  oneofs: true,
-});
-const loaded = grpc.loadPackageDefinition(definition) as any;
+import { loadPackage, requireAddr, unary } from './grpc';
 
 export type PlayStream = grpc.ClientDuplexStream<unknown, any>;
 
-export function createMatchClient(): { play(): PlayStream } {
-  const addr = process.env.MATCH_GRPC_ADDR;
-  if (!addr) {
-    throw new Error('MATCH_GRPC_ADDR is not set');
+export type RoomReply = {
+  roomCode: string;
+  matchId: string;
+};
+
+@Injectable()
+export class MatchClient {
+  private readonly client: any;
+
+  constructor() {
+    const pkg = loadPackage('match.proto');
+    this.client = new pkg.match.v1.Match(
+      requireAddr('MATCH_GRPC_ADDR'),
+      grpc.credentials.createInsecure(),
+    );
   }
-  return new loaded.match.v1.Match(
-    addr,
-    grpc.credentials.createInsecure(),
-  );
+
+  createRoom(
+    playerId: string,
+    displayName: string,
+  ): Promise<RoomReply> {
+    return unary<RoomReply>(this.client, 'CreateRoom', {
+      playerId,
+      displayName,
+    });
+  }
+
+  joinRoom(
+    roomCode: string,
+    playerId: string,
+    displayName: string,
+  ): Promise<RoomReply> {
+    return unary<RoomReply>(this.client, 'JoinRoom', {
+      roomCode,
+      playerId,
+      displayName,
+    });
+  }
+
+  play(): PlayStream {
+    return this.client.Play();
+  }
 }

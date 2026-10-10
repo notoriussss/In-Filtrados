@@ -3,7 +3,7 @@ import { OnGatewayConnection, WebSocketGateway } from '@nestjs/websockets';
 import type { IncomingMessage } from 'http';
 import type { WebSocket } from 'ws';
 import type { ClientMessage, ServerMessage } from '@in-filtrados/messages';
-import { createMatchClient, type PlayStream } from './match.client';
+import { MatchClient, type PlayStream } from '../clients/match.client';
 import { ERROR_CODES, ERROR_MESSAGES } from './game.constants';
 
 // S1-07: WebSocket /ws?playerId=<id> without a token, one Play stream per socket.
@@ -11,7 +11,8 @@ import { ERROR_CODES, ERROR_MESSAGES } from './game.constants';
 @WebSocketGateway({ path: '/ws' })
 export class GameGateway implements OnGatewayConnection {
   private readonly logger = new Logger(GameGateway.name);
-  private readonly match = createMatchClient();
+
+  constructor(private readonly match: MatchClient) {}
 
   handleConnection(socket: WebSocket, req: IncomingMessage): void {
     const playerId = new URL(
