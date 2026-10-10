@@ -15,6 +15,12 @@ func testMap() *Map {
 		Width:  1600,
 		Height: 1200,
 		Spawn:  Point{X: 800, Y: 500},
+		Stations: []Station{
+			{ID: "leak-1", Type: "reduce", X: 800, Y: 500},
+			{ID: "rain-1", Type: "reuse", X: 100, Y: 100},
+			{ID: "filter-1", Type: "recycle", X: 200, Y: 200},
+			{ID: "filter-2", Type: "recycle", X: 300, Y: 300},
+		},
 	}
 }
 
