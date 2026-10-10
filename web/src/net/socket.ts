@@ -1,17 +1,23 @@
 import type { ClientMessage, ServerMessage } from '@in-filtrados/messages';
 
-// S1-07: connects to /ws on the same host (nginx or Vite forward it to the gateway).
-// S1-20 adds automatic reconnection.
+let currentWs: WebSocket | null = null;
+
 export function connect(
-  playerId: string,
+  token: string,
+  matchId: string,
   onMessage: (msg: ServerMessage) => void,
 ): (msg: ClientMessage) => void {
+  if (currentWs) {
+    currentWs.close();
+  }
+
   const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  const query = encodeURIComponent(playerId);
-  const ws = new WebSocket(`${protocol}://${location.host}/ws?playerId=${query}`);
+  const query = encodeURIComponent(token);
+  const ws = new WebSocket(`${protocol}://${location.host}/ws?token=${query}`);
+  currentWs = ws;
 
   ws.addEventListener('open', () => {
-    send({ type: 'join', matchId: 'DEV', lastTick: 0 });
+    send({ type: 'join', matchId, lastTick: 0 });
   });
   ws.addEventListener('message', (e) => {
     onMessage(JSON.parse(e.data) as ServerMessage);
@@ -26,4 +32,11 @@ export function connect(
     }
   }
   return send;
+}
+
+export function disconnect(): void {
+  if (currentWs) {
+    currentWs.close();
+    currentWs = null;
+  }
 }
