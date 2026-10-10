@@ -1,12 +1,12 @@
 import { api } from '../api';
 import { session } from '../session';
-import { MENSAJES_ERROR } from '../constants';
+import { ERROR_MESSAGES } from '../constants';
 
 export function mountLogin(
   show: (screen: 'login' | 'register' | 'lobby' | 'game') => void
 ): void {
   const container = document.getElementById('screen-login')!;
-  
+
   container.innerHTML = `
     <div class="panel">
       <h1>In-Filtrados</h1>
@@ -37,10 +37,16 @@ export function mountLogin(
   `;
 
   const form = document.getElementById('login-form') as HTMLFormElement;
-  const usernameInput = document.getElementById('username') as HTMLInputElement;
-  const passwordInput = document.getElementById('password') as HTMLInputElement;
+  const usernameInput = document.getElementById(
+    'username'
+  ) as HTMLInputElement;
+  const passwordInput = document.getElementById(
+    'password'
+  ) as HTMLInputElement;
   const errorDiv = document.getElementById('login-error') as HTMLDivElement;
-  const btnGoRegister = document.getElementById('btn-go-register') as HTMLButtonElement;
+  const btnGoRegister = document.getElementById(
+    'btn-go-register'
+  ) as HTMLButtonElement;
 
   function showError(msg: string) {
     errorDiv.textContent = msg;
@@ -66,10 +72,13 @@ export function mountLogin(
       show('lobby');
     } catch (err: any) {
       const msg = err.message || '';
-      if (msg.includes('401') || msg.toLowerCase().includes('unauthenticated')) {
-        showError(MENSAJES_ERROR.USUARIO_O_CONTRASENA_INCORRECTOS);
+      if (
+        msg.includes('401') ||
+        msg.toLowerCase().includes('unauthenticated')
+      ) {
+        showError(ERROR_MESSAGES.INVALID_CREDENTIALS);
       } else {
-        showError(msg || MENSAJES_ERROR.SERVICIO_NO_DISPONIBLE);
+        showError(msg || ERROR_MESSAGES.SERVICE_UNAVAILABLE);
       }
     }
   });

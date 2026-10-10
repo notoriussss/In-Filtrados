@@ -112,7 +112,7 @@ export function mountGame(
   resize();
   animationFrame = requestAnimationFrame(frame);
 
-  // Guardamos las funciones de limpieza en el elemento canvas como hack temporal 
+  // Guardamos las funciones de limpieza en canvas como hack temporal 
   // para poder limpiar los event listeners en unmountGame.
   (canvas as any)._cleanup = () => {
     window.removeEventListener('keydown', onKeyDown);

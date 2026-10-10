@@ -75,7 +75,8 @@ El mapa vive en **`shared/map.json`** (carpeta nueva en la raíz). Lo usan `matc
 // Navegador → gateway
 export type ClientMessage =
   | { type: 'join'; matchId: string; lastTick: number }   // primer mensaje al conectar
-  | { type: 'move'; dx: -1 | 0 | 1; dy: -1 | 0 | 1 };
+  | { type: 'move'; dx: -1 | 0 | 1; dy: -1 | 0 | 1 }
+  | { type: 'start' };                                     // solo el creador; match lo valida
 
 // Gateway → navegador
 export type ServerMessage =

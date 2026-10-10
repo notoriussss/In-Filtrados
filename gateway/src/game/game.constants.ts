@@ -11,7 +11,7 @@ export const ERROR_CODES = {
 export const ERROR_MESSAGES = {
   MISSING_TOKEN: 'Falta el token de sesión',
   INVALID_TOKEN: 'Sesión inválida o expirada',
-  MISSING_PLAYER_ID: 'Falta el playerId',
+  PLAYERS_SERVICE_UNAVAILABLE: 'El servidor de cuentas no responde',
   MATCH_SERVICE_UNAVAILABLE: 'El servidor de la partida no responde',
   MALFORMED_MESSAGE: 'Mensaje inválido o malformado',
 } as const;

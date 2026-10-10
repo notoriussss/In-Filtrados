@@ -1,14 +1,14 @@
 import { Logger } from '@nestjs/common';
 import { OnGatewayConnection, WebSocketGateway } from '@nestjs/websockets';
 import type { IncomingMessage } from 'http';
-import type { WebSocket } from 'ws';
+import type { RawData, WebSocket } from 'ws';
+import { status } from '@grpc/grpc-js';
 import type { ClientMessage, ServerMessage } from '@in-filtrados/messages';
 import { MatchClient, type PlayStream } from '../clients/match.client';
 import { ERROR_CODES, ERROR_MESSAGES } from './game.constants';
 import { PlayersClient } from '../clients/players.client';
 
-// S1-07: WebSocket /ws?playerId=<id> without a token, one Play stream per socket.
-// S1-16 replaces playerId with the token and adds the error handling of the final version.
+// WebSocket /ws?token=...; one Play stream per player
 @WebSocketGateway({ path: '/ws' })
 export class GameGateway implements OnGatewayConnection {
   private readonly logger = new Logger(GameGateway.name);
@@ -19,7 +19,10 @@ export class GameGateway implements OnGatewayConnection {
     private readonly players: PlayersClient,
   ) {}
 
-  async handleConnection(socket: WebSocket, req: IncomingMessage): Promise<void> {
+  async handleConnection(
+    socket: WebSocket,
+    req: IncomingMessage,
+  ): Promise<void> {
     const token = new URL(
       req.url ?? '',
       'http://localhost',
@@ -36,7 +39,7 @@ export class GameGateway implements OnGatewayConnection {
     }
 
     let isAuthenticated = false;
-    const messageQueue: any[] = [];
+    const messageQueue: RawData[] = [];
     let stream: PlayStream | null = null;
     let playerId: string | null = null;
 
@@ -86,13 +89,22 @@ export class GameGateway implements OnGatewayConnection {
     try {
       const res = await this.players.validateToken(token);
       playerId = res.playerId;
-    } catch (err) {
-      send(socket, {
-        type: 'error',
-        code: ERROR_CODES.UNAUTHORIZED,
-        message: ERROR_MESSAGES.INVALID_TOKEN,
-      });
-      socket.close(4001);
+    } catch (err: any) {
+      if (err.code === status.UNAUTHENTICATED) {
+        send(socket, {
+          type: 'error',
+          code: ERROR_CODES.UNAUTHORIZED,
+          message: ERROR_MESSAGES.INVALID_TOKEN,
+        });
+        socket.close(4001);
+      } else {
+        send(socket, {
+          type: 'error',
+          code: ERROR_CODES.SERVICE_UNAVAILABLE,
+          message: ERROR_MESSAGES.PLAYERS_SERVICE_UNAVAILABLE,
+        });
+        socket.close(1011);
+      }
       return;
     }
 
@@ -152,7 +164,8 @@ function send(socket: WebSocket, msg: ServerMessage): void {
   if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(msg));
 }
 
-// Only the two messages of messages/src/index.ts get through; anything else is ignored.
+// Only messages from messages/src/index.ts get through;
+// anything else is ignored.
 function parse(raw: string): ClientMessage | null {
   try {
     const msg = JSON.parse(raw);
