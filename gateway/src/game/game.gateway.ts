@@ -5,6 +5,7 @@ import type { WebSocket } from 'ws';
 import type { ClientMessage, ServerMessage } from '@in-filtrados/messages';
 import { createMatchClient, type PlayStream } from './match.client';
 import { ERROR_CODES, ERROR_MESSAGES } from './game.constants';
+import { validateToken } from '../clients/players.client';
 
 // S1-07: WebSocket /ws?playerId=<id> without a token, one Play stream per socket.
 // S1-16 replaces playerId with the token and adds the error handling of the final version.
@@ -12,28 +13,41 @@ import { ERROR_CODES, ERROR_MESSAGES } from './game.constants';
 export class GameGateway implements OnGatewayConnection {
   private readonly logger = new Logger(GameGateway.name);
   private readonly match = createMatchClient();
+  private readonly activeSockets = new Map<string, WebSocket>();
 
-  handleConnection(socket: WebSocket, req: IncomingMessage): void {
-    const playerId = new URL(
+  async handleConnection(socket: WebSocket, req: IncomingMessage): Promise<void> {
+    const token = new URL(
       req.url ?? '',
       'http://localhost',
-    ).searchParams.get('playerId');
-    if (!playerId) {
+    ).searchParams.get('token');
+
+    if (!token) {
       send(socket, {
         type: 'error',
-        code: ERROR_CODES.BAD_MESSAGE,
-        message: ERROR_MESSAGES.MISSING_PLAYER_ID,
+        code: ERROR_CODES.UNAUTHORIZED,
+        message: ERROR_MESSAGES.MISSING_TOKEN,
       });
-      socket.close(4000);
+      socket.close(4001);
       return;
     }
-    this.logger.log(`ws open ${playerId}`);
+
+    let isAuthenticated = false;
+    const messageQueue: any[] = [];
     let stream: PlayStream | null = null;
+    let playerId: string | null = null;
 
     socket.on('message', (raw) => {
+      if (!isAuthenticated) {
+        messageQueue.push(raw);
+        return;
+      }
+      processMessage(raw);
+    });
+
+    const processMessage = (raw: any) => {
       const msg = parse(raw.toString());
       if (!msg) return;
-      if (msg.type === 'join' && !stream) {
+      if (msg.type === 'join' && !stream && playerId) {
         stream = this.openPlay(
           socket,
           playerId,
@@ -43,12 +57,38 @@ export class GameGateway implements OnGatewayConnection {
       } else if (msg.type === 'move' && stream) {
         stream.write({ move: { dx: msg.dx, dy: msg.dy } });
       }
-    });
+    };
 
     socket.on('close', () => {
-      this.logger.log(`ws close ${playerId}`);
+      if (playerId) {
+        this.logger.log(`ws close ${playerId}`);
+      }
       stream?.end();
     });
+
+    try {
+      const res = await validateToken(token);
+      playerId = res.playerId;
+    } catch (err) {
+      send(socket, {
+        type: 'error',
+        code: ERROR_CODES.UNAUTHORIZED,
+        message: ERROR_MESSAGES.INVALID_TOKEN,
+      });
+      socket.close(4001);
+      return;
+    }
+
+    isAuthenticated = true;
+    this.logger.log(`ws open ${playerId}`);
+
+    const existing = this.activeSockets.get(playerId);
+    if (existing) {
+      existing.close(4001);
+    }
+    this.activeSockets.set(playerId, socket);
+
+    messageQueue.forEach(processMessage);
   }
 
   private openPlay(
