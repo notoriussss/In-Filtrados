@@ -23,8 +23,8 @@ const DB_MAX_CONNECTIONS: u32 = 5;
 
 #[tokio::main]
 async fn main() {
-    let db_url =
-        std::env::var("PLAYERS_DB_URL").expect("falta la variable de entorno PLAYERS_DB_URL");
+    let db_url = std::env::var("PLAYERS_DB_URL")
+        .expect("falta la variable de entorno PLAYERS_DB_URL");
 
     let pool = PgPoolOptions::new()
         .max_connections(DB_MAX_CONNECTIONS)
@@ -52,7 +52,8 @@ async fn main() {
     let listener = tokio::net::TcpListener::bind(http_addr)
         .await
         .expect("no se pudo abrir el puerto HTTP");
-    let http_server = axum::serve(listener, app).with_graceful_shutdown(shutdown_signal());
+    let http_server =
+        axum::serve(listener, app).with_graceful_shutdown(shutdown_signal());
 
     tokio::select! {
         result = grpc_server => {
@@ -86,10 +87,12 @@ async fn shutdown_signal() {
 
     #[cfg(unix)]
     let terminate = async {
-        tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
-            .expect("no se pudo escuchar SIGTERM")
-            .recv()
-            .await;
+        tokio::signal::unix::signal(
+            tokio::signal::unix::SignalKind::terminate(),
+        )
+        .expect("no se pudo escuchar SIGTERM")
+        .recv()
+        .await;
     };
 
     #[cfg(not(unix))]

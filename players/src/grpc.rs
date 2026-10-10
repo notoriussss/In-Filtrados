@@ -19,7 +19,8 @@ pub mod players_v1 {
 
 use players_v1::players_server::Players;
 use players_v1::{
-    LoginRequest, Player, PlayerIdRequest, Profile, RegisterRequest, Token, ValidateRequest,
+    LoginRequest, Player, PlayerIdRequest, Profile, RegisterRequest, Token,
+    ValidateRequest,
 };
 
 /// Servicio gRPC de cuentas; comparte el pool con el resto del proceso.
@@ -40,9 +41,10 @@ impl Players for PlayersService {
         request: Request<RegisterRequest>,
     ) -> Result<Response<Player>, Status> {
         let input = request.into_inner();
-        let account = accounts::register(&self.pool, &input.username, &input.password)
-            .await
-            .map_err(status_from)?;
+        let account =
+            accounts::register(&self.pool, &input.username, &input.password)
+                .await
+                .map_err(status_from)?;
 
         Ok(Response::new(Player {
             player_id: account.player_id.to_string(),
@@ -50,11 +52,15 @@ impl Players for PlayersService {
         }))
     }
 
-    async fn login(&self, request: Request<LoginRequest>) -> Result<Response<Token>, Status> {
+    async fn login(
+        &self,
+        request: Request<LoginRequest>,
+    ) -> Result<Response<Token>, Status> {
         let input = request.into_inner();
-        let session = accounts::login(&self.pool, &input.username, &input.password)
-            .await
-            .map_err(status_from)?;
+        let session =
+            accounts::login(&self.pool, &input.username, &input.password)
+                .await
+                .map_err(status_from)?;
 
         Ok(Response::new(Token {
             token: session.token,
@@ -90,13 +96,24 @@ impl Players for PlayersService {
 /// Traduce un error de cuentas al código gRPC que espera el gateway.
 fn status_from(error: AccountError) -> Status {
     match error {
-        AccountError::InvalidUsername => Status::invalid_argument(ERR_MSG_INVALID_USERNAME),
-        AccountError::InvalidPassword => Status::invalid_argument(ERR_MSG_INVALID_PASSWORD),
-        AccountError::AlreadyExists => Status::already_exists(ERR_MSG_ALREADY_EXISTS),
-        AccountError::InvalidCredentials => Status::unauthenticated(ERR_MSG_INVALID_CREDENTIALS),
-        AccountError::InvalidToken => Status::unauthenticated(ERR_MSG_INVALID_TOKEN),
+        AccountError::InvalidUsername => {
+            Status::invalid_argument(ERR_MSG_INVALID_USERNAME)
+        }
+        AccountError::InvalidPassword => {
+            Status::invalid_argument(ERR_MSG_INVALID_PASSWORD)
+        }
+        AccountError::AlreadyExists => {
+            Status::already_exists(ERR_MSG_ALREADY_EXISTS)
+        }
+        AccountError::InvalidCredentials => {
+            Status::unauthenticated(ERR_MSG_INVALID_CREDENTIALS)
+        }
+        AccountError::InvalidToken => {
+            Status::unauthenticated(ERR_MSG_INVALID_TOKEN)
+        }
         AccountError::Database(error) => {
-            // Nunca se registran contraseñas ni tokens; solo el error del motor.
+            // Nunca se registran contraseñas ni tokens;
+            // solo el error del motor.
             eprintln!("players: error de base de datos: {}", error);
             Status::internal(ERR_MSG_INTERNAL)
         }
@@ -184,19 +201,21 @@ mod tests {
         assert_eq!(player.username, username);
         let player_id = Uuid::parse_str(&player.player_id).unwrap();
 
-        let password_hash: String =
-            sqlx::query_scalar("SELECT password_hash FROM players WHERE id = $1")
+        let password_hash: String = sqlx::query_scalar(
+            "SELECT password_hash FROM players WHERE id = $1",
+        )
+        .bind(player_id)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
+        assert!(password_hash.starts_with("$argon2"));
+
+        let coins: i32 =
+            sqlx::query_scalar("SELECT coins FROM players WHERE id = $1")
                 .bind(player_id)
                 .fetch_one(&pool)
                 .await
                 .unwrap();
-        assert!(password_hash.starts_with("$argon2"));
-
-        let coins: i32 = sqlx::query_scalar("SELECT coins FROM players WHERE id = $1")
-            .bind(player_id)
-            .fetch_one(&pool)
-            .await
-            .unwrap();
         assert_eq!(coins, 0);
     }
 
@@ -270,12 +289,13 @@ mod tests {
         assert_eq!(token.token.len(), accounts::TOKEN_BYTES * 2);
         assert!(token.token.chars().all(|c| c.is_ascii_hexdigit()));
 
-        let expires_at: DateTime<Utc> =
-            sqlx::query_scalar("SELECT expires_at FROM sessions WHERE token = $1")
-                .bind(&token.token)
-                .fetch_one(&pool)
-                .await
-                .unwrap();
+        let expires_at: DateTime<Utc> = sqlx::query_scalar(
+            "SELECT expires_at FROM sessions WHERE token = $1",
+        )
+        .bind(&token.token)
+        .fetch_one(&pool)
+        .await
+        .unwrap();
 
         let remaining = expires_at - Utc::now();
         assert!(remaining > Duration::hours(23));
@@ -341,7 +361,9 @@ mod tests {
             .into_inner();
 
         let response = service
-            .validate_token(Request::new(ValidateRequest { token: login.token }))
+            .validate_token(Request::new(ValidateRequest {
+                token: login.token,
+            }))
             .await
             .expect("el token debería ser válido");
 
@@ -369,7 +391,8 @@ mod tests {
             .into_inner();
         let player_id = Uuid::parse_str(&login.player_id).unwrap();
 
-        let expired_token = format!("{}{}", Uuid::new_v4().simple(), Uuid::new_v4().simple());
+        let expired_token =
+            format!("{}{}", Uuid::new_v4().simple(), Uuid::new_v4().simple());
         sqlx::query(
             "INSERT INTO sessions (token, player_id, expires_at)
              VALUES ($1, $2, now() - interval '1 hour')",

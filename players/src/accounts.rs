@@ -3,7 +3,9 @@
 //! Toda la lógica de cuentas vive aquí; `grpc.rs` solo traduce los
 //! resultados a mensajes y códigos gRPC.
 
-use argon2::password_hash::{phc::PasswordHash, PasswordHasher, PasswordVerifier};
+use argon2::password_hash::{
+    phc::PasswordHash, PasswordHasher, PasswordVerifier,
+};
 use argon2::Argon2;
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -108,6 +110,12 @@ pub async fn register(
     }
 }
 
+/// Hash dummy de Argon2id para mitigar ataques de temporización si el
+/// usuario no existe en `login`.
+const DUMMY_HASH: &str =
+    "$argon2id$v=19$m=19456,t=2,p=1$YKxHHveeej4JEi13WxZsdw$\
+     UE/YqqpGjgW93GvQij7zWePVStTcoHELSvCoZyi4cNs";
+
 /// Verifica las credenciales y, si son correctas, crea una sesión.
 ///
 /// Usuario inexistente y contraseña incorrecta devuelven el mismo error
@@ -126,6 +134,7 @@ pub async fn login(
     .map_err(AccountError::Database)?;
 
     let Some((player_id, stored_hash)) = row else {
+        let _ = verify_password(password, DUMMY_HASH);
         return Err(AccountError::InvalidCredentials);
     };
 
@@ -151,7 +160,10 @@ pub async fn login(
 }
 
 /// Busca un token que no haya vencido y devuelve su jugador.
-pub async fn validate_token(pool: &PgPool, token: &str) -> Result<PlayerAccount, AccountError> {
+pub async fn validate_token(
+    pool: &PgPool,
+    token: &str,
+) -> Result<PlayerAccount, AccountError> {
     let row = sqlx::query_as::<_, (Uuid, String)>(
         "SELECT p.id, p.username
          FROM sessions s
@@ -171,9 +183,12 @@ pub async fn validate_token(pool: &PgPool, token: &str) -> Result<PlayerAccount,
 }
 
 /// Compara la contraseña con el hash guardado.
-fn verify_password(password: &str, stored_hash: &str) -> Result<(), AccountError> {
-    let parsed_hash =
-        PasswordHash::new(stored_hash).map_err(|_| AccountError::InvalidCredentials)?;
+fn verify_password(
+    password: &str,
+    stored_hash: &str,
+) -> Result<(), AccountError> {
+    let parsed_hash = PasswordHash::new(stored_hash)
+        .map_err(|_| AccountError::InvalidCredentials)?;
 
     Argon2::default()
         .verify_password(password.as_bytes(), &parsed_hash)
