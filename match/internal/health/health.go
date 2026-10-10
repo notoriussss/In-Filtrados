@@ -23,6 +23,11 @@ type Checker interface {
 	CheckRabbitMQ(ctx context.Context) error
 }
 
+// Pingable represents any database connection pool that supports Ping.
+type Pingable interface {
+	Ping(ctx context.Context) error
+}
+
 type DefaultChecker struct{}
 
 func (c *DefaultChecker) CheckDB(ctx context.Context) error {
@@ -32,6 +37,23 @@ func (c *DefaultChecker) CheckDB(ctx context.Context) error {
 	}
 	hostPort := extractHostPort(dbUrl, "localhost:5432")
 	return pingTCP(ctx, hostPort)
+}
+
+// PoolChecker pings the active database connection pool.
+type PoolChecker struct {
+	DefaultChecker
+	db Pingable
+}
+
+func NewPoolChecker(db Pingable) *PoolChecker {
+	return &PoolChecker{db: db}
+}
+
+func (c *PoolChecker) CheckDB(ctx context.Context) error {
+	if c.db != nil {
+		return c.db.Ping(ctx)
+	}
+	return c.DefaultChecker.CheckDB(ctx)
 }
 
 func (c *DefaultChecker) CheckRabbitMQ(ctx context.Context) error {

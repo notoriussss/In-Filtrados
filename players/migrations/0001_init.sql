@@ -1,0 +1,15 @@
+CREATE TABLE players (
+  id UUID PRIMARY KEY,
+  username TEXT NOT NULL UNIQUE,
+  password_hash TEXT NOT NULL,
+  coins INTEGER NOT NULL DEFAULT 0,
+  matches_played INTEGER NOT NULL DEFAULT 0,
+  wins INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE sessions (
+  token TEXT PRIMARY KEY,
+  player_id UUID NOT NULL REFERENCES players(id),
+  expires_at TIMESTAMPTZ NOT NULL
+);

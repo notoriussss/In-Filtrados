@@ -26,6 +26,7 @@ message ClientAction {
   oneof action {
     Join join = 1;
     Move move = 2;
+    Start start = 3;
   }
 }
 message Join {
@@ -37,6 +38,8 @@ message Move {
   int32 dx = 1;
   int32 dy = 2;
 }
+// Start: la manda el creador para pasar de LOBBY a PLAYING.
+message Start {}
 
 message ServerEvent {
   oneof event {

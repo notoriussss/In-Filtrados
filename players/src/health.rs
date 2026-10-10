@@ -13,7 +13,8 @@ pub struct HealthResponse {
 
 pub async fn check_tcp(addr: &str) -> Result<(), String> {
     let host_port = extract_host_port(addr);
-    match timeout(Duration::from_secs(1), TcpStream::connect(&host_port)).await {
+    match timeout(Duration::from_secs(1), TcpStream::connect(&host_port)).await
+    {
         Ok(Ok(_stream)) => Ok(()),
         Ok(Err(e)) => Err(format!("fail: {}", e)),
         Err(_) => Err("fail: timeout (1s)".to_string()),
@@ -125,8 +126,10 @@ mod tests {
 
     #[test]
     fn test_build_health_response_degraded() {
-        let (status_code, response) =
-            build_health_response(Err("fail: connection refused".to_string()), Ok(()));
+        let (status_code, response) = build_health_response(
+            Err("fail: connection refused".to_string()),
+            Ok(()),
+        );
         assert_eq!(status_code, StatusCode::SERVICE_UNAVAILABLE);
         assert_eq!(response.status, "degraded");
         assert_eq!(response.service, "players");

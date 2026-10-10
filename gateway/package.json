@@ -7,7 +7,7 @@
     "start": "ts-node src/main.ts",
     "start:dev": "ts-node-dev src/main.ts",
     "lint": "tsc --noEmit",
-    "test": "echo \"testing gateway...\""
+    "test": "tsc && node --test dist/clients/grpc-errors.test.js"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.14.5",
@@ -18,6 +18,8 @@
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/platform-ws": "^10.4.22",
     "@nestjs/websockets": "^10.4.22",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1"
   },
