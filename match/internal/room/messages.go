@@ -15,4 +15,5 @@ const (
 	msgParseMap = "parse map"
 
 	msgPickImpostors = "pick impostors"
+	msgPickStations  = "pick stations"
 )

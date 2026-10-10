@@ -212,7 +212,10 @@ func (r *Room) startMatch(playerID string) {
 	r.startedAt = time.Now()
 	r.startTick = r.tick
 	r.tanks = r.buildTanks()
-	r.assignTasks() // S2-04
+	if err := r.assignTasks(); err != nil {
+		log.Printf("room %s: no se pudo asignar tareas: %v", r.Code, err)
+		return
+	}
 	r.reservoir = 0
 	r.participants = r.snapshotParticipants()
 

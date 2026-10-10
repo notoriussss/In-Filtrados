@@ -3,6 +3,7 @@ package room
 import (
 	"context"
 	"crypto/rand"
+	"fmt"
 	"log"
 	"math/big"
 
@@ -10,27 +11,28 @@ import (
 	"github.com/notoriussss/in-filtrados/match/internal/events"
 )
 
-// pickRandomStations chooses exactly count unique station IDs from the map.
-// If there are fewer stations than count, it returns all of them.
-func pickRandomStations(all []Station, count int) []string {
+// pickRandomStations chooses count unique station IDs from the map using
+// crypto/rand. If there are fewer stations than count, it returns all of them.
+func pickRandomStations(all []Station, count int) ([]string, error) {
 	n := len(all)
 	if n == 0 {
-		return nil
+		return nil, nil
 	}
 	if count > n {
 		count = n
 	}
 
-	// Create a copy of indices to shuffle
 	indices := make([]int, n)
 	for i := 0; i < n; i++ {
 		indices[i] = i
 	}
 
-	// Fisher-Yates shuffle for 'count' elements using crypto/rand
 	for i := 0; i < count; i++ {
 		max := big.NewInt(int64(n - i))
-		jBig, _ := rand.Int(rand.Reader, max)
+		jBig, err := rand.Int(rand.Reader, max)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", msgPickStations, err)
+		}
 		j := int(jBig.Int64()) + i
 		indices[i], indices[j] = indices[j], indices[i]
 	}
@@ -39,22 +41,26 @@ func pickRandomStations(all []Station, count int) []string {
 	for i := 0; i < count; i++ {
 		result[i] = all[indices[i]].ID
 	}
-	return result
+	return result, nil
 }
 
 // assignTasks randomly assigns exactly tasksPerPlayer tasks to each player
 // using the stations defined in the map.
-func (r *Room) assignTasks() {
+func (r *Room) assignTasks() error {
 	for _, p := range r.players {
-		stations := pickRandomStations(r.m.Stations, tasksPerPlayer)
-		p.assignedTasks = make(map[string]bool)
+		stations, err := pickRandomStations(r.m.Stations, tasksPerPlayer)
+		if err != nil {
+			return err
+		}
+		p.assignedTasks = make(map[string]bool, len(stations))
 		for _, id := range stations {
 			p.assignedTasks[id] = true
 		}
 		p.tasksCompleted = 0
 		p.taskStartTick = 0
-		p.currentTaskStation = ""
+		p.taskStation = ""
 	}
+	return nil
 }
 
 func (r *Room) startTask(playerID string, p *player, stationID string) {
@@ -70,7 +76,7 @@ func (r *Room) startTask(playerID string, p *player, stationID string) {
 	}
 	// Empezar a contar el tiempo.
 	p.taskStartTick = r.tick
-	p.currentTaskStation = stationID
+	p.taskStation = stationID
 }
 
 func (r *Room) completeTask(playerID string, p *player, stationID string) {
@@ -80,17 +86,17 @@ func (r *Room) completeTask(playerID string, p *player, stationID string) {
 	if !p.assignedTasks[stationID] {
 		return
 	}
-	if p.currentTaskStation != stationID {
+	if p.taskStation == "" || p.taskStation != stationID {
 		return
 	}
-	// Validar tiempo: deben pasar al menos taskMinTicks (3s)
-	if p.taskStartTick == 0 || r.tick-p.taskStartTick < taskMinTicks {
+	// Validar tiempo: deben pasar al menos taskMinTicks (3 s / 60 ticks)
+	if r.tick-p.taskStartTick < taskMinTicks {
 		return
 	}
 	s := r.stationAt(stationID)
 	if s == nil || !nearStation(p, s) {
 		p.taskStartTick = 0
-		p.currentTaskStation = ""
+		p.taskStation = ""
 		return
 	}
 
@@ -98,33 +104,45 @@ func (r *Room) completeTask(playerID string, p *player, stationID string) {
 	delete(p.assignedTasks, stationID)
 	p.tasksCompleted++
 	p.taskStartTick = 0
-	p.currentTaskStation = ""
+	p.taskStation = ""
 
 	if p.role == matchv1.Role_IMPOSTOR {
 		// El impostor finge la tarea, no suma al embalse ni publica evento.
 		return
 	}
 
-	points := int32(0)
-	switch s.Type {
-	case "reduce":
-		points = 3
-	case "reuse":
-		points = 4
-	case "recycle":
-		points = 5
-	}
-
+	points := taskPoints[s.Type]
 	if points > 0 {
 		r.reservoir = min(r.reservoir+points, reservoirMax)
 
 		if r.publisher != nil {
-			ctx, cancel := context.WithTimeout(context.Background(), depsTimeout)
-			defer cancel()
-			event := events.NewTaskCompleted(r.MatchID, playerID, s.Type, points*100)
-			if err := r.publisher.Publish(ctx, events.RoutingKeyTaskCompleted, event); err != nil {
-				log.Printf("room %s: no se pudo publicar task.completed: %v", r.Code, err)
-			}
+			pub := r.publisher
+			code := r.Code
+			event := events.NewTaskCompleted(
+				r.MatchID,
+				playerID,
+				s.Type,
+				points*litersPerPoint,
+			)
+			go func() {
+				ctx, cancel := context.WithTimeout(
+					context.Background(),
+					depsTimeout,
+				)
+				defer cancel()
+				err := pub.Publish(
+					ctx,
+					events.RoutingKeyTaskCompleted,
+					event,
+				)
+				if err != nil {
+					log.Printf(
+						"room %s: no se pudo publicar task.completed: %v",
+						code,
+						err,
+					)
+				}
+			}()
 		}
 	}
 }
@@ -143,4 +161,3 @@ func nearStation(p *player, s *Station) bool {
 	dy := float64(p.view.Y) - s.Y
 	return dx*dx+dy*dy <= taskRadius*taskRadius
 }
-

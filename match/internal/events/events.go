@@ -11,7 +11,7 @@ import (
 
 // Exchange y routing keys del contrato (docs/tasks.md 0.7).
 const (
-	ExchangeName       = "game.events"
+	ExchangeName            = "game.events"
 	RoutingKeyStarted       = "match.started"
 	RoutingKeyFinished      = "match.finished"
 	RoutingKeyTaskCompleted = "task.completed"
