@@ -8,6 +8,16 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse
 
 from app.health import HealthMonitor
+from app.messages import (
+    CHECK_POLLING_FIRST_SCAN,
+    CHECK_POLLING_INVALID_TIMESTAMP,
+    CHECK_POLLING_NOT_INITIALIZED,
+    CHECK_POLLING_OK,
+    CHECK_POLLING_STALE,
+    CHECK_POLLING_TASK_STOPPED,
+    STATE_DEGRADED,
+    STATE_OK,
+)
 
 
 async def polling_loop(monitor, client):
@@ -48,9 +58,9 @@ async def get_health():
     checks = {}
 
     if monitor is None or task is None or started_at is None:
-        checks["polling"] = "fail: monitoring not initialized"
+        checks["polling"] = CHECK_POLLING_NOT_INITIALIZED
     elif task.done():
-        checks["polling"] = "fail: monitoring task stopped"
+        checks["polling"] = CHECK_POLLING_TASK_STOPPED
     else:
         now = datetime.now(UTC)
 
@@ -58,27 +68,30 @@ async def get_health():
             startup_age = (now - started_at).total_seconds()
 
             if startup_age <= 10:
-                checks["polling"] = "ok"
+                checks["polling"] = CHECK_POLLING_OK
             else:
-                checks["polling"] = "fail: first scan not completed"
+                checks["polling"] = CHECK_POLLING_FIRST_SCAN
         else:
             try:
                 last_scan = datetime.fromisoformat(monitor.last_scan_at)
                 scan_age = (now - last_scan).total_seconds()
 
                 if scan_age <= 15:
-                    checks["polling"] = "ok"
+                    checks["polling"] = CHECK_POLLING_OK
                 else:
-                    checks["polling"] = "fail: monitoring results are stale"
+                    checks["polling"] = CHECK_POLLING_STALE
             except (ValueError, TypeError):
-                checks["polling"] = "fail: invalid scan timestamp"
+                checks["polling"] = CHECK_POLLING_INVALID_TIMESTAMP
 
-    healthy = all(value == "ok" for value in checks.values())
+    healthy = all(
+        value == CHECK_POLLING_OK
+        for value in checks.values()
+    )
 
     return JSONResponse(
         status_code=200 if healthy else 503,
         content={
-            "status": "ok" if healthy else "degraded",
+            "status": STATE_OK if healthy else STATE_DEGRADED,
             "service": "monitor",
             "checks": checks,
         },
