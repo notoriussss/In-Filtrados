@@ -126,6 +126,12 @@ func (r *Room) handleAction(a PlayerAction) {
 		r.startContaminate(a.PlayerID, p, a.TankSlot)
 	case a.Clean:
 		r.startClean(p, a.TankSlot)
+	case a.InteractTask:
+		if !a.Completed {
+			r.startTask(a.PlayerID, p, a.StationID)
+		} else {
+			r.completeTask(a.PlayerID, p, a.StationID)
+		}
 	default:
 		p.dx, p.dy = clampDir(a.DX), clampDir(a.DY)
 	}

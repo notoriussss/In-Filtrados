@@ -74,9 +74,14 @@ type PlayerAction struct {
 	PlayerID    string
 	DX, DY      int32
 	Start       bool
-	Contaminate bool
-	Clean       bool
-	TankSlot    int32
+	Contaminate  bool
+	Clean        bool
+	TankSlot     int32
+	
+	// S2-04
+	InteractTask bool
+	StationID    string
+	Completed    bool
 }
 
 type player struct {

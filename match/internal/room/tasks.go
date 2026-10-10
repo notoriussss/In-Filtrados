@@ -3,6 +3,8 @@ package room
 import (
 	"crypto/rand"
 	"math/big"
+
+	"github.com/notoriussss/in-filtrados/match/gen/matchv1"
 )
 
 // pickRandomStations chooses exactly count unique station IDs from the map.
@@ -50,3 +52,56 @@ func (r *Room) assignTasks() {
 		p.taskStartTick = 0
 	}
 }
+
+func (r *Room) startTask(playerID string, p *player, stationID string) {
+	if r.phase != matchv1.Phase_PLAYING {
+		return
+	}
+	if !p.assignedTasks[stationID] {
+		return
+	}
+	s := r.stationAt(stationID)
+	if s == nil || !nearStation(p, s) {
+		return
+	}
+	// Empezar a contar el tiempo.
+	p.taskStartTick = r.tick
+}
+
+func (r *Room) completeTask(playerID string, p *player, stationID string) {
+	if r.phase != matchv1.Phase_PLAYING {
+		return
+	}
+	if !p.assignedTasks[stationID] {
+		return
+	}
+	// Validar tiempo: deben pasar al menos taskMinTicks (3s)
+	if p.taskStartTick == 0 || r.tick-p.taskStartTick < taskMinTicks {
+		return
+	}
+	s := r.stationAt(stationID)
+	if s == nil || !nearStation(p, s) {
+		return
+	}
+	
+	// Completado con éxito
+	delete(p.assignedTasks, stationID)
+	p.tasksCompleted++
+	p.taskStartTick = 0
+}
+
+func (r *Room) stationAt(id string) *Station {
+	for i := range r.m.Stations {
+		if r.m.Stations[i].ID == id {
+			return &r.m.Stations[i]
+		}
+	}
+	return nil
+}
+
+func nearStation(p *player, s *Station) bool {
+	dx := float64(p.view.X) - s.X
+	dy := float64(p.view.Y) - s.Y
+	return dx*dx+dy*dy <= taskRadius*taskRadius
+}
+
