@@ -97,8 +97,8 @@ Cada integrante lleva el nodo de un servicio que **no** es el suyo cuando se pue
 
 | Nodo | Puerto | Protocolo | Quién se conecta | Publicado fuera de la laptop |
 |---|---|---|---|---|
-| N1 | 8080 | HTTP + WebSocket (`/`, `/api`, `/ws`) | Navegadores | Sí |
-| N1 | 3000 | HTTP `/health` del gateway | N5 | Sí |
+| N1 | 8080 | HTTP + WebSocket (`/`, `/api`, `/ws`, `/health/gateway`) | Navegadores y N5 | Sí |
+| N1 | 3000 | HTTP `/health` del gateway | Solo `web` (nginx, red interna de Docker) | **No** (S2-08) |
 | N2 | 50051 | gRPC | N1 | Sí |
 | N2 | 8081 | HTTP `/health` | N5 | Sí |
 | N2 | 5432 | PostgreSQL #1 | Solo `match` (red interna de Docker) | **No** |
@@ -112,6 +112,7 @@ Cada integrante lleva el nodo de un servicio que **no** es el suyo cuando se pue
 **Notas:**
 - Son los mismos puertos que `tasks.md`, 0.1, así que no cambia nada del código.
 - Los `/health` de N2 y N3 informan también el estado de su base de datos (`SELECT 1`). Así el monitor sabe si una base cayó sin tener que llegar a ella.
+- S2-08: el `/health` del gateway se consulta por nginx, en `http://<EDGE_HOST>:8080/health/gateway`. El 3000 queda solo en la red interna de Docker para que nadie hable directo con el gateway ni se salte el límite de login con un `X-Forwarded-For` inventado.
 
 ---
 
@@ -141,8 +142,9 @@ PLAYERS_DB_URL=postgresql://${PLAYERS_DB_USER}:${PLAYERS_DB_PASSWORD}@players-db
 RECONNECT_GRACE_SECONDS=600
 
 # Health endpoints para el monitor (N5)
+# El del gateway pasa por nginx: su puerto 3000 no se publica (S2-08)
 WEB_HEALTH_URL=http://${EDGE_HOST}:8080/health
-GATEWAY_HEALTH_URL=http://${EDGE_HOST}:3000/health
+GATEWAY_HEALTH_URL=http://${EDGE_HOST}:8080/health/gateway
 MATCH_HEALTH_URL=http://${MATCH_HOST}:8081/health
 PLAYERS_HEALTH_URL=http://${PLAYERS_HOST}:8082/health
 ```

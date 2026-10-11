@@ -17,6 +17,8 @@ services:
       PORT: "3000"
       MATCH_GRPC_ADDR: ${MATCH_GRPC_ADDR:?falta MATCH_GRPC_ADDR en lab.env}
       PLAYERS_GRPC_ADDR: ${PLAYERS_GRPC_ADDR:?falta PLAYERS_GRPC_ADDR en lab.env}
-    ports:
-      - "3000:3000"
+    # S2-08: sin ports. Los navegadores entran por nginx (web :8080) y
+    # el monitor consulta /health/gateway por ese mismo nginx. Publicar
+    # el 3000 permitía saltarse el límite de login con un
+    # X-Forwarded-For inventado.
     restart: unless-stopped

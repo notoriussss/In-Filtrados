@@ -46,8 +46,7 @@ $Topology = [ordered]@{
     N1 = @{
         HostVar = "EDGE_HOST"; Role = "edge"
         Ports = @(
-            @{ Port = 8080; Name = "web" },
-            @{ Port = 3000; Name = "gateway /health" }
+            @{ Port = 8080; Name = "web" }
         )
     }
     N2 = @{

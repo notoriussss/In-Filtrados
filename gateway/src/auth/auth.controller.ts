@@ -15,7 +15,7 @@ import {
   TokenReply,
 } from '../clients/players.client';
 import { toHttpException } from '../clients/grpc-errors';
-import { ThrottlerGuard } from '@nestjs/throttler';
+import { LoginThrottlerGuard } from './login-throttler.guard';
 import { CredentialsDto } from './auth.dto';
 import { AuthGuard, type AuthedRequest } from './auth.guard';
 
@@ -34,9 +34,9 @@ export class AuthController {
 
   @Post('auth/login')
   @HttpCode(HttpStatus.OK)
-  // S2-08: 10 intentos de login por minuto por IP; el resto responde
-  // 429 sin llegar siquiera a players.
-  @UseGuards(ThrottlerGuard)
+  // S2-08: 10 intentos de login por minuto por IP real; el resto
+  // responde 429 sin llegar siquiera a players.
+  @UseGuards(LoginThrottlerGuard)
   async login(@Body() body: CredentialsDto): Promise<TokenReply> {
     try {
       return await this.players.login(body.username, body.password);
