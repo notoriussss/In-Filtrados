@@ -231,7 +231,7 @@ func (r *Room) removePlayer(l Leave) {
 	p.view.Connected = false
 	p.dx, p.dy = 0, 0
 	p.out = nil
-	if r.inMatch() {
+	if r.inMatch() && p.view.Alive {
 		// El periodo de gracia empieza en updateGrace si no vuelve en
 		// disconnectDebounce: cambiar de socket (de la sala de espera a
 		// la partida, o al recargar) no pausa ni avisa al monitor.
@@ -306,8 +306,14 @@ func (r *Room) publishAsync(routingKey string, event any) {
 // monitor) y convierte en fantasma a quien no volvió a tiempo, para que
 // la partida no se trabe esperando a alguien que se fue de verdad.
 func (r *Room) updateGrace() {
+	if !r.inMatch() {
+		return
+	}
 	now := r.now()
 	for id, p := range r.players {
+		if !p.view.Alive {
+			continue
+		}
 		if !p.leftAt.IsZero() && p.graceUntil.IsZero() &&
 			now.Sub(p.leftAt) >= disconnectDebounce {
 			p.graceUntil = p.leftAt.Add(r.grace)
@@ -324,9 +330,6 @@ func (r *Room) updateGrace() {
 		}
 		p.leftAt = time.Time{}
 		p.graceUntil = time.Time{}
-		if !p.view.Alive {
-			continue
-		}
 		p.view.Alive = false
 		p.pending = nil
 		p.taskStartTick = 0
@@ -336,6 +339,9 @@ func (r *Room) updateGrace() {
 			r.Code,
 			id,
 		)
+		if r.meeting != nil && !r.meeting.votingClosed && r.allAliveVoted() {
+			r.closeVoting()
+		}
 	}
 }
 
@@ -426,14 +432,7 @@ func (r *Room) startMatch(playerID string) {
 			r.startedAt,
 			playerIDs,
 		)
-		err := r.publisher.Publish(ctx, events.RoutingKeyStarted, event)
-		if err != nil {
-			log.Printf(
-				"room %s: no se pudo publicar match.started: %v",
-				r.Code,
-				err,
-			)
-		}
+		r.publishAsync(events.RoutingKeyStarted, event)
 	}
 	log.Printf("room %s: partida %s iniciada", r.Code, r.MatchID)
 }
@@ -471,14 +470,7 @@ func (r *Room) finishMatch() {
 			events.WinnerCrew,
 			results,
 		)
-		err := r.publisher.Publish(ctx, events.RoutingKeyFinished, event)
-		if err != nil {
-			log.Printf(
-				"room %s: no se pudo publicar match.finished: %v",
-				r.Code,
-				err,
-			)
-		}
+		r.publishAsync(events.RoutingKeyFinished, event)
 	}
 	log.Printf("room %s: partida %s terminada (crew)", r.Code, r.MatchID)
 }

@@ -210,3 +210,79 @@ func TestDisconnectedVoterCountsAsSkip(t *testing.T) {
 		t.Error("b está conectado: no se le inventa un voto")
 	}
 }
+
+func TestGhostDisconnectDoesNotPause(t *testing.T) {
+	r, clock, outs := graceRoom(t)
+	// c ya es un fantasma (expulsado o tanque muerto)
+	r.players["c"].view.Alive = false
+
+	disconnect(r, clock, "c", outs["c"])
+	if r.paused() {
+		t.Fatal("un fantasma desconectado no debe pausar la sala")
+	}
+	if len(r.waitingFor()) != 0 {
+		t.Fatalf(
+			"waitingFor no debe incluir al fantasma: %v",
+			r.waitingFor(),
+		)
+	}
+}
+
+func TestRestoreRoomWithGhostDoesNotWaitForGhost(t *testing.T) {
+	r, _, _ := graceRoom(t)
+	// c es fantasma
+	r.players["c"].view.Alive = false
+	saver := &fakeSaver{}
+	r.snapshots = saver
+	r.savedKey = ""
+	r.maybeSave()
+
+	clock := &fakeClock{t: time.Unix(1_800_000_000, 0)}
+	got, err := Restore(
+		saver.last().state,
+		mapWithStations(),
+		WithClock(clock.now),
+		WithGracePeriod(time.Minute),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Solo los vivos ("a" y "b") deben estar en espera
+	wf := got.waitingFor()
+	if len(wf) != 2 || wf[0] != "a" || wf[1] != "b" {
+		t.Fatalf("solo los vivos deben estar en espera, got: %v", wf)
+	}
+	if !got.players["c"].leftAt.IsZero() ||
+		!got.players["c"].graceUntil.IsZero() {
+		t.Error("el fantasma no debe tener gracia asignada al restaurar")
+	}
+}
+
+func TestGraceExpiryDuringMeetingClosesVotingIfAllAliveVoted(t *testing.T) {
+	r, clock, outs := graceRoom(t)
+	r.phase = matchv1.Phase_MEETING
+	r.meeting = &meetingState{
+		reporterID:   "a",
+		votes:        make(map[string]voteChoice),
+		votingEndsAt: r.tick + meetingVotingTicks,
+	}
+	// "a" y "b" votan
+	r.handleVote("a", "b", false)
+	r.handleVote("b", "a", false)
+
+	// "c" se desconecta y entra en gracia
+	disconnect(r, clock, "c", outs["c"])
+	if r.meeting.votingClosed {
+		t.Fatal("la votación no debe cerrarse mientras c está en gracia")
+	}
+
+	// Pasa el tiempo de gracia completo: c vence y pasa a fantasma
+	clock.advance(r.grace + time.Second)
+	r.updateGrace()
+
+	if !r.meeting.votingClosed {
+		t.Fatal("al vencer c y quedar 2/2 votos, debe cerrarse la votación")
+	}
+}
+

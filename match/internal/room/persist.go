@@ -230,6 +230,9 @@ func Restore(state []byte, m *Map, opts ...Option) (*Room, error) {
 	r := NewRoom(s.Code, s.MatchID, m, opts...)
 	r.creatorID = s.CreatorID
 	r.phase = s.Phase
+	if r.phase == matchv1.Phase_ENDED {
+		return nil, fmt.Errorf("partida ya terminada")
+	}
 	r.tick = s.Tick
 	r.startTick = s.StartTick
 	r.startedAt = s.StartedAt
@@ -254,6 +257,11 @@ func Restore(state []byte, m *Map, opts ...Option) (*Room, error) {
 		for _, station := range sp.AssignedTasks {
 			tasks[station] = true
 		}
+		playerLeftAt, playerGraceUntil := time.Time{}, time.Time{}
+		if r.inMatch() && sp.Alive {
+			playerLeftAt = leftAt
+			playerGraceUntil = graceUntil
+		}
 		r.players[sp.ID] = &player{
 			view: &matchv1.PlayerView{
 				Id:        sp.ID,
@@ -273,8 +281,8 @@ func Restore(state []byte, m *Map, opts ...Option) (*Room, error) {
 			ejected:         sp.Ejected,
 			oilUntil:        sp.OilUntil,
 			nextOilDrop:     sp.NextOilDrop,
-			leftAt:          leftAt,
-			graceUntil:      graceUntil,
+			leftAt:          playerLeftAt,
+			graceUntil:      playerGraceUntil,
 		}
 	}
 	r.connectedCount.Store(int32(len(r.players)))
@@ -326,7 +334,9 @@ func Restore(state []byte, m *Map, opts ...Option) (*Room, error) {
 	// S3-04: el monitor ve a todos en periodo de gracia hasta que vuelvan.
 	if r.inMatch() {
 		for id, p := range r.players {
-			r.publishDisconnected(id, p, leftAt)
+			if p.view.Alive {
+				r.publishDisconnected(id, p, leftAt)
+			}
 		}
 	}
 	// Lo que se acaba de leer ya está guardado.

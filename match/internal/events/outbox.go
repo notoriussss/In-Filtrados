@@ -53,8 +53,9 @@ type OutboxPublisher struct {
 
 	// mu ordena las publicaciones y los reintentos: un evento nuevo no
 	// adelanta a uno que espera en outbox.
-	mu      sync.Mutex
-	pending bool
+	mu       sync.Mutex
+	pending  bool
+	flushing bool
 }
 
 // NewOutboxPublisher arranca suponiendo que puede haber pendientes de
@@ -137,10 +138,19 @@ func (o *OutboxPublisher) Run(ctx context.Context) {
 // detiene en el primer fallo para no desordenar los eventos.
 func (o *OutboxPublisher) Flush(ctx context.Context) {
 	o.mu.Lock()
-	defer o.mu.Unlock()
-	if !o.pending {
+	if !o.pending || o.flushing {
+		o.mu.Unlock()
 		return
 	}
+	o.flushing = true
+	o.mu.Unlock()
+
+	defer func() {
+		o.mu.Lock()
+		o.flushing = false
+		o.mu.Unlock()
+	}()
+
 	for {
 		listCtx, cancel := context.WithTimeout(ctx, outboxTimeout)
 		batch, err := o.store.Pending(listCtx, outboxBatch)
@@ -150,7 +160,9 @@ func (o *OutboxPublisher) Flush(ctx context.Context) {
 			return
 		}
 		if len(batch) == 0 {
+			o.mu.Lock()
 			o.pending = false
+			o.mu.Unlock()
 			return
 		}
 		for _, ev := range batch {
