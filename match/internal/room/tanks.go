@@ -128,16 +128,17 @@ func (r *Room) logVisits() {
 }
 
 func (r *Room) logEvent(playerID, kind string, slot int32) {
-	if r.eventLog == nil {
-		return
-	}
-	r.eventLog.Log(LogEntry{
+	entry := LogEntry{
 		MatchID:  r.MatchID,
 		Tick:     r.tick,
 		PlayerID: playerID,
 		Kind:     kind,
 		TankSlot: slot,
-	})
+	}
+	r.eventHistory = append(r.eventHistory, entry)
+	if r.eventLog != nil {
+		r.eventLog.Log(entry)
+	}
 }
 
 func (r *Room) tankAt(slot int32) *tank {
