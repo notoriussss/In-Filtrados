@@ -26,6 +26,9 @@ export const ERROR_MESSAGES = {
 export const RATE_LIMIT_PER_SECOND = 30;
 export const RATE_LIMIT_CAPACITY = 30;
 export const RATE_LIMIT_WARNINGS = 3;
+// Si pasa este tiempo sin descartar nada, los avisos se olvidan: tres
+// ráfagas aisladas en una partida no desconectan a nadie.
+export const RATE_LIMIT_WARNING_RESET_MS = 1000;
 
 // Límites de validación de las acciones del juego (S2-01).
 export const MAX_TANK_SLOT = 9; // hasta 10 jugadores por sala

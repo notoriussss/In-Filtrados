@@ -55,9 +55,14 @@ test('una calma larga no acumula más que la capacidad', () => {
   assert.equal(allowed, 30);
 });
 
-test('tras 3 avisos el limiter pide cerrar la conexión', () => {
+test('tras 3 avisos seguidos el limiter pide cerrar la conexión', () => {
   const clock = fakeClock();
-  const limiter = new FloodLimiter(new TokenBucket(30, 30, clock.now), 3);
+  const limiter = new FloodLimiter(
+    new TokenBucket(30, 30, clock.now),
+    3,
+    1000,
+    clock.now,
+  );
   for (let i = 0; i < 30; i++) {
     assert.equal(limiter.check(), 'allow', `mensaje ${i + 1}`);
   }
@@ -66,10 +71,57 @@ test('tras 3 avisos el limiter pide cerrar la conexión', () => {
   assert.equal(limiter.check(), 'close'); // 3.er aviso y cierre
 });
 
+test('una calma de un segundo olvida los avisos anteriores', () => {
+  const clock = fakeClock();
+  const limiter = new FloodLimiter(
+    new TokenBucket(30, 30, clock.now),
+    3,
+    1000,
+    clock.now,
+  );
+
+  // Tres ráfagas aisladas (30 pasan y 1 se descarta en cada una) con
+  // calma de 2,5 s entre medio: nunca se cierra la conexión.
+  for (let rush = 0; rush < 3; rush++) {
+    if (rush > 0) clock.advance(2500);
+    for (let i = 0; i < 30; i++) {
+      assert.equal(limiter.check(), 'allow', `ráfaga ${rush + 1}`);
+    }
+    assert.equal(limiter.check(), 'warn', `ráfaga ${rush + 1}`);
+  }
+});
+
+test('los descartes seguidos dentro del segundo sí cierran', () => {
+  const clock = fakeClock();
+  const limiter = new FloodLimiter(
+    new TokenBucket(30, 30, clock.now),
+    3,
+    1000,
+    clock.now,
+  );
+  for (let i = 0; i < 30; i++) limiter.check();
+
+  assert.equal(limiter.check(), 'warn');
+  clock.advance(10);
+  assert.equal(limiter.check(), 'warn');
+  clock.advance(10);
+  assert.equal(limiter.check(), 'close');
+});
+
 test('el flood de una conexión no toca a la otra', () => {
   const clock = fakeClock();
-  const flooded = new FloodLimiter(new TokenBucket(30, 30, clock.now), 3);
-  const other = new FloodLimiter(new TokenBucket(30, 30, clock.now), 3);
+  const flooded = new FloodLimiter(
+    new TokenBucket(30, 30, clock.now),
+    3,
+    1000,
+    clock.now,
+  );
+  const other = new FloodLimiter(
+    new TokenBucket(30, 30, clock.now),
+    3,
+    1000,
+    clock.now,
+  );
 
   for (let i = 0; i < 100; i++) flooded.check();
   assert.equal(flooded.check(), 'close');

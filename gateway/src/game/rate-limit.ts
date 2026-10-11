@@ -36,18 +36,31 @@ export class TokenBucket {
 }
 
 // FloodLimiter une el bucket con los avisos: después de maxWarnings
-// mensajes descartados cierra la conexión (código 4008).
+// mensajes descartados seguidos cierra la conexión (código 4008). Si
+// pasa resetAfterMs sin descartar nada, los avisos se olvidan: tres
+// ráfagas aisladas en una partida no desconectan a nadie.
 export class FloodLimiter {
   private warnings = 0;
+  private lastWarningAt: number | null = null;
 
   constructor(
     private readonly bucket: TokenBucket,
     private readonly maxWarnings: number,
+    private readonly resetAfterMs: number,
+    private readonly now: () => number = Date.now,
   ) {}
 
   check(): LimitOutcome {
     if (this.bucket.tryConsume()) return 'allow';
+    const current = this.now();
+    if (
+      this.lastWarningAt !== null &&
+      current - this.lastWarningAt >= this.resetAfterMs
+    ) {
+      this.warnings = 0;
+    }
     this.warnings += 1;
+    this.lastWarningAt = current;
     return this.warnings >= this.maxWarnings ? 'close' : 'warn';
   }
 }

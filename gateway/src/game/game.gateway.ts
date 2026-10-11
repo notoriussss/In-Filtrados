@@ -10,6 +10,7 @@ import {
   ERROR_MESSAGES,
   RATE_LIMIT_CAPACITY,
   RATE_LIMIT_PER_SECOND,
+  RATE_LIMIT_WARNING_RESET_MS,
   RATE_LIMIT_WARNINGS,
   WS_CLOSE_CODES,
 } from './game.constants';
@@ -61,6 +62,7 @@ export class GameGateway implements OnGatewayConnection {
     const limiter = new FloodLimiter(
       new TokenBucket(RATE_LIMIT_CAPACITY, RATE_LIMIT_PER_SECOND),
       RATE_LIMIT_WARNINGS,
+      RATE_LIMIT_WARNING_RESET_MS,
     );
 
     socket.on('message', (raw: RawData) => {
