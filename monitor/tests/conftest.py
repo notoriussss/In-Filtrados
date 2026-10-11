@@ -8,5 +8,5 @@ os.environ.setdefault("MATCH_HEALTH_URL", "http://match:8081/health")
 os.environ.setdefault("PLAYERS_HEALTH_URL", "http://players:8082/health")
 os.environ.setdefault(
     "RABBITMQ_URL",
-    "amqp://guest:guest@localhost:5672/",
+    "amqp://guest:guest@localhost:5672",
 )
