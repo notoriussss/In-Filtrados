@@ -195,7 +195,7 @@ class EventStats:
                 "player_id": player["player_id"],
                 "name": player["name"],
                 "grace_ends_at": player["grace_ends_at"].isoformat(),
-                "seconds_left": int(
+                "seconds_left": round(
                     (player["grace_ends_at"] - now).total_seconds()
                 ),
             }
@@ -208,6 +208,8 @@ class EventStats:
         # Ya nadie espera volver a una partida terminada.
         for key in [k for k in self.in_grace if k[0] == match_id]:
             self.in_grace.pop(key)
+        for key in [k for k in self._grace_at if k[0] == match_id]:
+            self._grace_at.pop(key)
         self.finished_today += 1
 
         winner = WINNER_LABELS.get(

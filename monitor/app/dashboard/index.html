@@ -537,6 +537,8 @@
         // S3-04: cada desconectado con su cuenta regresiva; se actualiza
         // cada segundo con la hora de fin que manda match.
         let graceEnds = [];
+        const TEXT_GRACE_PREFIX = " — vuelve en ";
+        const TEXT_GRACE_SUFFIX = " o pasa a fantasma";
 
         function formatCountdown(seconds) {
             const s = Math.max(0, Math.floor(seconds));
@@ -558,9 +560,9 @@
                 countdown.className = "countdown";
                 countdown.dataset.index = String(index);
                 item.append(
-                    `${player.name} — vuelve en `,
+                    `${player.name}${TEXT_GRACE_PREFIX}`,
                     countdown,
-                    " o pasa a fantasma",
+                    TEXT_GRACE_SUFFIX,
                 );
                 return item;
             });
