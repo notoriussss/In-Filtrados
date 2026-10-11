@@ -14,7 +14,18 @@ export const ERROR_MESSAGES = {
   PLAYERS_SERVICE_UNAVAILABLE: 'El servidor de cuentas no responde',
   MATCH_SERVICE_UNAVAILABLE: 'El servidor de la partida no responde',
   MALFORMED_MESSAGE: 'Mensaje inválido o malformado',
+  // S2-08: aviso enviado antes de cerrar la conexión por exceso de
+  // mensajes. Se envía dentro de un error BAD_MESSAGE para no tocar el
+  // contrato de messages/src/index.ts.
+  RATE_LIMITED: 'Vas muy rápido: el gateway está descartando tus mensajes',
 } as const;
+
+// S2-08: límite de velocidad por WebSocket (patrón Gateway
+// Offloading). El token bucket arranca lleno y se recarga de a uno
+// por segundo trabajado.
+export const RATE_LIMIT_PER_SECOND = 30;
+export const RATE_LIMIT_CAPACITY = 30;
+export const RATE_LIMIT_WARNINGS = 3;
 
 // Límites de validación de las acciones del juego (S2-01).
 export const MAX_TANK_SLOT = 9; // hasta 10 jugadores por sala
@@ -41,4 +52,5 @@ export const WS_CLOSE_CODES = {
   SERVICE_UNAVAILABLE: 1011,
   UNAUTHORIZED: 4001,
   REPLACED: 4002,
+  RATE_LIMITED: 4008, // S2-08: 3 avisos de límite de velocidad
 } as const;

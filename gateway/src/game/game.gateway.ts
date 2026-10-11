@@ -8,9 +8,13 @@ import { MatchClient } from '../clients/match.client';
 import {
   ERROR_CODES,
   ERROR_MESSAGES,
+  RATE_LIMIT_CAPACITY,
+  RATE_LIMIT_PER_SECOND,
+  RATE_LIMIT_WARNINGS,
   WS_CLOSE_CODES,
 } from './game.constants';
 import { parseClientMessage, toGrpcAction } from './client-messages';
+import { FloodLimiter, TokenBucket } from './rate-limit';
 import { PlayersClient } from '../clients/players.client';
 import { PlayRelay } from './play-relay';
 import { ChatDeduper } from './chat-dedupe';
@@ -52,6 +56,13 @@ export class GameGateway implements OnGatewayConnection {
     let matchId: string | null = null;
     let playerId: string | null = null;
 
+    // S2-08: un token bucket por conexión (un jugador = un socket
+    // activo), así un flood no toca a nadie más de la sala.
+    const limiter = new FloodLimiter(
+      new TokenBucket(RATE_LIMIT_CAPACITY, RATE_LIMIT_PER_SECOND),
+      RATE_LIMIT_WARNINGS,
+    );
+
     socket.on('message', (raw: RawData) => {
       if (!isAuthenticated) {
         messageQueue.push(raw);
@@ -61,6 +72,19 @@ export class GameGateway implements OnGatewayConnection {
     });
 
     const processMessage = (raw: RawData) => {
+      const outcome = limiter.check();
+      if (outcome !== 'allow') {
+        // S2-08: se descarta, se avisa y a la tercera se corta.
+        send(socket, {
+          type: 'error',
+          code: ERROR_CODES.BAD_MESSAGE,
+          message: ERROR_MESSAGES.RATE_LIMITED,
+        });
+        if (outcome === 'close') {
+          socket.close(WS_CLOSE_CODES.RATE_LIMITED);
+        }
+        return;
+      }
       const msg = parseClientMessage(raw.toString());
       if (!msg) {
         send(socket, {
