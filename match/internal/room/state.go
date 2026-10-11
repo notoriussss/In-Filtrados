@@ -134,7 +134,7 @@ type player struct {
 	taskStation    string
 
 	// S2-05: Chat
-	lastChatTick int64
+	nextChatTick int64
 }
 
 // meetingState guarda el estado de la reunión activa (S2-05).

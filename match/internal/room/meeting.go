@@ -2,6 +2,7 @@ package room
 
 import (
 	"sort"
+	"unicode/utf8"
 
 	"github.com/notoriussss/in-filtrados/match/gen/matchv1"
 )
@@ -113,6 +114,35 @@ func nearDeadTank(p *player, t *tank) bool {
 	dx := float64(p.view.X) - t.x
 	dy := float64(p.view.Y) - t.y
 	return dx*dx+dy*dy <= reportRange*reportRange
+}
+
+// handleChat procesa un mensaje de chat durante la reunión (S2-05).
+func (r *Room) handleChat(playerID string, msgID string, text string) {
+	if r.phase != matchv1.Phase_MEETING || r.meeting == nil {
+		return
+	}
+	p, ok := r.players[playerID]
+	if !ok || !p.view.Alive {
+		return
+	}
+	if text == "" || utf8.RuneCountInString(text) > chatMaxChars {
+		return
+	}
+	if r.tick < p.nextChatTick {
+		return
+	}
+
+	p.nextChatTick = r.tick + chatCooldownTicks
+	entry := chatEntry{
+		id:       msgID,
+		playerID: playerID,
+		text:     text,
+		tick:     r.tick,
+	}
+	r.chat = append(r.chat, entry)
+	if len(r.chat) > chatHistoryLimit {
+		r.chat = r.chat[len(r.chat)-chatHistoryLimit:]
+	}
 }
 
 func (r *Room) stepMeeting() {

@@ -1,6 +1,8 @@
 package room
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/notoriussss/in-filtrados/match/gen/matchv1"
@@ -175,5 +177,208 @@ func TestReportSuccessfulTeleportsAndSetsMeeting(t *testing.T) {
 	}
 	if view.EndsAtTick != r.tick+meetingVotingTicks {
 		t.Errorf("EndsAtTick incorrecto: %d", view.EndsAtTick)
+	}
+}
+
+func TestChatRequiresMeetingPhase(t *testing.T) {
+	r := playingRoomWithDeadTank(t)
+	// Partida en PLAYING: el chat debe ser ignorado
+	r.handleAction(PlayerAction{
+		PlayerID:      "crew1",
+		Chat:          true,
+		ChatMessageID: "msg-1",
+		ChatText:      "hola equipo",
+	})
+	if len(r.chat) != 0 {
+		t.Errorf("chat no permitido fuera de reunion, got %d", len(r.chat))
+	}
+}
+
+func TestChatRequiresAlivePlayer(t *testing.T) {
+	r := playingRoomWithDeadTank(t)
+	t0 := r.tankAt(0)
+	t0.dead = true
+	p := r.players["crew1"]
+	p.view.X = float32(t0.x)
+	p.view.Y = float32(t0.y)
+	r.handleAction(PlayerAction{
+		PlayerID: "crew1",
+		Report:   true,
+		TankSlot: 0,
+	})
+	if r.phase != matchv1.Phase_MEETING {
+		t.Fatalf("debe estar en Phase_MEETING")
+	}
+
+	// crew2 es un fantasma
+	r.players["crew2"].view.Alive = false
+
+	r.handleAction(PlayerAction{
+		PlayerID:      "crew2",
+		Chat:          true,
+		ChatMessageID: "msg-ghost",
+		ChatText:      "soy un fantasma",
+	})
+	if len(r.chat) != 0 {
+		t.Errorf("fantasmas no pueden chatear, got %d msgs", len(r.chat))
+	}
+}
+
+func TestChatLengthLimit(t *testing.T) {
+	r := playingRoomWithDeadTank(t)
+	t0 := r.tankAt(0)
+	t0.dead = true
+	p := r.players["crew1"]
+	p.view.X = float32(t0.x)
+	p.view.Y = float32(t0.y)
+	r.handleAction(PlayerAction{
+		PlayerID: "crew1",
+		Report:   true,
+		TankSlot: 0,
+	})
+
+	// Mensaje vacío rechazado
+	r.handleAction(PlayerAction{
+		PlayerID:      "crew1",
+		Chat:          true,
+		ChatMessageID: "msg-empty",
+		ChatText:      "",
+	})
+	if len(r.chat) != 0 {
+		t.Errorf("mensaje vacio debe rechazarse")
+	}
+
+	// 200 caracteres exactos aceptado
+	exact200 := strings.Repeat("a", 200)
+	r.handleAction(PlayerAction{
+		PlayerID:      "crew1",
+		Chat:          true,
+		ChatMessageID: "msg-200",
+		ChatText:      exact200,
+	})
+	if len(r.chat) != 1 {
+		t.Fatalf(
+			"mensaje de 200 caracteres debe aceptarse, got %d",
+			len(r.chat),
+		)
+	}
+
+	// Avanzar ticks para superar el cooldown de 1 segundo
+	r.tick += chatCooldownTicks
+
+	// 201 caracteres rechazado
+	over200 := strings.Repeat("a", 201)
+	r.handleAction(PlayerAction{
+		PlayerID:      "crew1",
+		Chat:          true,
+		ChatMessageID: "msg-201",
+		ChatText:      over200,
+	})
+	if len(r.chat) != 1 {
+		t.Errorf("mensaje de 201 caracteres debe rechazarse")
+	}
+}
+
+func TestChatRateLimit(t *testing.T) {
+	r := playingRoomWithDeadTank(t)
+	t0 := r.tankAt(0)
+	t0.dead = true
+	p := r.players["crew1"]
+	p.view.X = float32(t0.x)
+	p.view.Y = float32(t0.y)
+	r.handleAction(PlayerAction{
+		PlayerID: "crew1",
+		Report:   true,
+		TankSlot: 0,
+	})
+
+	// Primer mensaje aceptado
+	r.handleAction(PlayerAction{
+		PlayerID:      "crew1",
+		Chat:          true,
+		ChatMessageID: "msg-1",
+		ChatText:      "primer mensaje",
+	})
+	if len(r.chat) != 1 {
+		t.Fatalf("primer mensaje debe aceptarse")
+	}
+
+	// Mensaje antes de 1 segundo (10 ticks < chatCooldownTicks) rechazado
+	r.tick += 10
+	r.handleAction(PlayerAction{
+		PlayerID:      "crew1",
+		Chat:          true,
+		ChatMessageID: "msg-spam",
+		ChatText:      "mensaje spam",
+	})
+	if len(r.chat) != 1 {
+		t.Errorf("mensaje antes de 1 s debe rechazarse por cooldown")
+	}
+
+	// Otro jugador puede chatear de inmediato (cooldown independiente)
+	r.handleAction(PlayerAction{
+		PlayerID:      "crew2",
+		Chat:          true,
+		ChatMessageID: "msg-crew2",
+		ChatText:      "mensaje independiente",
+	})
+	if len(r.chat) != 2 {
+		t.Errorf("otro jugador no debe bloquearse por cooldown ajeno")
+	}
+
+	// Jugador original puede volver a enviar tras completar 20 ticks
+	r.tick += 10
+	r.handleAction(PlayerAction{
+		PlayerID:      "crew1",
+		Chat:          true,
+		ChatMessageID: "msg-2",
+		ChatText:      "segundo mensaje",
+	})
+	if len(r.chat) != 3 {
+		t.Errorf("mensaje tras 1 s debe aceptarse, got %d", len(r.chat))
+	}
+}
+
+func TestChatHistoryLimit(t *testing.T) {
+	r := playingRoomWithDeadTank(t)
+	t0 := r.tankAt(0)
+	t0.dead = true
+	p := r.players["crew1"]
+	p.view.X = float32(t0.x)
+	p.view.Y = float32(t0.y)
+	r.handleAction(PlayerAction{
+		PlayerID: "crew1",
+		Report:   true,
+		TankSlot: 0,
+	})
+
+	for i := 0; i < 35; i++ {
+		r.tick += chatCooldownTicks
+		r.handleAction(PlayerAction{
+			PlayerID:      "crew1",
+			Chat:          true,
+			ChatMessageID: fmt.Sprintf("msg-%d", i),
+			ChatText:      fmt.Sprintf("mensaje %d", i),
+		})
+	}
+
+	if len(r.chat) != chatHistoryLimit {
+		t.Fatalf(
+			"historial debe limitarse a %d, got %d",
+			chatHistoryLimit,
+			len(r.chat),
+		)
+	}
+	if r.chat[0].id != "msg-5" {
+		t.Errorf(
+			"el primer mensaje retenido debe ser msg-5, got %s",
+			r.chat[0].id,
+		)
+	}
+
+	// Verificar vistas en snapshots
+	views := r.chatViews()
+	if len(views) != chatHistoryLimit {
+		t.Errorf("chatViews debe retornar %d elementos", chatHistoryLimit)
 	}
 }

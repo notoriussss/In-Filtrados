@@ -127,6 +127,12 @@ func (r *Room) handleAction(a PlayerAction) {
 	switch {
 	case a.Report:
 		r.handleReport(a.PlayerID, a.TankSlot)
+	case a.Chat:
+		r.handleChat(
+			a.PlayerID,
+			a.ChatMessageID,
+			a.ChatText,
+		)
 	case a.Contaminate:
 		if r.phase == matchv1.Phase_PLAYING {
 			r.startContaminate(a.PlayerID, p, a.TankSlot)
