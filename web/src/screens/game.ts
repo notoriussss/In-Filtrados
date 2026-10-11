@@ -1,7 +1,9 @@
+import type { OilDrop } from '@in-filtrados/messages';
 import { gameMap } from '../map';
 import { type Camera, clampCamera, createCamera } from '../canvas/camera';
 import { renderMap } from '../canvas/renderMap';
 import { renderPlayers } from '../canvas/renderPlayers';
+import { renderOilDrops } from '../canvas/renderOilDrops';
 import {
   closeGameSocket,
   openGameSocket,
@@ -40,6 +42,7 @@ export function mountGame(
 
   const interpolator = new Interpolator();
   const meId = currentSession.playerId;
+  let oilDrops: OilDrop[] = []; // S2-12: rastro del impostor
 
   let status: SocketStatus = { state: 'connected' };
   const socket = openGameSocket({
@@ -59,6 +62,7 @@ export function mountGame(
   socket.onMessage((msg) => {
     if (msg.type === 'snapshot') {
       interpolator.push(msg.tick, msg.players, performance.now());
+      oilDrops = msg.oilDrops;
     } else if (msg.type === 'error') {
       if (msg.code === ERROR_CODES.MATCH_NOT_FOUND) {
         session.saveSession({
@@ -99,7 +103,8 @@ export function mountGame(
   window.addEventListener('resize', resize);
 
   function frame(): void {
-    const players = interpolator.playersAt(performance.now());
+    const now = performance.now();
+    const players = interpolator.playersAt(now);
     const me = players.find((p) => p.id === meId);
     if (me) {
       camera = clampCamera({ ...camera, x: me.x, y: me.y }, gameMap);
@@ -108,6 +113,8 @@ export function mountGame(
     ctx.fillStyle = '#1b2a33';
     ctx.fillRect(0, 0, camera.viewWidth, camera.viewHeight);
     renderMap(ctx, gameMap, camera);
+    const tick = interpolator.tickAt(now);
+    if (tick !== null) renderOilDrops(ctx, oilDrops, camera, tick);
     renderPlayers(ctx, players, camera, meId);
     if (status.state === 'reconnecting') {
       renderOverlayMessage(

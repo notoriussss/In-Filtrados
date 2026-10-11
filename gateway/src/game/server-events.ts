@@ -2,6 +2,7 @@ import type {
   ChatMessage,
   ErrorCode,
   Meeting,
+  OilDrop,
   ServerMessage,
   Snapshot,
   TankView,
@@ -60,6 +61,7 @@ function toSnapshot(s: GrpcSnapshot): Snapshot {
     },
     meeting: s.meeting ? toMeeting(s.meeting) : null,
     chat: (s.chat ?? []).map(toChat),
+    oilDrops: (s.oilDrops ?? []).map(toOilDrop),
   };
 }
 
@@ -88,5 +90,14 @@ function toChat(c: ChatMessage): ChatMessage {
     playerId: c.playerId,
     text: c.text,
     tick: c.tick,
+  };
+}
+
+function toOilDrop(d: OilDrop): OilDrop {
+  return {
+    x: d.x,
+    y: d.y,
+    color: d.color,
+    expiresAtTick: d.expiresAtTick,
   };
 }
