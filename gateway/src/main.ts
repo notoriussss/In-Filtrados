@@ -6,9 +6,20 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
-  // S2-08: detrás de nginx el límite de login es por IP real; 1 salto
-  // confía solo en lo que manda el proxy, no en lo que manda el cliente.
-  app.set('trust proxy', 1);
+  // S2-08: detrás de nginx el límite de login es por IP real. Solo se
+  // confía en proxies de la red interna de Docker o loopback, para que
+  // una conexión directa al puerto 3000 no pueda falsificar la IP con
+  // un encabezado X-Forwarded-For inventado.
+  const trustProxyEnv = process.env.TRUST_PROXY;
+  if (trustProxyEnv) {
+    const num = Number(trustProxyEnv);
+    app.set(
+      'trust proxy',
+      Number.isNaN(num) ? trustProxyEnv : num,
+    );
+  } else {
+    app.set('trust proxy', 'loopback, 172.16.0.0/12');
+  }
   // Un cuerpo inválido responde 400 antes de llegar al controlador.
   app.useGlobalPipes(
     new ValidationPipe({

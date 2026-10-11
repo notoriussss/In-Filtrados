@@ -49,7 +49,7 @@ laboratorio no se compila ni se descarga nada.
 
    | Nodo | Puertos |
    |---|---|
-   | N1 | 8080 |
+   | N1 | 8080, 3000 |
    | N2 | 50051, 8081 |
    | N3 | 50052, 8082 |
    | N4 | 5672, 15672 |

@@ -1,3 +1,4 @@
+import express from 'express';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { LoginThrottlerGuard } from './login-throttler.guard';
@@ -32,5 +33,20 @@ test(
       ips: [],
     });
     assert.equal(tracker, '172.18.0.2');
+  },
+);
+
+test(
+  'trust proxy solo confía en la subred de Docker y loopback',
+  () => {
+    const app = express();
+    app.set('trust proxy', 'loopback, 172.16.0.0/12');
+    const trust = app.get('trust proxy fn');
+    assert.equal(trust('127.0.0.1', 0), true);
+    assert.equal(trust('::1', 0), true);
+    assert.equal(trust('172.18.0.2', 0), true);
+    assert.equal(trust('172.20.0.5', 0), true);
+    assert.equal(trust('192.168.10.21', 0), false);
+    assert.equal(trust('10.0.0.1', 0), false);
   },
 );
