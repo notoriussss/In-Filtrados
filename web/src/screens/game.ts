@@ -1,4 +1,8 @@
-import type { OilDrop } from '@in-filtrados/messages';
+import type {
+  OilDrop,
+  PlayerView,
+  Winner,
+} from '@in-filtrados/messages';
 import { gameMap } from '../map';
 import { type Camera, clampCamera, createCamera } from '../canvas/camera';
 import { renderMap } from '../canvas/renderMap';
@@ -12,6 +16,9 @@ import {
 import { Interpolator } from '../net/interpolation';
 import { DirectionInput } from '../input';
 import { session } from '../session';
+import { api, type MeResponse } from '../api';
+import { type MeetingPanel, mountMeetingPanel } from './meeting';
+import { mountEndPanel } from './matchEnd';
 import {
   CONNECTION_MESSAGES,
   ERROR_CODES,
@@ -44,6 +51,57 @@ export function mountGame(
   const meId = currentSession.playerId;
   let oilDrops: OilDrop[] = []; // S2-12: rastro del impostor
 
+  // S2-10: panel de la reunión y pantalla final, encima del canvas.
+  const meetingRoot = document.getElementById('meeting-overlay')!;
+  const endRoot = document.getElementById('end-overlay')!;
+  let meetingPanel: MeetingPanel | null = null;
+  let closeEndPanel: (() => void) | null = null;
+  let winner: Winner | null = null;
+  let impostorIds: string[] = [];
+  let lastPlayers: PlayerView[] = [];
+  // Perfil al entrar: la pantalla final compara las monedas con este.
+  let profileBefore: MeResponse | null = null;
+  api.getMe(currentSession.token).then(
+    (me) => (profileBefore = me),
+    () => (profileBefore = null),
+  );
+
+  const backToLobby = () => {
+    const latest = session.loadSession() ?? currentSession;
+    session.saveSession({
+      ...latest,
+      matchId: '',
+      roomCode: undefined,
+      isCreator: false,
+    });
+    show('lobby');
+  };
+
+  const showMeeting = (on: boolean) => {
+    meetingRoot.hidden = !on;
+    if (on && !meetingPanel) {
+      meetingPanel = mountMeetingPanel(meetingRoot, meId, (msg) =>
+        send(msg),
+      );
+    } else if (!on && meetingPanel) {
+      meetingPanel.destroy();
+      meetingPanel = null;
+    }
+  };
+
+  const showEnd = () => {
+    if (closeEndPanel) return;
+    endRoot.hidden = false;
+    closeEndPanel = mountEndPanel(endRoot, {
+      winner,
+      impostorIds,
+      players: lastPlayers,
+      token: currentSession.token,
+      before: profileBefore,
+      onBack: backToLobby,
+    });
+  };
+
   let status: SocketStatus = { state: 'connected' };
   const socket = openGameSocket({
     token: currentSession.token,
@@ -63,6 +121,13 @@ export function mountGame(
     if (msg.type === 'snapshot') {
       interpolator.push(msg.tick, msg.players, performance.now());
       oilDrops = msg.oilDrops;
+      lastPlayers = msg.players;
+      showMeeting(msg.phase === 'MEETING');
+      meetingPanel?.update(msg);
+      if (msg.phase === 'ENDED') showEnd();
+    } else if (msg.type === 'matchEnded') {
+      winner = msg.winner;
+      impostorIds = msg.impostorIds;
     } else if (msg.type === 'error') {
       if (msg.code === ERROR_CODES.MATCH_NOT_FOUND) {
         session.saveSession({
@@ -142,6 +207,9 @@ export function mountGame(
     window.removeEventListener('resize', resize);
     cancelAnimationFrame(animationFrame);
     closeGameSocket();
+    showMeeting(false);
+    closeEndPanel?.();
+    endRoot.hidden = true;
   };
 }
 

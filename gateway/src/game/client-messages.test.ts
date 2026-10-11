@@ -1,0 +1,77 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { parseClientMessage, toGrpcAction } from './client-messages';
+
+const parse = (msg: unknown) => parseClientMessage(JSON.stringify(msg));
+
+test('join keeps matchId and a numeric lastTick', () => {
+  assert.deepEqual(parse({ type: 'join', matchId: 'm1', lastTick: '7' }), {
+    type: 'join',
+    matchId: 'm1',
+    lastTick: 7,
+  });
+  assert.equal(parse({ type: 'join', matchId: 3 }), null);
+});
+
+test('move only accepts -1, 0 and 1', () => {
+  assert.deepEqual(parse({ type: 'move', dx: 1, dy: -1 }), {
+    type: 'move',
+    dx: 1,
+    dy: -1,
+  });
+  assert.equal(parse({ type: 'move', dx: 2, dy: 0 }), null);
+});
+
+test('report needs a tank slot from 0 to 9', () => {
+  assert.deepEqual(toGrpcAction(parse({ type: 'report', tankSlot: 3 })!), {
+    report: { tankSlot: 3 },
+  });
+  assert.equal(parse({ type: 'report', tankSlot: 10 }), null);
+  assert.equal(parse({ type: 'report', tankSlot: '3' }), null);
+});
+
+test('vote for a player or skip with null', () => {
+  assert.deepEqual(
+    toGrpcAction(parse({ type: 'vote', targetPlayerId: 'p2' })!),
+    { vote: { targetPlayerId: 'p2' } },
+  );
+  assert.deepEqual(
+    toGrpcAction(parse({ type: 'vote', targetPlayerId: null })!),
+    { vote: { skip: true } },
+  );
+  assert.equal(parse({ type: 'vote' }), null);
+  assert.equal(parse({ type: 'vote', targetPlayerId: '' }), null);
+});
+
+test('chat is trimmed and limited to 200 characters', () => {
+  assert.deepEqual(
+    toGrpcAction(parse({ type: 'chat', clientMsgId: 'c1', text: ' hola ' })!),
+    { chat: { clientMsgId: 'c1', text: 'hola' } },
+  );
+  const longest = 'á'.repeat(200);
+  assert.ok(parse({ type: 'chat', clientMsgId: 'c1', text: longest }));
+  assert.equal(
+    parse({ type: 'chat', clientMsgId: 'c1', text: longest + 'a' }),
+    null,
+  );
+  assert.equal(parse({ type: 'chat', clientMsgId: 'c1', text: '   ' }), null);
+  assert.equal(parse({ type: 'chat', text: 'hola' }), null);
+});
+
+test('interact on a station or a tank', () => {
+  assert.deepEqual(
+    toGrpcAction(
+      parse({ type: 'interact', stationId: 'leak-1', completed: true })!,
+    ),
+    { interact: { stationId: 'leak-1', completed: true } },
+  );
+  assert.deepEqual(
+    toGrpcAction(parse({ type: 'interact', tankSlot: 0 })!),
+    { interact: { tankSlot: 0 } },
+  );
+});
+
+test('unknown types and invalid JSON are rejected', () => {
+  assert.equal(parse({ type: 'teleport' }), null);
+  assert.equal(parseClientMessage('{ no es json'), null);
+});

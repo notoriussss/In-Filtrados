@@ -19,6 +19,10 @@ export const ERROR_MESSAGES = {
 // Límites de validación de las acciones del juego (S2-01).
 export const MAX_TANK_SLOT = 9; // hasta 10 jugadores por sala
 export const MAX_STATION_ID_LENGTH = 64;
+// S2-10: votos y chat de la reunión.
+export const MAX_PLAYER_ID_LENGTH = 64;
+export const MAX_CLIENT_MSG_ID_LENGTH = 64; // un UUID tiene 36
+export const MAX_CHAT_LENGTH = 200; // caracteres, igual que match
 
 // WebSocket close codes used by the gateway.
 export const WS_CLOSE_CODES = {

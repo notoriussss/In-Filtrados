@@ -21,3 +21,43 @@ export const CONNECTION_MESSAGES = {
   reconnecting: (attempt: number) => `Reconectando… (intento ${attempt})`,
   SESSION_REPLACED: 'Abriste el juego en otra pestaña',
 } as const;
+
+// Textos de la reunión, la votación y el fin de partida (S2-10).
+export const MEETING_TEXT = {
+  TITLE: 'Reunión de emergencia',
+  REPORTED_BY: (name: string) => `${name} reportó un tanque muerto`,
+  TANK_OF: (name: string) => `Tanque de ${name}`,
+  LAST_VISITORS: 'Últimos en pasar por el tanque',
+  NO_VISITORS: 'Nadie pasó cerca',
+  VOTING_ENDS_IN: (seconds: number) => `Votación: ${seconds} s`,
+  RESULT_ENDS_IN: (seconds: number) => `Volvemos al huerto en ${seconds} s`,
+  PLAYERS: 'Jugadores',
+  VOTED: 'votó',
+  GHOST: 'fantasma',
+  DISCONNECTED: 'desconectado',
+  YOU: 'tú',
+  SKIP: 'Saltar voto',
+  CHOOSE_VOTE: 'Toca a un jugador para votar o salta el voto',
+  ALREADY_VOTED: 'Ya votaste. Esperando a los demás…',
+  GHOST_CANNOT_VOTE: 'Eres un fantasma: puedes leer el chat, pero no votar',
+  CHAT: 'Chat',
+  CHAT_PLACEHOLDER: 'Escribe un mensaje (Enter para enviar)',
+  GHOST_CHAT_PLACEHOLDER: 'Los fantasmas no pueden escribir',
+  SEND: 'Enviar',
+  EJECTED_IMPOSTOR: (name: string) => `${name} era el impostor`,
+  EJECTED_CREW: (name: string) => `${name} no era el impostor`,
+  NOBODY_EJECTED: 'Nadie salió: hubo empate o saltaron el voto',
+  WAS_EJECTED: (name: string) => `Expulsaron a ${name}`,
+  UNKNOWN_PLAYER: 'Alguien',
+} as const;
+
+export const END_TEXT = {
+  TITLE: 'Fin de la partida',
+  CREW_WON: '¡Ganó la tripulación!',
+  IMPOSTOR_WON: '¡Ganó el impostor!',
+  ENDED: 'La partida terminó',
+  IMPOSTOR_WAS: (names: string) => `Impostor: ${names}`,
+  COINS_EARNED: (coins: number) => `Ganaste ${coins} monedas`,
+  COINS_PENDING: 'Tus monedas aparecerán en tu perfil en unos segundos',
+  BACK_TO_LOBBY: 'Volver a la sala',
+} as const;

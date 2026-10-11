@@ -3,19 +3,14 @@ import { OnGatewayConnection, WebSocketGateway } from '@nestjs/websockets';
 import type { IncomingMessage } from 'http';
 import type { RawData, WebSocket } from 'ws';
 import { status } from '@grpc/grpc-js';
-import type {
-  ClientMessage,
-  InteractMessage,
-  ServerMessage,
-} from '@in-filtrados/messages';
+import type { ServerMessage } from '@in-filtrados/messages';
 import { MatchClient, type PlayStream } from '../clients/match.client';
 import {
   ERROR_CODES,
   ERROR_MESSAGES,
-  MAX_STATION_ID_LENGTH,
-  MAX_TANK_SLOT,
   WS_CLOSE_CODES,
 } from './game.constants';
+import { parseClientMessage, toGrpcAction } from './client-messages';
 import { PlayersClient } from '../clients/players.client';
 import { type GrpcServerEvent, toServerMessage } from './server-events';
 
@@ -63,7 +58,7 @@ export class GameGateway implements OnGatewayConnection {
     });
 
     const processMessage = (raw: RawData) => {
-      const msg = parse(raw.toString());
+      const msg = parseClientMessage(raw.toString());
       if (!msg) {
         send(socket, {
           type: 'error',
@@ -72,22 +67,19 @@ export class GameGateway implements OnGatewayConnection {
         });
         return;
       }
-      if (msg.type === 'join' && !stream && playerId) {
-        stream = this.openPlay(
-          socket,
-          playerId,
-          msg.matchId,
-          msg.lastTick,
-        );
-      } else if (msg.type === 'move' && stream) {
-        stream.write({ move: { dx: msg.dx, dy: msg.dy } });
-      } else if (msg.type === 'start' && stream) {
-        stream.write({ start: {} });
-      } else if (msg.type === 'contaminate' && stream) {
-        stream.write({ contaminate: { tankSlot: msg.tankSlot } });
-      } else if (msg.type === 'interact' && stream) {
-        stream.write({ interact: toGrpcInteract(msg) });
+      if (msg.type === 'join') {
+        if (!stream && playerId) {
+          stream = this.openPlay(
+            socket,
+            playerId,
+            msg.matchId,
+            msg.lastTick,
+          );
+        }
+        return;
       }
+      const action = toGrpcAction(msg);
+      if (stream && action) stream.write(action);
     };
 
     socket.on('close', () => {
@@ -164,80 +156,4 @@ export class GameGateway implements OnGatewayConnection {
 
 function send(socket: WebSocket, msg: ServerMessage): void {
   if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(msg));
-}
-
-// Only messages from messages/src/index.ts get through;
-// anything else is ignored.
-function parse(raw: string): ClientMessage | null {
-  try {
-    const msg = JSON.parse(raw);
-    if (msg?.type === 'join' && typeof msg.matchId === 'string') {
-      return {
-        type: 'join',
-        matchId: msg.matchId,
-        lastTick: Number(msg.lastTick) || 0,
-      };
-    }
-    if (msg?.type === 'move') {
-      const dx = msg.dx;
-      const dy = msg.dy;
-      if (
-        (dx === -1 || dx === 0 || dx === 1) &&
-        (dy === -1 || dy === 0 || dy === 1)
-      ) {
-        return { type: 'move', dx, dy };
-      }
-      return null;
-    }
-    if (msg?.type === 'start') {
-      return { type: 'start' };
-    }
-    if (msg?.type === 'contaminate' && isSlot(msg.tankSlot)) {
-      return { type: 'contaminate', tankSlot: msg.tankSlot };
-    }
-    if (msg?.type === 'interact') {
-      return parseInteract(msg);
-    }
-  } catch {
-    // not JSON
-  }
-  return null;
-}
-
-// S2-03: interact sobre un tanque (limpiar) o una estación (S2-04).
-function parseInteract(msg: {
-  stationId?: unknown;
-  tankSlot?: unknown;
-  completed?: unknown;
-}): InteractMessage | null {
-  if (isSlot(msg.tankSlot)) {
-    return { type: 'interact', tankSlot: msg.tankSlot };
-  }
-  if (
-    typeof msg.stationId === 'string' &&
-    msg.stationId.length > 0 &&
-    msg.stationId.length <= MAX_STATION_ID_LENGTH
-  ) {
-    return {
-      type: 'interact',
-      stationId: msg.stationId,
-      completed: msg.completed === true,
-    };
-  }
-  return null;
-}
-
-function toGrpcInteract(msg: InteractMessage): object {
-  if ('tankSlot' in msg) {
-    return { tankSlot: msg.tankSlot };
-  }
-  return { stationId: msg.stationId, completed: msg.completed ?? false };
-}
-
-function isSlot(value: unknown): value is number {
-  return (
-    Number.isInteger(value) &&
-    (value as number) >= 0 &&
-    (value as number) <= MAX_TANK_SLOT
-  );
 }
