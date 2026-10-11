@@ -205,7 +205,12 @@ func TestStartSavesAndPublishes(t *testing.T) {
 		)
 	}
 
-	started := pub.forKey(events.RoutingKeyStarted)
+	started := waitForEvents(
+		t,
+		pub,
+		events.RoutingKeyStarted,
+		1,
+	)
 	if len(started) != 1 {
 		t.Fatalf("debe publicarse un match.started, got %d", len(started))
 	}
@@ -255,7 +260,12 @@ func TestMatchFinishesAfterDuration(t *testing.T) {
 		)
 	}
 
-	finished := pub.forKey(events.RoutingKeyFinished)
+	finished := waitForEvents(
+		t,
+		pub,
+		events.RoutingKeyFinished,
+		1,
+	)
 	if len(finished) != 1 {
 		t.Fatalf("debe publicarse un match.finished, got %d", len(finished))
 	}
