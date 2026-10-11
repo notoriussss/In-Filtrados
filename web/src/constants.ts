@@ -71,3 +71,7 @@ export const END_TEXT = {
   BACK_TO_LOBBY: 'Volver a la sala',
 } as const;
 
+// Contaminar con la tecla C: hay que quedarse quieto 3 s.
+export const CONTAMINATE_MESSAGES = {
+  still: (seconds: string) => `¡Quieto! Contaminando… ${seconds} s`,
+} as const;
