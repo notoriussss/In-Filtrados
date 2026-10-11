@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/notoriussss/in-filtrados/match/gen/matchv1"
+	"github.com/notoriussss/in-filtrados/match/internal/events"
 )
 
 func playingRoomWithDeadTank(t *testing.T) *Room {
@@ -380,5 +382,291 @@ func TestChatHistoryLimit(t *testing.T) {
 	views := r.chatViews()
 	if len(views) != chatHistoryLimit {
 		t.Errorf("chatViews debe retornar %d elementos", chatHistoryLimit)
+	}
+}
+
+func TestVoteSimpleMajorityEjects(t *testing.T) {
+	r := playingRoomWithDeadTank(t)
+	t0 := r.tankAt(0)
+	t0.dead = true
+	p := r.players["crew1"]
+	p.view.X = float32(t0.x)
+	p.view.Y = float32(t0.y)
+	r.handleAction(PlayerAction{
+		PlayerID: "crew1",
+		Report:   true,
+		TankSlot: 0,
+	})
+
+	// crew1 vota imp
+	r.handleAction(PlayerAction{
+		PlayerID:     "crew1",
+		Vote:         true,
+		VoteTargetID: "imp",
+	})
+	if r.meeting.votingClosed {
+		t.Error("la votacion no debe cerrarse con un solo voto")
+	}
+
+	// crew2 vota imp
+	r.handleAction(PlayerAction{
+		PlayerID:     "crew2",
+		Vote:         true,
+		VoteTargetID: "imp",
+	})
+	if r.meeting.votingClosed {
+		t.Error("la votacion no debe cerrarse antes de que voten todos")
+	}
+
+	// imp vota crew1
+	r.handleAction(PlayerAction{
+		PlayerID:     "imp",
+		Vote:         true,
+		VoteTargetID: "crew1",
+	})
+
+	// Todos votaron: votación cerrada automáticamente
+	if !r.meeting.votingClosed {
+		t.Fatal("la votacion debio cerrarse al votar todos los vivos")
+	}
+	if r.meeting.ejectedID != "imp" {
+		t.Errorf("ejectedID esperaba imp, got %s", r.meeting.ejectedID)
+	}
+	if !r.meeting.wasImpostor {
+		t.Error("wasImpostor debia ser true")
+	}
+	if r.players["imp"].view.Alive {
+		t.Error("el jugador expulsado debe tener Alive = false")
+	}
+	if r.meeting.resultEndsAt != r.tick+meetingResultTicks {
+		t.Errorf(
+			"resultEndsAt debia ser %d, got %d",
+			r.tick+meetingResultTicks,
+			r.meeting.resultEndsAt,
+		)
+	}
+}
+
+func TestVoteTieNoEjection(t *testing.T) {
+	r := playingRoomWithDeadTank(t)
+	t0 := r.tankAt(0)
+	t0.dead = true
+	p := r.players["crew1"]
+	p.view.X = float32(t0.x)
+	p.view.Y = float32(t0.y)
+	r.handleAction(PlayerAction{
+		PlayerID: "crew1",
+		Report:   true,
+		TankSlot: 0,
+	})
+
+	// Empate 1-1 y un skip
+	r.handleAction(PlayerAction{
+		PlayerID:     "crew1",
+		Vote:         true,
+		VoteTargetID: "crew2",
+	})
+	r.handleAction(PlayerAction{
+		PlayerID:     "crew2",
+		Vote:         true,
+		VoteTargetID: "crew1",
+	})
+	r.handleAction(PlayerAction{
+		PlayerID: "imp",
+		Vote:     true,
+		VoteSkip: true,
+	})
+
+	if !r.meeting.votingClosed {
+		t.Fatal("la votacion debio cerrarse")
+	}
+	if r.meeting.ejectedID != "" {
+		t.Errorf("en empate nadie debe salir, got %s", r.meeting.ejectedID)
+	}
+	for id, pl := range r.players {
+		if !pl.view.Alive {
+			t.Errorf("jugador %s no debio morir", id)
+		}
+	}
+}
+
+func TestVoteSkipMajorityNoEjection(t *testing.T) {
+	r := playingRoomWithDeadTank(t)
+	t0 := r.tankAt(0)
+	t0.dead = true
+	p := r.players["crew1"]
+	p.view.X = float32(t0.x)
+	p.view.Y = float32(t0.y)
+	r.handleAction(PlayerAction{
+		PlayerID: "crew1",
+		Report:   true,
+		TankSlot: 0,
+	})
+
+	// 1 voto a imp, 2 skips
+	r.handleAction(PlayerAction{
+		PlayerID:     "crew1",
+		Vote:         true,
+		VoteTargetID: "imp",
+	})
+	r.handleAction(PlayerAction{
+		PlayerID: "crew2",
+		Vote:     true,
+		VoteSkip: true,
+	})
+	r.handleAction(PlayerAction{
+		PlayerID: "imp",
+		Vote:     true,
+		VoteSkip: true,
+	})
+
+	if !r.meeting.votingClosed {
+		t.Fatal("la votacion debio cerrarse")
+	}
+	if r.meeting.ejectedID != "" {
+		t.Errorf(
+			"con mayoria de skip nadie debe salir, got %s",
+			r.meeting.ejectedID,
+		)
+	}
+}
+
+func TestGhostVoteIgnored(t *testing.T) {
+	r := playingRoomWithDeadTank(t)
+	t0 := r.tankAt(0)
+	t0.dead = true
+	p := r.players["crew1"]
+	p.view.X = float32(t0.x)
+	p.view.Y = float32(t0.y)
+	r.handleAction(PlayerAction{
+		PlayerID: "crew1",
+		Report:   true,
+		TankSlot: 0,
+	})
+
+	// Matar a crew2
+	r.players["crew2"].view.Alive = false
+
+	// crew2 intenta votar
+	r.handleAction(PlayerAction{
+		PlayerID:     "crew2",
+		Vote:         true,
+		VoteTargetID: "imp",
+	})
+
+	if _, ok := r.meeting.votes["crew2"]; ok {
+		t.Error("voto de fantasma no debe registrarse")
+	}
+}
+
+func TestMeetingLifecycleTimeoutAndResultScreen(t *testing.T) {
+	r := playingRoomWithDeadTank(t)
+	t0 := r.tankAt(0)
+	t0.dead = true
+	p := r.players["crew1"]
+	p.view.X = float32(t0.x)
+	p.view.Y = float32(t0.y)
+	r.handleAction(PlayerAction{
+		PlayerID: "crew1",
+		Report:   true,
+		TankSlot: 0,
+	})
+
+	// Solo crew1 vota imp
+	r.handleAction(PlayerAction{
+		PlayerID:     "crew1",
+		Vote:         true,
+		VoteTargetID: "imp",
+	})
+	if r.meeting.votingClosed {
+		t.Fatal("no debio cerrarse aun")
+	}
+
+	// Avanzar tiempo hasta que expire la votacion (45 s = 900 ticks)
+	r.tick += meetingVotingTicks
+	r.stepMeeting()
+
+	if !r.meeting.votingClosed {
+		t.Fatal("debio cerrarse por timeout de 45 s")
+	}
+	if r.meeting.ejectedID != "imp" {
+		t.Errorf("ejectedID esperaba imp, got %s", r.meeting.ejectedID)
+	}
+
+	// 50 ticks despues: sigue en pantalla de resultado (MEETING)
+	r.tick += 50
+	r.stepMeeting()
+	if r.phase != matchv1.Phase_MEETING || r.meeting == nil {
+		t.Fatal("debe mantenerse en pantalla de resultado")
+	}
+
+	// 50 ticks mas (total 100 ticks = 5 s de resultado): vuelve a PLAYING
+	r.tick += 50
+	r.stepMeeting()
+	if r.phase != matchv1.Phase_PLAYING {
+		t.Errorf("debe volver a PLAYING, got %v", r.phase)
+	}
+	if r.meeting != nil {
+		t.Error("meeting debe ser nil tras volver a PLAYING")
+	}
+}
+
+func TestPlayerEjectedEventPublished(t *testing.T) {
+	pub := &fakePublisher{}
+	r := NewRoom(
+		"TEST",
+		"match-1",
+		mapWithTanks(),
+		WithCreator("crew1"),
+		WithPublisher(pub),
+	)
+	for _, id := range []string{"crew1", "imp"} {
+		out := make(chan *matchv1.Snapshot, 1)
+		r.addPlayer(Join{PlayerID: id, Out: out})
+	}
+	r.startMatch("crew1")
+	r.players["crew1"].role = matchv1.Role_CREW
+	r.players["imp"].role = matchv1.Role_IMPOSTOR
+
+	t0 := r.tankAt(0)
+	t0.dead = true
+	p := r.players["crew1"]
+	p.view.X = float32(t0.x)
+	p.view.Y = float32(t0.y)
+
+	r.handleAction(PlayerAction{
+		PlayerID: "crew1",
+		Report:   true,
+		TankSlot: 0,
+	})
+
+	r.handleAction(PlayerAction{
+		PlayerID:     "crew1",
+		Vote:         true,
+		VoteTargetID: "imp",
+	})
+	r.handleAction(PlayerAction{
+		PlayerID:     "imp",
+		Vote:         true,
+		VoteTargetID: "imp",
+	})
+
+	// Esperar que la goroutine publique el evento
+	time.Sleep(100 * time.Millisecond)
+
+	eventsList := pub.forKey(events.RoutingKeyPlayerEjected)
+	if len(eventsList) != 1 {
+		t.Fatalf(
+			"esperaba 1 evento %s, got %d",
+			events.RoutingKeyPlayerEjected,
+			len(eventsList),
+		)
+	}
+	ev, ok := eventsList[0].payload.(events.PlayerEjected)
+	if !ok {
+		t.Fatalf("payload no es PlayerEjected: %T", eventsList[0].payload)
+	}
+	if ev.PlayerID != "imp" || !ev.WasImpostor || ev.MatchID != "match-1" {
+		t.Errorf("datos del evento incorrectos: %+v", ev)
 	}
 }

@@ -133,6 +133,12 @@ func (r *Room) handleAction(a PlayerAction) {
 			a.ChatMessageID,
 			a.ChatText,
 		)
+	case a.Vote:
+		r.handleVote(
+			a.PlayerID,
+			a.VoteTargetID,
+			a.VoteSkip,
+		)
 	case a.Contaminate:
 		if r.phase == matchv1.Phase_PLAYING {
 			r.startContaminate(a.PlayerID, p, a.TankSlot)

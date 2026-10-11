@@ -1,10 +1,13 @@
 package room
 
 import (
+	"context"
+	"log"
 	"sort"
 	"unicode/utf8"
 
 	"github.com/notoriussss/in-filtrados/match/gen/matchv1"
+	"github.com/notoriussss/in-filtrados/match/internal/events"
 )
 
 // handleReport procesa la acción de reportar un tanque muerto (S2-05).
@@ -85,12 +88,16 @@ func (r *Room) meetingView() *matchv1.Meeting {
 		votesCast = append(votesCast, voterID)
 	}
 	sort.Strings(votesCast)
+	endsAt := r.meeting.votingEndsAt
+	if r.meeting.votingClosed {
+		endsAt = r.meeting.resultEndsAt
+	}
 	return &matchv1.Meeting{
 		ReporterId:   r.meeting.reporterID,
 		TankSlot:     r.meeting.tankSlot,
 		LastVisitors: r.meeting.lastVisitors,
 		VotesCast:    votesCast,
-		EndsAtTick:   r.meeting.votingEndsAt,
+		EndsAtTick:   endsAt,
 	}
 }
 
@@ -145,5 +152,208 @@ func (r *Room) handleChat(playerID string, msgID string, text string) {
 	}
 }
 
+// handleVote procesa el voto de un jugador durante la reunión (S2-05).
+func (r *Room) handleVote(
+	voterID string,
+	targetID string,
+	skip bool,
+) {
+	if r.phase != matchv1.Phase_MEETING || r.meeting == nil {
+		return
+	}
+	if r.meeting.votingClosed {
+		return
+	}
+	voter, ok := r.players[voterID]
+	if !ok || !voter.view.Alive {
+		return
+	}
+	if _, alreadyVoted := r.meeting.votes[voterID]; alreadyVoted {
+		return
+	}
+	if !skip {
+		target, ok := r.players[targetID]
+		if !ok || !target.view.Alive {
+			return
+		}
+	} else {
+		targetID = ""
+	}
+
+	r.meeting.votes[voterID] = voteChoice{
+		targetID: targetID,
+		skip:     skip,
+	}
+
+	if r.allAliveVoted() {
+		r.closeVoting()
+	}
+}
+
+// allAliveVoted verifica si todos los jugadores vivos ya votaron.
+func (r *Room) allAliveVoted() bool {
+	if r.meeting == nil {
+		return false
+	}
+	for id, p := range r.players {
+		if p.view.Alive {
+			if _, ok := r.meeting.votes[id]; !ok {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+// closeVoting finaliza la votación, cuenta los votos y expulsa si corresponde.
+func (r *Room) closeVoting() {
+	if r.meeting == nil || r.meeting.votingClosed {
+		return
+	}
+	r.meeting.votingClosed = true
+	r.meeting.resultEndsAt = r.tick + meetingResultTicks
+
+	ejectedID, wasImpostor := r.tallyVotes()
+	r.meeting.ejectedID = ejectedID
+	r.meeting.wasImpostor = wasImpostor
+
+	if ejectedID != "" {
+		if p, ok := r.players[ejectedID]; ok {
+			p.view.Alive = false
+			p.dx = 0
+			p.dy = 0
+			p.pending = nil
+			p.taskStartTick = 0
+			p.taskStation = ""
+		}
+		r.publishPlayerEjected(ejectedID, wasImpostor)
+	}
+}
+
+// publishPlayerEjected emite el evento player.ejected de forma asíncrona.
+func (r *Room) publishPlayerEjected(
+	playerID string,
+	wasImpostor bool,
+) {
+	if r.publisher == nil {
+		return
+	}
+	pub := r.publisher
+	code := r.Code
+	event := events.NewPlayerEjected(
+		r.MatchID,
+		playerID,
+		wasImpostor,
+	)
+	go func() {
+		ctx, cancel := context.WithTimeout(
+			context.Background(),
+			depsTimeout,
+		)
+		defer cancel()
+		err := pub.Publish(
+			ctx,
+			events.RoutingKeyPlayerEjected,
+			event,
+		)
+		if err != nil {
+			log.Printf(
+				"room %s: no se pudo publicar player.ejected: %v",
+				code,
+				err,
+			)
+		}
+	}()
+}
+
+// tallyVotes evalúa los votos de la reunión actual.
+func (r *Room) tallyVotes() (string, bool) {
+	if r.meeting == nil {
+		return "", false
+	}
+	return tallyVotes(
+		r.meeting.votes,
+		func(playerID string) bool {
+			p, ok := r.players[playerID]
+			return ok && p.view.Alive
+		},
+		func(playerID string) bool {
+			p, ok := r.players[playerID]
+			return ok && p.role == matchv1.Role_IMPOSTOR
+		},
+	)
+}
+
+// tallyVotes cuenta votos según las reglas de S2-05:
+// - Solo cuentan votos de jugadores vivos hacia jugadores vivos o skip.
+// - La mayoría simple expulsa al jugador más votado.
+// - En empate o mayoría de skip nadie sale.
+func tallyVotes(
+	votes map[string]voteChoice,
+	isAlive func(playerID string) bool,
+	isImpostor func(playerID string) bool,
+) (ejectedID string, wasImpostor bool) {
+	if len(votes) == 0 {
+		return "", false
+	}
+	counts := make(map[string]int)
+	skipCount := 0
+
+	for voterID, choice := range votes {
+		if !isAlive(voterID) {
+			continue
+		}
+		if choice.skip {
+			skipCount++
+			continue
+		}
+		if !isAlive(choice.targetID) {
+			continue
+		}
+		counts[choice.targetID]++
+	}
+
+	maxVotes := 0
+	topCandidate := ""
+	tie := false
+
+	candidates := make([]string, 0, len(counts))
+	for id := range counts {
+		candidates = append(candidates, id)
+	}
+	sort.Strings(candidates)
+
+	for _, id := range candidates {
+		c := counts[id]
+		if c > maxVotes {
+			maxVotes = c
+			topCandidate = id
+			tie = false
+		} else if c == maxVotes {
+			tie = true
+		}
+	}
+
+	if maxVotes == 0 || tie || skipCount >= maxVotes {
+		return "", false
+	}
+
+	return topCandidate, isImpostor(topCandidate)
+}
+
+// stepMeeting avanza la votación y el tiempo de pantalla de resultado (S2-05).
 func (r *Room) stepMeeting() {
+	if r.meeting == nil {
+		return
+	}
+	if !r.meeting.votingClosed {
+		if r.tick >= r.meeting.votingEndsAt {
+			r.closeVoting()
+		}
+		return
+	}
+	if r.tick >= r.meeting.resultEndsAt {
+		r.meeting = nil
+		r.phase = matchv1.Phase_PLAYING
+	}
 }
