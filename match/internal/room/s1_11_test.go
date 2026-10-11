@@ -250,9 +250,9 @@ func TestMatchFinishesAfterDuration(t *testing.T) {
 	waitPhase(t, b, matchv1.Phase_PLAYING)
 	waitPhase(t, b, matchv1.Phase_ENDED)
 
-	if store.finishes != 1 || store.winner != events.WinnerCrew {
+	if store.finishes != 1 || store.winner != events.WinnerImpostor {
 		t.Fatalf(
-			"debe terminarse la partida con crew: finishes=%d winner=%s",
+			"debe terminarse la partida con impostor: finishes=%d winner=%s",
 			store.finishes,
 			store.winner,
 		)
@@ -266,7 +266,7 @@ func TestMatchFinishesAfterDuration(t *testing.T) {
 	if !ok {
 		t.Fatalf("payload inesperado: %T", finished[0].payload)
 	}
-	if event.Winner != events.WinnerCrew {
+	if event.Winner != events.WinnerImpostor {
 		t.Errorf("winner inesperado: %s", event.Winner)
 	}
 	if event.EventID == "" || event.FinishedAt == "" {

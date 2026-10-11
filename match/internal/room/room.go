@@ -285,13 +285,13 @@ func (r *Room) startMatch(playerID string) {
 	log.Printf("room %s: partida %s iniciada", r.Code, r.MatchID)
 }
 
-// finishMatch termina sola la partida con winner crew (regla de la semana 1).
-func (r *Room) finishMatch() {
-	if r.phase != matchv1.Phase_PLAYING {
+// finishMatch termina la partida con el ganador dado y persiste (S2-06).
+func (r *Room) finishMatch(winner string) {
+	if r.phase != matchv1.Phase_PLAYING && r.phase != matchv1.Phase_MEETING {
 		return
 	}
 	r.phase = matchv1.Phase_ENDED
-	finishedAt := time.Now()
+	r.endedAt = time.Now()
 
 	ctx, cancel := context.WithTimeout(context.Background(), depsTimeout)
 	defer cancel()
@@ -304,10 +304,13 @@ func (r *Room) finishMatch() {
 				Ejected:  p.ejected,
 			})
 		}
+		sort.Slice(partResults, func(i, j int) bool {
+			return partResults[i].PlayerID < partResults[j].PlayerID
+		})
 		err := r.store.FinishMatch(
 			ctx,
 			r.MatchID,
-			events.WinnerCrew,
+			winner,
 			partResults,
 		)
 		if err != nil {
@@ -315,19 +318,22 @@ func (r *Room) finishMatch() {
 		}
 	}
 	if r.publisher != nil {
-		results := make([]events.PlayerResult, 0, len(r.participants))
-		for _, p := range r.participants {
+		results := make([]events.PlayerResult, 0, len(r.players))
+		for id, p := range r.players {
 			results = append(results, events.PlayerResult{
-				PlayerID: p.PlayerID,
-				Role:     p.Role,
-				Ejected:  false,
-				Harvest:  0,
+				PlayerID: id,
+				Role:     roleName(p.role),
+				Ejected:  p.ejected,
+				Harvest:  r.calculateHarvest(p),
 			})
 		}
+		sort.Slice(results, func(i, j int) bool {
+			return results[i].PlayerID < results[j].PlayerID
+		})
 		event := events.NewMatchFinished(
 			r.MatchID,
-			finishedAt,
-			events.WinnerCrew,
+			r.endedAt,
+			winner,
 			results,
 		)
 		err := r.publisher.Publish(ctx, events.RoutingKeyFinished, event)
@@ -339,7 +345,98 @@ func (r *Room) finishMatch() {
 			)
 		}
 	}
-	log.Printf("room %s: partida %s terminada (crew)", r.Code, r.MatchID)
+	log.Printf(
+		"room %s: partida %s terminada (ganador: %s)",
+		r.Code,
+		r.MatchID,
+		winner,
+	)
+}
+
+// checkEndConditions evalúa las 4 condiciones de fin de partida (S2-06):
+// 1. Ganan tripulantes si el embalse llega a 100.
+// 2. Ganan tripulantes si todos los impostores fueron expulsados.
+// 3. Gana impostor si vivos impostor >= vivos tripulante.
+// 4. Gana impostor si pasan 8 minutos sin que el embalse llegue a 100.
+func (r *Room) checkEndConditions() {
+	if r.phase != matchv1.Phase_PLAYING {
+		return
+	}
+	if r.reservoir >= reservoirMax {
+		r.finishMatch(events.WinnerCrew)
+		return
+	}
+	if r.allImpostorsEjected() {
+		r.finishMatch(events.WinnerCrew)
+		return
+	}
+	aliveImp, aliveCrew, deadCrew := r.countRoles()
+	if aliveImp > 0 && deadCrew > 0 && aliveImp >= aliveCrew {
+		r.finishMatch(events.WinnerImpostor)
+		return
+	}
+	if time.Since(r.startedAt) >= r.matchDuration {
+		r.finishMatch(events.WinnerImpostor)
+		return
+	}
+}
+
+// allImpostorsEjected verifica si todos los impostores fueron expulsados.
+func (r *Room) allImpostorsEjected() bool {
+	totalImp := 0
+	ejectedImp := 0
+	for _, p := range r.players {
+		if p.role == matchv1.Role_IMPOSTOR {
+			totalImp++
+			if p.ejected {
+				ejectedImp++
+			}
+		}
+	}
+	return totalImp > 0 && ejectedImp == totalImp
+}
+
+// countRoles cuenta impostores vivos, tripulantes vivos y bajas de tripulantes.
+func (r *Room) countRoles() (aliveImp, aliveCrew, deadCrew int) {
+	for _, p := range r.players {
+		switch p.role {
+		case matchv1.Role_IMPOSTOR:
+			if p.view.Alive {
+				aliveImp++
+			}
+		case matchv1.Role_CREW:
+			if p.view.Alive {
+				aliveCrew++
+			} else {
+				deadCrew++
+			}
+		}
+	}
+	return aliveImp, aliveCrew, deadCrew
+}
+
+// calculateHarvest calcula la cosecha por jugador según la fórmula (S2-06):
+// tareas completadas * 5 + (10 si su tanque sigue vivo).
+func (r *Room) calculateHarvest(p *player) int {
+	harvest := p.tasksCompleted * 5
+	if p.tankSlot != noTank {
+		if t := r.tankAt(int32(p.tankSlot)); t != nil && !t.dead {
+			harvest += 10
+		}
+	}
+	return harvest
+}
+
+// impostorIDs devuelve la lista ordenada de IDs de todos los impostores.
+func (r *Room) impostorIDs() []string {
+	var ids []string
+	for id, p := range r.players {
+		if p.role == matchv1.Role_IMPOSTOR {
+			ids = append(ids, id)
+		}
+	}
+	sort.Strings(ids)
+	return ids
 }
 
 // assignRoles elige los impostores entre todos los jugadores de la sala;
@@ -418,12 +515,8 @@ func (r *Room) snapshotParticipants() []PlayerInfo {
 	return infos
 }
 
-// step mueve a cada jugador y termina la partida si se cumplió el tiempo.
+// step mueve a cada jugador y evalúa las condiciones de la partida.
 func (r *Room) step() {
-	if r.phase == matchv1.Phase_PLAYING &&
-		time.Since(r.startedAt) >= r.matchDuration {
-		r.finishMatch()
-	}
 	if r.phase != matchv1.Phase_MEETING {
 		for _, p := range r.players {
 			nx, ny := r.m.Move(
@@ -440,6 +533,9 @@ func (r *Room) step() {
 	}
 	if r.phase == matchv1.Phase_MEETING {
 		r.stepMeeting()
+	}
+	if r.phase == matchv1.Phase_PLAYING {
+		r.checkEndConditions()
 	}
 }
 
