@@ -31,6 +31,18 @@ type MatchStore interface {
 	) error
 }
 
+// SnapshotSaver guarda la instantánea de una sala (S3-02). Save no debe
+// bloquear: la llama la goroutine de la sala en medio de su tick.
+type SnapshotSaver interface {
+	Save(matchID string, tick int64, state []byte)
+}
+
+// SavedSnapshot es una instantánea leída de la base al arrancar.
+type SavedSnapshot struct {
+	MatchID string
+	State   []byte
+}
+
 // Tipos de fila de event_log (S2-03).
 const (
 	LogContaminate = "contaminate"

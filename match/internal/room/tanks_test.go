@@ -40,7 +40,7 @@ func playingRoom(t *testing.T) (*Room, *fakeEventLog) {
 		WithEventLog(eventLog),
 	)
 	for _, id := range []string{"imp", "crew1", "crew2"} {
-		out := make(chan *matchv1.Snapshot, 1)
+		out := make(chan *matchv1.ServerEvent, 1)
 		r.addPlayer(Join{PlayerID: id, Out: out})
 	}
 	r.startMatch("imp")
@@ -297,7 +297,7 @@ func TestVisitIsLoggedOnceWhenEntering(t *testing.T) {
 
 func TestNoTankActionsInLobby(t *testing.T) {
 	r := NewRoom("TEST", "match-1", mapWithTanks(), WithCreator("imp"))
-	r.addPlayer(Join{PlayerID: "imp", Out: make(chan *matchv1.Snapshot, 1)})
+	r.addPlayer(Join{PlayerID: "imp", Out: make(chan *matchv1.ServerEvent, 1)})
 	r.players["imp"].role = matchv1.Role_IMPOSTOR
 	contaminate(r, "imp", 1)
 	if r.players["imp"].pending != nil {

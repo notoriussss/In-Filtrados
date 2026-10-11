@@ -24,6 +24,9 @@ type Server struct {
 	store         room.MatchStore
 	eventLog      room.EventLog
 	matchDuration time.Duration
+	gracePeriod   time.Duration
+	cleanupDelay  time.Duration
+	snapshots     room.SnapshotSaver
 }
 
 // ServerOption configura el servidor gRPC.
@@ -47,6 +50,21 @@ func WithEventLog(eventLog room.EventLog) ServerOption {
 // WithMatchDuration acorta la partida; los tests la usan.
 func WithMatchDuration(duration time.Duration) ServerOption {
 	return func(s *Server) { s.matchDuration = duration }
+}
+
+// WithGracePeriod guarda el lugar del que se desconecta (S3-01).
+func WithGracePeriod(grace time.Duration) ServerOption {
+	return func(s *Server) { s.gracePeriod = grace }
+}
+
+// WithCleanupDelay configura la espera para liberar la sala (S2-06).
+func WithCleanupDelay(delay time.Duration) ServerOption {
+	return func(s *Server) { s.cleanupDelay = delay }
+}
+
+// WithSnapshots guarda una instantánea de cada sala (S3-02).
+func WithSnapshots(saver room.SnapshotSaver) ServerOption {
+	return func(s *Server) { s.snapshots = saver }
 }
 
 func NewServer(reg *room.Registry, m *room.Map, opts ...ServerOption) *Server {
@@ -109,7 +127,45 @@ func (s *Server) roomOptions(creatorID string) []room.Option {
 	if s.matchDuration > 0 {
 		opts = append(opts, room.WithMatchDuration(s.matchDuration))
 	}
+	if s.gracePeriod > 0 {
+		opts = append(opts, room.WithGracePeriod(s.gracePeriod))
+	}
+	if s.cleanupDelay > 0 {
+		opts = append(opts, room.WithCleanupDelay(s.cleanupDelay))
+	}
+	if s.snapshots != nil {
+		opts = append(opts, room.WithSnapshots(s.snapshots))
+	}
 	return opts
+}
+
+// RestoreRooms recrea las salas de las partidas sin terminar (S3-02).
+// Quedan en pausa hasta que sus jugadores se reconecten. Devuelve
+// cuántas recuperó; una instantánea dañada se salta sin tumbar a match.
+func (s *Server) RestoreRooms(
+	ctx context.Context,
+	saved []room.SavedSnapshot,
+) int {
+	restored := 0
+	for _, snap := range saved {
+		r, err := room.Restore(snap.State, s.m, s.roomOptions("")...)
+		if err != nil {
+			log.Printf("restore: partida %s: %v", snap.MatchID, err)
+			continue
+		}
+		if !s.registry.AddIfFree(r) {
+			log.Printf("restore: el código %s ya está en uso", r.Code)
+			continue
+		}
+		go r.Run(ctx)
+		restored++
+		log.Printf(
+			"restore: sala %s (partida %s) en pausa hasta que vuelvan",
+			r.Code,
+			r.MatchID,
+		)
+	}
+	return restored
 }
 
 func (s *Server) JoinRoom(
@@ -152,16 +208,16 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 	}
 
 	playerID := join.GetPlayerId()
-	eventOut := make(chan *matchv1.ServerEvent, 16)
+	out := make(chan *matchv1.ServerEvent, 16)
 	r.Join(room.Join{
 		PlayerID: playerID,
-		EventOut: eventOut,
+		Out:      out,
 	})
 	log.Printf("play: %s joined %s", playerID, r.Code)
 	defer func() {
 		r.Leave(room.Leave{
 			PlayerID: playerID,
-			EventOut: eventOut,
+			Out:      out,
 		})
 		log.Printf("play: %s left %s", playerID, r.Code)
 	}()
@@ -176,7 +232,7 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 		defer close(sent)
 		for {
 			select {
-			case event, ok := <-eventOut:
+			case event, ok := <-out:
 				if !ok {
 					return
 				}
@@ -189,61 +245,81 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 		}
 	}()
 
+	msgs := make(chan *matchv1.ClientAction)
+	recvErr := make(chan error, 1)
+	go func() {
+		for {
+			msg, err := stream.Recv()
+			if err != nil {
+				recvErr <- err
+				return
+			}
+			select {
+			case msgs <- msg:
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
 	for {
-		msg, err := stream.Recv()
-		if errors.Is(err, io.EOF) {
+		select {
+		case <-sent:
 			return nil
-		}
-		if err != nil {
+		case err := <-recvErr:
+			if errors.Is(err, io.EOF) {
+				return nil
+			}
 			return err
-		}
-		switch {
-		case msg.GetMove() != nil:
-			mv := msg.GetMove()
-			r.Act(room.PlayerAction{
-				PlayerID: playerID,
-				DX:       mv.GetDx(),
-				DY:       mv.GetDy(),
-			})
-		case msg.GetStart() != nil:
-			r.Act(room.PlayerAction{PlayerID: playerID, Start: true})
-		case msg.GetContaminate() != nil:
-			r.Act(room.PlayerAction{
-				PlayerID:    playerID,
-				Contaminate: true,
-				TankSlot:    msg.GetContaminate().GetTankSlot(),
-			})
-		case msg.GetInteract() != nil:
-			if action, ok := interactAction(playerID, msg.GetInteract()); ok {
+		case msg := <-msgs:
+			switch {
+			case msg.GetMove() != nil:
+				mv := msg.GetMove()
+				r.Act(room.PlayerAction{
+					PlayerID: playerID,
+					DX:       mv.GetDx(),
+					DY:       mv.GetDy(),
+				})
+			case msg.GetStart() != nil:
+				r.Act(room.PlayerAction{PlayerID: playerID, Start: true})
+			case msg.GetContaminate() != nil:
+				r.Act(room.PlayerAction{
+					PlayerID:    playerID,
+					Contaminate: true,
+					TankSlot:    msg.GetContaminate().GetTankSlot(),
+				})
+			case msg.GetInteract() != nil:
+				if action, ok := interactAction(playerID, msg.GetInteract()); ok {
+					r.Act(action)
+				}
+			case msg.GetReport() != nil:
+				r.Act(room.PlayerAction{
+					PlayerID: playerID,
+					Report:   true,
+					TankSlot: msg.GetReport().GetTankSlot(),
+				})
+			case msg.GetVote() != nil:
+				v := msg.GetVote()
+				action := room.PlayerAction{
+					PlayerID: playerID,
+					Vote:     true,
+				}
+				switch choice := v.GetChoice().(type) {
+				case *matchv1.Vote_TargetPlayerId:
+					action.VoteTargetID = choice.TargetPlayerId
+				case *matchv1.Vote_Skip:
+					action.VoteSkip = choice.Skip
+				}
 				r.Act(action)
+			case msg.GetChat() != nil:
+				c := msg.GetChat()
+				r.Act(room.PlayerAction{
+					PlayerID:      playerID,
+					Chat:          true,
+					ChatMessageID: c.GetClientMsgId(),
+					ChatText:      c.GetText(),
+				})
 			}
-		case msg.GetReport() != nil:
-			r.Act(room.PlayerAction{
-				PlayerID: playerID,
-				Report:   true,
-				TankSlot: msg.GetReport().GetTankSlot(),
-			})
-		case msg.GetVote() != nil:
-			v := msg.GetVote()
-			action := room.PlayerAction{
-				PlayerID: playerID,
-				Vote:     true,
-			}
-			switch choice := v.GetChoice().(type) {
-			case *matchv1.Vote_TargetPlayerId:
-				action.VoteTargetID = choice.TargetPlayerId
-			case *matchv1.Vote_Skip:
-				action.VoteSkip = choice.Skip
-			}
-			r.Act(action)
-		case msg.GetChat() != nil:
-			c := msg.GetChat()
-			r.Act(room.PlayerAction{
-				PlayerID:      playerID,
-				Chat:          true,
-				ChatMessageID: c.GetClientMsgId(),
-				ChatText:      c.GetText(),
-			})
 		}
 	}
 }

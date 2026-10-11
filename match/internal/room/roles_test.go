@@ -63,7 +63,7 @@ func TestImpostorCount(t *testing.T) {
 func startFive(
 	t *testing.T,
 	opts ...Option,
-) (*Room, map[string]chan *matchv1.Snapshot) {
+) (*Room, map[string]chan *matchv1.ServerEvent) {
 	t.Helper()
 	opts = append([]Option{WithCreator("p0")}, opts...)
 	r := NewRoom("TEST", "match-1", mapWithTanks(), opts...)
@@ -71,10 +71,10 @@ func startFive(
 	t.Cleanup(cancel)
 	go r.Run(ctx)
 
-	outs := make(map[string]chan *matchv1.Snapshot)
+	outs := make(map[string]chan *matchv1.ServerEvent)
 	for i := 0; i < 5; i++ {
 		id := fmt.Sprintf("p%d", i)
-		outs[id] = make(chan *matchv1.Snapshot, 256)
+		outs[id] = make(chan *matchv1.ServerEvent, 256)
 		r.Join(Join{PlayerID: id, Out: outs[id]})
 	}
 	waitPlayers(t, outs["p4"], 5)
@@ -106,7 +106,7 @@ func TestEachSnapshotCarriesOnlyItsOwnRole(t *testing.T) {
 
 func TestLobbySnapshotHasNoRole(t *testing.T) {
 	r := startRoom(t, WithCreator("a"))
-	a := make(chan *matchv1.Snapshot, 64)
+	a := make(chan *matchv1.ServerEvent, 64)
 	r.Join(Join{PlayerID: "a", Out: a})
 	snap := waitPlayers(t, a, 1)
 	if snap.MyRole != matchv1.Role_NO_ROLE {

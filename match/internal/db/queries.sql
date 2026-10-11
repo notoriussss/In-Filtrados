@@ -24,3 +24,32 @@ UPDATE participants
 SET ejected = $3
 WHERE match_id = $1 AND player_id = $2;
 
+-- name: UpsertSnapshot :exec
+-- S3-02: guarda la última instantánea de la partida (una fila por partida).
+INSERT INTO snapshots (match_id, tick, state, updated_at)
+VALUES ($1, $2, $3, now())
+ON CONFLICT (match_id) DO UPDATE
+SET tick = EXCLUDED.tick, state = EXCLUDED.state, updated_at = now();
+
+-- name: ListUnfinishedSnapshots :many
+-- S3-02: partidas empezadas y sin terminar, para recrearlas al arrancar.
+SELECT s.match_id, s.state
+FROM snapshots s
+JOIN matches m ON m.id = s.match_id
+WHERE m.ended_at IS NULL;
+
+-- name: InsertOutbox :exec
+-- S3-03: un evento que RabbitMQ no confirmó.
+INSERT INTO outbox (event_id, routing_key, payload)
+VALUES ($1, $2, $3)
+ON CONFLICT (event_id) DO NOTHING;
+
+-- name: ListOutbox :many
+-- S3-03: los pendientes más viejos primero.
+SELECT id, event_id, routing_key, payload
+FROM outbox
+ORDER BY id
+LIMIT $1;
+
+-- name: DeleteOutbox :exec
+DELETE FROM outbox WHERE id = $1;

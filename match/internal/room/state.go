@@ -54,6 +54,12 @@ const (
 	chatHistoryLimit   = 30  // mensajes guardados en snapshot
 	maxLastVisitors    = 3   // visitantes máximos en el reporte
 
+	// S3-01: lugar reservado al jugador que se desconecta en partida.
+	// En el laboratorio se sube con RECONNECT_GRACE_SECONDS.
+	defaultGracePeriod = 90 * time.Second
+	// Un corte más corto que esto no cuenta (cambio de socket).
+	disconnectDebounce = time.Second
+
 	// S2-12: gotas de aceite tras contaminar.
 	oilTrailTicks     = 300 // 15 s soltando gotas
 	oilDropEveryTicks = 20  // 1 gota por segundo
@@ -78,18 +84,16 @@ var colors = []string{
 	"#f032e6",
 }
 
-// Join registers a player; Out receives snapshots and EventOut receives events.
+// Join registers a player; Out receives server events.
 type Join struct {
 	PlayerID string
-	Out      chan *matchv1.Snapshot
-	EventOut chan *matchv1.ServerEvent
+	Out      chan *matchv1.ServerEvent
 }
 
 // Leave says that the stream ended.
 type Leave struct {
 	PlayerID string
-	Out      chan *matchv1.Snapshot
-	EventOut chan *matchv1.ServerEvent
+	Out      chan *matchv1.ServerEvent
 }
 
 // Name dice cómo se llama un jugador (viene de CreateRoom o JoinRoom).
@@ -121,11 +125,17 @@ type PlayerAction struct {
 	ChatText      string
 }
 
+// isMove: la acción solo cambia la dirección (un Move).
+func (a PlayerAction) isMove() bool {
+	return !a.Start && !a.Contaminate && !a.Clean && !a.InteractTask &&
+		!a.Report && !a.Vote && !a.Chat
+}
+
 type player struct {
-	view     *matchv1.PlayerView
-	dx, dy   int32
-	out      chan *matchv1.Snapshot
-	eventOut chan *matchv1.ServerEvent
+	view         *matchv1.PlayerView
+	dx, dy       int32
+	out          chan *matchv1.ServerEvent
+	pendingEnded bool
 
 	role     matchv1.Role // NO_ROLE hasta que empieza la partida
 	tankSlot int          // noTank si no le tocó tanque
@@ -148,6 +158,11 @@ type player struct {
 	// S2-12: rastro de aceite hasta el tick oilUntil.
 	oilUntil    int64
 	nextOilDrop int64
+
+	// S3-01: hasta cuándo se le guarda el lugar al desconectado. Es
+	// tiempo de reloj, no ticks, para que siga corriendo en una pausa.
+	leftAt     time.Time // cuándo se cortó su stream; cero si conectado
+	graceUntil time.Time
 }
 
 // meetingState guarda el estado de la reunión activa (S2-05).

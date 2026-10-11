@@ -87,15 +87,16 @@ func (f *fakeStore) FinishMatch(
 // waitPhase waits for a snapshot with the given phase.
 func waitPhase(
 	t *testing.T,
-	ch chan *matchv1.Snapshot,
+	ch chan *matchv1.ServerEvent,
 	phase matchv1.Phase,
 ) *matchv1.Snapshot {
 	t.Helper()
 	timeout := time.After(time.Second)
 	for {
 		select {
-		case snap := <-ch:
-			if snap.Phase == phase {
+		case ev := <-ch:
+			snap := snapOf(ev)
+			if snap != nil && snap.Phase == phase {
 				return snap
 			}
 		case <-timeout:
@@ -113,7 +114,7 @@ func TestStartNeedsTwoPlayers(t *testing.T) {
 		WithStore(store),
 	)
 
-	out := make(chan *matchv1.Snapshot, 64)
+	out := make(chan *matchv1.ServerEvent, 64)
 	r.Join(Join{PlayerID: "creator", Out: out})
 	waitPlayers(t, out, 1)
 
@@ -143,8 +144,8 @@ func TestStartIsIgnoredAfterPlaying(t *testing.T) {
 		WithStore(store),
 	)
 
-	a := make(chan *matchv1.Snapshot, 64)
-	b := make(chan *matchv1.Snapshot, 64)
+	a := make(chan *matchv1.ServerEvent, 64)
+	b := make(chan *matchv1.ServerEvent, 64)
 	r.Join(Join{PlayerID: "creator", Out: a})
 	r.Join(Join{PlayerID: "friend", Out: b})
 	waitPlayers(t, b, 2)
@@ -175,8 +176,8 @@ func TestStartSavesAndPublishes(t *testing.T) {
 		WithStore(store),
 	)
 
-	a := make(chan *matchv1.Snapshot, 64)
-	b := make(chan *matchv1.Snapshot, 64)
+	a := make(chan *matchv1.ServerEvent, 64)
+	b := make(chan *matchv1.ServerEvent, 64)
 	r.Join(Join{PlayerID: "creator", Out: a})
 	r.Join(Join{PlayerID: "friend", Out: b})
 	waitPlayers(t, b, 2)
@@ -208,7 +209,12 @@ func TestStartSavesAndPublishes(t *testing.T) {
 		)
 	}
 
-	started := pub.forKey(events.RoutingKeyStarted)
+	started := waitForEvents(
+		t,
+		pub,
+		events.RoutingKeyStarted,
+		1,
+	)
 	if len(started) != 1 {
 		t.Fatalf("debe publicarse un match.started, got %d", len(started))
 	}
@@ -240,8 +246,8 @@ func TestMatchFinishesAfterDuration(t *testing.T) {
 		WithMatchDuration(150*time.Millisecond),
 	)
 
-	a := make(chan *matchv1.Snapshot, 64)
-	b := make(chan *matchv1.Snapshot, 64)
+	a := make(chan *matchv1.ServerEvent, 64)
+	b := make(chan *matchv1.ServerEvent, 64)
 	r.Join(Join{PlayerID: "creator", Out: a})
 	r.Join(Join{PlayerID: "friend", Out: b})
 	waitPlayers(t, b, 2)
@@ -258,7 +264,12 @@ func TestMatchFinishesAfterDuration(t *testing.T) {
 		)
 	}
 
-	finished := pub.forKey(events.RoutingKeyFinished)
+	finished := waitForEvents(
+		t,
+		pub,
+		events.RoutingKeyFinished,
+		1,
+	)
 	if len(finished) != 1 {
 		t.Fatalf("debe publicarse un match.finished, got %d", len(finished))
 	}

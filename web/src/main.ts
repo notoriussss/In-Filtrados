@@ -1,5 +1,5 @@
 import './style.css';
-import { session } from './session';
+import { initialScreen, session } from './session';
 import { mountLogin } from './screens/login';
 import { mountRegister } from './screens/register';
 import { mountLobby } from './screens/lobby';
@@ -33,10 +33,8 @@ export function show(screen: Screen, initialError?: string): void {
   }
 }
 
-// Inicialización: si hay sesión guardada, va al lobby, si no, al login.
-const currentSession = session.loadSession();
-if (currentSession && currentSession.token) {
-  show('lobby');
-} else {
-  show('login');
-}
+// Inicialización (S3-01): con una partida guardada vuelve directo a ella
+// (recargar a mitad de partida o de reunión); con sesión sin partida va
+// al lobby y sin sesión al login. La pantalla de partida regresa al lobby
+// si la sala todavía no empezó.
+show(initialScreen(session.loadSession()));

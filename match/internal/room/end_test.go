@@ -32,7 +32,7 @@ func setupPlayingRoom(
 
 	r := NewRoom("TEST", "match-1", mapWithTanks(), allOpts...)
 	for _, id := range players {
-		out := make(chan *matchv1.Snapshot, 16)
+		out := make(chan *matchv1.ServerEvent, 16)
 		r.addPlayer(Join{PlayerID: id, Out: out})
 	}
 	r.startMatch(players[0])
@@ -51,7 +51,8 @@ func setupPlayingRoom(
 	return r
 }
 
-// TestWinCondition_Reservoir100: los tripulantes ganan si el embalse llega a 100.
+// TestWinCondition_Reservoir100: los tripulantes ganan
+// si el embalse llega a 100.
 func TestWinCondition_Reservoir100(t *testing.T) {
 	pub := &fakePublisher{}
 	store := &fakeStore{}
@@ -78,7 +79,7 @@ func TestWinCondition_Reservoir100(t *testing.T) {
 			store.winner,
 		)
 	}
-	evs := pub.forKey(events.RoutingKeyFinished)
+	evs := waitForEvents(t, pub, events.RoutingKeyFinished, 1)
 	if len(evs) != 1 {
 		t.Fatalf("esperaba 1 evento match.finished, got %d", len(evs))
 	}
@@ -205,13 +206,17 @@ func TestWinCondition_ImpostorParity(t *testing.T) {
 			store.winner,
 		)
 	}
-	evs := pub.forKey(events.RoutingKeyFinished)
+	evs := waitForEvents(t, pub, events.RoutingKeyFinished, 1)
 	if len(evs) != 1 {
 		t.Fatalf("esperaba 1 evento match.finished, got %d", len(evs))
 	}
 	mf := evs[0].payload.(events.MatchFinished)
 	if mf.Winner != events.WinnerImpostor {
-		t.Errorf("evento ganador esperado %s, got %s", events.WinnerImpostor, mf.Winner)
+		t.Errorf(
+			"evento ganador esperado %s, got %s",
+			events.WinnerImpostor,
+			mf.Winner,
+		)
 	}
 }
 
@@ -232,8 +237,9 @@ func TestWinCondition_EightMinutesTimeout(t *testing.T) {
 	)
 
 	r.reservoir = 40 // embalse incompleto
-	// Simular que han transcurrido 8 minutos y 1 segundo
-	r.startedAt = time.Now().Add(-8*time.Minute - time.Second)
+	// Simular que han transcurrido 8 minutos en ticks (S2-06, S3-02)
+	r.startedAt = r.now().Add(-8*time.Minute - time.Second)
+	r.tick = r.startTick + int64(8*time.Minute/tickInterval)
 
 	r.step()
 
@@ -277,7 +283,7 @@ func TestHarvestFormula(t *testing.T) {
 	r.reservoir = 100
 	r.step()
 
-	evs := pub.forKey(events.RoutingKeyFinished)
+	evs := waitForEvents(t, pub, events.RoutingKeyFinished, 1)
 	if len(evs) != 1 {
 		t.Fatalf("esperaba evento match.finished")
 	}
@@ -310,10 +316,10 @@ func TestMatchEndedBroadcastOnEventOut(t *testing.T) {
 		WithStore(store),
 	)
 
-	eventOutA := make(chan *matchv1.ServerEvent, 16)
-	eventOutB := make(chan *matchv1.ServerEvent, 16)
-	r.addPlayer(Join{PlayerID: "c1", EventOut: eventOutA})
-	r.addPlayer(Join{PlayerID: "imp", EventOut: eventOutB})
+	outA := make(chan *matchv1.ServerEvent, 16)
+	outB := make(chan *matchv1.ServerEvent, 16)
+	r.addPlayer(Join{PlayerID: "c1", Out: outA})
+	r.addPlayer(Join{PlayerID: "imp", Out: outB})
 	r.startMatch("c1")
 
 	r.players["c1"].role = matchv1.Role_CREW
@@ -332,7 +338,7 @@ func TestMatchEndedBroadcastOnEventOut(t *testing.T) {
 drainLoop:
 	for {
 		select {
-		case ev := <-eventOutA:
+		case ev := <-outA:
 			if me := ev.GetMatchEnded(); me != nil {
 				receivedEnded = me
 				break drainLoop
@@ -353,13 +359,14 @@ drainLoop:
 		)
 	}
 	sort.Strings(receivedEnded.ImpostorIds)
-	if len(receivedEnded.ImpostorIds) != 1 || receivedEnded.ImpostorIds[0] != "imp" {
+	if len(receivedEnded.ImpostorIds) != 1 ||
+		receivedEnded.ImpostorIds[0] != "imp" {
 		t.Errorf("impostor_ids inesperados: %v", receivedEnded.ImpostorIds)
 	}
 }
 
-// TestRoomMemoryCleanupAfterDelay: verifica que a los 30 s de terminar la partida
-// la sala se libera del registry, step retorna true y se cierran canales.
+// TestRoomMemoryCleanupAfterDelay: verifica que a los 30 s de terminar
+// la partida la sala se libera del registry y se cierran canales.
 func TestRoomMemoryCleanupAfterDelay(t *testing.T) {
 	cleaned := false
 	cleanupDelay := 50 * time.Millisecond
@@ -373,10 +380,9 @@ func TestRoomMemoryCleanupAfterDelay(t *testing.T) {
 		}),
 	)
 
-	outA := make(chan *matchv1.Snapshot, 16)
-	eventOutA := make(chan *matchv1.ServerEvent, 16)
-	r.addPlayer(Join{PlayerID: "c1", Out: outA, EventOut: eventOutA})
-	outB := make(chan *matchv1.Snapshot, 16)
+	outA := make(chan *matchv1.ServerEvent, 16)
+	r.addPlayer(Join{PlayerID: "c1", Out: outA})
+	outB := make(chan *matchv1.ServerEvent, 16)
 	r.addPlayer(Join{PlayerID: "c2", Out: outB})
 	r.startMatch("c1")
 
@@ -388,20 +394,20 @@ func TestRoomMemoryCleanupAfterDelay(t *testing.T) {
 	}
 
 	// De inmediato: cleanup aún no debe haber ocurrido
-	stopped := r.step()
+	stopped := r.onTick()
 	if stopped {
-		t.Fatalf("step no debio retornar true antes de cleanupDelay")
+		t.Fatalf("onTick no debio retornar true antes de cleanupDelay")
 	}
 	if cleaned {
 		t.Fatalf("cleanup no debio ejecutarse antes del delay")
 	}
 
 	// Simular transcurso del tiempo de cleanup
-	r.endedAt = time.Now().Add(-cleanupDelay - time.Millisecond)
+	r.endedAt = r.now().Add(-cleanupDelay - time.Millisecond)
 
-	stopped = r.step()
+	stopped = r.onTick()
 	if !stopped {
-		t.Fatalf("step debio retornar true al cumplirse cleanupDelay")
+		t.Fatalf("onTick debio retornar true al cumplirse cleanupDelay")
 	}
 	if !cleaned {
 		t.Fatalf("onCleanup debio ejecutarse para remover la sala")
@@ -414,13 +420,5 @@ func TestRoomMemoryCleanupAfterDelay(t *testing.T) {
 	_, openOut := <-outA
 	if openOut {
 		t.Errorf("el canal outA debio cerrarse")
-	}
-
-	for len(eventOutA) > 0 {
-		<-eventOutA
-	}
-	_, openEvent := <-eventOutA
-	if openEvent {
-		t.Errorf("el canal eventOutA debio cerrarse")
 	}
 }

@@ -7,7 +7,7 @@
     "start": "ts-node src/main.ts",
     "start:dev": "ts-node-dev src/main.ts",
     "lint": "tsc --noEmit",
-    "test": "tsc && node --test dist/clients/grpc-errors.test.js dist/clients/resilience.test.js dist/game/server-events.test.js"
+    "test": "tsc && node --test dist/clients/grpc-errors.test.js dist/clients/resilience.test.js dist/game/server-events.test.js dist/game/client-messages.test.js dist/game/play-relay.test.js dist/game/chat-dedupe.test.js"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.14.5",

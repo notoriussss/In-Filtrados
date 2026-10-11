@@ -28,7 +28,7 @@ func playingRoomTasks(
 		opts...,
 	)
 	for _, id := range []string{"crew1", "imp"} {
-		out := make(chan *matchv1.Snapshot, 1)
+		out := make(chan *matchv1.ServerEvent, 1)
 		r.addPlayer(Join{PlayerID: id, Out: out})
 	}
 	r.startMatch("crew1")

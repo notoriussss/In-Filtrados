@@ -1,0 +1,39 @@
+# N2 match: match y su base. match-db no publica el 5432: solo match llega a
+# ella por la red interna de Docker (Database per Service forzado por la red).
+# docker compose --env-file deploy/lab.env -f deploy/compose/n2.yml up -d
+name: in-filtrados-lab
+
+services:
+  match-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${MATCH_DB_NAME:?falta MATCH_DB_NAME en lab.env}
+      POSTGRES_USER: ${MATCH_DB_USER:?falta MATCH_DB_USER en lab.env}
+      POSTGRES_PASSWORD: ${MATCH_DB_PASSWORD:?falta MATCH_DB_PASSWORD en lab.env}
+    volumes:
+      - match-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\"" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  match:
+    image: ${IMAGE_REGISTRY:-ghcr.io/notoriussss}/in-filtrados-match:${IMAGE_TAG:-latest}
+    environment:
+      HTTP_PORT: "8081"
+      MATCH_DB_URL: ${MATCH_DB_URL:?falta MATCH_DB_URL en lab.env}
+      RABBITMQ_URL: ${RABBITMQ_URL:?falta RABBITMQ_URL en lab.env}
+      MAP_PATH: ${MAP_PATH:-/app/shared/map.json}
+      RECONNECT_GRACE_SECONDS: ${RECONNECT_GRACE_SECONDS:-600}
+    ports:
+      - "50051:50051"
+      - "8081:8081"
+    depends_on:
+      match-db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  match-db-data:

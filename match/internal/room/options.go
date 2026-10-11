@@ -6,7 +6,8 @@ import (
 	"github.com/notoriussss/in-filtrados/match/internal/events"
 )
 
-// defaultMatchDuration es la duración máxima de la partida: 8 minutos (S2-06).
+// defaultMatchDuration es la duración máxima de la partida:
+// 8 minutos (S2-06).
 const defaultMatchDuration = 8 * time.Minute
 
 // defaultCleanupDelay es el tiempo para liberar la sala de memoria (S2-06).
@@ -48,9 +49,29 @@ func WithCleanupDelay(duration time.Duration) Option {
 	}
 }
 
+// WithGracePeriod fija cuánto se guarda el lugar de un jugador que se
+// desconecta en plena partida (S3-01, RECONNECT_GRACE_SECONDS).
+func WithGracePeriod(grace time.Duration) Option {
+	return func(r *Room) {
+		if grace > 0 {
+			r.grace = grace
+		}
+	}
+}
+
 // WithOnCleanup registra la función que libera la sala del registro.
 func WithOnCleanup(fn func(code string)) Option {
 	return func(r *Room) { r.onCleanup = fn }
+}
+
+// WithSnapshots guarda la sala cada 2 s y en cada cambio de fase (S3-02).
+func WithSnapshots(saver SnapshotSaver) Option {
+	return func(r *Room) { r.snapshots = saver }
+}
+
+// WithClock cambia el reloj de la sala; los tests lo adelantan a mano.
+func WithClock(now func() time.Time) Option {
+	return func(r *Room) { r.now = now }
 }
 
 // WithEventLog anota en event_log lo que pasa con los tanques (S2-03).

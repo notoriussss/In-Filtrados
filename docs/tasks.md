@@ -115,6 +115,8 @@ myTaskProgress: { completed, total };
 meeting: { reporterId, tankSlot, lastVisitors[], votesCast[], endsAtTick, votingClosed, ejectedId, wasImpostor } | null;
 chat: { id, playerId, text, tick }[]; // últimos 30
 oilDrops: { x, y, color, expiresAtTick }[]; // S2-12: rastro del impostor
+paused: boolean;                   // S3-02: alguien está en su periodo de gracia
+waitingFor: string[];              // S3-02: ids de quienes se esperan
 ```
 
 - `myRole` viaja **solo en el snapshot de su dueño**: `match` arma un snapshot por jugador y el gateway nunca recibe el rol de otro.
@@ -144,6 +146,10 @@ El WebSocket se abre en `/ws?token=<token>`.
 | `match.finished` | `match` | `{ event_id, match_id, finished_at, winner: "crew" \| "impostor", players: [{ player_id, role, ejected, harvest }] }` |
 | `task.completed` | `match` (semana 2) | `{ event_id, match_id, player_id, task_type, liters_saved }` |
 | `player.ejected` | `match` (semana 2) | `{ event_id, match_id, player_id, was_impostor }` |
+| `player.disconnected` | `match` (S3-04) | `{ event_id, match_id, player_id, display_name, grace_seconds, grace_ends_at, at }` |
+| `player.reconnected` | `match` (S3-04) | `{ event_id, match_id, player_id, display_name, at }` |
+
+`at` (RFC 3339 con nanosegundos) ordena la desconexión y la reconexión de un mismo jugador aunque lleguen al revés. El monitor los usa para mostrar quién está en periodo de gracia y su cuenta regresiva.
 
 | Cola (durable) | Enlazada a | La consume |
 |---|---|---|
@@ -613,18 +619,20 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S1-23 — Desplegar en la nube (infraestructura)
+#### S1-23 — Un `compose` por nodo y `lab.env` para el laboratorio (infraestructura)
 
-**Archivos:** `deploy/README.md` y `deploy/setup.sh`.
+**Cambio (7 de octubre):** reemplaza a "desplegar en la nube". Las 5 laptops del equipo son los nodos servidor y cada una corre su nodo con Docker (`docs/deployment-lab.md`, secciones 3 a 6).
+
+**Archivos:** `deploy/compose/n1.yml` a `n5.yml`, `deploy/lab.env.example`, `deploy/scripts/check-network.ps1` y `deploy/README.md`.
 
 **Pasos:**
-1. Crear una máquina virtual en una capa gratuita (Azure for Students, Oracle Cloud Always Free o AWS), con Ubuntu 22.04, 2 vCPU y 4 GB de RAM o más.
-2. Abrir **solo** los puertos 80 (juego) y 8000 (panel) en el firewall de la nube. No exponer Postgres, RabbitMQ ni los puertos gRPC.
-3. `setup.sh`: instalar Docker y el plugin de compose, clonar el repo, copiar `.env` con contraseñas **distintas** a las de `.env.example` y correr `docker compose up -d --build`.
-4. En la nube, `web` publica el puerto 80 en lugar del 8080.
-5. Documentar en `deploy/README.md` cómo actualizar: `git pull && docker compose up -d --build`.
+1. Un `compose` por nodo con las imágenes del CD: N1 edge (`web` y `gateway`), N2 (`match` y `match-db`), N3 (`players` y `players-db`), N4 (`rabbitmq`) y N5 (`monitor`).
+2. `match-db` y `players-db` sin publicar el 5432; `restart: unless-stopped` en todos.
+3. `lab.env.example` con las IP de cada nodo, las direcciones derivadas, las URL de las bases, un usuario propio de RabbitMQ y `RECONNECT_GRACE_SECONDS=600`. El `lab.env` real no se sube.
+4. `check-network.ps1`: ping, puertos publicados, 5432 cerrado y WebSocket hacia los otros nodos.
+5. `deploy/README.md`: preparar cada laptop, arrancar cada nodo y agrupar nodos.
 
-**Criterio de verificación:** desde el celular, con datos móviles (no el wifi de la universidad), abrir `http://<ip-pública>` y jugar contra alguien en una laptop. `http://<ip-pública>:8000` muestra el panel. `nc -zv <ip-pública> 5432` y `nc -zv <ip-pública> 5672` fallan (los puertos no están expuestos).
+**Criterio de verificación:** con 2 laptops (`-f n1.yml -f n2.yml` en una y `-f n3.yml -f n4.yml -f n5.yml` en otra) y `lab.env` con sus IP, un navegador en una tercera máquina abre `http://<EDGE_HOST>:8080` y el panel del monitor está en verde. Desde otra máquina, conectar al 5432 de N2 o N3 falla. Tras una caída del proceso (`docker compose exec match sh -c 'kill -9 1'`), Docker lo relanza solo y el panel vuelve a verde. `check-network.ps1` reporta todo en verde.
 
 ---
 
@@ -700,11 +708,17 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 #### S2-06 — Fin de partida real (`match/`)
 
 **Pasos:**
-1. Ganan los tripulantes si el embalse llega a 100 **o** todos los impostores fueron expulsados.
-2. Gana el impostor si quedan tantos impostores vivos como tripulantes vivos **o** pasan 8 minutos sin que el embalse llegue a 100.
-3. `harvest` por jugador = tareas completadas × 5 + (10 si su tanque sigue vivo).
-4. Quitar la regla temporal de 3 minutos de S1-11.
-5. Fase `ENDED`: snapshot con `MatchEnded { winner, impostor_id }`, guardar en `matches` y `participants`, publicar `match.finished` y liberar la sala de memoria a los 30 segundos.
+1. Ganan los tripulantes si el embalse llega a 100 **o** todos los impostores
+   fueron expulsados/desconectados (`aliveImp == 0`).
+2. Gana el impostor si quedan tantos impostores vivos como tripulantes vivos
+   habiendo muerto al menos un tripulante (`deadCrew > 0`, para evitar fin
+   inmediato al iniciar salas de prueba de 2 jugadores con 1 impostor) **o**
+   pasan 8 minutos sin que el embalse llegue a 100.
+3. `harvest` por jugador = tareas completadas × 5 + (10 si su tanque vivo).
+4. Quitar la regla temporal de 3 minutos de S1-11; contar duración en ticks.
+5. Fase `ENDED`: snapshot con `MatchEnded { winner, impostor_ids }`, guardar
+   en `matches` y `participants`, publicar `match.finished` asíncrono y
+   liberar la sala a los 30 s (cerrando streams gRPC con canal `done`).
 
 **Criterio de verificación:** tests de cada una de las 4 condiciones de fin. Una partida real termina sola, muestra quién era el impostor y las monedas aparecen en el perfil según la fórmula.
 
@@ -797,7 +811,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 #### S3-01 — Periodo de gracia y `Resume` · en pareja
 
 **Pasos:**
-1. **`match`:** cuando el stream de un jugador se corta, marcarlo `connected: false` y conservar su lugar 90 segundos. Si vuelve, recupera todo. Si no, pasa a fantasma.
+1. **`match`:** cuando el stream de un jugador se corta, marcarlo `connected: false` y conservar su lugar durante `RECONNECT_GRACE_SECONDS` (90 por defecto en `.env.example`; 600 en el laboratorio, `deploy/lab.env.example`). Si vuelve, recupera todo. Si no, pasa a fantasma.
 2. **`match`:** si un desconectado no vota antes de que termine la reunión, su voto cuenta como `skip`.
 3. **`match`:** al recibir `Join` de alguien que ya está en la sala, reemplazar su canal de salida y mandarle de inmediato un snapshot completo (con chat y estado de la reunión).
 4. **`web`:** al cargar la página, si `session.ts` tiene `matchId`, ir directo a la partida en lugar de al lobby.
@@ -812,8 +826,8 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 1. Tabla `snapshots (match_id UUID PRIMARY KEY, tick BIGINT, state JSONB, updated_at TIMESTAMPTZ)`.
 2. Cada 2 segundos y en cada cambio de fase, la goroutine de la sala serializa su estado y hace `INSERT ... ON CONFLICT (match_id) DO UPDATE`. La escritura va en **otra goroutine**, para que la base de datos lenta no frene el ticker.
 3. Al arrancar `match`: buscar partidas con `ended_at IS NULL` y snapshot, recrear su sala en pausa y esperar a que los jugadores se reconecten.
-4. Si no queda ningún jugador conectado, la sala se pausa: el ticker sigue, pero no suma contaminación ni tiempo.
-5. **`gateway`:** el gateway, al reconectar un jugador, reabre el stream `Play` y reintenta con espera creciente si `match` todavía está arrancando.
+4. Si no queda ningún jugador conectado, la sala se pausa: el ticker sigue, pero no suma contaminación ni tiempo. **Implementado como en `deployment-lab.md`, sección 9:** la sala se pausa mientras **cualquier** jugador esté en su periodo de gracia; el snapshot lleva `paused` y `waitingFor` y el navegador muestra "Partida en pausa: esperando a X". Un corte de menos de 1 s (la página cambia el socket de la sala de espera por el de la partida, o recarga) no abre el periodo de gracia ni pausa.
+5. **`gateway`:** el gateway, al reconectar un jugador, reabre el stream `Play` y reintenta con espera creciente si `match` todavía está arrancando. Si el stream se cae, el WebSocket sigue abierto: el navegador recibe `SERVICE_UNAVAILABLE` y el gateway reabre `Play` (0,5 s, 1 s, 2 s, 4 s, 8 s y luego cada 10 s).
 
 **Criterio de verificación:** en plena partida, `docker compose restart match`: en menos de 15 segundos todos los navegadores vuelven a la misma partida, con a lo sumo 2 segundos de movimiento perdidos, y el tiempo restante de la partida no avanzó mientras `match` estaba caído.
 
@@ -823,7 +837,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 **Pasos:**
 1. Revisar que exchange, colas y mensajes sean durables y persistentes (sección 0.7), y que `players` haga `ack` solo después del `COMMIT`.
-2. `match` usa publisher confirms; si RabbitMQ no confirma, guarda el evento en una tabla `outbox` y lo reintenta cada 5 segundos.
+2. `match` usa publisher confirms; si RabbitMQ no confirma, guarda el evento en una tabla `outbox` y lo reintenta cada 5 segundos. Mientras quede algo en `outbox`, los eventos nuevos también esperan ahí, para que salgan en orden (`match/internal/events/outbox.go`).
 3. Probar: matar `players` con `docker compose kill players` **en medio** de procesar un mensaje (con un `sleep` temporal de prueba) y comprobar que al volver se procesa una sola vez.
 
 **Criterio de verificación:** las tres pruebas pasan: (a) `players` apagado durante el fin de partida, (b) RabbitMQ reiniciado durante el fin de partida y (c) `players` muerto a mitad de un mensaje. En las tres, las monedas se suman exactamente una vez.

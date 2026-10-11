@@ -1,0 +1,22 @@
+# N1 edge: web (nginx) y gateway. Es el único nodo que ven los navegadores.
+# docker compose --env-file deploy/lab.env -f deploy/compose/n1.yml up -d
+name: in-filtrados-lab
+
+services:
+  web:
+    image: ${IMAGE_REGISTRY:-ghcr.io/notoriussss}/in-filtrados-web:${IMAGE_TAG:-latest}
+    ports:
+      - "8080:80"
+    depends_on:
+      - gateway
+    restart: unless-stopped
+
+  gateway:
+    image: ${IMAGE_REGISTRY:-ghcr.io/notoriussss}/in-filtrados-gateway:${IMAGE_TAG:-latest}
+    environment:
+      PORT: "3000"
+      MATCH_GRPC_ADDR: ${MATCH_GRPC_ADDR:?falta MATCH_GRPC_ADDR en lab.env}
+      PLAYERS_GRPC_ADDR: ${PLAYERS_GRPC_ADDR:?falta PLAYERS_GRPC_ADDR en lab.env}
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
