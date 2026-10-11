@@ -38,6 +38,15 @@ export type Snapshot = {
   myTaskProgress: TaskProgress;
   meeting: Meeting | null; // solo en MEETING
   chat: ChatMessage[]; // últimos 30 mensajes
+  oilDrops: OilDrop[]; // S2-12: rastro del impostor
+};
+
+// OilDrop: gota del rastro que deja el impostor tras contaminar (S2-12).
+export type OilDrop = {
+  x: number;
+  y: number;
+  color: string;
+  expiresAtTick: number;
 };
 
 export type Phase = 'LOBBY' | 'PLAYING' | 'MEETING' | 'ENDED';

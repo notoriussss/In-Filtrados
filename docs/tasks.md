@@ -114,6 +114,7 @@ myRole: 'NO_ROLE' | 'CREW' | 'IMPOSTOR'; // solo el del destinatario
 myTaskProgress: { completed, total };
 meeting: { reporterId, tankSlot, lastVisitors[], votesCast[], endsAtTick, votingClosed, ejectedId, wasImpostor } | null;
 chat: { id, playerId, text, tick }[]; // últimos 30
+oilDrops: { x, y, color, expiresAtTick }[]; // S2-12: rastro del impostor
 ```
 
 - `myRole` viaja **solo en el snapshot de su dueño**: `match` arma un snapshot por jugador y el gateway nunca recibe el rol de otro.

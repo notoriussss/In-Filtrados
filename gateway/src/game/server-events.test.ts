@@ -32,6 +32,15 @@ test('snapshot keeps only the fields of the contract', () => {
         wasImpostor: false,
       },
       chat: [{ id: 'm1', playerId: 'p2', text: 'hola', tick: 5 }],
+      oilDrops: [
+        {
+          x: 100,
+          y: 200,
+          color: '#e6194b',
+          expiresAtTick: 307,
+          extra: 'x',
+        },
+      ],
     },
   } as unknown as GrpcServerEvent;
 
@@ -55,6 +64,9 @@ test('snapshot keeps only the fields of the contract', () => {
       wasImpostor: false,
     },
     chat: [{ id: 'm1', playerId: 'p2', text: 'hola', tick: 5 }],
+    oilDrops: [
+      { x: 100, y: 200, color: '#e6194b', expiresAtTick: 307 },
+    ],
   });
 });
 
@@ -103,6 +115,7 @@ test('snapshot with meeting result maps ejectedId', () => {
       wasImpostor: true,
     },
     chat: [],
+    oilDrops: [],
   });
 });
 
@@ -127,6 +140,7 @@ test('snapshot without meeting sends null', () => {
   if (msg?.type !== 'snapshot') return;
   assert.equal(msg.meeting, null);
   assert.deepEqual(msg.myTaskProgress, { completed: 0, total: 0 });
+  assert.deepEqual(msg.oilDrops, []);
 });
 
 test('matchEnded keeps winner and impostors', () => {

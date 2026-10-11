@@ -87,3 +87,15 @@ describe('Interpolator', () => {
     expect(new Interpolator().playersAt(1000)).toEqual([]);
   });
 });
+
+describe('Interpolator.tickAt', () => {
+  it('is null before the first snapshot', () => {
+    expect(new Interpolator().tickAt(1000)).toBeNull();
+  });
+
+  it('uses the same delay as the players', () => {
+    const it = feed(4);
+    const now = 1000 + 3 * TICK_MS + INTERPOLATION_DELAY_MS;
+    expect(it.tickAt(now)).toBe(3);
+  });
+});

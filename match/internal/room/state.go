@@ -53,6 +53,11 @@ const (
 	chatCooldownTicks  = 20  // 1 s entre mensajes de chat
 	chatHistoryLimit   = 30  // mensajes guardados en snapshot
 	maxLastVisitors    = 3   // visitantes máximos en el reporte
+
+	// S2-12: gotas de aceite tras contaminar.
+	oilTrailTicks     = 300 // 15 s soltando gotas
+	oilDropEveryTicks = 20  // 1 gota por segundo
+	oilDropLifeTicks  = 300 // cada gota dura 15 s
 )
 
 var taskPoints = map[string]int32{
@@ -136,6 +141,10 @@ type player struct {
 	// S2-05: Chat y expulsión
 	nextChatTick int64
 	ejected      bool
+
+	// S2-12: rastro de aceite hasta el tick oilUntil.
+	oilUntil    int64
+	nextOilDrop int64
 }
 
 // meetingState guarda el estado de la reunión activa (S2-05).
@@ -179,6 +188,13 @@ type tank struct {
 	contamination int32 // 0 a 100
 	dead          bool
 	reported      bool
+}
+
+// oilDrop es una gota del rastro del impostor (S2-12).
+type oilDrop struct {
+	x, y      float32
+	color     string
+	expiresAt int64
 }
 
 func clampDir(v int32) int32 {

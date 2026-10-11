@@ -43,6 +43,7 @@ type Room struct {
 	eventHistory  []LogEntry
 	meeting       *meetingState
 	chat          []chatEntry
+	oilDrops      []*oilDrop // S2-12
 
 	joins   chan Join
 	leaves  chan Leave
@@ -245,6 +246,7 @@ func (r *Room) startMatch(playerID string) {
 	r.eventHistory = nil
 	r.meeting = nil
 	r.chat = nil
+	r.oilDrops = nil
 	r.participants = r.snapshotParticipants()
 
 	ctx, cancel := context.WithTimeout(context.Background(), depsTimeout)
@@ -442,8 +444,9 @@ func (r *Room) broadcast() {
 		return views[i].Id < views[j].Id
 	})
 	tanks := r.tankViews()
-	// Un snapshot por jugador: my_role es solo el suyo. Players y tanks se
-	// comparten porque nadie los modifica después de enviarlos.
+	drops := r.oilDropViews()
+	// Un snapshot por jugador: my_role es solo el suyo. Players, tanks y
+	// drops se comparten porque nadie los modifica después de enviarlos.
 	for _, p := range r.players {
 		if p.out == nil {
 			continue
@@ -461,8 +464,9 @@ func (r *Room) broadcast() {
 					len(p.assignedTasks) + p.tasksCompleted,
 				),
 			},
-			Meeting: r.meetingView(),
-			Chat:    r.chatViews(),
+			Meeting:  r.meetingView(),
+			Chat:     r.chatViews(),
+			OilDrops: drops,
 		}
 		select {
 		case p.out <- snap:
