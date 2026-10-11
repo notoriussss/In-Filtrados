@@ -7,7 +7,7 @@
     "start": "ts-node src/main.ts",
     "start:dev": "ts-node-dev src/main.ts",
     "lint": "tsc --noEmit",
-    "test": "tsc && node --test dist/clients/grpc-errors.test.js dist/clients/resilience.test.js dist/game/server-events.test.js dist/game/client-messages.test.js dist/game/play-relay.test.js dist/game/chat-dedupe.test.js"
+    "test": "tsc && node --test dist/clients/grpc-errors.test.js dist/clients/resilience.test.js dist/game/server-events.test.js dist/game/client-messages.test.js dist/game/play-relay.test.js dist/game/chat-dedupe.test.js dist/game/rate-limit.test.js"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.14.5",
@@ -17,6 +17,7 @@
     "@nestjs/core": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/platform-ws": "^10.4.22",
+    "@nestjs/throttler": "^6.7.1",
     "@nestjs/websockets": "^10.4.22",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
@@ -30,6 +31,7 @@
     "@types/opossum": "^8.1.9",
     "@types/ws": "^8.18.2",
     "ts-node": "^10.9.1",
-    "typescript": "^5.0.0"
+    "typescript": "^5.0.0",
+    "ws": "^8.18.0"
   }
 }
