@@ -100,7 +100,9 @@ func (r *Room) Run(ctx context.Context) {
 		case n := <-r.nameCh:
 			r.setName(n)
 		case <-ticker.C:
-			r.step()
+			if r.step() {
+				return
+			}
 			r.tick++
 			r.broadcast()
 		case <-ctx.Done():
@@ -170,7 +172,12 @@ func (r *Room) handleAction(a PlayerAction) {
 func (r *Room) addPlayer(j Join) {
 	if p, ok := r.players[j.PlayerID]; ok { // same player coming back
 		p.view.Connected = true
-		p.out = j.Out
+		if j.Out != nil {
+			p.out = j.Out
+		}
+		if j.EventOut != nil {
+			p.eventOut = j.EventOut
+		}
 		return
 	}
 	r.connectedCount.Add(1)
@@ -194,7 +201,8 @@ func (r *Room) addPlayer(j Join) {
 			Connected: true,
 			Alive:     true,
 		},
-		out: j.Out,
+		out:      j.Out,
+		eventOut: j.EventOut,
 	}
 	r.order++
 }
@@ -203,12 +211,19 @@ func (r *Room) addPlayer(j Join) {
 // still registered can do it, so a stale stream cannot kick a reconnected one.
 func (r *Room) removePlayer(l Leave) {
 	p, ok := r.players[l.PlayerID]
-	if !ok || p.out != l.Out {
+	if !ok {
+		return
+	}
+	if l.Out != nil && p.out != l.Out {
+		return
+	}
+	if l.EventOut != nil && p.eventOut != l.EventOut {
 		return
 	}
 	p.view.Connected = false
 	p.dx, p.dy = 0, 0
 	p.out = nil
+	p.eventOut = nil
 }
 
 // startMatch pasa la sala a PLAYING: guarda la partida y publica el evento.
@@ -351,6 +366,51 @@ func (r *Room) finishMatch(winner string) {
 		r.MatchID,
 		winner,
 	)
+	r.broadcast()
+	r.broadcastMatchEnded(winner)
+}
+
+// broadcastMatchEnded envía MatchEnded a los streams de los jugadores (S2-06).
+func (r *Room) broadcastMatchEnded(winner string) {
+	impostorIDs := r.impostorIDs()
+	ev := &matchv1.ServerEvent{
+		Event: &matchv1.ServerEvent_MatchEnded{
+			MatchEnded: &matchv1.MatchEnded{
+				Winner:      winner,
+				ImpostorIds: impostorIDs,
+			},
+		},
+	}
+	for _, p := range r.players {
+		if p.eventOut == nil {
+			continue
+		}
+		select {
+		case p.eventOut <- ev:
+		default:
+		}
+	}
+}
+
+// cleanup libera la sala de memoria y notifica su remoción (S2-06).
+func (r *Room) cleanup() {
+	if r.onCleanup != nil {
+		r.onCleanup(r.Code)
+	}
+	for _, p := range r.players {
+		if p.out != nil {
+			close(p.out)
+			p.out = nil
+		}
+		if p.eventOut != nil {
+			close(p.eventOut)
+			p.eventOut = nil
+		}
+	}
+	log.Printf(
+		"room %s: sala liberada de memoria tras fin de partida",
+		r.Code,
+	)
 }
 
 // checkEndConditions evalúa las 4 condiciones de fin de partida (S2-06):
@@ -492,7 +552,7 @@ func roleName(role matchv1.Role) string {
 func (r *Room) connectedPlayers() int {
 	count := 0
 	for _, p := range r.players {
-		if p.out != nil {
+		if p.out != nil || p.eventOut != nil {
 			count++
 		}
 	}
@@ -516,7 +576,14 @@ func (r *Room) snapshotParticipants() []PlayerInfo {
 }
 
 // step mueve a cada jugador y evalúa las condiciones de la partida.
-func (r *Room) step() {
+// Devuelve true si la sala cumplió el tiempo de cleanup y debe liberarse.
+func (r *Room) step() bool {
+	if r.phase == matchv1.Phase_ENDED {
+		if time.Since(r.endedAt) >= r.cleanupDelay {
+			r.cleanup()
+			return true
+		}
+	}
 	if r.phase != matchv1.Phase_MEETING {
 		for _, p := range r.players {
 			nx, ny := r.m.Move(
@@ -537,6 +604,7 @@ func (r *Room) step() {
 	if r.phase == matchv1.Phase_PLAYING {
 		r.checkEndConditions()
 	}
+	return false
 }
 
 // broadcast never blocks: if a player's channel is full, that snapshot is
@@ -560,7 +628,7 @@ func (r *Room) broadcast() {
 	// Un snapshot por jugador: my_role es solo el suyo. Players, tanks y
 	// drops se comparten porque nadie los modifica después de enviarlos.
 	for _, p := range r.players {
-		if p.out == nil {
+		if p.out == nil && p.eventOut == nil {
 			continue
 		}
 		snap := &matchv1.Snapshot{
@@ -580,9 +648,21 @@ func (r *Room) broadcast() {
 			Chat:     r.chatViews(),
 			OilDrops: drops,
 		}
-		select {
-		case p.out <- snap:
-		default:
+		if p.out != nil {
+			select {
+			case p.out <- snap:
+			default:
+			}
+		}
+		if p.eventOut != nil {
+			select {
+			case p.eventOut <- &matchv1.ServerEvent{
+				Event: &matchv1.ServerEvent_Snapshot{
+					Snapshot: snap,
+				},
+			}:
+			default:
+			}
 		}
 	}
 }

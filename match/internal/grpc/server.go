@@ -92,6 +92,11 @@ func (s *Server) CreateRoom(
 // roomOptions arma las opciones de la sala con las dependencias del server.
 func (s *Server) roomOptions(creatorID string) []room.Option {
 	opts := []room.Option{room.WithCreator(creatorID)}
+	if s.registry != nil {
+		opts = append(opts, room.WithOnCleanup(func(code string) {
+			s.registry.Remove(code)
+		}))
+	}
 	if s.publisher != nil {
 		opts = append(opts, room.WithPublisher(s.publisher))
 	}
@@ -147,11 +152,17 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 	}
 
 	playerID := join.GetPlayerId()
-	out := make(chan *matchv1.Snapshot, 8)
-	r.Join(room.Join{PlayerID: playerID, Out: out})
+	eventOut := make(chan *matchv1.ServerEvent, 16)
+	r.Join(room.Join{
+		PlayerID: playerID,
+		EventOut: eventOut,
+	})
 	log.Printf("play: %s joined %s", playerID, r.Code)
 	defer func() {
-		r.Leave(room.Leave{PlayerID: playerID, Out: out})
+		r.Leave(room.Leave{
+			PlayerID: playerID,
+			EventOut: eventOut,
+		})
 		log.Printf("play: %s left %s", playerID, r.Code)
 	}()
 
@@ -165,11 +176,9 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 		defer close(sent)
 		for {
 			select {
-			case snap := <-out:
-				event := &matchv1.ServerEvent{
-					Event: &matchv1.ServerEvent_Snapshot{
-						Snapshot: snap,
-					},
+			case event, ok := <-eventOut:
+				if !ok {
+					return
 				}
 				if err := stream.Send(event); err != nil {
 					return
