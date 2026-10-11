@@ -43,7 +43,9 @@ type Room struct {
 	eventHistory  []LogEntry
 	meeting       *meetingState
 	chat          []chatEntry
-	oilDrops      []*oilDrop // S2-12
+	oilDrops      []*oilDrop       // S2-12
+	grace         time.Duration    // S3-01
+	now           func() time.Time // S3-01: reloj, cambiable en tests
 
 	joins   chan Join
 	leaves  chan Leave
@@ -63,6 +65,8 @@ func NewRoom(code string, matchID string, m *Map, opts ...Option) *Room {
 		names:         make(map[string]string),
 		phase:         matchv1.Phase_LOBBY,
 		matchDuration: defaultMatchDuration,
+		grace:         defaultGracePeriod,
+		now:           time.Now,
 		joins:         make(chan Join),
 		leaves:        make(chan Leave),
 		actions:       make(chan PlayerAction, actionBuffer),
@@ -96,6 +100,7 @@ func (r *Room) Run(ctx context.Context) {
 		case n := <-r.nameCh:
 			r.setName(n)
 		case <-ticker.C:
+			r.expireGrace()
 			r.step()
 			r.tick++
 			r.broadcast()
@@ -165,8 +170,7 @@ func (r *Room) handleAction(a PlayerAction) {
 
 func (r *Room) addPlayer(j Join) {
 	if p, ok := r.players[j.PlayerID]; ok { // same player coming back
-		p.view.Connected = true
-		p.out = j.Out
+		r.resumePlayer(j.PlayerID, p, j.Out)
 		return
 	}
 	r.connectedCount.Add(1)
@@ -197,6 +201,7 @@ func (r *Room) addPlayer(j Join) {
 
 // removePlayer marks the player as disconnected. Only the stream that is
 // still registered can do it, so a stale stream cannot kick a reconnected one.
+// En plena partida le guarda el lugar durante el periodo de gracia (S3-01).
 func (r *Room) removePlayer(l Leave) {
 	p, ok := r.players[l.PlayerID]
 	if !ok || p.out != l.Out {
@@ -205,6 +210,62 @@ func (r *Room) removePlayer(l Leave) {
 	p.view.Connected = false
 	p.dx, p.dy = 0, 0
 	p.out = nil
+	if r.inMatch() {
+		p.graceUntil = r.now().Add(r.grace)
+		log.Printf(
+			"room %s: %s se desconectó; su lugar se guarda %s",
+			r.Code,
+			l.PlayerID,
+			r.grace,
+		)
+	}
+}
+
+// resumePlayer reemplaza el canal de salida del jugador que vuelve y le
+// manda de inmediato la foto completa: posición, rol, tareas, reunión y
+// chat (S3-01). Así no espera al siguiente tick para ver la partida.
+func (r *Room) resumePlayer(
+	id string,
+	p *player,
+	out chan *matchv1.Snapshot,
+) {
+	if !p.graceUntil.IsZero() {
+		log.Printf("room %s: %s volvió a tiempo", r.Code, id)
+	}
+	p.view.Connected = true
+	p.out = out
+	p.graceUntil = time.Time{}
+	r.sendTo(p, r.sharedView())
+}
+
+// expireGrace convierte en fantasma a quien no volvió a tiempo, para que
+// la partida no se trabe esperando a alguien que se fue de verdad.
+func (r *Room) expireGrace() {
+	now := r.now()
+	for id, p := range r.players {
+		if p.graceUntil.IsZero() || now.Before(p.graceUntil) {
+			continue
+		}
+		p.graceUntil = time.Time{}
+		if !p.view.Alive {
+			continue
+		}
+		p.view.Alive = false
+		p.pending = nil
+		p.taskStartTick = 0
+		p.taskStation = ""
+		log.Printf(
+			"room %s: %s no volvió a tiempo; pasa a fantasma",
+			r.Code,
+			id,
+		)
+	}
+}
+
+// inMatch: la partida está en juego (ni en la sala de espera ni terminada).
+func (r *Room) inMatch() bool {
+	return r.phase == matchv1.Phase_PLAYING ||
+		r.phase == matchv1.Phase_MEETING
 }
 
 // startMatch pasa la sala a PLAYING: guarda la partida y publica el evento.
@@ -430,6 +491,26 @@ func (r *Room) step() {
 // broadcast never blocks: if a player's channel is full, that snapshot is
 // dropped for them and the next one brings them up to date.
 func (r *Room) broadcast() {
+	shared := r.sharedView()
+	for _, p := range r.players {
+		if p.out != nil {
+			r.sendTo(p, shared)
+		}
+	}
+}
+
+// sharedState es la parte del snapshot que es igual para todos.
+// Players, tanks y drops se comparten porque nadie los modifica después
+// de enviarlos.
+type sharedState struct {
+	players []*matchv1.PlayerView
+	tanks   []*matchv1.TankView
+	drops   []*matchv1.OilDrop
+	meeting *matchv1.Meeting
+	chat    []*matchv1.ChatMessage
+}
+
+func (r *Room) sharedView() sharedState {
 	views := make([]*matchv1.PlayerView, 0, len(r.players))
 	for _, p := range r.players {
 		views = append(views, proto.Clone(p.view).(*matchv1.PlayerView))
@@ -443,35 +524,38 @@ func (r *Room) broadcast() {
 		}
 		return views[i].Id < views[j].Id
 	})
-	tanks := r.tankViews()
-	drops := r.oilDropViews()
-	// Un snapshot por jugador: my_role es solo el suyo. Players, tanks y
-	// drops se comparten porque nadie los modifica después de enviarlos.
-	for _, p := range r.players {
-		if p.out == nil {
-			continue
-		}
-		snap := &matchv1.Snapshot{
-			Tick:      r.tick,
-			Phase:     r.phase,
-			Players:   views,
-			Tanks:     tanks,
-			Reservoir: r.reservoir,
-			MyRole:    p.role,
-			MyTaskProgress: &matchv1.TaskProgress{
-				Completed: int32(p.tasksCompleted),
-				Total: int32(
-					len(p.assignedTasks) + p.tasksCompleted,
-				),
-			},
-			Meeting:  r.meetingView(),
-			Chat:     r.chatViews(),
-			OilDrops: drops,
-		}
-		select {
-		case p.out <- snap:
-		default:
-		}
+	return sharedState{
+		players: views,
+		tanks:   r.tankViews(),
+		drops:   r.oilDropViews(),
+		meeting: r.meetingView(),
+		chat:    r.chatViews(),
+	}
+}
+
+// sendTo arma el snapshot de un jugador (my_role es solo el suyo) y lo
+// deja en su canal sin bloquear.
+func (r *Room) sendTo(p *player, s sharedState) {
+	snap := &matchv1.Snapshot{
+		Tick:      r.tick,
+		Phase:     r.phase,
+		Players:   s.players,
+		Tanks:     s.tanks,
+		Reservoir: r.reservoir,
+		MyRole:    p.role,
+		MyTaskProgress: &matchv1.TaskProgress{
+			Completed: int32(p.tasksCompleted),
+			Total: int32(
+				len(p.assignedTasks) + p.tasksCompleted,
+			),
+		},
+		Meeting:  s.meeting,
+		Chat:     s.chat,
+		OilDrops: s.drops,
+	}
+	select {
+	case p.out <- snap:
+	default:
 	}
 }
 

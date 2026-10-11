@@ -36,6 +36,21 @@ func WithMatchDuration(duration time.Duration) Option {
 	}
 }
 
+// WithGracePeriod fija cuánto se guarda el lugar de un jugador que se
+// desconecta en plena partida (S3-01, RECONNECT_GRACE_SECONDS).
+func WithGracePeriod(grace time.Duration) Option {
+	return func(r *Room) {
+		if grace > 0 {
+			r.grace = grace
+		}
+	}
+}
+
+// WithClock cambia el reloj de la sala; los tests lo adelantan a mano.
+func WithClock(now func() time.Time) Option {
+	return func(r *Room) { r.now = now }
+}
+
 // WithEventLog anota en event_log lo que pasa con los tanques (S2-03).
 func WithEventLog(eventLog EventLog) Option {
 	return func(r *Room) { r.eventLog = eventLog }

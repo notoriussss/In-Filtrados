@@ -122,6 +122,12 @@ export function mountGame(
       interpolator.push(msg.tick, msg.players, performance.now());
       oilDrops = msg.oilDrops;
       lastPlayers = msg.players;
+      // S3-01: se entró directo a la partida, pero la sala sigue en
+      // espera: se vuelve al lobby, que muestra el código y la lista.
+      if (msg.phase === 'LOBBY') {
+        show('lobby');
+        return;
+      }
       showMeeting(msg.phase === 'MEETING');
       meetingPanel?.update(msg);
       if (msg.phase === 'ENDED') showEnd();

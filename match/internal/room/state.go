@@ -54,6 +54,10 @@ const (
 	chatHistoryLimit   = 30  // mensajes guardados en snapshot
 	maxLastVisitors    = 3   // visitantes máximos en el reporte
 
+	// S3-01: lugar reservado al jugador que se desconecta en partida.
+	// En el laboratorio se sube con RECONNECT_GRACE_SECONDS.
+	defaultGracePeriod = 90 * time.Second
+
 	// S2-12: gotas de aceite tras contaminar.
 	oilTrailTicks     = 300 // 15 s soltando gotas
 	oilDropEveryTicks = 20  // 1 gota por segundo
@@ -145,6 +149,10 @@ type player struct {
 	// S2-12: rastro de aceite hasta el tick oilUntil.
 	oilUntil    int64
 	nextOilDrop int64
+
+	// S3-01: hasta cuándo se le guarda el lugar al desconectado. Es
+	// tiempo de reloj, no ticks, para que siga corriendo en una pausa.
+	graceUntil time.Time
 }
 
 // meetingState guarda el estado de la reunión activa (S2-05).

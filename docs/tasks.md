@@ -799,7 +799,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 #### S3-01 — Periodo de gracia y `Resume` · en pareja
 
 **Pasos:**
-1. **`match`:** cuando el stream de un jugador se corta, marcarlo `connected: false` y conservar su lugar 90 segundos. Si vuelve, recupera todo. Si no, pasa a fantasma.
+1. **`match`:** cuando el stream de un jugador se corta, marcarlo `connected: false` y conservar su lugar durante `RECONNECT_GRACE_SECONDS` (90 por defecto en `.env.example`; 600 en el laboratorio, `deploy/lab.env.example`). Si vuelve, recupera todo. Si no, pasa a fantasma.
 2. **`match`:** si un desconectado no vota antes de que termine la reunión, su voto cuenta como `skip`.
 3. **`match`:** al recibir `Join` de alguien que ya está en la sala, reemplazar su canal de salida y mandarle de inmediato un snapshot completo (con chat y estado de la reunión).
 4. **`web`:** al cargar la página, si `session.ts` tiene `matchId`, ir directo a la partida en lugar de al lobby.

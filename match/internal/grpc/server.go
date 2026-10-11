@@ -24,6 +24,7 @@ type Server struct {
 	store         room.MatchStore
 	eventLog      room.EventLog
 	matchDuration time.Duration
+	gracePeriod   time.Duration
 }
 
 // ServerOption configura el servidor gRPC.
@@ -47,6 +48,11 @@ func WithEventLog(eventLog room.EventLog) ServerOption {
 // WithMatchDuration acorta la partida; los tests la usan.
 func WithMatchDuration(duration time.Duration) ServerOption {
 	return func(s *Server) { s.matchDuration = duration }
+}
+
+// WithGracePeriod guarda el lugar del que se desconecta (S3-01).
+func WithGracePeriod(grace time.Duration) ServerOption {
+	return func(s *Server) { s.gracePeriod = grace }
 }
 
 func NewServer(reg *room.Registry, m *room.Map, opts ...ServerOption) *Server {
@@ -103,6 +109,9 @@ func (s *Server) roomOptions(creatorID string) []room.Option {
 	}
 	if s.matchDuration > 0 {
 		opts = append(opts, room.WithMatchDuration(s.matchDuration))
+	}
+	if s.gracePeriod > 0 {
+		opts = append(opts, room.WithGracePeriod(s.gracePeriod))
 	}
 	return opts
 }

@@ -10,7 +10,9 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strconv"
 	"syscall"
+	"time"
 
 	"github.com/golang-migrate/migrate/v4"
 	migratepgx "github.com/golang-migrate/migrate/v4/database/pgx/v5"
@@ -31,12 +33,16 @@ import (
 // `/app` en la imagen (el Dockerfile copia las migraciones ahí).
 const migrationsDir = "migrations"
 
+// defaultGraceSeconds es el periodo de gracia sin RECONNECT_GRACE_SECONDS.
+const defaultGraceSeconds = 90
+
 func main() {
 	httpPort := getenv("HTTP_PORT", "8081")
 	grpcPort := getenv("GRPC_PORT", "50051")
 	mapPath := getenv("MAP_PATH", "../shared/map.json")
 	dbURL := os.Getenv("MATCH_DB_URL")
 	rabbitURL := os.Getenv("RABBITMQ_URL")
+	grace := graceFromEnv(os.Getenv("RECONNECT_GRACE_SECONDS"))
 
 	ctx, stop := signal.NotifyContext(
 		context.Background(),
@@ -73,6 +79,7 @@ func main() {
 	serverOpts := []matchgrpc.ServerOption{
 		matchgrpc.WithStore(store),
 		matchgrpc.WithEventLog(eventLog),
+		matchgrpc.WithGracePeriod(grace),
 	}
 	if publisher != nil {
 		serverOpts = append(serverOpts, matchgrpc.WithPublisher(publisher))
@@ -153,6 +160,24 @@ func newPublisher(rabbitURL string) *events.AMQPPublisher {
 		return nil
 	}
 	return events.NewAMQPPublisher(rabbitURL)
+}
+
+// graceFromEnv lee RECONNECT_GRACE_SECONDS (S3-01). Vacía o inválida,
+// usa los 90 s de docs/tasks.md; el laboratorio usa 600.
+func graceFromEnv(raw string) time.Duration {
+	if raw == "" {
+		return defaultGraceSeconds * time.Second
+	}
+	seconds, err := strconv.Atoi(raw)
+	if err != nil || seconds <= 0 {
+		log.Printf(
+			"RECONNECT_GRACE_SECONDS=%q no es válido; se usan %d s",
+			raw,
+			defaultGraceSeconds,
+		)
+		return defaultGraceSeconds * time.Second
+	}
+	return time.Duration(seconds) * time.Second
 }
 
 func getenv(key, fallback string) string {

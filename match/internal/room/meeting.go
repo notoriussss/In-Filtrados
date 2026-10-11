@@ -229,6 +229,7 @@ func (r *Room) closeVoting() {
 	}
 	r.meeting.votingClosed = true
 	r.meeting.resultEndsAt = r.tick + meetingResultTicks
+	r.skipForDisconnected()
 
 	ejectedID, wasImpostor := r.tallyVotes()
 	r.meeting.ejectedID = ejectedID
@@ -282,6 +283,19 @@ func (r *Room) publishPlayerEjected(
 			)
 		}
 	}()
+}
+
+// skipForDisconnected: el vivo desconectado que no alcanzó a votar
+// cuenta como "saltar" (S3-01).
+func (r *Room) skipForDisconnected() {
+	for id, p := range r.players {
+		if !p.view.Alive || p.view.Connected {
+			continue
+		}
+		if _, voted := r.meeting.votes[id]; !voted {
+			r.meeting.votes[id] = voteChoice{skip: true}
+		}
+	}
 }
 
 // tallyVotes evalúa los votos de la reunión actual.
