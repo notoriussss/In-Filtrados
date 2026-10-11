@@ -146,6 +146,10 @@ El WebSocket se abre en `/ws?token=<token>`.
 | `match.finished` | `match` | `{ event_id, match_id, finished_at, winner: "crew" \| "impostor", players: [{ player_id, role, ejected, harvest }] }` |
 | `task.completed` | `match` (semana 2) | `{ event_id, match_id, player_id, task_type, liters_saved }` |
 | `player.ejected` | `match` (semana 2) | `{ event_id, match_id, player_id, was_impostor }` |
+| `player.disconnected` | `match` (S3-04) | `{ event_id, match_id, player_id, display_name, grace_seconds, grace_ends_at, at }` |
+| `player.reconnected` | `match` (S3-04) | `{ event_id, match_id, player_id, display_name, at }` |
+
+`at` (RFC 3339 con nanosegundos) ordena la desconexión y la reconexión de un mismo jugador aunque lleguen al revés. El monitor los usa para mostrar quién está en periodo de gracia y su cuenta regresiva.
 
 | Cola (durable) | Enlazada a | La consume |
 |---|---|---|
@@ -816,7 +820,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 1. Tabla `snapshots (match_id UUID PRIMARY KEY, tick BIGINT, state JSONB, updated_at TIMESTAMPTZ)`.
 2. Cada 2 segundos y en cada cambio de fase, la goroutine de la sala serializa su estado y hace `INSERT ... ON CONFLICT (match_id) DO UPDATE`. La escritura va en **otra goroutine**, para que la base de datos lenta no frene el ticker.
 3. Al arrancar `match`: buscar partidas con `ended_at IS NULL` y snapshot, recrear su sala en pausa y esperar a que los jugadores se reconecten.
-4. Si no queda ningún jugador conectado, la sala se pausa: el ticker sigue, pero no suma contaminación ni tiempo. **Implementado como en `deployment-lab.md`, sección 9:** la sala se pausa mientras **cualquier** jugador esté en su periodo de gracia; el snapshot lleva `paused` y `waitingFor` y el navegador muestra "Partida en pausa: esperando a X".
+4. Si no queda ningún jugador conectado, la sala se pausa: el ticker sigue, pero no suma contaminación ni tiempo. **Implementado como en `deployment-lab.md`, sección 9:** la sala se pausa mientras **cualquier** jugador esté en su periodo de gracia; el snapshot lleva `paused` y `waitingFor` y el navegador muestra "Partida en pausa: esperando a X". Un corte de menos de 1 s (la página cambia el socket de la sala de espera por el de la partida, o recarga) no abre el periodo de gracia ni pausa.
 5. **`gateway`:** el gateway, al reconectar un jugador, reabre el stream `Play` y reintenta con espera creciente si `match` todavía está arrancando. Si el stream se cae, el WebSocket sigue abierto: el navegador recibe `SERVICE_UNAVAILABLE` y el gateway reabre `Play` (0,5 s, 1 s, 2 s, 4 s, 8 s y luego cada 10 s).
 
 **Criterio de verificación:** en plena partida, `docker compose restart match`: en menos de 15 segundos todos los navegadores vuelven a la misma partida, con a lo sumo 2 segundos de movimiento perdidos, y el tiempo restante de la partida no avanzó mientras `match` estaba caído.

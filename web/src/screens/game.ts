@@ -21,6 +21,7 @@ import { api, type MeResponse } from '../api';
 import { type MeetingPanel, mountMeetingPanel } from './meeting';
 import { mountEndPanel } from './matchEnd';
 import { pauseMessage } from '../pause';
+import { ChatQueue } from '../net/chatQueue';
 import {
   CONNECTION_MESSAGES,
   ERROR_CODES,
@@ -90,11 +91,22 @@ export function mountGame(
     show('lobby');
   };
 
+  // S3-04: el chat escrito sin conexión espera aquí hasta salir.
+  const chatQueue = new ChatQueue((msg) => send(msg));
+
   const showMeeting = (on: boolean) => {
     meetingRoot.hidden = !on;
     if (on && !meetingPanel) {
-      meetingPanel = mountMeetingPanel(meetingRoot, meId, (msg) =>
-        send(msg),
+      meetingPanel = mountMeetingPanel(
+        meetingRoot,
+        meId,
+        (msg) => send(msg),
+        (text) => {
+          chatQueue.add(text, performance.now());
+          if (lastSnapshot) {
+            meetingPanel?.update(lastSnapshot, chatQueue.waiting());
+          }
+        },
       );
     } else if (!on && meetingPanel) {
       meetingPanel.destroy();
@@ -128,6 +140,7 @@ export function mountGame(
       const { dx, dy } = input.current();
       if (dx !== 0 || dy !== 0) send({ type: 'move', dx, dy });
     }
+    if (s.state !== 'connected') chatQueue.offline();
     status = s;
   });
   socket.onMessage((msg) => {
@@ -149,8 +162,9 @@ export function mountGame(
         show('lobby');
         return;
       }
+      chatQueue.onSnapshot(msg, performance.now());
       showMeeting(msg.phase === 'MEETING');
-      meetingPanel?.update(msg);
+      meetingPanel?.update(msg, chatQueue.waiting());
       if (msg.phase === 'ENDED') showEnd();
     } else if (msg.type === 'matchEnded') {
       winner = msg.winner;
@@ -158,6 +172,7 @@ export function mountGame(
     } else if (msg.type === 'error') {
       if (msg.code === ERROR_CODES.SERVICE_UNAVAILABLE) {
         matchDown = true; // el gateway reabre Play solo (S3-02)
+        chatQueue.offline();
         updatePause();
         return;
       }

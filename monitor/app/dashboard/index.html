@@ -212,6 +212,20 @@
             margin-bottom: 6px;
         }
 
+        #grace-list {
+            padding-left: 22px;
+        }
+
+        #grace-list li {
+            margin-bottom: 6px;
+        }
+
+        .countdown {
+            font-variant-numeric: tabular-nums;
+            font-weight: bold;
+            color: #f5c84c;
+        }
+
         [hidden] {
             display: none !important;
         }
@@ -253,7 +267,15 @@
                 <span id="stat-today" class="stat-value">–</span>
                 <span class="stat-label">Partidas hoy</span>
             </div>
+            <div class="stat">
+                <span id="stat-grace" class="stat-value">–</span>
+                <span class="stat-label">En periodo de gracia</span>
+            </div>
         </div>
+
+        <h3>Jugadores desconectados</h3>
+        <p id="no-grace" class="muted">Nadie está desconectado.</p>
+        <ul id="grace-list"></ul>
 
         <h3>Eventos recientes</h3>
         <p id="no-events" class="muted">Todavía no llegan eventos.</p>
@@ -489,6 +511,8 @@
             setNumber("stat-active", stats.active_matches);
             setNumber("stat-players", stats.players_in_match);
             setNumber("stat-today", stats.finished_today);
+            setNumber("stat-grace", stats.players_in_grace);
+            renderGrace(Array.isArray(stats.grace) ? stats.grace : []);
 
             document.getElementById("events-offline").hidden =
                 stats.connected === true;
@@ -508,6 +532,49 @@
             });
             document.getElementById("event-list")
                 .replaceChildren(...items);
+        }
+
+        // S3-04: cada desconectado con su cuenta regresiva; se actualiza
+        // cada segundo con la hora de fin que manda match.
+        let graceEnds = [];
+
+        function formatCountdown(seconds) {
+            const s = Math.max(0, Math.floor(seconds));
+            const minutes = Math.floor(s / 60);
+            return `${minutes}:${String(s % 60).padStart(2, "0")}`;
+        }
+
+        function renderGrace(players) {
+            document.getElementById("no-grace").hidden = players.length > 0;
+            // La hora del panel puede diferir de la del servidor: se
+            // cuenta desde seconds_left, no desde grace_ends_at.
+            const receivedAt = Date.now();
+            graceEnds = players.map(player => ({
+                endsAt: receivedAt + player.seconds_left * 1000,
+            }));
+            const items = players.map((player, index) => {
+                const item = document.createElement("li");
+                const countdown = document.createElement("span");
+                countdown.className = "countdown";
+                countdown.dataset.index = String(index);
+                item.append(
+                    `${player.name} — vuelve en `,
+                    countdown,
+                    " o pasa a fantasma",
+                );
+                return item;
+            });
+            document.getElementById("grace-list").replaceChildren(...items);
+            tickGrace();
+        }
+
+        function tickGrace() {
+            for (const el of document.querySelectorAll(".countdown")) {
+                const entry = graceEnds[Number(el.dataset.index)];
+                if (!entry) continue;
+                el.textContent =
+                    formatCountdown((entry.endsAt - Date.now()) / 1000);
+            }
         }
 
         async function refreshStats() {
@@ -531,6 +598,7 @@
 
         setInterval(() => {
             for (const view of cards.values()) updateDowntime(view);
+            tickGrace();
         }, 1000);
 
         refresh();

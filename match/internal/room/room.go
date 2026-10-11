@@ -48,6 +48,7 @@ type Room struct {
 	snapshots     SnapshotSaver    // S3-02
 	savedKey      string           // fase de la última instantánea
 	savedTick     int64            // tick de la última instantánea
+	seenChat      map[string]bool  // S3-04: client_msg_id de la partida
 	now           func() time.Time // S3-01: reloj, cambiable en tests
 
 	joins   chan Join
@@ -74,6 +75,7 @@ func NewRoom(code string, matchID string, m *Map, opts ...Option) *Room {
 		leaves:        make(chan Leave),
 		actions:       make(chan PlayerAction, actionBuffer),
 		nameCh:        make(chan Name),
+		seenChat:      make(map[string]bool),
 		rnd:           rand.Reader,
 	}
 	for _, opt := range opts {
@@ -112,7 +114,7 @@ func (r *Room) Run(ctx context.Context) {
 
 // onTick es un tick del ticker de 20 Hz.
 func (r *Room) onTick() {
-	r.expireGrace()
+	r.updateGrace()
 	// S3-02: en pausa el ticker sigue y manda snapshots, pero el tick no
 	// avanza: no suben los tanques ni corren la reunión ni el reloj.
 	if !r.paused() {
@@ -230,13 +232,10 @@ func (r *Room) removePlayer(l Leave) {
 	p.dx, p.dy = 0, 0
 	p.out = nil
 	if r.inMatch() {
-		p.graceUntil = r.now().Add(r.grace)
-		log.Printf(
-			"room %s: %s se desconectó; su lugar se guarda %s",
-			r.Code,
-			l.PlayerID,
-			r.grace,
-		)
+		// El periodo de gracia empieza en updateGrace si no vuelve en
+		// disconnectDebounce: cambiar de socket (de la sala de espera a
+		// la partida, o al recargar) no pausa ni avisa al monitor.
+		p.leftAt = r.now()
 	}
 }
 
@@ -250,21 +249,80 @@ func (r *Room) resumePlayer(
 ) {
 	if !p.graceUntil.IsZero() {
 		log.Printf("room %s: %s volvió a tiempo", r.Code, id)
+		r.publishAsync(
+			events.RoutingKeyPlayerReconnected,
+			events.NewPlayerReconnected(r.MatchID, id, p.view.Name, r.now()),
+		)
 	}
 	p.view.Connected = true
 	p.out = out
+	p.leftAt = time.Time{}
 	p.graceUntil = time.Time{}
 	r.sendTo(p, r.sharedView())
 }
 
-// expireGrace convierte en fantasma a quien no volvió a tiempo, para que
+// publishDisconnected avisa que el jugador entró en su periodo de
+// gracia (S3-04); el monitor muestra la cuenta regresiva.
+func (r *Room) publishDisconnected(id string, p *player, now time.Time) {
+	r.publishAsync(
+		events.RoutingKeyPlayerDisconnected,
+		events.NewPlayerDisconnected(
+			r.MatchID,
+			id,
+			p.view.Name,
+			p.graceUntil.Sub(now).Round(time.Second),
+			now,
+		),
+	)
+}
+
+// publishAsync publica sin frenar a la sala: el publicador espera la
+// confirmación de RabbitMQ (o guarda en outbox) en otra goroutine.
+func (r *Room) publishAsync(routingKey string, event any) {
+	if r.publisher == nil {
+		return
+	}
+	pub := r.publisher
+	code := r.Code
+	go func() {
+		ctx, cancel := context.WithTimeout(
+			context.Background(),
+			depsTimeout,
+		)
+		defer cancel()
+		if err := pub.Publish(ctx, routingKey, event); err != nil {
+			log.Printf(
+				"room %s: no se pudo publicar %s: %v",
+				code,
+				routingKey,
+				err,
+			)
+		}
+	}()
+}
+
+// updateGrace abre el periodo de gracia de quien lleva más de
+// disconnectDebounce desconectado (la sala se pausa y se avisa al
+// monitor) y convierte en fantasma a quien no volvió a tiempo, para que
 // la partida no se trabe esperando a alguien que se fue de verdad.
-func (r *Room) expireGrace() {
+func (r *Room) updateGrace() {
 	now := r.now()
 	for id, p := range r.players {
+		if !p.leftAt.IsZero() && p.graceUntil.IsZero() &&
+			now.Sub(p.leftAt) >= disconnectDebounce {
+			p.graceUntil = p.leftAt.Add(r.grace)
+			r.publishDisconnected(id, p, now)
+			log.Printf(
+				"room %s: %s se desconectó; su lugar se guarda %s",
+				r.Code,
+				id,
+				r.grace,
+			)
+		}
 		if p.graceUntil.IsZero() || now.Before(p.graceUntil) {
 			continue
 		}
+		p.leftAt = time.Time{}
 		p.graceUntil = time.Time{}
 		if !p.view.Alive {
 			continue

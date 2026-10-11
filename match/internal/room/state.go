@@ -57,6 +57,8 @@ const (
 	// S3-01: lugar reservado al jugador que se desconecta en partida.
 	// En el laboratorio se sube con RECONNECT_GRACE_SECONDS.
 	defaultGracePeriod = 90 * time.Second
+	// Un corte más corto que esto no cuenta (cambio de socket).
+	disconnectDebounce = time.Second
 
 	// S2-12: gotas de aceite tras contaminar.
 	oilTrailTicks     = 300 // 15 s soltando gotas
@@ -158,6 +160,7 @@ type player struct {
 
 	// S3-01: hasta cuándo se le guarda el lugar al desconectado. Es
 	// tiempo de reloj, no ticks, para que siga corriendo en una pausa.
+	leftAt     time.Time // cuándo se cortó su stream; cero si conectado
 	graceUntil time.Time
 }
 

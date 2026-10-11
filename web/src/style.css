@@ -331,6 +331,10 @@ button:disabled {
   margin-bottom: 0.25rem;
 }
 
+.meeting-pending {
+  opacity: 0.55;
+}
+
 .meeting-chat-form {
   display: flex;
   gap: 0.5rem;

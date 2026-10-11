@@ -49,6 +49,7 @@ export const MEETING_TEXT = {
   CHAT_PLACEHOLDER: 'Escribe un mensaje (Enter para enviar)',
   GHOST_CHAT_PLACEHOLDER: 'Los fantasmas no pueden escribir',
   SEND: 'Enviar',
+  SENDING: 'enviando…',
   EJECTED_IMPOSTOR: (name: string) => `${name} era el impostor`,
   EJECTED_CREW: (name: string) => `${name} no era el impostor`,
   NOBODY_EJECTED: 'Nadie salió: hubo empate o saltaron el voto',

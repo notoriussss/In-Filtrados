@@ -1,14 +1,15 @@
 import type { ClientMessage, Snapshot } from '@in-filtrados/messages';
 import { MEETING_TEXT } from '../constants';
 import { type MeetingView, meetingView } from '../meeting/view';
-import { newClientMsgId } from '../net/ids';
+import type { PendingChat } from '../net/chatQueue';
 
 // S2-10: panel de la reunión sobre el canvas. Se arma una vez y en cada
 // snapshot solo se reescriben las partes que cambiaron, para no perder
 // lo que el jugador está escribiendo en el chat.
 
 export type MeetingPanel = {
-  update(snap: Snapshot): void;
+  // waiting: chat escrito que todavía no confirma el servidor (S3-04).
+  update(snap: Snapshot, waiting?: readonly PendingChat[]): void;
   destroy(): void;
 };
 
@@ -16,6 +17,9 @@ export function mountMeetingPanel(
   root: HTMLElement,
   meId: string,
   send: (msg: ClientMessage) => void,
+  // onChat deja el mensaje en la cola de chat (S3-04): sale aunque se
+  // escriba sin conexión.
+  onChat: (text: string) => void,
 ): MeetingPanel {
   root.innerHTML = `
     <div class="meeting-panel">
@@ -105,11 +109,14 @@ export function mountMeetingPanel(
     e.preventDefault();
     const text = input.value.trim();
     if (!text || !view?.canChat) return;
-    send({ type: 'chat', clientMsgId: newClientMsgId(), text });
+    onChat(text);
     input.value = '';
   });
 
-  function update(snap: Snapshot): void {
+  function update(
+    snap: Snapshot,
+    waiting: readonly PendingChat[] = [],
+  ): void {
     view = meetingView(snap, meId);
     if (!view) return;
     const v = view;
@@ -140,18 +147,32 @@ export function mountMeetingPanel(
       playerList.replaceChildren(...v.players.map(playerItem));
     });
 
-    const chatKey = JSON.stringify(snap.chat.map((c) => c.id));
+    const chatKey = JSON.stringify([
+      snap.chat.map((c) => c.id),
+      waiting.map((c) => c.clientMsgId),
+    ]);
     setIfChanged('chat', chatKey, () => {
+      const line = (playerId: string, text: string) => {
+        const li = document.createElement('li');
+        const who = document.createElement('strong');
+        const player = snap.players.find((p) => p.id === playerId);
+        const name = player?.name ?? MEETING_TEXT.UNKNOWN_PLAYER;
+        who.textContent = `${name}: `;
+        who.style.color = player?.color ?? '';
+        li.append(who, document.createTextNode(text));
+        return li;
+      };
+      const pending = waiting.map((c) => {
+        const li = line(meId, c.text);
+        li.classList.add('meeting-pending');
+        const note = document.createElement('em');
+        note.textContent = ` (${MEETING_TEXT.SENDING})`;
+        li.append(note);
+        return li;
+      });
       messages.replaceChildren(
-        ...snap.chat.map((c) => {
-          const li = document.createElement('li');
-          const who = document.createElement('strong');
-          const player = snap.players.find((p) => p.id === c.playerId);
-          who.textContent = `${player?.name ?? MEETING_TEXT.UNKNOWN_PLAYER}: `;
-          who.style.color = player?.color ?? '';
-          li.append(who, document.createTextNode(c.text));
-          return li;
-        }),
+        ...snap.chat.map((c) => line(c.playerId, c.text)),
+        ...pending,
       );
       messages.scrollTop = messages.scrollHeight;
     });

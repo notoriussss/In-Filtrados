@@ -36,7 +36,12 @@ EVENT_MATCH_FINISHED = "Terminó una partida: ganó {winner}"
 EVENT_TASK_COMPLETED = "Un jugador completó una tarea ({liters} L ahorrados)"
 EVENT_PLAYER_EJECTED_IMPOSTOR = "Expulsaron a un jugador: era el impostor"
 EVENT_PLAYER_EJECTED_CREW = "Expulsaron a un jugador: era de la tripulación"
+EVENT_PLAYER_DISCONNECTED = (
+    "{name} se desconectó: tiene {seconds} s para volver"
+)
+EVENT_PLAYER_RECONNECTED = "{name} volvió a la partida"
 EVENT_UNKNOWN = "Evento {key}"
+PLAYER_UNKNOWN = "Un jugador"
 WINNER_LABELS = {
     "crew": "la tripulación",
     "impostor": "el impostor",

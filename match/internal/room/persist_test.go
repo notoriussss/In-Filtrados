@@ -39,7 +39,7 @@ func (f *fakeSaver) last() savedCall {
 }
 
 func TestPauseFreezesTheRoomWhileSomeoneIsInGrace(t *testing.T) {
-	r, _, outs := graceRoom(t)
+	r, clock, outs := graceRoom(t)
 	imp := r.players["a"]
 	imp.role = matchv1.Role_IMPOSTOR
 	b := r.players["b"]
@@ -50,7 +50,7 @@ func TestPauseFreezesTheRoomWhileSomeoneIsInGrace(t *testing.T) {
 	tick := r.tick
 	x := b.view.X
 
-	r.removePlayer(Leave{PlayerID: "c", Out: outs["c"]})
+	disconnect(r, clock, "c", outs["c"])
 	if !r.paused() {
 		t.Fatal("con un jugador en gracia la sala debe pausarse")
 	}
@@ -95,9 +95,9 @@ func TestPauseFreezesTheRoomWhileSomeoneIsInGrace(t *testing.T) {
 }
 
 func TestPausedTimeDoesNotCountForTheMatchClock(t *testing.T) {
-	r, _, outs := graceRoom(t)
+	r, clock, outs := graceRoom(t)
 	r.matchDuration = 10 * tickInterval
-	r.removePlayer(Leave{PlayerID: "c", Out: outs["c"]})
+	disconnect(r, clock, "c", outs["c"])
 	for i := 0; i < 100; i++ {
 		r.onTick()
 	}

@@ -150,11 +150,12 @@ func (r *Room) handleChat(playerID string, msgID string, text string) {
 	if r.tick < p.nextChatTick {
 		return
 	}
-	for _, c := range r.chat {
-		if c.id == msgID {
-			return
-		}
+	// S3-04: un client_msg_id ya visto en la partida es un reintento del
+	// navegador (chat escrito sin conexión): se descarta.
+	if msgID == "" || r.seenChat[msgID] {
+		return
 	}
+	r.seenChat[msgID] = true
 
 	p.nextChatTick = r.tick + chatCooldownTicks
 	entry := chatEntry{

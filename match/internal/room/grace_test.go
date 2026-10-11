@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/notoriussss/in-filtrados/match/gen/matchv1"
+	"github.com/notoriussss/in-filtrados/match/internal/events"
 )
 
 // fakeClock es un reloj que los tests adelantan a mano.
@@ -39,6 +40,39 @@ func graceRoom(
 	return r, clock, outs
 }
 
+// disconnect corta el stream de id y deja pasar la espera de 1 s: el
+// jugador queda en su periodo de gracia.
+func disconnect(
+	r *Room,
+	clock *fakeClock,
+	id string,
+	out chan *matchv1.Snapshot,
+) {
+	r.removePlayer(Leave{PlayerID: id, Out: out})
+	clock.advance(disconnectDebounce)
+	r.updateGrace()
+}
+
+func TestASocketSwapIsNotADisconnection(t *testing.T) {
+	r, clock, outs := graceRoom(t)
+	pub := &fakePublisher{}
+	r.publisher = pub
+	// La página cierra el socket de la sala de espera y abre el de la
+	// partida: entre uno y otro pasan unos milisegundos.
+	r.removePlayer(Leave{PlayerID: "a", Out: outs["a"]})
+	clock.advance(200 * time.Millisecond)
+	r.updateGrace()
+	if r.paused() {
+		t.Error("un corte de 200 ms no pausa la sala")
+	}
+	r.addPlayer(Join{PlayerID: "a", Out: make(chan *matchv1.Snapshot, 8)})
+	clock.advance(5 * time.Second)
+	r.updateGrace()
+	if r.paused() || len(pub.forKey(events.RoutingKeyPlayerDisconnected)) > 0 {
+		t.Error("ni pausa ni aviso al monitor por cambiar de socket")
+	}
+}
+
 func TestDisconnectedPlayerKeepsEverythingWithinGrace(t *testing.T) {
 	r, clock, outs := graceRoom(t)
 	b := r.players["b"]
@@ -52,7 +86,7 @@ func TestDisconnectedPlayerKeepsEverythingWithinGrace(t *testing.T) {
 		t.Fatal("debe quedar connected: false")
 	}
 	clock.advance(30 * time.Second) // 30 s sin wifi
-	r.expireGrace()
+	r.updateGrace()
 
 	back := make(chan *matchv1.Snapshot, 8)
 	r.addPlayer(Join{PlayerID: "b", Out: back})
@@ -78,13 +112,13 @@ func TestGraceExpiredTurnsIntoGhost(t *testing.T) {
 	r.removePlayer(Leave{PlayerID: "c", Out: outs["c"]})
 
 	clock.advance(89 * time.Second)
-	r.expireGrace()
+	r.updateGrace()
 	if !r.players["c"].view.Alive {
 		t.Fatal("pasó a fantasma antes de tiempo")
 	}
 
 	clock.advance(time.Second)
-	r.expireGrace()
+	r.updateGrace()
 	if r.players["c"].view.Alive {
 		t.Fatal("a los 90 s debe pasar a fantasma")
 	}

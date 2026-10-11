@@ -38,6 +38,7 @@ type savedRoom struct {
 	Chat         []savedChat       `json:"chat"`
 	OilDrops     []savedOilDrop    `json:"oil_drops"`
 	EventHistory []LogEntry        `json:"event_history"`
+	SeenChat     []string          `json:"seen_chat"`
 }
 
 type savedPlayer struct {
@@ -145,6 +146,9 @@ func (r *Room) toSaved() savedRoom {
 		Participants: r.participants,
 		EventHistory: r.eventHistory,
 	}
+	for id := range r.seenChat {
+		s.SeenChat = append(s.SeenChat, id)
+	}
 	for id, p := range r.players {
 		tasks := make([]string, 0, len(p.assignedTasks))
 		for station := range p.assignedTasks {
@@ -236,10 +240,14 @@ func Restore(state []byte, m *Map, opts ...Option) (*Room, error) {
 	if s.Names != nil {
 		r.names = s.Names
 	}
+	for _, id := range s.SeenChat {
+		r.seenChat[id] = true
+	}
 
-	graceUntil := time.Time{}
+	leftAt, graceUntil := time.Time{}, time.Time{}
 	if r.inMatch() {
-		graceUntil = r.now().Add(r.grace)
+		leftAt = r.now()
+		graceUntil = leftAt.Add(r.grace)
 	}
 	for _, sp := range s.Players {
 		tasks := make(map[string]bool, len(sp.AssignedTasks))
@@ -265,6 +273,7 @@ func Restore(state []byte, m *Map, opts ...Option) (*Room, error) {
 			ejected:         sp.Ejected,
 			oilUntil:        sp.OilUntil,
 			nextOilDrop:     sp.NextOilDrop,
+			leftAt:          leftAt,
 			graceUntil:      graceUntil,
 		}
 	}
@@ -313,6 +322,12 @@ func Restore(state []byte, m *Map, opts ...Option) (*Room, error) {
 			color:     d.Color,
 			expiresAt: d.ExpiresAt,
 		})
+	}
+	// S3-04: el monitor ve a todos en periodo de gracia hasta que vuelvan.
+	if r.inMatch() {
+		for id, p := range r.players {
+			r.publishDisconnected(id, p, leftAt)
+		}
 	}
 	// Lo que se acaba de leer ya está guardado.
 	r.savedKey = r.saveKey()

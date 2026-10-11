@@ -224,3 +224,93 @@ async def test_consumer_retries_until_rabbitmq_is_up(monkeypatch):
         await task
     assert not stats.connected
     connection.close.assert_awaited_once()
+
+
+# S3-04: jugadores en periodo de gracia.
+
+NOW = datetime(2026, 10, 10, 12, 0, 0, tzinfo=UTC)
+
+
+def disconnected(event_id="d1", match_id="m1", player_id="p1",
+                 seconds=600, at=NOW):
+    return {
+        "event_id": event_id,
+        "match_id": match_id,
+        "player_id": player_id,
+        "display_name": "Ana",
+        "grace_seconds": seconds,
+        "grace_ends_at": (at + timedelta(seconds=seconds)).isoformat(),
+        "at": at.isoformat(),
+    }
+
+
+def reconnected(event_id="r1", match_id="m1", player_id="p1", at=NOW):
+    return {
+        "event_id": event_id,
+        "match_id": match_id,
+        "player_id": player_id,
+        "display_name": "Ana",
+        "at": at.isoformat(),
+    }
+
+
+class Clock:
+    def __init__(self, now):
+        self.value = now
+
+    def __call__(self):
+        return self.value
+
+
+def test_disconnected_player_shows_with_countdown():
+    clock = Clock(NOW + timedelta(seconds=30))
+    stats = EventStats(now=clock)
+
+    assert stats.handle("player.disconnected", disconnected())
+
+    snapshot = stats.snapshot()
+    assert snapshot["players_in_grace"] == 1
+    player = snapshot["grace"][0]
+    assert player["name"] == "Ana"
+    assert player["seconds_left"] == 570
+    assert snapshot["recent_events"][0]["description"] == (
+        "Ana se desconectó: tiene 600 s para volver"
+    )
+
+
+def test_reconnected_player_disappears():
+    stats = EventStats(now=Clock(NOW))
+    stats.handle("player.disconnected", disconnected())
+    stats.handle(
+        "player.reconnected",
+        reconnected(at=NOW + timedelta(seconds=5)),
+    )
+
+    assert stats.snapshot()["players_in_grace"] == 0
+
+
+def test_out_of_order_reconnect_does_not_hide_a_new_disconnect():
+    stats = EventStats(now=Clock(NOW))
+    later = NOW + timedelta(seconds=10)
+    stats.handle("player.disconnected", disconnected(at=later))
+    # Llega tarde la reconexión de un corte anterior.
+    stats.handle("player.reconnected", reconnected(at=NOW))
+
+    assert stats.snapshot()["players_in_grace"] == 1
+
+
+def test_grace_over_or_match_finished_removes_the_player():
+    clock = Clock(NOW)
+    stats = EventStats(now=clock)
+    stats.handle("player.disconnected", disconnected(seconds=60))
+    stats.handle(
+        "player.disconnected",
+        disconnected(event_id="d2", match_id="m2", player_id="p2"),
+    )
+
+    clock.value = NOW + timedelta(seconds=61)
+    snapshot = stats.snapshot()
+    assert [p["player_id"] for p in snapshot["grace"]] == ["p2"]
+
+    stats.handle("match.finished", finished(event_id="f2", match_id="m2"))
+    assert stats.snapshot()["players_in_grace"] == 0

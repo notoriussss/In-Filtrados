@@ -13,12 +13,14 @@ import {
 import { parseClientMessage, toGrpcAction } from './client-messages';
 import { PlayersClient } from '../clients/players.client';
 import { PlayRelay } from './play-relay';
+import { ChatDeduper } from './chat-dedupe';
 
 // WebSocket /ws?token=...; one Play stream per player
 @WebSocketGateway({ path: '/ws' })
 export class GameGateway implements OnGatewayConnection {
   private readonly logger = new Logger(GameGateway.name);
   private readonly activeSockets = new Map<string, WebSocket>();
+  private readonly chatIds = new ChatDeduper();
 
   constructor(
     private readonly match: MatchClient,
@@ -47,6 +49,7 @@ export class GameGateway implements OnGatewayConnection {
     let isAuthenticated = false;
     const messageQueue: RawData[] = [];
     let relay: PlayRelay | null = null;
+    let matchId: string | null = null;
     let playerId: string | null = null;
 
     socket.on('message', (raw: RawData) => {
@@ -69,6 +72,7 @@ export class GameGateway implements OnGatewayConnection {
       }
       if (msg.type === 'join') {
         if (!relay && playerId) {
+          matchId = msg.matchId;
           relay = this.openPlay(
             socket,
             playerId,
@@ -79,7 +83,14 @@ export class GameGateway implements OnGatewayConnection {
         return;
       }
       const action = toGrpcAction(msg);
-      if (relay && action) relay.write(action);
+      if (!relay || !action) return;
+      if (msg.type === 'chat') {
+        // S3-04: solo se anota si de verdad sale hacia match; mientras
+        // Play se reabre, el navegador lo reintentará.
+        if (!relay.connected) return;
+        if (!this.chatIds.firstTime(matchId!, msg.clientMsgId)) return;
+      }
+      relay.write(action);
     };
 
     socket.on('close', () => {
