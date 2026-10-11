@@ -133,8 +133,9 @@ type player struct {
 	taskStartTick  int64
 	taskStation    string
 
-	// S2-05: Chat
+	// S2-05: Chat y expulsión
 	nextChatTick int64
+	ejected      bool
 }
 
 // meetingState guarda el estado de la reunión activa (S2-05).
@@ -177,6 +178,7 @@ type tank struct {
 	x, y          float64
 	contamination int32 // 0 a 100
 	dead          bool
+	reported      bool
 }
 
 func clampDir(v int32) int32 {

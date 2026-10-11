@@ -20,14 +20,16 @@ func (r *Room) handleReport(playerID string, tankSlot int32) {
 		return
 	}
 	t := r.tankAt(tankSlot)
-	if t == nil || !t.dead {
+	if t == nil || !t.dead || t.reported {
 		return
 	}
 	if !nearDeadTank(p, t) {
 		return
 	}
 
+	t.reported = true
 	r.phase = matchv1.Phase_MEETING
+	r.chat = nil
 	r.teleportToPlaza()
 
 	visitors := r.lastVisitors(tankSlot)
@@ -89,8 +91,15 @@ func (r *Room) meetingView() *matchv1.Meeting {
 	}
 	sort.Strings(votesCast)
 	endsAt := r.meeting.votingEndsAt
+	votingClosed := false
+	ejectedID := ""
+	wasImpostor := false
+
 	if r.meeting.votingClosed {
 		endsAt = r.meeting.resultEndsAt
+		votingClosed = true
+		ejectedID = r.meeting.ejectedID
+		wasImpostor = r.meeting.wasImpostor
 	}
 	return &matchv1.Meeting{
 		ReporterId:   r.meeting.reporterID,
@@ -98,6 +107,9 @@ func (r *Room) meetingView() *matchv1.Meeting {
 		LastVisitors: r.meeting.lastVisitors,
 		VotesCast:    votesCast,
 		EndsAtTick:   endsAt,
+		VotingClosed: votingClosed,
+		EjectedId:    ejectedID,
+		WasImpostor:  wasImpostor,
 	}
 }
 
@@ -137,6 +149,11 @@ func (r *Room) handleChat(playerID string, msgID string, text string) {
 	}
 	if r.tick < p.nextChatTick {
 		return
+	}
+	for _, c := range r.chat {
+		if c.id == msgID {
+			return
+		}
 	}
 
 	p.nextChatTick = r.tick + chatCooldownTicks
@@ -220,6 +237,7 @@ func (r *Room) closeVoting() {
 	if ejectedID != "" {
 		if p, ok := r.players[ejectedID]; ok {
 			p.view.Alive = false
+			p.ejected = true
 			p.dx = 0
 			p.dy = 0
 			p.pending = nil

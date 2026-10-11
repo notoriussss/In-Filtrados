@@ -124,6 +124,9 @@ message Meeting {
   repeated string last_visitors = 3; // últimos 3 jugadores distintos
   repeated string votes_cast    = 4; // quién ya votó, nunca por quién
   int64           ends_at_tick  = 5;
+  bool            voting_closed = 6; // true durante los 5 s de resultado
+  string          ejected_id    = 7; // vacío si nadie salió
+  bool            was_impostor  = 8; // solo vale si ejected_id no está vacío
 }
 message ChatMessage {
   string id        = 1; // client_msg_id

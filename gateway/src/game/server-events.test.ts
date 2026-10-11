@@ -27,6 +27,9 @@ test('snapshot keeps only the fields of the contract', () => {
         lastVisitors: ['p1'],
         votesCast: [],
         endsAtTick: 900,
+        votingClosed: false,
+        ejectedId: '',
+        wasImpostor: false,
       },
       chat: [{ id: 'm1', playerId: 'p2', text: 'hola', tick: 5 }],
     },
@@ -47,8 +50,59 @@ test('snapshot keeps only the fields of the contract', () => {
       lastVisitors: ['p1'],
       votesCast: [],
       endsAtTick: 900,
+      votingClosed: false,
+      ejectedId: null,
+      wasImpostor: false,
     },
     chat: [{ id: 'm1', playerId: 'p2', text: 'hola', tick: 5 }],
+  });
+});
+
+test('snapshot with meeting result maps ejectedId', () => {
+  const ev = {
+    event: 'snapshot',
+    snapshot: {
+      tick: 20,
+      phase: 'MEETING',
+      players: [],
+      tanks: [],
+      reservoir: 0,
+      myRole: 'CREW',
+      myTaskProgress: { completed: 0, total: 4 },
+      meeting: {
+        reporterId: 'p1',
+        tankSlot: 0,
+        lastVisitors: ['p1', 'p2'],
+        votesCast: ['p1', 'p2'],
+        endsAtTick: 1000,
+        votingClosed: true,
+        ejectedId: 'p2',
+        wasImpostor: true,
+      },
+      chat: [],
+    },
+  } as unknown as GrpcServerEvent;
+
+  assert.deepEqual(toServerMessage(ev), {
+    type: 'snapshot',
+    tick: 20,
+    phase: 'MEETING',
+    players: [],
+    tanks: [],
+    reservoir: 0,
+    myRole: 'CREW',
+    myTaskProgress: { completed: 0, total: 4 },
+    meeting: {
+      reporterId: 'p1',
+      tankSlot: 0,
+      lastVisitors: ['p1', 'p2'],
+      votesCast: ['p1', 'p2'],
+      endsAtTick: 1000,
+      votingClosed: true,
+      ejectedId: 'p2',
+      wasImpostor: true,
+    },
+    chat: [],
   });
 });
 

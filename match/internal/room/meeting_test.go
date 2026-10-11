@@ -35,6 +35,29 @@ func playingRoomWithDeadTank(t *testing.T) *Room {
 	return r
 }
 
+func waitForEvents(
+	t *testing.T,
+	pub *fakePublisher,
+	key string,
+	count int,
+) []publishedEvent {
+	t.Helper()
+	deadline := time.Now().Add(1 * time.Second)
+	for time.Now().Before(deadline) {
+		eventsList := pub.forKey(key)
+		if len(eventsList) >= count {
+			return eventsList
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	t.Fatalf(
+		"timeout esperando %d eventos con routing key %s",
+		count,
+		key,
+	)
+	return nil
+}
+
 func TestReportRequiresDeadTank(t *testing.T) {
 	r := playingRoomWithDeadTank(t)
 	t0 := r.tankAt(0)
@@ -438,6 +461,9 @@ func TestVoteSimpleMajorityEjects(t *testing.T) {
 	if r.players["imp"].view.Alive {
 		t.Error("el jugador expulsado debe tener Alive = false")
 	}
+	if !r.players["imp"].ejected {
+		t.Error("el jugador expulsado debe tener ejected = true")
+	}
 	if r.meeting.resultEndsAt != r.tick+meetingResultTicks {
 		t.Errorf(
 			"resultEndsAt debia ser %d, got %d",
@@ -652,16 +678,12 @@ func TestPlayerEjectedEventPublished(t *testing.T) {
 	})
 
 	// Esperar que la goroutine publique el evento
-	time.Sleep(100 * time.Millisecond)
-
-	eventsList := pub.forKey(events.RoutingKeyPlayerEjected)
-	if len(eventsList) != 1 {
-		t.Fatalf(
-			"esperaba 1 evento %s, got %d",
-			events.RoutingKeyPlayerEjected,
-			len(eventsList),
-		)
-	}
+	eventsList := waitForEvents(
+		t,
+		pub,
+		events.RoutingKeyPlayerEjected,
+		1,
+	)
 	ev, ok := eventsList[0].payload.(events.PlayerEjected)
 	if !ok {
 		t.Fatalf("payload no es PlayerEjected: %T", eventsList[0].payload)
@@ -1001,14 +1023,14 @@ func TestFullMeetingCycleIntegration(t *testing.T) {
 	}
 
 	// Esperar que la goroutine emita el evento player.ejected
-	time.Sleep(100 * time.Millisecond)
-	ejectedEvents := pub.forKey(events.RoutingKeyPlayerEjected)
+	ejectedEvents := waitForEvents(
+		t,
+		pub,
+		events.RoutingKeyPlayerEjected,
+		1,
+	)
 	if len(ejectedEvents) != 1 {
-		t.Fatalf(
-			"esperaba 1 evento %s, got %d",
-			events.RoutingKeyPlayerEjected,
-			len(ejectedEvents),
-		)
+		t.Fatalf("esperaba 1 evento player.ejected, got %d", len(ejectedEvents))
 	}
 
 	// 6. Transicion de pantalla de resultado tras 5 s (100 ticks)
@@ -1041,5 +1063,182 @@ func TestFullMeetingCycleIntegration(t *testing.T) {
 	})
 	if r.phase == matchv1.Phase_MEETING {
 		t.Error("un jugador expulsado no puede volver a reportar")
+	}
+}
+
+func TestReportAlreadyReportedTankRejected(t *testing.T) {
+	r := playingRoomWithDeadTank(t)
+	t0 := r.tankAt(0)
+	t0.dead = true
+	p := r.players["crew1"]
+	p.view.X = float32(t0.x)
+	p.view.Y = float32(t0.y)
+
+	// Primer reporte exitoso
+	r.handleAction(PlayerAction{
+		PlayerID: "crew1",
+		Report:   true,
+		TankSlot: 0,
+	})
+	if r.phase != matchv1.Phase_MEETING {
+		t.Fatalf("primer reporte debe abrir meeting")
+	}
+
+	// Cerrar reunión por skip de todos
+	r.handleAction(PlayerAction{
+		PlayerID: "crew1",
+		Vote:     true,
+		VoteSkip: true,
+	})
+	r.handleAction(PlayerAction{
+		PlayerID: "crew2",
+		Vote:     true,
+		VoteSkip: true,
+	})
+	r.handleAction(PlayerAction{
+		PlayerID: "imp",
+		Vote:     true,
+		VoteSkip: true,
+	})
+
+	// Avanzar los 5 s de resultado para volver a PLAYING
+	r.tick += meetingResultTicks
+	r.stepMeeting()
+	if r.phase != matchv1.Phase_PLAYING {
+		t.Fatalf("debe volver a PLAYING, got %v", r.phase)
+	}
+
+	// Moverse al tanque 0 e intentar reportarlo otra vez
+	p.view.X = float32(t0.x)
+	p.view.Y = float32(t0.y)
+	r.handleAction(PlayerAction{
+		PlayerID: "crew1",
+		Report:   true,
+		TankSlot: 0,
+	})
+
+	if r.phase == matchv1.Phase_MEETING {
+		t.Error("un tanque ya reportado no puede volver a reportarse")
+	}
+	if r.meeting != nil {
+		t.Error("meeting debe seguir siendo nil")
+	}
+}
+
+func TestMeetingViewHidesRoleUntilVotingClosed(t *testing.T) {
+	r := playingRoomWithDeadTank(t)
+	t0 := r.tankAt(0)
+	t0.dead = true
+	p := r.players["crew1"]
+	p.view.X = float32(t0.x)
+	p.view.Y = float32(t0.y)
+
+	r.handleAction(PlayerAction{
+		PlayerID: "crew1",
+		Report:   true,
+		TankSlot: 0,
+	})
+
+	// 1. Durante la votación activa: rol oculto y voting_closed = false
+	viewBefore := r.meetingView()
+	if viewBefore.VotingClosed {
+		t.Error("VotingClosed debe ser false durante la votacion")
+	}
+	if viewBefore.EjectedId != "" {
+		t.Errorf(
+			"EjectedId debe ser vacio durante votacion, got %s",
+			viewBefore.EjectedId,
+		)
+	}
+	if viewBefore.WasImpostor {
+		t.Error("WasImpostor debe ser false durante votacion")
+	}
+
+	// 2. Votar todos para cerrar votación y expulsar a imp
+	r.handleAction(PlayerAction{
+		PlayerID:     "crew1",
+		Vote:         true,
+		VoteTargetID: "imp",
+	})
+	r.handleAction(PlayerAction{
+		PlayerID:     "crew2",
+		Vote:         true,
+		VoteTargetID: "imp",
+	})
+	r.handleAction(PlayerAction{
+		PlayerID:     "imp",
+		Vote:         true,
+		VoteTargetID: "crew1",
+	})
+
+	// 3. Tras el cierre (pantalla de 5 s): expone los valores reales
+	viewAfter := r.meetingView()
+	if !viewAfter.VotingClosed {
+		t.Error("VotingClosed debe ser true tras cerrar votacion")
+	}
+	if viewAfter.EjectedId != "imp" {
+		t.Errorf("EjectedId esperaba imp, got %s", viewAfter.EjectedId)
+	}
+	if !viewAfter.WasImpostor {
+		t.Error("WasImpostor debe ser true para el impostor expulsado")
+	}
+}
+
+func TestChatDuplicateMsgIDIgnored(t *testing.T) {
+	r := playingRoomWithDeadTank(t)
+	t0 := r.tankAt(0)
+	t0.dead = true
+	p := r.players["crew1"]
+	p.view.X = float32(t0.x)
+	p.view.Y = float32(t0.y)
+
+	r.handleAction(PlayerAction{
+		PlayerID: "crew1",
+		Report:   true,
+		TankSlot: 0,
+	})
+
+	// Primer mensaje con msgID = "dup-1"
+	r.handleAction(PlayerAction{
+		PlayerID:      "crew1",
+		Chat:          true,
+		ChatMessageID: "dup-1",
+		ChatText:      "mensaje original",
+	})
+	if len(r.chat) != 1 {
+		t.Fatalf("primer mensaje debe aceptarse")
+	}
+
+	// Avanzar tiempo para superar cooldown
+	r.tick += chatCooldownTicks
+
+	// Segundo mensaje con el MISMO msgID
+	r.handleAction(PlayerAction{
+		PlayerID:      "crew1",
+		Chat:          true,
+		ChatMessageID: "dup-1",
+		ChatText:      "mensaje duplicado retransmitido",
+	})
+	if len(r.chat) != 1 {
+		t.Error("mensaje con msgID duplicado debe ignorarse")
+	}
+}
+
+func TestGhostNotLoggedAsVisitor(t *testing.T) {
+	r := playingRoomWithDeadTank(t)
+	t0 := r.tankAt(0)
+	t0.dead = true
+
+	// crew2 es un fantasma
+	r.players["crew2"].view.Alive = false
+	r.players["crew2"].view.X = float32(t0.x)
+	r.players["crew2"].view.Y = float32(t0.y)
+
+	r.stepTanks()
+
+	for _, entry := range r.eventHistory {
+		if entry.PlayerID == "crew2" {
+			t.Error("un fantasma no debe registrarse como visitante")
+		}
 	}
 }
