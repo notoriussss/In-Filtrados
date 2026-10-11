@@ -208,6 +208,33 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 			if action, ok := interactAction(playerID, msg.GetInteract()); ok {
 				r.Act(action)
 			}
+		case msg.GetReport() != nil:
+			r.Act(room.PlayerAction{
+				PlayerID: playerID,
+				Report:   true,
+				TankSlot: msg.GetReport().GetTankSlot(),
+			})
+		case msg.GetVote() != nil:
+			v := msg.GetVote()
+			action := room.PlayerAction{
+				PlayerID: playerID,
+				Vote:     true,
+			}
+			switch choice := v.GetChoice().(type) {
+			case *matchv1.Vote_TargetPlayerId:
+				action.VoteTargetID = choice.TargetPlayerId
+			case *matchv1.Vote_Skip:
+				action.VoteSkip = choice.Skip
+			}
+			r.Act(action)
+		case msg.GetChat() != nil:
+			c := msg.GetChat()
+			r.Act(room.PlayerAction{
+				PlayerID:      playerID,
+				Chat:          true,
+				ChatMessageID: c.GetClientMsgId(),
+				ChatText:      c.GetText(),
+			})
 		}
 	}
 }

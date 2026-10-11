@@ -116,6 +116,9 @@ func (r *Room) addContamination(t *tank, amount int32) {
 // logVisits anota cada vez que un jugador entra a tankRange de un tanque.
 func (r *Room) logVisits() {
 	for id, p := range r.players {
+		if !p.view.Alive {
+			continue
+		}
 		if p.nearTanks == nil {
 			p.nearTanks = make(map[int32]bool)
 		}
@@ -130,16 +133,17 @@ func (r *Room) logVisits() {
 }
 
 func (r *Room) logEvent(playerID, kind string, slot int32) {
-	if r.eventLog == nil {
-		return
-	}
-	r.eventLog.Log(LogEntry{
+	entry := LogEntry{
 		MatchID:  r.MatchID,
 		Tick:     r.tick,
 		PlayerID: playerID,
 		Kind:     kind,
 		TankSlot: slot,
-	})
+	}
+	r.eventHistory = append(r.eventHistory, entry)
+	if r.eventLog != nil {
+		r.eventLog.Log(entry)
+	}
 }
 
 func (r *Room) tankAt(slot int32) *tank {

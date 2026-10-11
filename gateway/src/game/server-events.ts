@@ -10,8 +10,12 @@ import type {
 
 // Shapes of the gRPC ServerEvent as @grpc/proto-loader decodes it
 // (camelCase, enums as strings, longs as numbers, defaults on).
+type GrpcMeeting = Omit<Meeting, 'ejectedId'> & {
+  ejectedId?: string | null;
+};
+
 type GrpcSnapshot = Omit<Snapshot, 'type' | 'meeting'> & {
-  meeting: Meeting | null;
+  meeting: GrpcMeeting | null;
 };
 
 type GrpcMatchEnded = { winner: string; impostorIds: string[] };
@@ -74,13 +78,17 @@ function toTank(t: TankView): TankView {
   };
 }
 
-function toMeeting(m: Meeting): Meeting {
+function toMeeting(m: GrpcMeeting): Meeting {
   return {
     reporterId: m.reporterId,
     tankSlot: m.tankSlot,
     lastVisitors: [...(m.lastVisitors ?? [])],
     votesCast: [...(m.votesCast ?? [])],
     endsAtTick: m.endsAtTick,
+    votingClosed: Boolean(m.votingClosed),
+    ejectedId:
+      m.ejectedId && m.ejectedId.length > 0 ? m.ejectedId : null,
+    wasImpostor: Boolean(m.wasImpostor),
   };
 }
 

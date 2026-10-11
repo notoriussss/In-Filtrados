@@ -15,6 +15,7 @@ const (
 	RoutingKeyStarted       = "match.started"
 	RoutingKeyFinished      = "match.finished"
 	RoutingKeyTaskCompleted = "task.completed"
+	RoutingKeyPlayerEjected = "player.ejected"
 )
 
 // Roles y ganadores de match.finished (docs/tasks.md 0.7).
@@ -54,6 +55,14 @@ type TaskCompleted struct {
 	PlayerID    string `json:"player_id"`
 	TaskType    string `json:"task_type"`
 	LitersSaved int32  `json:"liters_saved"`
+}
+
+// PlayerEjected es el evento `player.ejected` de docs/tasks.md 0.7.
+type PlayerEjected struct {
+	EventID     string `json:"event_id"`
+	MatchID     string `json:"match_id"`
+	PlayerID    string `json:"player_id"`
+	WasImpostor bool   `json:"was_impostor"`
 }
 
 // PlayerResult es el resultado de un jugador dentro de `match.finished`.
@@ -109,6 +118,20 @@ func NewTaskCompleted(
 		PlayerID:    playerID,
 		TaskType:    taskType,
 		LitersSaved: litersSaved,
+	}
+}
+
+// NewPlayerEjected arma el evento con un `event_id` nuevo.
+func NewPlayerEjected(
+	matchID string,
+	playerID string,
+	wasImpostor bool,
+) PlayerEjected {
+	return PlayerEjected{
+		EventID:     uuid.New().String(),
+		MatchID:     matchID,
+		PlayerID:    playerID,
+		WasImpostor: wasImpostor,
 	}
 }
 

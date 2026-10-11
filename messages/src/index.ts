@@ -3,7 +3,8 @@
 
 // Browser -> gateway
 export type ClientMessage =
-  | { type: 'join'; matchId: string; lastTick: number } // first message after connecting
+  // primer mensaje al conectar
+  | { type: 'join'; matchId: string; lastTick: number }
   | { type: 'move'; dx: -1 | 0 | 1; dy: -1 | 0 | 1 }
   | { type: 'start' } // solo el creador; match lo valida
   // S2-01: acciones del juego completo.
@@ -82,6 +83,9 @@ export type Meeting = {
   lastVisitors: string[]; // últimos 3 jugadores distintos junto al tanque
   votesCast: string[]; // quién ya votó, nunca por quién
   endsAtTick: number;
+  votingClosed: boolean;
+  ejectedId: string | null;
+  wasImpostor: boolean;
 };
 
 export type ChatMessage = {

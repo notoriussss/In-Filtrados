@@ -39,7 +39,10 @@ type Room struct {
 	rnd           io.Reader // azar de los roles: crypto/rand
 	startTick     int64
 	eventLog      EventLog
-	reservoir     int32      // S2-04
+	reservoir     int32 // S2-04
+	eventHistory  []LogEntry
+	meeting       *meetingState
+	chat          []chatEntry
 	oilDrops      []*oilDrop // S2-12
 
 	joins   chan Join
@@ -123,18 +126,40 @@ func (r *Room) handleAction(a PlayerAction) {
 		return
 	}
 	switch {
+	case a.Report:
+		r.handleReport(a.PlayerID, a.TankSlot)
+	case a.Chat:
+		r.handleChat(
+			a.PlayerID,
+			a.ChatMessageID,
+			a.ChatText,
+		)
+	case a.Vote:
+		r.handleVote(
+			a.PlayerID,
+			a.VoteTargetID,
+			a.VoteSkip,
+		)
 	case a.Contaminate:
-		r.startContaminate(a.PlayerID, p, a.TankSlot)
+		if r.phase == matchv1.Phase_PLAYING {
+			r.startContaminate(a.PlayerID, p, a.TankSlot)
+		}
 	case a.Clean:
-		r.startClean(p, a.TankSlot)
+		if r.phase == matchv1.Phase_PLAYING {
+			r.startClean(p, a.TankSlot)
+		}
 	case a.InteractTask:
-		if !a.Completed {
-			r.startTask(a.PlayerID, p, a.StationID)
-		} else {
-			r.completeTask(a.PlayerID, p, a.StationID)
+		if r.phase == matchv1.Phase_PLAYING {
+			if !a.Completed {
+				r.startTask(a.PlayerID, p, a.StationID)
+			} else {
+				r.completeTask(a.PlayerID, p, a.StationID)
+			}
 		}
 	default:
-		p.dx, p.dy = clampDir(a.DX), clampDir(a.DY)
+		if r.phase != matchv1.Phase_MEETING {
+			p.dx, p.dy = clampDir(a.DX), clampDir(a.DY)
+		}
 	}
 }
 
@@ -218,6 +243,9 @@ func (r *Room) startMatch(playerID string) {
 		return
 	}
 	r.reservoir = 0
+	r.eventHistory = nil
+	r.meeting = nil
+	r.chat = nil
 	r.oilDrops = nil
 	r.participants = r.snapshotParticipants()
 
@@ -380,17 +408,22 @@ func (r *Room) step() {
 		time.Since(r.startedAt) >= r.matchDuration {
 		r.finishMatch()
 	}
-	for _, p := range r.players {
-		nx, ny := r.m.Move(
-			float64(p.view.X),
-			float64(p.view.Y),
-			float64(p.dx*stepPerTick),
-			float64(p.dy*stepPerTick),
-		)
-		p.view.X, p.view.Y = float32(nx), float32(ny)
+	if r.phase != matchv1.Phase_MEETING {
+		for _, p := range r.players {
+			nx, ny := r.m.Move(
+				float64(p.view.X),
+				float64(p.view.Y),
+				float64(p.dx*stepPerTick),
+				float64(p.dy*stepPerTick),
+			)
+			p.view.X, p.view.Y = float32(nx), float32(ny)
+		}
 	}
 	if r.phase == matchv1.Phase_PLAYING {
 		r.stepTanks()
+	}
+	if r.phase == matchv1.Phase_MEETING {
+		r.stepMeeting()
 	}
 }
 
@@ -427,8 +460,12 @@ func (r *Room) broadcast() {
 			MyRole:    p.role,
 			MyTaskProgress: &matchv1.TaskProgress{
 				Completed: int32(p.tasksCompleted),
-				Total:     int32(len(p.assignedTasks) + p.tasksCompleted),
+				Total: int32(
+					len(p.assignedTasks) + p.tasksCompleted,
+				),
 			},
+			Meeting:  r.meetingView(),
+			Chat:     r.chatViews(),
 			OilDrops: drops,
 		}
 		select {
