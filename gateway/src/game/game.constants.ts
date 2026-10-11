@@ -30,9 +30,10 @@ export const PLAY_RETRY_DELAYS_MS: readonly number[] = [
 ];
 export const PLAY_RETRY_MAX_MS = 10_000;
 
-// S3-04: clientMsgId de chat recordados para descartar reintentos.
+// S3-04: clientMsgId de chat recordados para descartar reintentos en vuelo.
 export const CHAT_IDS_PER_MATCH = 500;
 export const CHAT_DEDUPE_MATCHES = 200;
+export const CHAT_IN_FLIGHT_MS = 3000;
 
 // WebSocket close codes used by the gateway.
 export const WS_CLOSE_CODES = {
