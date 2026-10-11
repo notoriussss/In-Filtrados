@@ -19,10 +19,19 @@ export type EndPanelOptions = {
   onBack: () => void;
 };
 
+export type EndPanelHandle = {
+  update: (
+    winner: Winner | null,
+    impostorIds: string[],
+    players?: PlayerView[],
+  ) => void;
+  destroy: () => void;
+};
+
 export function mountEndPanel(
   root: HTMLElement,
   opts: EndPanelOptions,
-): () => void {
+): EndPanelHandle {
   root.innerHTML = `
     <div class="panel end-panel">
       <h2>${END_TEXT.TITLE}</h2>
@@ -36,13 +45,25 @@ export function mountEndPanel(
   `;
   const ref = (name: string) =>
     root.querySelector<HTMLElement>(`[data-ref="${name}"]`)!;
-  ref('winner').textContent = endTitle(opts.winner);
-  if (opts.impostorIds.length > 0) {
-    const names = opts.impostorIds
-      .map((id) => nameOf(opts.players, id))
-      .join(', ');
-    ref('impostor').textContent = END_TEXT.IMPOSTOR_WAS(names);
-  }
+
+  let currentWinner = opts.winner;
+  let currentImpostorIds = opts.impostorIds;
+  let currentPlayers = opts.players;
+
+  const renderResults = () => {
+    ref('winner').textContent = endTitle(currentWinner);
+    if (currentImpostorIds.length > 0) {
+      const names = currentImpostorIds
+        .map((id) => nameOf(currentPlayers, id))
+        .join(', ');
+      ref('impostor').textContent = END_TEXT.IMPOSTOR_WAS(names);
+    } else {
+      ref('impostor').textContent = '';
+    }
+  };
+
+  renderResults();
+
   const coins = ref('coins');
   coins.textContent = END_TEXT.COINS_PENDING;
   ref('back').addEventListener('click', opts.onBack);
@@ -51,7 +72,11 @@ export function mountEndPanel(
   let attempts = 0;
   let timer = 0;
   const poll = async () => {
-    if (stopped || !opts.before) return;
+    if (stopped) return;
+    if (!opts.before) {
+      coins.textContent = END_TEXT.COINS_CHECK_PROFILE;
+      return;
+    }
     attempts++;
     try {
       const after = await api.getMe(opts.token);
@@ -64,14 +89,24 @@ export function mountEndPanel(
       // players caído: se reintenta; las monedas llegan al volver.
     }
     if (attempts < COINS_POLL_ATTEMPTS) {
-      timer = window.setTimeout(poll, COINS_POLL_MS);
+      timer = setTimeout(poll, COINS_POLL_MS) as unknown as number;
+    } else if (!stopped) {
+      coins.textContent = END_TEXT.COINS_CHECK_PROFILE;
     }
   };
   void poll();
 
-  return () => {
-    stopped = true;
-    window.clearTimeout(timer);
-    root.innerHTML = '';
+  return {
+    update: (winner, impostorIds, players) => {
+      currentWinner = winner;
+      currentImpostorIds = impostorIds;
+      if (players) currentPlayers = players;
+      renderResults();
+    },
+    destroy: () => {
+      stopped = true;
+      clearTimeout(timer);
+      root.innerHTML = '';
+    },
   };
 }

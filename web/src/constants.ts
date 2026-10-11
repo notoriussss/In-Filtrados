@@ -57,6 +57,8 @@ export const MEETING_TEXT = {
   UNKNOWN_PLAYER: 'Alguien',
 } as const;
 
+export const MAX_CHAT_LENGTH = 200;
+
 export const END_TEXT = {
   TITLE: 'Fin de la partida',
   CREW_WON: '¡Ganó la tripulación!',
@@ -65,5 +67,7 @@ export const END_TEXT = {
   IMPOSTOR_WAS: (names: string) => `Impostor: ${names}`,
   COINS_EARNED: (coins: number) => `Ganaste ${coins} monedas`,
   COINS_PENDING: 'Tus monedas aparecerán en tu perfil en unos segundos',
+  COINS_CHECK_PROFILE: 'Revisa tus monedas en tu perfil',
   BACK_TO_LOBBY: 'Volver a la sala',
 } as const;
+

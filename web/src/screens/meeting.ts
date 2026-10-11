@@ -1,5 +1,5 @@
 import type { ClientMessage, Snapshot } from '@in-filtrados/messages';
-import { MEETING_TEXT } from '../constants';
+import { MAX_CHAT_LENGTH, MEETING_TEXT } from '../constants';
 import { type MeetingView, meetingView } from '../meeting/view';
 import type { PendingChat } from '../net/chatQueue';
 
@@ -48,7 +48,7 @@ export function mountMeetingPanel(
           <form class="meeting-chat-form" data-ref="form">
             <input
               data-ref="input"
-              maxlength="200"
+              maxlength="${MAX_CHAT_LENGTH}"
               autocomplete="off"
             />
             <button class="primary" data-ref="sendBtn">

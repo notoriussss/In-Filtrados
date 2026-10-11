@@ -19,7 +19,7 @@ import { DirectionInput } from '../input';
 import { session } from '../session';
 import { api, type MeResponse } from '../api';
 import { type MeetingPanel, mountMeetingPanel } from './meeting';
-import { mountEndPanel } from './matchEnd';
+import { type EndPanelHandle, mountEndPanel } from './matchEnd';
 import { pauseMessage } from '../pause';
 import { ChatQueue } from '../net/chatQueue';
 import {
@@ -58,7 +58,7 @@ export function mountGame(
   const meetingRoot = document.getElementById('meeting-overlay')!;
   const endRoot = document.getElementById('end-overlay')!;
   let meetingPanel: MeetingPanel | null = null;
-  let closeEndPanel: (() => void) | null = null;
+  let endPanel: EndPanelHandle | null = null;
   let winner: Winner | null = null;
   let impostorIds: string[] = [];
   let lastPlayers: PlayerView[] = [];
@@ -115,9 +115,12 @@ export function mountGame(
   };
 
   const showEnd = () => {
-    if (closeEndPanel) return;
+    if (endPanel) {
+      endPanel.update(winner, impostorIds, lastPlayers);
+      return;
+    }
     endRoot.hidden = false;
-    closeEndPanel = mountEndPanel(endRoot, {
+    endPanel = mountEndPanel(endRoot, {
       winner,
       impostorIds,
       players: lastPlayers,
@@ -169,6 +172,9 @@ export function mountGame(
     } else if (msg.type === 'matchEnded') {
       winner = msg.winner;
       impostorIds = msg.impostorIds;
+      if (endPanel) {
+        endPanel.update(winner, impostorIds, lastPlayers);
+      }
     } else if (msg.type === 'error') {
       if (msg.code === ERROR_CODES.SERVICE_UNAVAILABLE) {
         matchDown = true; // el gateway reabre Play solo (S3-02)
@@ -256,7 +262,8 @@ export function mountGame(
     closeGameSocket();
     showMeeting(false);
     pauseBanner.hidden = true;
-    closeEndPanel?.();
+    endPanel?.destroy();
+    endPanel = null;
     endRoot.hidden = true;
   };
 }
