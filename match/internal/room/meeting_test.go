@@ -670,3 +670,376 @@ func TestPlayerEjectedEventPublished(t *testing.T) {
 		t.Errorf("datos del evento incorrectos: %+v", ev)
 	}
 }
+
+func TestTallyVotesTable(t *testing.T) {
+	tests := []struct {
+		name         string
+		votes        map[string]voteChoice
+		alive        map[string]bool
+		impostors    map[string]bool
+		wantEjected  string
+		wantImpostor bool
+	}{
+		{
+			name: "mayoria simple expulsa al impostor",
+			votes: map[string]voteChoice{
+				"p1": {targetID: "imp"},
+				"p2": {targetID: "imp"},
+				"p3": {targetID: "p1"},
+			},
+			alive: map[string]bool{
+				"p1": true, "p2": true, "p3": true, "imp": true,
+			},
+			impostors: map[string]bool{
+				"imp": true,
+			},
+			wantEjected:  "imp",
+			wantImpostor: true,
+		},
+		{
+			name: "mayoria simple expulsa a tripulante inocente",
+			votes: map[string]voteChoice{
+				"p1": {targetID: "p2"},
+				"p2": {targetID: "imp"},
+				"p3": {targetID: "p2"},
+			},
+			alive: map[string]bool{
+				"p1": true, "p2": true, "p3": true, "imp": true,
+			},
+			impostors: map[string]bool{
+				"imp": true,
+			},
+			wantEjected:  "p2",
+			wantImpostor: false,
+		},
+		{
+			name: "empate exacto no expulsa a nadie",
+			votes: map[string]voteChoice{
+				"p1": {targetID: "p2"},
+				"p2": {targetID: "imp"},
+			},
+			alive: map[string]bool{
+				"p1": true, "p2": true, "imp": true,
+			},
+			impostors: map[string]bool{
+				"imp": true,
+			},
+			wantEjected:  "",
+			wantImpostor: false,
+		},
+		{
+			name: "todos votan skip",
+			votes: map[string]voteChoice{
+				"p1": {skip: true},
+				"p2": {skip: true},
+				"p3": {skip: true},
+			},
+			alive: map[string]bool{
+				"p1": true, "p2": true, "p3": true,
+			},
+			impostors:    map[string]bool{},
+			wantEjected:  "",
+			wantImpostor: false,
+		},
+		{
+			name: "mayoria de skip supera al mas votado",
+			votes: map[string]voteChoice{
+				"p1": {skip: true},
+				"p2": {skip: true},
+				"p3": {targetID: "imp"},
+			},
+			alive: map[string]bool{
+				"p1": true, "p2": true, "p3": true, "imp": true,
+			},
+			impostors: map[string]bool{
+				"imp": true,
+			},
+			wantEjected:  "",
+			wantImpostor: false,
+		},
+		{
+			name: "skip empata con el mas votado",
+			votes: map[string]voteChoice{
+				"p1": {skip: true},
+				"p2": {targetID: "imp"},
+			},
+			alive: map[string]bool{
+				"p1": true, "p2": true, "imp": true,
+			},
+			impostors: map[string]bool{
+				"imp": true,
+			},
+			wantEjected:  "",
+			wantImpostor: false,
+		},
+		{
+			name: "votos de fantasmas son ignorados",
+			votes: map[string]voteChoice{
+				"p1":    {targetID: "imp"},
+				"ghost": {targetID: "p1"},
+			},
+			alive: map[string]bool{
+				"p1": true, "imp": true, "ghost": false,
+			},
+			impostors: map[string]bool{
+				"imp": true,
+			},
+			wantEjected:  "imp",
+			wantImpostor: true,
+		},
+		{
+			name: "votos hacia un fantasma son ignorados",
+			votes: map[string]voteChoice{
+				"p1": {targetID: "ghost"},
+				"p2": {targetID: "imp"},
+				"p3": {targetID: "imp"},
+			},
+			alive: map[string]bool{
+				"p1": true, "p2": true, "p3": true, "imp": true, "ghost": false,
+			},
+			impostors: map[string]bool{
+				"imp": true,
+			},
+			wantEjected:  "imp",
+			wantImpostor: true,
+		},
+		{
+			name:         "votacion vacia sin votos registrados",
+			votes:        map[string]voteChoice{},
+			alive:        map[string]bool{"p1": true, "p2": true},
+			impostors:    map[string]bool{},
+			wantEjected:  "",
+			wantImpostor: false,
+		},
+		{
+			name: "sala grande de 8 jugadores con 2 impostores",
+			votes: map[string]voteChoice{
+				"c1": {targetID: "imp1"},
+				"c2": {targetID: "imp1"},
+				"c3": {targetID: "imp1"},
+				"c4": {targetID: "imp2"},
+				"c5": {skip: true},
+				"c6": {skip: true},
+				"i1": {targetID: "c1"},
+				"i2": {targetID: "c1"},
+			},
+			alive: map[string]bool{
+				"c1": true, "c2": true, "c3": true, "c4": true,
+				"c5": true, "c6": true, "i1": true, "i2": true,
+				"imp1": true, "imp2": true,
+			},
+			impostors: map[string]bool{
+				"i1": true, "i2": true, "imp1": true, "imp2": true,
+			},
+			wantEjected:  "imp1",
+			wantImpostor: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotEjected, gotWasImpostor := tallyVotes(
+				tt.votes,
+				func(id string) bool { return tt.alive[id] },
+				func(id string) bool { return tt.impostors[id] },
+			)
+			if gotEjected != tt.wantEjected {
+				t.Errorf(
+					"tallyVotes() ejected = %q, want %q",
+					gotEjected,
+					tt.wantEjected,
+				)
+			}
+			if gotWasImpostor != tt.wantImpostor {
+				t.Errorf(
+					"tallyVotes() wasImpostor = %v, want %v",
+					gotWasImpostor,
+					tt.wantImpostor,
+				)
+			}
+		})
+	}
+}
+
+func TestFullMeetingCycleIntegration(t *testing.T) {
+	pub := &fakePublisher{}
+	r := NewRoom(
+		"TEST",
+		"match-1",
+		mapWithTanks(),
+		WithCreator("crew1"),
+		WithPublisher(pub),
+	)
+	for _, id := range []string{"crew1", "crew2", "crew3", "imp"} {
+		out := make(chan *matchv1.Snapshot, 1)
+		r.addPlayer(Join{PlayerID: id, Out: out})
+	}
+	r.startMatch("crew1")
+	for id, p := range r.players {
+		p.role = matchv1.Role_CREW
+		if id == "imp" {
+			p.role = matchv1.Role_IMPOSTOR
+		}
+	}
+
+	// 1. Registrar visitas a los tanques
+	r.logEvent("crew2", LogVisit, 0)
+	r.logEvent("imp", LogVisit, 0)
+	r.logEvent("crew1", LogVisit, 0)
+	r.logEvent("crew3", LogVisit, 1)
+
+	// 2. Tanque 0 muere
+	t0 := r.tankAt(0)
+	t0.dead = true
+
+	// 3. crew1 reporta tanque 0
+	p1 := r.players["crew1"]
+	p1.view.X = float32(t0.x)
+	p1.view.Y = float32(t0.y)
+
+	r.handleAction(PlayerAction{
+		PlayerID: "crew1",
+		Report:   true,
+		TankSlot: 0,
+	})
+
+	if r.phase != matchv1.Phase_MEETING {
+		t.Fatalf("fase debe ser MEETING, got %v", r.phase)
+	}
+	if r.meeting == nil {
+		t.Fatal("meeting no debe ser nil")
+	}
+
+	// Verificar visitantes del snapshot
+	view := r.meetingView()
+	expectedVisitors := []string{"crew1", "imp", "crew2"}
+	if len(view.LastVisitors) != len(expectedVisitors) {
+		t.Fatalf(
+			"esperaba %d visitantes, got %d",
+			len(expectedVisitors),
+			len(view.LastVisitors),
+		)
+	}
+	for i, v := range expectedVisitors {
+		if view.LastVisitors[i] != v {
+			t.Errorf(
+				"visitante %d esperaba %s, got %s",
+				i,
+				v,
+				view.LastVisitors[i],
+			)
+		}
+	}
+
+	// 4. Chat durante reunion
+	r.handleAction(PlayerAction{
+		PlayerID:      "crew1",
+		Chat:          true,
+		ChatMessageID: "msg-1",
+		ChatText:      "vi a imp salir del huerto",
+	})
+	if len(r.chat) != 1 {
+		t.Fatalf("esperaba 1 mensaje de chat, got %d", len(r.chat))
+	}
+
+	// Spam de chat rechazado por rate limit
+	r.handleAction(PlayerAction{
+		PlayerID:      "crew1",
+		Chat:          true,
+		ChatMessageID: "msg-spam",
+		ChatText:      "votemos a imp",
+	})
+	if len(r.chat) != 1 {
+		t.Error("spam de chat debio rechazarse")
+	}
+
+	// imp responde (cooldown independiente)
+	r.handleAction(PlayerAction{
+		PlayerID:      "imp",
+		Chat:          true,
+		ChatMessageID: "msg-2",
+		ChatText:      "yo estaba en la planta",
+	})
+	if len(r.chat) != 2 {
+		t.Fatalf("esperaba 2 mensajes de chat, got %d", len(r.chat))
+	}
+
+	// 5. Todos votan por imp excepto imp que vota crew1
+	r.handleAction(PlayerAction{
+		PlayerID:     "crew1",
+		Vote:         true,
+		VoteTargetID: "imp",
+	})
+	r.handleAction(PlayerAction{
+		PlayerID:     "crew2",
+		Vote:         true,
+		VoteTargetID: "imp",
+	})
+	r.handleAction(PlayerAction{
+		PlayerID:     "crew3",
+		Vote:         true,
+		VoteTargetID: "imp",
+	})
+	r.handleAction(PlayerAction{
+		PlayerID:     "imp",
+		Vote:         true,
+		VoteTargetID: "crew1",
+	})
+
+	// Votacion cerrada anticipadamente
+	if !r.meeting.votingClosed {
+		t.Fatal("votacion debio cerrarse al votar todos")
+	}
+	if r.meeting.ejectedID != "imp" {
+		t.Fatalf("ejectedID esperaba imp, got %s", r.meeting.ejectedID)
+	}
+	if !r.meeting.wasImpostor {
+		t.Fatal("wasImpostor debia ser true")
+	}
+	if r.players["imp"].view.Alive {
+		t.Fatal("imp debio quedar muerto")
+	}
+
+	// Esperar que la goroutine emita el evento player.ejected
+	time.Sleep(100 * time.Millisecond)
+	ejectedEvents := pub.forKey(events.RoutingKeyPlayerEjected)
+	if len(ejectedEvents) != 1 {
+		t.Fatalf(
+			"esperaba 1 evento %s, got %d",
+			events.RoutingKeyPlayerEjected,
+			len(ejectedEvents),
+		)
+	}
+
+	// 6. Transicion de pantalla de resultado tras 5 s (100 ticks)
+	r.tick += 50
+	r.stepMeeting()
+	if r.phase != matchv1.Phase_MEETING {
+		t.Fatal("a los 50 ticks aun debe seguir en MEETING")
+	}
+
+	r.tick += 50
+	r.stepMeeting()
+	if r.phase != matchv1.Phase_PLAYING {
+		t.Fatalf("a los 100 ticks debe volver a PLAYING, got %v", r.phase)
+	}
+	if r.meeting != nil {
+		t.Fatal("meeting debe ser nil tras volver a PLAYING")
+	}
+
+	// 7. Jugador expulsado ya no puede reportar ni chatear
+	t1 := r.tankAt(1)
+	t1.dead = true
+	pImp := r.players["imp"]
+	pImp.view.X = float32(t1.x)
+	pImp.view.Y = float32(t1.y)
+
+	r.handleAction(PlayerAction{
+		PlayerID: "imp",
+		Report:   true,
+		TankSlot: 1,
+	})
+	if r.phase == matchv1.Phase_MEETING {
+		t.Error("un jugador expulsado no puede volver a reportar")
+	}
+}
