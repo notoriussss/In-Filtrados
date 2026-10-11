@@ -7,7 +7,6 @@ import httpx
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse
 
-from app.events import EventStats, consume_events
 from app.health import HealthMonitor
 from app.messages import (
     CHECK_POLLING_FIRST_SCAN,
@@ -31,23 +30,17 @@ async def polling_loop(monitor, client):
 async def lifespan(app):
     monitor = HealthMonitor()
     app.state.monitor = monitor
-    events = EventStats()
-    app.state.events = events
 
     async with httpx.AsyncClient(timeout=2) as client:
         task = asyncio.create_task(polling_loop(monitor, client))
-        events_task = asyncio.create_task(consume_events(events))
         app.state.polling_task = task
-        app.state.events_task = events_task
         app.state.started_at = datetime.now(UTC)
         try:
             yield
         finally:
-            for background in (task, events_task):
-                background.cancel()
-            for background in (task, events_task):
-                with suppress(asyncio.CancelledError):
-                    await background
+            task.cancel()
+            with suppress(asyncio.CancelledError):
+                await task
 
 
 app = FastAPI(
@@ -112,11 +105,6 @@ async def get_dashboard():
 @app.get("/api/status")
 async def get_status():
     return app.state.monitor.snapshot()
-
-
-@app.get("/api/stats")
-async def get_stats():
-    return app.state.events.snapshot()
 
 
 if __name__ == "__main__":
