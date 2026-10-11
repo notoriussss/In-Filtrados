@@ -176,6 +176,42 @@
             margin-bottom: 28px;
         }
 
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat {
+            background: #1b2638;
+            border: 1px solid #354158;
+            border-radius: 12px;
+            padding: 18px;
+            text-align: center;
+        }
+
+        .stat-value {
+            display: block;
+            font-size: 3rem;
+            font-weight: bold;
+            line-height: 1.1;
+        }
+
+        .stat-label {
+            color: #aab7cb;
+        }
+
+        #event-list {
+            padding-left: 22px;
+            max-height: 260px;
+            overflow-y: auto;
+        }
+
+        #event-list li {
+            margin-bottom: 6px;
+        }
+
         [hidden] {
             display: none !important;
         }
@@ -196,6 +232,33 @@
         desactualizados; esto no significa que todos los servicios
         estén caídos.
     </div>
+
+    <section aria-labelledby="matches-title">
+        <h2 id="matches-title">Partidas</h2>
+
+        <div id="events-offline" class="banner" role="status" hidden>
+            Sin conexión con RabbitMQ; reconectando…
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <span id="stat-active" class="stat-value">–</span>
+                <span class="stat-label">Partidas activas</span>
+            </div>
+            <div class="stat">
+                <span id="stat-players" class="stat-value">–</span>
+                <span class="stat-label">Jugadores en partida</span>
+            </div>
+            <div class="stat">
+                <span id="stat-today" class="stat-value">–</span>
+                <span class="stat-label">Partidas hoy</span>
+            </div>
+        </div>
+
+        <h3>Eventos recientes</h3>
+        <p id="no-events" class="muted">Todavía no llegan eventos.</p>
+        <ul id="event-list"></ul>
+    </section>
 
     <section aria-labelledby="incidents-title">
         <h2 id="incidents-title">Incidentes registrados</h2>
@@ -410,11 +473,68 @@
             }
         }
 
+        function formatTime(value) {
+            const date = new Date(value);
+            return Number.isNaN(date.getTime())
+                ? "--:--:--"
+                : date.toLocaleTimeString("es");
+        }
+
+        function setNumber(id, value) {
+            document.getElementById(id).textContent =
+                Number.isFinite(value) ? String(value) : "–";
+        }
+
+        function renderStats(stats) {
+            setNumber("stat-active", stats.active_matches);
+            setNumber("stat-players", stats.players_in_match);
+            setNumber("stat-today", stats.finished_today);
+
+            document.getElementById("events-offline").hidden =
+                stats.connected === true;
+
+            const events = Array.isArray(stats.recent_events)
+                ? stats.recent_events
+                : [];
+            document.getElementById("no-events").hidden =
+                events.length > 0;
+
+            const items = events.map(event => {
+                const item = document.createElement("li");
+                item.textContent =
+                    `${formatTime(event.received_at)} — ` +
+                    `${event.description}`;
+                return item;
+            });
+            document.getElementById("event-list")
+                .replaceChildren(...items);
+        }
+
+        async function refreshStats() {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 4000);
+
+            try {
+                const response = await fetch("/api/stats", {
+                    signal: controller.signal,
+                    cache: "no-store",
+                });
+                if (!response.ok) throw new Error("Stats response failed");
+                renderStats(await response.json());
+            } catch {
+                // El aviso general de conexión ya lo maneja refresh().
+            } finally {
+                clearTimeout(timeout);
+                setTimeout(refreshStats, 2000);
+            }
+        }
+
         setInterval(() => {
             for (const view of cards.values()) updateDowntime(view);
         }, 1000);
 
         refresh();
+        refreshStats();
     </script>
 </body>
 

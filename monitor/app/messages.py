@@ -29,3 +29,25 @@ CHECK_POLLING_INVALID_TIMESTAMP = "fail: invalid scan timestamp"
 # Mensajes de error para excepciones internas
 ERROR_UNEXPECTED_SERVICE = "Unexpected service in health response"
 ERROR_UNEXPECTED_HEALTH_RESPONSE = "Unexpected health response"
+
+# Descripciones de eventos del juego para el panel (S1-22)
+EVENT_MATCH_STARTED = "Empezó la partida {room} con {players} jugadores"
+EVENT_MATCH_FINISHED = "Terminó una partida: ganó {winner}"
+EVENT_TASK_COMPLETED = "Un jugador completó una tarea ({liters} L ahorrados)"
+EVENT_PLAYER_EJECTED_IMPOSTOR = "Expulsaron a un jugador: era el impostor"
+EVENT_PLAYER_EJECTED_CREW = "Expulsaron a un jugador: era de la tripulación"
+EVENT_UNKNOWN = "Evento {key}"
+WINNER_LABELS = {
+    "crew": "la tripulación",
+    "impostor": "el impostor",
+}
+WINNER_UNKNOWN = "un bando desconocido"
+
+# Mensajes de log del consumidor de eventos
+LOG_EVENTS_CONNECT_FAILED = (
+    "No se pudo conectar a RabbitMQ (%s); reintentando en %s s"
+)
+LOG_EVENTS_CONNECTED = "Consumiendo eventos de la cola %s"
+LOG_EVENTS_DISCONNECTED = "Se perdió la conexión con RabbitMQ"
+LOG_EVENTS_RECONNECTED = "Conexión con RabbitMQ restablecida"
+LOG_EVENTS_BAD_MESSAGE = "Evento descartado (%s) con routing key %s"
