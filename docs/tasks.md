@@ -512,7 +512,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 **Pasos:**
 1. Usar `@nestjs/platform-ws` (WebSocket puro, sin Socket.IO, para que el navegador use la API nativa).
-2. Al conectar a `/ws?token=...`: validar el token con `players`. Si no es válido, mandar `{type:'error', code:'UNAUTHORIZED'}` y cerrar con el código 4001. Si el mismo `playerId` abre una segunda conexión, cerrar la anterior con 4002 (sesión reemplazada).
+2. Al conectar a `/ws?token=...`: validar el token con `players`. Si no es válido, mandar `{type:'error', code:'UNAUTHORIZED'}` y cerrar con el código 4001. Si el mismo `playerId` abre una segunda conexión, cerrar la anterior con 4002 (sesión reemplazada). Si supera el límite de mensajes de S2-08, cerrar con 4008 (demasiados mensajes).
 3. Al recibir `join`: abrir un stream `Play` con `match`, mandarle `Join` con el `playerId` **del token**, nunca uno que mande el navegador.
 4. Reenviar cada `move` como `Move`, validando que `dx` y `dy` estén en {-1, 0, 1}. Si un mensaje no se puede parsear, `error BAD_MESSAGE` sin cerrar la conexión.
 5. Reenviar cada `Snapshot` al navegador convertido a `ServerMessage`.
@@ -575,7 +575,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 **Pasos:**
 1. Clase `GameSocket` con `connect()`, `send()` y `onMessage()`.
-2. Si la conexión se cierra con un código distinto de 1000 (cierre normal), 4001 (token inválido) o 4002 (sesión reemplazada), reintentar con espera creciente: 0,5 s, 1 s, 2 s, 4 s, 8 s y luego cada 10 s, indefinidamente.
+2. Si la conexión se cierra con un código distinto de 1000 (cierre normal), 4001 (token inválido) o 4002 (sesión reemplazada), reintentar con espera creciente: 0,5 s, 1 s, 2 s, 4 s, 8 s y luego cada 10 s, indefinidamente. El 4008 (demasiados mensajes, S2-08) es un corte normal: también reintenta.
 3. Mientras reconecta, mostrar sobre el canvas el aviso "Reconectando…" con el número de intento.
 4. Al reconectar, mandar de nuevo `join` con el `matchId` guardado en `session.ts` y el último `tick` recibido.
 5. Si el cierre es 4001, borrar la sesión y volver al login. Con 4002 (reemplazada), no reintentar y mantener la sesión.
