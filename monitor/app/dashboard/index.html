@@ -276,6 +276,12 @@
             color: #aab7cb;
         }
 
+        .liters-note {
+            display: block;
+            margin-top: 4px;
+            font-size: 0.85rem;
+        }
+
         .chart {
             background: #1b2638;
             border: 1px solid #354158;
@@ -360,6 +366,9 @@
                 <span id="liters-total" class="liters-value">–</span>
                 <span class="liters-label">
                     litros ahorrados con las 3R
+                </span>
+                <span class="liters-note muted">
+                    desde que arrancó el panel
                 </span>
             </div>
 
@@ -688,8 +697,16 @@
         const TEXT_ROOM_UNKNOWN = "Partida sin código";
         let lastLiters = null;
 
+        // Punto de miles siempre ("1.200 L"): toLocaleString("es") no
+        // separa los números de 4 cifras.
+        const THOUSANDS_SEPARATOR = ".";
+
         function formatLiters(value) {
-            return `${value.toLocaleString("es")}${TEXT_LITERS_UNIT}`;
+            const digits = String(Math.trunc(value)).replace(
+                /\B(?=(\d{3})+(?!\d))/g,
+                THOUSANDS_SEPARATOR,
+            );
+            return `${digits}${TEXT_LITERS_UNIT}`;
         }
 
         function renderLiters(total) {

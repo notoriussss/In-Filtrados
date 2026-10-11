@@ -144,12 +144,27 @@ desde la raíz del repo:
 .\deploy\scripts\update.ps1
 ```
 
+**Antes, una vez por laptop:** el repo es privado, así que sus imágenes en
+GHCR también lo son. Cada laptop necesita una sesión en `ghcr.io` con un
+token de GitHub (*classic*) que tenga **solo** el permiso `read:packages`
+(GitHub → Settings → Developer settings → Personal access tokens):
+
+```powershell
+$env:CR_PAT | docker login ghcr.io -u <GITHUB_USER> --password-stdin
+```
+
+La sesión queda guardada en Docker; no hay que repetirlo en cada
+actualización. Sin ella, el script falla en el `pull` y lo dice.
+
 El script:
 
 1. Detecta qué nodo es esta laptop comparando sus IP con las de
    `deploy/lab.env` (si hay nodos agrupados con la misma IP, los toma todos).
-2. Hace `git pull --ff-only` para traer los `compose` nuevos (se salta con
-   `-SkipGitPull`; si falla, avisa y sigue).
+2. Hace `git pull --ff-only` para traer los `compose` nuevos, **solo si la
+   laptop está en `main`**: las imágenes son las de `main` (`latest`), y unos
+   `compose` de otra rama podrían no coincidir. En otra rama avisa en
+   amarillo y se salta el pull. También se salta con `-SkipGitPull`; si el
+   pull falla, avisa y sigue.
 3. Corre `docker compose --env-file deploy/lab.env -f deploy/compose/nX.yml pull`
    y luego `up -d`: no se compila nada en la laptop.
 4. Muestra `ps` y sale con código 0, o con 1 y el motivo si algo falla.

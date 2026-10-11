@@ -32,6 +32,9 @@ $Msg = @{
     NodesDetected  = "Nodos de esta laptop: {0}"
     GitPull        = "Trayendo los últimos compose del repo (git pull)…"
     GitPullFail    = "git pull falló; se sigue con los compose que hay."
+    GitNotMain     = "Esta laptop está en la rama '{0}', no en main: " +
+        "se salta git pull para no mezclar sus compose con las " +
+        "imágenes de main (git checkout main para alinearla)."
     Pull           = "Descargando las imágenes nuevas de GHCR…"
     PullFail       = "docker compose pull falló: ¿hay red y sesión en " +
         "ghcr.io? (docker login ghcr.io)"
@@ -108,10 +111,17 @@ foreach ($node in $Nodes) {
 Write-Host ($Msg.NodesDetected -f ($Nodes -join ", "))
 
 if (-not $SkipGitPull) {
-    Write-Host $Msg.GitPull
-    git pull --ff-only
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host $Msg.GitPullFail -ForegroundColor Yellow
+    # Las imágenes son las de main (latest): los compose también deben
+    # venir de main, o pueden no coincidir.
+    $branch = git rev-parse --abbrev-ref HEAD
+    if ($LASTEXITCODE -ne 0 -or $branch -ne "main") {
+        Write-Host ($Msg.GitNotMain -f $branch) -ForegroundColor Yellow
+    } else {
+        Write-Host $Msg.GitPull
+        git pull --ff-only
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host $Msg.GitPullFail -ForegroundColor Yellow
+        }
     }
 }
 
