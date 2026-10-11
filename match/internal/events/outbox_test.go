@@ -190,3 +190,46 @@ func TestEventsWithoutIDAreRejected(t *testing.T) {
 		t.Errorf("esperaba errNoEventID, fue %v", err)
 	}
 }
+
+type raceStore struct {
+	memStore
+	first bool
+	o     *OutboxPublisher
+}
+
+func (r *raceStore) Pending(
+	ctx context.Context,
+	limit int32,
+) ([]OutboxEvent, error) {
+	if r.first {
+		r.first = false
+		// Simula que la consulta a la base no vio nada pero antes de que
+		// Flush procese el lote vacío, entra Publish y sube added.
+		_ = r.o.Publish(
+			context.Background(),
+			RoutingKeyStarted,
+			event("e-race"),
+		)
+		return nil, nil
+	}
+	return r.memStore.Pending(ctx, limit)
+}
+
+func TestFlushReReadsWhenEventAddedDuringEmptyCheck(t *testing.T) {
+	pub := &flakyPublisher{}
+	store := &raceStore{first: true}
+	o := NewOutboxPublisher(pub, store)
+	store.o = o
+
+	o.Flush(context.Background())
+
+	if len(pub.sent) != 1 || pub.sent[0] != RoutingKeyStarted {
+		t.Fatalf(
+			"el evento debió publicarse tras detectar added != before: %v",
+			pub.sent,
+		)
+	}
+	if len(store.rows) != 0 {
+		t.Errorf("la tabla debió quedar vacía, got %d filas", len(store.rows))
+	}
+}

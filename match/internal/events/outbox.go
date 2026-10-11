@@ -56,6 +56,7 @@ type OutboxPublisher struct {
 	mu       sync.Mutex
 	pending  bool
 	flushing bool
+	added    uint64
 }
 
 // NewOutboxPublisher arranca suponiendo que puede haber pendientes de
@@ -117,6 +118,7 @@ func (o *OutboxPublisher) Publish(
 		)
 	}
 	o.pending = true
+	o.added++
 	return nil
 }
 
@@ -152,6 +154,10 @@ func (o *OutboxPublisher) Flush(ctx context.Context) {
 	}()
 
 	for {
+		o.mu.Lock()
+		before := o.added
+		o.mu.Unlock()
+
 		listCtx, cancel := context.WithTimeout(ctx, outboxTimeout)
 		batch, err := o.store.Pending(listCtx, outboxBatch)
 		cancel()
@@ -161,9 +167,13 @@ func (o *OutboxPublisher) Flush(ctx context.Context) {
 		}
 		if len(batch) == 0 {
 			o.mu.Lock()
-			o.pending = false
+			if o.added == before {
+				o.pending = false
+				o.mu.Unlock()
+				return
+			}
 			o.mu.Unlock()
-			return
+			continue
 		}
 		for _, ev := range batch {
 			if !o.republish(ctx, ev) {
