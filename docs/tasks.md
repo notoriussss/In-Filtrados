@@ -613,18 +613,20 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S1-23 — Desplegar en la nube (infraestructura)
+#### S1-23 — Un `compose` por nodo y `lab.env` para el laboratorio (infraestructura)
 
-**Archivos:** `deploy/README.md` y `deploy/setup.sh`.
+**Cambio (7 de octubre):** reemplaza a "desplegar en la nube". Las 5 laptops del equipo son los nodos servidor y cada una corre su nodo con Docker (`docs/deployment-lab.md`, secciones 3 a 6).
+
+**Archivos:** `deploy/compose/n1.yml` a `n5.yml`, `deploy/lab.env.example`, `deploy/scripts/check-network.ps1` y `deploy/README.md`.
 
 **Pasos:**
-1. Crear una máquina virtual en una capa gratuita (Azure for Students, Oracle Cloud Always Free o AWS), con Ubuntu 22.04, 2 vCPU y 4 GB de RAM o más.
-2. Abrir **solo** los puertos 80 (juego) y 8000 (panel) en el firewall de la nube. No exponer Postgres, RabbitMQ ni los puertos gRPC.
-3. `setup.sh`: instalar Docker y el plugin de compose, clonar el repo, copiar `.env` con contraseñas **distintas** a las de `.env.example` y correr `docker compose up -d --build`.
-4. En la nube, `web` publica el puerto 80 en lugar del 8080.
-5. Documentar en `deploy/README.md` cómo actualizar: `git pull && docker compose up -d --build`.
+1. Un `compose` por nodo con las imágenes del CD: N1 edge (`web` y `gateway`), N2 (`match` y `match-db`), N3 (`players` y `players-db`), N4 (`rabbitmq`) y N5 (`monitor`).
+2. `match-db` y `players-db` sin publicar el 5432; `restart: unless-stopped` en todos.
+3. `lab.env.example` con las IP de cada nodo, las direcciones derivadas, las URL de las bases, un usuario propio de RabbitMQ y `RECONNECT_GRACE_SECONDS=600`. El `lab.env` real no se sube.
+4. `check-network.ps1`: ping, puertos publicados, 5432 cerrado y WebSocket hacia los otros nodos.
+5. `deploy/README.md`: preparar cada laptop, arrancar cada nodo y agrupar nodos.
 
-**Criterio de verificación:** desde el celular, con datos móviles (no el wifi de la universidad), abrir `http://<ip-pública>` y jugar contra alguien en una laptop. `http://<ip-pública>:8000` muestra el panel. `nc -zv <ip-pública> 5432` y `nc -zv <ip-pública> 5672` fallan (los puertos no están expuestos).
+**Criterio de verificación:** con 2 laptops (`-f n1.yml -f n2.yml` en una y `-f n3.yml -f n4.yml -f n5.yml` en otra) y `lab.env` con sus IP, un navegador en una tercera máquina abre `http://<EDGE_HOST>:8080` y el panel del monitor está en verde. Desde otra máquina, conectar al 5432 de N2 o N3 falla. Tras una caída del proceso (`docker compose exec match kill 1`), Docker lo relanza solo y el panel vuelve a verde. `check-network.ps1` reporta todo en verde.
 
 ---
 

@@ -1,0 +1,36 @@
+# N3 players: players y su base. players-db no publica el 5432.
+# docker compose --env-file deploy/lab.env -f deploy/compose/n3.yml up -d
+name: in-filtrados-lab
+
+services:
+  players-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${PLAYERS_DB_NAME:?falta PLAYERS_DB_NAME en lab.env}
+      POSTGRES_USER: ${PLAYERS_DB_USER:?falta PLAYERS_DB_USER en lab.env}
+      POSTGRES_PASSWORD: ${PLAYERS_DB_PASSWORD:?falta PLAYERS_DB_PASSWORD en lab.env}
+    volumes:
+      - players-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\"" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  players:
+    image: ${IMAGE_REGISTRY:-ghcr.io/notoriussss}/in-filtrados-players:${IMAGE_TAG:-latest}
+    environment:
+      HTTP_PORT: "8082"
+      PLAYERS_DB_URL: ${PLAYERS_DB_URL:?falta PLAYERS_DB_URL en lab.env}
+      RABBITMQ_URL: ${RABBITMQ_URL:?falta RABBITMQ_URL en lab.env}
+    ports:
+      - "50052:50052"
+      - "8082:8082"
+    depends_on:
+      players-db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  players-db-data:

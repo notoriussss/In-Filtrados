@@ -120,25 +120,22 @@ Cada integrante lleva el nodo de un servicio que **no** es el suyo cuando se pue
 Las 5 laptops leen el mismo `deploy/lab.env`. El día de la presentación solo se cambian las IP y se copia el archivo a las 5 (USB, chat del equipo o carpeta compartida).
 
 ```ini
-# deploy/lab.env — IP del día (las asigna el DHCP del laboratorio)
+# deploy/lab.env — IP del día (las asigna el DHCP del laboratorio).
+# Extracto: el archivo completo es deploy/lab.env.example.
 EDGE_HOST=192.168.10.21
 MATCH_HOST=192.168.10.22
 PLAYERS_HOST=192.168.10.23
 BROKER_HOST=192.168.10.24
 MONITOR_HOST=192.168.10.25
 
-# Direcciones que usa cada servicio
-MATCH_ADDR=${MATCH_HOST}:50051
-PLAYERS_ADDR=${PLAYERS_HOST}:50052
-AMQP_URL=amqp://game:CHANGE_ME@${BROKER_HOST}:5672/
+# Direcciones que usa cada servicio (derivadas de las IP)
+MATCH_GRPC_ADDR=${MATCH_HOST}:50051
+PLAYERS_GRPC_ADDR=${PLAYERS_HOST}:50052
+RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@${BROKER_HOST}:5672/
 
 # Bases de datos: siempre en la red interna de su nodo
-MATCH_DB_URL=postgres://match:CHANGE_ME@match-db:5432/match
-PLAYERS_DB_URL=postgres://players:CHANGE_ME@players-db:5432/players
-
-# JWT: players firma con la privada; gateway y match validan con la pública
-JWT_PRIVATE_KEY_FILE=keys/jwt.key      # solo en N3
-JWT_PUBLIC_KEY_FILE=keys/jwt.pub       # en N1 y N2
+MATCH_DB_URL=postgresql://${MATCH_DB_USER}:${MATCH_DB_PASSWORD}@match-db:5432/${MATCH_DB_NAME}
+PLAYERS_DB_URL=postgresql://${PLAYERS_DB_USER}:${PLAYERS_DB_PASSWORD}@players-db:5432/${PLAYERS_DB_NAME}
 
 # Reconexión (sección 9)
 RECONNECT_GRACE_SECONDS=600
@@ -149,6 +146,9 @@ GATEWAY_HEALTH_URL=http://${EDGE_HOST}:3000/health
 MATCH_HEALTH_URL=http://${MATCH_HOST}:8081/health
 PLAYERS_HEALTH_URL=http://${PLAYERS_HOST}:8082/health
 ```
+
+> La validación local del JWT (sección 9, punto 2) todavía no está
+> implementada: el gateway sigue validando el token con `players`.
 
 **Reglas:**
 - **Ningún servicio tiene una IP o `localhost` escrito en el código.** Todo sale de variables de entorno: en desarrollo de `.env` y en el laboratorio de `lab.env`.
@@ -161,15 +161,19 @@ deploy/
 ├── compose/
 │   ├── n1.yml ... n5.yml     un compose por nodo, mismas imágenes que docker-compose.yml
 └── scripts/
-    ├── check-network.ps1     prueba ping y puertos hacia los otros nodos
-    └── seed.ps1              crea cuentas de prueba para la demo
+    └── check-network.ps1     prueba ping, puertos, 5432 cerrado y WebSocket
 ```
 
-Cada laptop arranca su nodo con:
+Cada laptop arranca su nodo con (paso a paso en `deploy/README.md`):
 
 ```bash
 docker compose --env-file deploy/lab.env -f deploy/compose/n2.yml up -d
 ```
+
+Todos los contenedores llevan `restart: unless-stopped`. Ojo: para Docker,
+`docker compose kill` y `stop` son paradas **manuales** y no se relanzan. Para
+simular una caída real del proceso se usa
+`docker compose ... exec match kill 1`, y Docker lo levanta solo.
 
 ---
 
