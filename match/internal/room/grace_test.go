@@ -285,4 +285,3 @@ func TestGraceExpiryDuringMeetingClosesVotingIfAllAliveVoted(t *testing.T) {
 		t.Fatal("al vencer c y quedar 2/2 votos, debe cerrarse la votación")
 	}
 }
-
