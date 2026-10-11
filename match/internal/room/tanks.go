@@ -52,6 +52,7 @@ func (r *Room) stepTanks() {
 	for id, p := range r.players {
 		r.stepAction(id, p)
 	}
+	r.stepOil()
 	r.driftImpostorTanks()
 	r.logVisits()
 }
@@ -75,6 +76,7 @@ func (r *Room) stepAction(id string, p *player) {
 	case LogContaminate:
 		p.nextContaminate = r.tick + contaminateCooldown
 		r.addContamination(t, contaminateAmount)
+		r.startOilTrail(p)
 	case LogClean:
 		t.contamination = max(t.contamination-cleanAmount, 0)
 	}

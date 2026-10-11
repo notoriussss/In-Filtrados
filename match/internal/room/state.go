@@ -44,6 +44,11 @@ const (
 	pointsReuse    = 4
 	pointsRecycle  = 5
 	litersPerPoint = 100
+
+	// S2-12: gotas de aceite tras contaminar.
+	oilTrailTicks     = 300 // 15 s soltando gotas
+	oilDropEveryTicks = 20  // 1 gota por segundo
+	oilDropLifeTicks  = 300 // cada gota dura 15 s
 )
 
 var taskPoints = map[string]int32{
@@ -114,6 +119,10 @@ type player struct {
 	assignedTasks  map[string]bool
 	taskStartTick  int64
 	taskStation    string
+
+	// S2-12: rastro de aceite hasta el tick oilUntil.
+	oilUntil    int64
+	nextOilDrop int64
 }
 
 // tankAction es contaminar o limpiar: termina cuando pasan ticksLeft
@@ -131,6 +140,13 @@ type tank struct {
 	x, y          float64
 	contamination int32 // 0 a 100
 	dead          bool
+}
+
+// oilDrop es una gota del rastro del impostor (S2-12).
+type oilDrop struct {
+	x, y      float32
+	color     string
+	expiresAt int64
 }
 
 func clampDir(v int32) int32 {

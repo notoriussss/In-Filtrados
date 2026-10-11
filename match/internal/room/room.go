@@ -39,7 +39,8 @@ type Room struct {
 	rnd           io.Reader // azar de los roles: crypto/rand
 	startTick     int64
 	eventLog      EventLog
-	reservoir     int32 // S2-04
+	reservoir     int32      // S2-04
+	oilDrops      []*oilDrop // S2-12
 
 	joins   chan Join
 	leaves  chan Leave
@@ -217,6 +218,7 @@ func (r *Room) startMatch(playerID string) {
 		return
 	}
 	r.reservoir = 0
+	r.oilDrops = nil
 	r.participants = r.snapshotParticipants()
 
 	ctx, cancel := context.WithTimeout(context.Background(), depsTimeout)
@@ -409,8 +411,9 @@ func (r *Room) broadcast() {
 		return views[i].Id < views[j].Id
 	})
 	tanks := r.tankViews()
-	// Un snapshot por jugador: my_role es solo el suyo. Players y tanks se
-	// comparten porque nadie los modifica después de enviarlos.
+	drops := r.oilDropViews()
+	// Un snapshot por jugador: my_role es solo el suyo. Players, tanks y
+	// drops se comparten porque nadie los modifica después de enviarlos.
 	for _, p := range r.players {
 		if p.out == nil {
 			continue
@@ -426,6 +429,7 @@ func (r *Room) broadcast() {
 				Completed: int32(p.tasksCompleted),
 				Total:     int32(len(p.assignedTasks) + p.tasksCompleted),
 			},
+			OilDrops: drops,
 		}
 		select {
 		case p.out <- snap:
