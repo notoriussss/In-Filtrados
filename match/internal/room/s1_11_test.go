@@ -45,13 +45,14 @@ func (f *fakePublisher) forKey(routingKey string) []publishedEvent {
 }
 
 type fakeStore struct {
-	mu           sync.Mutex
-	starts       int
-	finishes     int
-	winner       string
-	startID      string
-	startCode    string
-	startPlayers []PlayerInfo
+	mu              sync.Mutex
+	starts          int
+	finishes        int
+	winner          string
+	startID         string
+	startCode       string
+	startPlayers    []PlayerInfo
+	endParticipants []ParticipantResult
 }
 
 func (f *fakeStore) StartMatch(
@@ -73,11 +74,13 @@ func (f *fakeStore) FinishMatch(
 	_ context.Context,
 	_ string,
 	winner string,
+	participants []ParticipantResult,
 ) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.finishes++
 	f.winner = winner
+	f.endParticipants = append([]ParticipantResult(nil), participants...)
 	return nil
 }
 

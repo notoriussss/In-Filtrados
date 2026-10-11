@@ -90,3 +90,30 @@ func (q *Queries) InsertEvent(ctx context.Context, arg InsertEventParams) error 
 	)
 	return err
 }
+
+const updateParticipantEjected = `-- name: UpdateParticipantEjected :exec
+UPDATE participants
+SET ejected = $3
+WHERE match_id = $1 AND player_id = $2
+`
+
+type UpdateParticipantEjectedParams struct {
+	MatchID  pgtype.UUID
+	PlayerID pgtype.UUID
+	Ejected  bool
+}
+
+// S2-06: guardar si el participante fue expulsado al terminar la partida.
+func (q *Queries) UpdateParticipantEjected(
+	ctx context.Context,
+	arg UpdateParticipantEjectedParams,
+) error {
+	_, err := q.db.Exec(
+		ctx,
+		updateParticipantEjected,
+		arg.MatchID,
+		arg.PlayerID,
+		arg.Ejected,
+	)
+	return err
+}

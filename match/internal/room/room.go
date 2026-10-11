@@ -44,6 +44,9 @@ type Room struct {
 	meeting       *meetingState
 	chat          []chatEntry
 	oilDrops      []*oilDrop // S2-12
+	cleanupDelay  time.Duration
+	onCleanup     func(code string)
+	endedAt       time.Time
 
 	joins   chan Join
 	leaves  chan Leave
@@ -63,6 +66,7 @@ func NewRoom(code string, matchID string, m *Map, opts ...Option) *Room {
 		names:         make(map[string]string),
 		phase:         matchv1.Phase_LOBBY,
 		matchDuration: defaultMatchDuration,
+		cleanupDelay:  defaultCleanupDelay,
 		joins:         make(chan Join),
 		leaves:        make(chan Leave),
 		actions:       make(chan PlayerAction, actionBuffer),
@@ -293,7 +297,19 @@ func (r *Room) finishMatch() {
 	defer cancel()
 
 	if r.store != nil {
-		err := r.store.FinishMatch(ctx, r.MatchID, events.WinnerCrew)
+		partResults := make([]ParticipantResult, 0, len(r.players))
+		for id, p := range r.players {
+			partResults = append(partResults, ParticipantResult{
+				PlayerID: id,
+				Ejected:  p.ejected,
+			})
+		}
+		err := r.store.FinishMatch(
+			ctx,
+			r.MatchID,
+			events.WinnerCrew,
+			partResults,
+		)
 		if err != nil {
 			log.Printf("room %s: no se pudo guardar el fin: %v", r.Code, err)
 		}

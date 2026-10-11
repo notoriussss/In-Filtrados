@@ -9,6 +9,12 @@ type PlayerInfo struct {
 	Role        string // events.RoleCrew o events.RoleImpostor
 }
 
+// ParticipantResult es el estado final de un jugador para participants (S2-06).
+type ParticipantResult struct {
+	PlayerID string
+	Ejected  bool
+}
+
 // MatchStore guarda el inicio y el fin de las partidas (PostgreSQL).
 type MatchStore interface {
 	StartMatch(
@@ -17,7 +23,12 @@ type MatchStore interface {
 		roomCode string,
 		players []PlayerInfo,
 	) error
-	FinishMatch(ctx context.Context, matchID string, winner string) error
+	FinishMatch(
+		ctx context.Context,
+		matchID string,
+		winner string,
+		participants []ParticipantResult,
+	) error
 }
 
 // Tipos de fila de event_log (S2-03).

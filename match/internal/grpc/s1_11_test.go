@@ -59,7 +59,12 @@ func (f *fakeStore) StartMatch(
 	return nil
 }
 
-func (f *fakeStore) FinishMatch(_ context.Context, _ string, _ string) error {
+func (f *fakeStore) FinishMatch(
+	_ context.Context,
+	_ string,
+	_ string,
+	_ []room.ParticipantResult,
+) error {
 	return nil
 }
 
