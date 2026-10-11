@@ -766,16 +766,43 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S2-11 — Minijuegos de las 3R (`web/`)
+#### S2-11 — Minijuegos de las 3R (`web/`, con un cambio chico de contrato en `proto/`, `match/`, `gateway/` y `messages/`)
 
-**Pasos (cada minijuego dura de 3 a 6 segundos):**
-1. **Reducir (cerrar fuga):** girar una válvula manteniendo presionado el clic hasta llenar una barra.
-2. **Reutilizar (agua gris):** arrastrar 3 cubetas al tanque.
-3. **Reciclar (filtrar):** hacer clic en 4 partículas de suciedad que flotan en el agua.
-4. Al terminar, mandar `Interact { completed: true }`. Si el jugador se aleja, se cancela.
-5. Lista de tareas pendientes en una esquina, con la zona donde está cada una.
+**Estado al 11 de octubre:** `match` ya asigna 4 estaciones al azar a cada jugador y valida `Interact` (S2-04, `match/internal/room/tasks.go`), y el gateway ya traduce `interact` a gRPC (`gateway/src/game/client-messages.ts`). Pero el jugador no puede ver ni hacer sus misiones:
+- El snapshot solo trae `myTaskProgress { completed, total }`: no dice **cuáles** estaciones le tocan.
+- `web/` dibuja todas las estaciones iguales (`web/src/canvas/renderMap.ts`), no muestra `myTaskProgress` y nunca manda `interact`.
 
-**Criterio de verificación:** cada minijuego se completa en el tiempo indicado sin instrucciones escritas, y la tarea aparece tachada en la lista. Tres compañeros que no lo programaron completan los 3 al primer intento.
+Sin esta tarea tampoco se puede verificar S2-13 jugando (completar 3 tareas y ver subir los litros).
+
+**Pasos:**
+
+*A. Contrato (un solo PR, con la skill `change-contract`; agrega campos, no rompe nada):*
+1. `proto/match.proto`: en `Snapshot`, `repeated MyTask my_tasks = 13;` con `message MyTask { string station_id = 1; bool done = 2; }`, y `string my_active_task = 14;` (estación cuya tarea el servidor dio por iniciada; vacío si ninguna). Solo viajan en el snapshot de su dueño, igual que `my_role`.
+2. Regenerar `match/gen/` con `match/gen.sh`.
+3. `messages/src/index.ts`: `myTasks: { stationId: string; done: boolean }[]` y `myActiveTask: string | null` en `Snapshot`. Actualizar el ejemplo de la sección 0.5 de este documento.
+4. `gateway/src/game/server-events.ts`: mapear los dos campos (`[]` y `null` si no vienen) y su prueba en `server-events.test.ts`.
+
+*B. `match/`:*
+5. Hoy `completeTask` borra la estación de `assignedTasks`, así que se pierde cuál se hizo. Guardar también `completedTasks []string` en `player` y en la instantánea (`persist.go`: campo nuevo `completed_tasks`, opcional al restaurar para no romper instantáneas viejas).
+6. En `room.go`, al armar el snapshot de cada jugador: `my_tasks` = pendientes + hechas, en orden estable (por id de estación), y `my_active_task` = `p.taskStation`.
+7. Cancelar la tarea en curso (`taskStation = ""`) si el jugador se aleja más de 40 unidades de la estación, para que el navegador cierre el minijuego al ver `myActiveTask` vacío.
+8. Pruebas: el snapshot trae las 4 tareas y marca `done` la completada; alejarse cancela; restaurar una instantánea conserva las hechas.
+
+*C. `web/` (cada minijuego dura de 3 a 6 segundos):*
+9. **Lista de misiones** en la esquina superior izquierda, sobre el canvas: "Misiones (2/4)" y una fila por tarea con su tipo (Reducir, Reutilizar, Reciclar) y la zona donde está, por ejemplo "Reducir · Cuarto de bombas". La zona se calcula en el navegador con `shared/map.json`: la zona más pequeña que contiene la estación (así se ignora "Arroyo", que cubre todo el mapa). Las hechas aparecen tachadas. Se oculta en `LOBBY` y durante la reunión.
+10. **En el mapa:** resaltar solo las estaciones pendientes del jugador (anillo pulsante o signo "!"); las demás y las hechas se dibujan atenuadas.
+11. **Iniciar:** junto a una estación propia pendiente a 40 unidades o menos, el botón contextual de S2-09 (tecla `E`) dice "Hacer tarea" y manda `interact { stationId }`. El minijuego se abre cuando el snapshot trae `myActiveTask === stationId` (lo confirma el servidor, no el navegador).
+12. **Minijuegos**, en un panel encima del canvas; mientras está abierto no se manda `move`:
+    1. **Reducir (cerrar fuga):** girar una válvula manteniendo presionado el clic hasta llenar una barra.
+    2. **Reutilizar (agua gris):** arrastrar 3 cubetas al tanque.
+    3. **Reciclar (filtrar):** hacer clic en 4 partículas de suciedad que flotan en el agua.
+13. **Terminar:** al completar el minijuego, mandar `interact { stationId, completed: true }`. Si se completó antes de 3 s desde el inicio, esperar a que pasen antes de mandarlo (el servidor rechaza los menores de 3 s). Se cierra con `Esc`, al empezar una reunión o si `myActiveTask` deja de ser esa estación (el jugador se alejó).
+14. El impostor ve sus tareas y los minijuegos igual que un tripulante (las "finge"; `match` no suma nada).
+15. Textos que ve el jugador como constantes en `web/src/constants.ts` (regla 9). Pruebas con `vitest` del cálculo de zona, del armado de la lista y de la lógica de cada minijuego (sin canvas).
+
+**Depende de:** S2-04 (hecha) y del botón contextual de S2-09; si S2-09 todavía no está en `develop`, la tecla `E` se agrega aquí y luego se unen.
+
+**Criterio de verificación:** cada minijuego se completa en el tiempo indicado sin instrucciones escritas, y la tarea aparece tachada en la lista. Tres compañeros que no lo programaron completan los 3 al primer intento. Desde las herramientas del navegador de un tripulante no se ven las tareas de otro jugador. Completar 3 tareas sube el embalse para todos y el contador de litros del monitor (S2-13) en menos de 3 segundos.
 
 ---
 
@@ -794,9 +821,9 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 **Pasos:**
 1. Consumir `task.completed` y `player.ejected`: litros ahorrados (total y por partida activa), tareas por tipo (Reducir, Reutilizar, Reciclar) y expulsiones acertadas contra fallidas.
 2. Mostrar en el panel un contador grande de **litros ahorrados** (el número más vistoso para el jurado) y un gráfico de barras simple de tareas por tipo.
-3. Despliegue automático: un job en GitHub Actions que, al hacer merge a `main`, entra por SSH a la máquina de la nube (clave en los secrets del repo) y corre `git pull && docker compose up -d --build`.
+3. Despliegue automático con Docker: el CD ya publica una imagen por servicio en GHCR cuando el CI de `main` sale en verde. `deploy/scripts/update.ps1` en cada nodo hace `docker compose --env-file deploy/lab.env -f deploy/compose/nX.yml pull` y `up -d`, así que no se compila nada en las laptops. El script detecta el nodo comparando las IP de la laptop con las de `lab.env` (o se le pasa `-Nodes N2`).
 
-**Criterio de verificación:** completar 3 tareas en una partida sube el contador de litros en el panel en menos de 3 segundos. Un merge a `main` aparece desplegado en la nube en menos de 10 minutos sin que nadie entre a la máquina.
+**Criterio de verificación:** completar 3 tareas en una partida sube el contador de litros en el panel en menos de 3 segundos. Un merge a `main` queda corriendo en cada laptop con un solo comando por nodo (`.\deploy\scripts\update.ps1`).
 
 ---
 

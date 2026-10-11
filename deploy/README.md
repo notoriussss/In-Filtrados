@@ -13,7 +13,8 @@ deploy/
 │   ├── n4.yml             N4 broker: RabbitMQ (:5672, consola :15672)
 │   └── n5.yml             N5 monitor (:8000)
 └── scripts/
-    └── check-network.ps1  ping, puertos y WebSocket hacia los otros nodos
+    ├── check-network.ps1  ping, puertos y WebSocket hacia los otros nodos
+    └── update.ps1         actualiza el nodo de esta laptop a lo último de main
 ```
 
 Los `compose` usan las mismas imágenes que `docker-compose.yml`, ya construidas
@@ -119,7 +120,7 @@ Para revisar solo algunos nodos: `check-network.ps1 -Nodes N1,N2`.
 |---|---|
 | Ver el estado | `docker compose --env-file deploy/lab.env -f deploy/compose/n2.yml ps` |
 | Ver los logs | `docker compose --env-file deploy/lab.env -f deploy/compose/n2.yml logs -f match` |
-| Actualizar imágenes | `... pull` y luego `... up -d` |
+| Actualizar imágenes | `.\deploy\scripts\update.ps1` (sección 5) |
 | Apagar el nodo | `... down` (sin `-v`, para no borrar la base ni las colas) |
 
 Todos los contenedores tienen `restart: unless-stopped`: si un proceso se cae,
@@ -132,3 +133,28 @@ docker compose --env-file deploy/lab.env -f deploy/compose/n2.yml exec match sh 
 ```
 
 A los pocos segundos `ps` lo muestra otra vez `Up` y el panel vuelve a verde.
+
+## 5. Actualizar tras un merge a `main`
+
+Cuando el CI de `main` sale en verde, el CD publica las imágenes nuevas en
+GHCR (`latest` y el SHA del commit). En cada laptop basta con un comando,
+desde la raíz del repo:
+
+```powershell
+.\deploy\scripts\update.ps1
+```
+
+El script:
+
+1. Detecta qué nodo es esta laptop comparando sus IP con las de
+   `deploy/lab.env` (si hay nodos agrupados con la misma IP, los toma todos).
+2. Hace `git pull --ff-only` para traer los `compose` nuevos (se salta con
+   `-SkipGitPull`; si falla, avisa y sigue).
+3. Corre `docker compose --env-file deploy/lab.env -f deploy/compose/nX.yml pull`
+   y luego `up -d`: no se compila nada en la laptop.
+4. Muestra `ps` y sale con código 0, o con 1 y el motivo si algo falla.
+
+Si la detección no encuentra el nodo (por ejemplo, la IP cambió y `lab.env`
+no se actualizó), se indica a mano: `.\deploy\scripts\update.ps1 -Nodes N2`.
+Si PowerShell bloquea el script, usar
+`powershell -ExecutionPolicy Bypass -File deploy/scripts/update.ps1`.

@@ -1,4 +1,4 @@
-"""Consumidor de eventos del juego y contadores del panel (S1-22)."""
+"""Consumidor de eventos del juego y contadores del panel (S1-22, S2-13)."""
 
 import asyncio
 import json
@@ -24,6 +24,8 @@ from app.messages import (
     LOG_EVENTS_DISCONNECTED,
     LOG_EVENTS_RECONNECTED,
     PLAYER_UNKNOWN,
+    TASK_TYPE_LABELS,
+    TASK_TYPE_UNKNOWN,
     WINNER_LABELS,
     WINNER_UNKNOWN,
 )
@@ -42,6 +44,9 @@ KEY_TASK_COMPLETED = "task.completed"
 KEY_PLAYER_EJECTED = "player.ejected"
 KEY_PLAYER_DISCONNECTED = "player.disconnected"
 KEY_PLAYER_RECONNECTED = "player.reconnected"
+
+EJECTED_CORRECT = "correct"
+EJECTED_WRONG = "wrong"
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +68,13 @@ def _parse_time(value):
     return parsed
 
 
+def _liters(value):
+    """Litros de un evento: solo enteros no negativos; si no, 0."""
+    if isinstance(value, bool) or not isinstance(value, int):
+        return 0
+    return max(value, 0)
+
+
 class EventStats:
     def __init__(self, now=_utc_now):
         self._now = now
@@ -79,6 +91,14 @@ class EventStats:
         # Último "at" visto por jugador: ordena desconexión y reconexión
         # aunque lleguen al revés.
         self._grace_at = {}
+        # S2-13: agua ahorrada, tareas de las 3R y expulsiones, en
+        # memoria desde que arrancó el monitor.
+        self.liters_total = 0
+        # match_id -> litros; solo partidas activas.
+        self.match_liters = {}
+        self.room_codes = {}
+        self.tasks_by_type = dict.fromkeys(TASK_TYPE_LABELS, 0)
+        self.ejections = {EJECTED_CORRECT: 0, EJECTED_WRONG: 0}
 
     def _remember(self, event_id):
         if len(self._seen_order) >= SEEN_LIMIT:
@@ -111,19 +131,13 @@ class EventStats:
         elif routing_key == KEY_MATCH_FINISHED:
             description = self._on_finished(match_id, payload)
         elif routing_key == KEY_TASK_COMPLETED:
-            description = EVENT_TASK_COMPLETED.format(
-                liters=payload.get("liters_saved", 0),
-            )
+            description = self._on_task_completed(match_id, payload)
         elif routing_key == KEY_PLAYER_DISCONNECTED:
             description = self._on_disconnected(match_id, payload)
         elif routing_key == KEY_PLAYER_RECONNECTED:
             description = self._on_reconnected(match_id, payload)
         elif routing_key == KEY_PLAYER_EJECTED:
-            description = (
-                EVENT_PLAYER_EJECTED_IMPOSTOR
-                if payload.get("was_impostor")
-                else EVENT_PLAYER_EJECTED_CREW
-            )
+            description = self._on_ejected(payload)
         else:
             description = EVENT_UNKNOWN.format(key=routing_key)
 
@@ -140,11 +154,36 @@ class EventStats:
         player_ids = payload.get("player_ids") or []
         if match_id and match_id not in self.active_matches:
             self.active_matches[match_id] = set(player_ids)
+            self.room_codes[match_id] = payload.get("room_code", "")
 
         return EVENT_MATCH_STARTED.format(
             room=payload.get("room_code", ""),
             players=len(player_ids),
         )
+
+    def _on_task_completed(self, match_id, payload):
+        liters = _liters(payload.get("liters_saved"))
+        self.liters_total += liters
+        if match_id:
+            self.match_liters[match_id] = (
+                self.match_liters.get(match_id, 0) + liters
+            )
+
+        task_type = payload.get("task_type")
+        if task_type in self.tasks_by_type:
+            self.tasks_by_type[task_type] += 1
+
+        return EVENT_TASK_COMPLETED.format(
+            kind=TASK_TYPE_LABELS.get(task_type, TASK_TYPE_UNKNOWN),
+            liters=liters,
+        )
+
+    def _on_ejected(self, payload):
+        if payload.get("was_impostor") is True:
+            self.ejections[EJECTED_CORRECT] += 1
+            return EVENT_PLAYER_EJECTED_IMPOSTOR
+        self.ejections[EJECTED_WRONG] += 1
+        return EVENT_PLAYER_EJECTED_CREW
 
     def _newer(self, key, payload):
         """True si el evento es más nuevo que el último del jugador."""
@@ -205,6 +244,9 @@ class EventStats:
     def _on_finished(self, match_id, payload):
         # Una partida que no vimos empezar también terminó hoy.
         self.active_matches.pop(match_id, None)
+        # Los litros de la partida ya quedaron en el total.
+        self.match_liters.pop(match_id, None)
+        self.room_codes.pop(match_id, None)
         # Ya nadie espera volver a una partida terminada.
         for key in [k for k in self.in_grace if k[0] == match_id]:
             self.in_grace.pop(key)
@@ -233,7 +275,33 @@ class EventStats:
             ),
             "finished_today": self.finished_today,
             "recent_events": list(reversed(self.recent)),
+            "liters_saved_total": self.liters_total,
+            "liters_by_match": self._liters_by_match(),
+            "tasks_by_type": [
+                {
+                    "type": task_type,
+                    "label": TASK_TYPE_LABELS[task_type],
+                    "count": count,
+                }
+                for task_type, count in self.tasks_by_type.items()
+            ],
+            "ejections": dict(self.ejections),
         }
+
+    def _liters_by_match(self):
+        matches = sorted(
+            self.match_liters.items(),
+            key=lambda item: item[1],
+            reverse=True,
+        )
+        return [
+            {
+                "match_id": match_id,
+                "room_code": self.room_codes.get(match_id, ""),
+                "liters": liters,
+            }
+            for match_id, liters in matches
+        ]
 
 
 def make_message_handler(stats):
