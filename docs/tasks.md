@@ -632,7 +632,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 4. `check-network.ps1`: ping, puertos publicados, 5432 cerrado y WebSocket hacia los otros nodos.
 5. `deploy/README.md`: preparar cada laptop, arrancar cada nodo y agrupar nodos.
 
-**Criterio de verificación:** con 2 laptops (`-f n1.yml -f n2.yml` en una y `-f n3.yml -f n4.yml -f n5.yml` en otra) y `lab.env` con sus IP, un navegador en una tercera máquina abre `http://<EDGE_HOST>:8080` y el panel del monitor está en verde. Desde otra máquina, conectar al 5432 de N2 o N3 falla. Tras una caída del proceso (`docker compose exec match kill 1`), Docker lo relanza solo y el panel vuelve a verde. `check-network.ps1` reporta todo en verde.
+**Criterio de verificación:** con 2 laptops (`-f n1.yml -f n2.yml` en una y `-f n3.yml -f n4.yml -f n5.yml` en otra) y `lab.env` con sus IP, un navegador en una tercera máquina abre `http://<EDGE_HOST>:8080` y el panel del monitor está en verde. Desde otra máquina, conectar al 5432 de N2 o N3 falla. Tras una caída del proceso (`docker compose exec match sh -c 'kill -9 1'`), Docker lo relanza solo y el panel vuelve a verde. `check-network.ps1` reporta todo en verde.
 
 ---
 

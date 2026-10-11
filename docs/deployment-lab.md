@@ -131,7 +131,7 @@ MONITOR_HOST=192.168.10.25
 # Direcciones que usa cada servicio (derivadas de las IP)
 MATCH_GRPC_ADDR=${MATCH_HOST}:50051
 PLAYERS_GRPC_ADDR=${PLAYERS_HOST}:50052
-RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@${BROKER_HOST}:5672/
+RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@${BROKER_HOST}:5672
 
 # Bases de datos: siempre en la red interna de su nodo
 MATCH_DB_URL=postgresql://${MATCH_DB_USER}:${MATCH_DB_PASSWORD}@match-db:5432/${MATCH_DB_NAME}
@@ -173,7 +173,7 @@ docker compose --env-file deploy/lab.env -f deploy/compose/n2.yml up -d
 Todos los contenedores llevan `restart: unless-stopped`. Ojo: para Docker,
 `docker compose kill` y `stop` son paradas **manuales** y no se relanzan. Para
 simular una caída real del proceso se usa
-`docker compose ... exec match kill 1`, y Docker lo levanta solo.
+`docker compose ... exec match sh -c 'kill -9 1'`, y Docker lo levanta solo.
 
 ---
 
@@ -234,7 +234,7 @@ Es la prueba del profesor: quitar el cable de red y, al reconectarlo, el juego s
 **Requisitos que este despliegue agrega a `architecture.md`:**
 1. **Heartbeat propio:** quitar el cable **no cierra** la conexión TCP; queda abierta a medias durante minutos. Por eso el navegador y el gateway se mandan un ping cada 2 s y dan la conexión por caída si pasan 5 s sin respuesta. Entre servicios se usa el keepalive de gRPC con los mismos tiempos.
 2. **JWT validado localmente:** el gateway y `match` validan el token con la clave pública, sin llamar a `players`. Así, si N3 se cae, nadie pierde la partida ni la posibilidad de reconectarse.
-3. **Outbox en `match`:** los eventos se guardan primero en una tabla `outbox` de PostgreSQL #1, en la misma transacción que el cambio, y un publicador los envía a RabbitMQ. Si N4 no está, los eventos esperan en N2 y salen al volver (patrón Transactional Outbox).
+3. **Outbox en `match`:** si RabbitMQ no confirma la publicación de un evento (o está caído), este se persiste en la tabla `outbox` de PostgreSQL #1. Un publicador reintenta periódicamente y en orden los eventos pendientes, y los borra una vez confirmados (patrón Outbox). Si N4 no está, los eventos esperan en N2 y salen al volver.
 4. **Pausa por cualquier desconexión:** la sala se pausa en cuanto **un** jugador se desconecta, no solo cuando se van todos. Los relojes, la contaminación y los votos se congelan. Al volver el jugador, todo está exactamente igual. Es más simple que mantener la partida corriendo con un jugador quieto, y es lo que el profe espera ver.
 5. **Gracia configurable:** mientras la sala está pausada, el jugador desconectado conserva su lugar durante `RECONNECT_GRACE_SECONDS` (10 minutos en el laboratorio). Solo al vencer pasa a fantasma y la sala sigue sin él, para que alguien que se fue de verdad no trabe la partida para siempre. Esto reemplaza los 90 s fijos de `architecture.md`, 6.1.
 

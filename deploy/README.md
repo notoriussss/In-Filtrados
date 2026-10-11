@@ -23,7 +23,17 @@ laboratorio no se compila ni se descarga nada.
 ## 1. Preparar cada laptop (en casa, una vez)
 
 1. Instalar Docker Desktop y comprobar `docker compose version`.
-2. Clonar el repo y descargar las imágenes de **todos** los nodos (por si hay
+2. Iniciar sesión en GitHub Container Registry (los paquetes de GHCR son
+   privados por defecto):
+
+   ```bash
+   echo $CR_PAT | docker login ghcr.io -u <GITHUB_USER> --password-stdin
+   ```
+
+   *Nota:* el CD publica desde `main`. Al mezclar `develop` a `main`, hacer
+   `pull` de nuevo para tener las imágenes finales con S2-10 y S3.
+
+3. Clonar el repo y descargar las imágenes de **todos** los nodos (por si hay
    que agrupar o cambiar de laptop el día de la demo):
 
    ```bash
@@ -33,8 +43,8 @@ laboratorio no se compila ni se descarga nada.
      -f deploy/compose/n5.yml pull
    ```
 
-3. Desactivar la suspensión y el apagado de pantalla mientras esté enchufada.
-4. Abrir en el firewall de Windows los puertos de su nodo, en perfil
+4. Desactivar la suspensión y el apagado de pantalla mientras esté enchufada.
+5. Abrir en el firewall de Windows los puertos de su nodo, en perfil
    **privado y público** (PowerShell como administrador):
 
    | Nodo | Puertos |
@@ -48,6 +58,13 @@ laboratorio no se compila ni se descarga nada.
    ```powershell
    New-NetFirewallRule -DisplayName "In-Filtrados N2" -Direction Inbound `
      -Protocol TCP -LocalPort 50051,8081 -Action Allow -Profile Private,Public
+   ```
+
+   Permitir también el ping (ICMP echo) para que `check-network.ps1` lo detecte:
+
+   ```powershell
+   New-NetFirewallRule -DisplayName "In-Filtrados ICMP Echo" -Direction Inbound `
+     -Protocol ICMPv4 -IcmpType 8 -Action Allow -Profile Private,Public
    ```
 
    El 5432 **no** se abre: las bases solo se ven dentro de la red de Docker de
@@ -111,7 +128,7 @@ Docker lo vuelve a levantar solo. En cambio, `docker compose kill`, `stop` y
 con `start` o `up -d`). Para simular una caída real del proceso:
 
 ```bash
-docker compose --env-file deploy/lab.env -f deploy/compose/n2.yml exec match kill 1
+docker compose --env-file deploy/lab.env -f deploy/compose/n2.yml exec match sh -c 'kill -9 1'
 ```
 
 A los pocos segundos `ps` lo muestra otra vez `Up` y el panel vuelve a verde.

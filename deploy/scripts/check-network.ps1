@@ -36,6 +36,7 @@ $Msg = @{
         "publicarse"
     WsOk          = "WebSocket en /ws responde"
     WsFail        = "WebSocket en /ws no responde ({0})"
+    NodeUnknown   = "nodo '{0}' desconocido en la topología (válidos: N1 a N5)."
     SummaryOk     = "Todo en verde."
     SummaryFail   = "{0} prueba(s) en rojo."
 }
@@ -165,7 +166,12 @@ Write-Host ($Msg.Header -f [Environment]::MachineName, $EnvFile)
 
 foreach ($node in $Nodes) {
     $info = $Topology[$node]
-    if ($null -eq $info) { continue }
+    if ($null -eq $info) {
+        $text = $Msg.NodeUnknown -f $node
+        Write-Host "  [FALLA] $text" -ForegroundColor Red
+        $failures++
+        continue
+    }
     $hostName = $envVars[$info.HostVar]
     if ([string]::IsNullOrWhiteSpace($hostName)) {
         $text = $Msg.VarMissing -f $info.HostVar, $EnvFile
@@ -177,8 +183,11 @@ foreach ($node in $Nodes) {
     Write-Host ""
     Write-Host ($Msg.NodeHeader -f $node, $info.Role, $hostName)
     $pingOk = Test-Ping $hostName
-    $text = if ($pingOk) { $Msg.PingOk } else { $Msg.PingFail }
-    Write-Result $pingOk $text
+    if ($pingOk) {
+        Write-Result $true $Msg.PingOk
+    } else {
+        Write-Host "  [AVISO] $($Msg.PingFail)" -ForegroundColor Yellow
+    }
 
     foreach ($port in $info.Ports) {
         $open = Test-Port $hostName $port.Port
