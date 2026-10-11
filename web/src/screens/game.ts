@@ -1,8 +1,4 @@
-import type {
-  OilDrop,
-  PlayerView, // TEMP S2-12
-  Snapshot, // TEMP S2-12
-} from '@in-filtrados/messages';
+import type { OilDrop } from '@in-filtrados/messages';
 import { gameMap } from '../map';
 import { type Camera, clampCamera, createCamera } from '../canvas/camera';
 import { renderMap } from '../canvas/renderMap';
@@ -16,10 +12,6 @@ import {
 import { Interpolator } from '../net/interpolation';
 import { DirectionInput } from '../input';
 import { session } from '../session';
-import { // TEMP S2-12
-  attachDebugContaminate, // TEMP S2-12
-  renderDebugHint, // TEMP S2-12
-} from '../debugContaminate'; // TEMP S2-12
 import {
   CONNECTION_MESSAGES,
   ERROR_CODES,
@@ -51,9 +43,6 @@ export function mountGame(
   const interpolator = new Interpolator();
   const meId = currentSession.playerId;
   let oilDrops: OilDrop[] = []; // S2-12: rastro del impostor
-  let lastMe: PlayerView | undefined; // TEMP S2-12
-  let lastRole = ''; // TEMP S2-12
-  let lastSnap: Snapshot | null = null; // TEMP S2-12
 
   let status: SocketStatus = { state: 'connected' };
   const socket = openGameSocket({
@@ -74,11 +63,6 @@ export function mountGame(
     if (msg.type === 'snapshot') {
       interpolator.push(msg.tick, msg.players, performance.now());
       oilDrops = msg.oilDrops;
-      lastSnap = msg; // TEMP S2-12
-      if (msg.myRole !== lastRole) { // TEMP S2-12
-        lastRole = msg.myRole; // TEMP S2-12
-        console.info(`[TEMP] mi rol: ${lastRole}`); // TEMP S2-12
-      } // TEMP S2-12
     } else if (msg.type === 'error') {
       if (msg.code === ERROR_CODES.MATCH_NOT_FOUND) {
         session.saveSession({
@@ -116,20 +100,12 @@ export function mountGame(
     send({ type: 'move', dx, dy });
   });
   const detachInput = input.attach(window);
-  const detachDebug = attachDebugContaminate( // TEMP S2-12
-    window, // TEMP S2-12
-    () => lastMe, // TEMP S2-12
-    () => lastSnap, // TEMP S2-12
-    meId, // TEMP S2-12
-    send, // TEMP S2-12
-  ); // TEMP S2-12
   window.addEventListener('resize', resize);
 
   function frame(): void {
     const now = performance.now();
     const players = interpolator.playersAt(now);
     const me = players.find((p) => p.id === meId);
-    lastMe = me; // TEMP S2-12
     if (me) {
       camera = clampCamera({ ...camera, x: me.x, y: me.y }, gameMap);
     }
@@ -140,7 +116,6 @@ export function mountGame(
     const tick = interpolator.tickAt(now);
     if (tick !== null) renderOilDrops(ctx, oilDrops, camera, tick);
     renderPlayers(ctx, players, camera, meId);
-    renderDebugHint(ctx, lastSnap, me, camera); // TEMP S2-12
     if (status.state === 'reconnecting') {
       renderOverlayMessage(
         ctx,
@@ -164,7 +139,6 @@ export function mountGame(
   // para poder limpiar los event listeners en unmountGame.
   (canvas as any)._cleanup = () => {
     detachInput();
-    detachDebug(); // TEMP S2-12
     window.removeEventListener('resize', resize);
     cancelAnimationFrame(animationFrame);
     closeGameSocket();
