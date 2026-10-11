@@ -827,7 +827,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 **Pasos:**
 1. Revisar que exchange, colas y mensajes sean durables y persistentes (sección 0.7), y que `players` haga `ack` solo después del `COMMIT`.
-2. `match` usa publisher confirms; si RabbitMQ no confirma, guarda el evento en una tabla `outbox` y lo reintenta cada 5 segundos.
+2. `match` usa publisher confirms; si RabbitMQ no confirma, guarda el evento en una tabla `outbox` y lo reintenta cada 5 segundos. Mientras quede algo en `outbox`, los eventos nuevos también esperan ahí, para que salgan en orden (`match/internal/events/outbox.go`).
 3. Probar: matar `players` con `docker compose kill players` **en medio** de procesar un mensaje (con un `sleep` temporal de prueba) y comprobar que al volver se procesa una sola vez.
 
 **Criterio de verificación:** las tres pruebas pasan: (a) `players` apagado durante el fin de partida, (b) RabbitMQ reiniciado durante el fin de partida y (c) `players` muerto a mitad de un mensaje. En las tres, las monedas se suman exactamente una vez.

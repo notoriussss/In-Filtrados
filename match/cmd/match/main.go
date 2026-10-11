@@ -88,7 +88,13 @@ func main() {
 		matchgrpc.WithSnapshots(snapshots),
 	}
 	if publisher != nil {
-		serverOpts = append(serverOpts, matchgrpc.WithPublisher(publisher))
+		// S3-03: lo que RabbitMQ no confirme espera en la tabla outbox.
+		outbox := events.NewOutboxPublisher(
+			publisher,
+			matchdb.NewOutboxStore(pool),
+		)
+		go outbox.Run(ctx)
+		serverOpts = append(serverOpts, matchgrpc.WithPublisher(outbox))
 	}
 
 	lis, err := net.Listen("tcp", ":"+grpcPort)
