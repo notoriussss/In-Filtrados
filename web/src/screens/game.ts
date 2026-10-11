@@ -1,6 +1,7 @@
 import type {
   OilDrop,
   PlayerView,
+  Snapshot,
   Winner,
 } from '@in-filtrados/messages';
 import { gameMap } from '../map';
@@ -19,6 +20,7 @@ import { session } from '../session';
 import { api, type MeResponse } from '../api';
 import { type MeetingPanel, mountMeetingPanel } from './meeting';
 import { mountEndPanel } from './matchEnd';
+import { pauseMessage } from '../pause';
 import {
   CONNECTION_MESSAGES,
   ERROR_CODES,
@@ -59,6 +61,17 @@ export function mountGame(
   let winner: Winner | null = null;
   let impostorIds: string[] = [];
   let lastPlayers: PlayerView[] = [];
+  // S3-02: aviso de pausa (alguien en gracia o match caído).
+  const pauseBanner = document.getElementById('pause-banner')!;
+  let matchDown = false;
+  let lastSnapshot: Snapshot | null = null;
+  const updatePause = () => {
+    const text = pauseMessage(lastSnapshot, matchDown);
+    pauseBanner.hidden = text === null;
+    if (text !== null && pauseBanner.textContent !== text) {
+      pauseBanner.textContent = text;
+    }
+  };
   // Perfil al entrar: la pantalla final compara las monedas con este.
   let profileBefore: MeResponse | null = null;
   api.getMe(currentSession.token).then(
@@ -122,6 +135,14 @@ export function mountGame(
       interpolator.push(msg.tick, msg.players, performance.now());
       oilDrops = msg.oilDrops;
       lastPlayers = msg.players;
+      lastSnapshot = msg;
+      if (matchDown) {
+        // match volvió (S3-02): retoma la dirección de las teclas.
+        matchDown = false;
+        const { dx, dy } = input.current();
+        if (dx !== 0 || dy !== 0) send({ type: 'move', dx, dy });
+      }
+      updatePause();
       // S3-01: se entró directo a la partida, pero la sala sigue en
       // espera: se vuelve al lobby, que muestra el código y la lista.
       if (msg.phase === 'LOBBY') {
@@ -135,6 +156,11 @@ export function mountGame(
       winner = msg.winner;
       impostorIds = msg.impostorIds;
     } else if (msg.type === 'error') {
+      if (msg.code === ERROR_CODES.SERVICE_UNAVAILABLE) {
+        matchDown = true; // el gateway reabre Play solo (S3-02)
+        updatePause();
+        return;
+      }
       if (msg.code === ERROR_CODES.MATCH_NOT_FOUND) {
         session.saveSession({
           ...currentSession,
@@ -214,6 +240,7 @@ export function mountGame(
     cancelAnimationFrame(animationFrame);
     closeGameSocket();
     showMeeting(false);
+    pauseBanner.hidden = true;
     closeEndPanel?.();
     endRoot.hidden = true;
   };

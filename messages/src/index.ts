@@ -39,6 +39,10 @@ export type Snapshot = {
   meeting: Meeting | null; // solo en MEETING
   chat: ChatMessage[]; // últimos 30 mensajes
   oilDrops: OilDrop[]; // S2-12: rastro del impostor
+  // S3-02: en pausa mientras alguien está en su periodo de gracia;
+  // waitingFor son los ids de esos jugadores.
+  paused: boolean;
+  waitingFor: string[];
 };
 
 // OilDrop: gota del rastro que deja el impostor tras contaminar (S2-12).

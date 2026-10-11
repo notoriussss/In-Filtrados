@@ -45,6 +45,8 @@ function snap(meeting: Partial<Meeting>, tick = 100): Snapshot {
     },
     chat: [],
     oilDrops: [],
+    paused: false,
+    waitingFor: [],
   };
 }
 

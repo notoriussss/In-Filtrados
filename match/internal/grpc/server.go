@@ -25,6 +25,7 @@ type Server struct {
 	eventLog      room.EventLog
 	matchDuration time.Duration
 	gracePeriod   time.Duration
+	snapshots     room.SnapshotSaver
 }
 
 // ServerOption configura el servidor gRPC.
@@ -53,6 +54,11 @@ func WithMatchDuration(duration time.Duration) ServerOption {
 // WithGracePeriod guarda el lugar del que se desconecta (S3-01).
 func WithGracePeriod(grace time.Duration) ServerOption {
 	return func(s *Server) { s.gracePeriod = grace }
+}
+
+// WithSnapshots guarda una instantánea de cada sala (S3-02).
+func WithSnapshots(saver room.SnapshotSaver) ServerOption {
+	return func(s *Server) { s.snapshots = saver }
 }
 
 func NewServer(reg *room.Registry, m *room.Map, opts ...ServerOption) *Server {
@@ -113,7 +119,39 @@ func (s *Server) roomOptions(creatorID string) []room.Option {
 	if s.gracePeriod > 0 {
 		opts = append(opts, room.WithGracePeriod(s.gracePeriod))
 	}
+	if s.snapshots != nil {
+		opts = append(opts, room.WithSnapshots(s.snapshots))
+	}
 	return opts
+}
+
+// RestoreRooms recrea las salas de las partidas sin terminar (S3-02).
+// Quedan en pausa hasta que sus jugadores se reconecten. Devuelve
+// cuántas recuperó; una instantánea dañada se salta sin tumbar a match.
+func (s *Server) RestoreRooms(
+	ctx context.Context,
+	saved []room.SavedSnapshot,
+) int {
+	restored := 0
+	for _, snap := range saved {
+		r, err := room.Restore(snap.State, s.m, s.roomOptions("")...)
+		if err != nil {
+			log.Printf("restore: partida %s: %v", snap.MatchID, err)
+			continue
+		}
+		if !s.registry.AddIfFree(r) {
+			log.Printf("restore: el código %s ya está en uso", r.Code)
+			continue
+		}
+		go r.Run(ctx)
+		restored++
+		log.Printf(
+			"restore: sala %s (partida %s) en pausa hasta que vuelvan",
+			r.Code,
+			r.MatchID,
+		)
+	}
+	return restored
 }
 
 func (s *Server) JoinRoom(

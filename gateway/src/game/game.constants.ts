@@ -24,6 +24,12 @@ export const MAX_PLAYER_ID_LENGTH = 64;
 export const MAX_CLIENT_MSG_ID_LENGTH = 64; // un UUID tiene 36
 export const MAX_CHAT_LENGTH = 200; // caracteres, igual que match
 
+// S3-02: espera entre intentos de reabrir Play si match no responde.
+export const PLAY_RETRY_DELAYS_MS: readonly number[] = [
+  500, 1000, 2000, 4000, 8000,
+];
+export const PLAY_RETRY_MAX_MS = 10_000;
+
 // WebSocket close codes used by the gateway.
 export const WS_CLOSE_CODES = {
   NORMAL: 1000,

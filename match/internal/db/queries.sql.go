@@ -90,3 +90,55 @@ func (q *Queries) InsertEvent(ctx context.Context, arg InsertEventParams) error 
 	)
 	return err
 }
+
+const listUnfinishedSnapshots = `-- name: ListUnfinishedSnapshots :many
+SELECT s.match_id, s.state
+FROM snapshots s
+JOIN matches m ON m.id = s.match_id
+WHERE m.ended_at IS NULL
+`
+
+type ListUnfinishedSnapshotsRow struct {
+	MatchID pgtype.UUID
+	State   []byte
+}
+
+// S3-02: partidas empezadas y sin terminar, para recrearlas al arrancar.
+func (q *Queries) ListUnfinishedSnapshots(ctx context.Context) ([]ListUnfinishedSnapshotsRow, error) {
+	rows, err := q.db.Query(ctx, listUnfinishedSnapshots)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListUnfinishedSnapshotsRow
+	for rows.Next() {
+		var i ListUnfinishedSnapshotsRow
+		if err := rows.Scan(&i.MatchID, &i.State); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const upsertSnapshot = `-- name: UpsertSnapshot :exec
+INSERT INTO snapshots (match_id, tick, state, updated_at)
+VALUES ($1, $2, $3, now())
+ON CONFLICT (match_id) DO UPDATE
+SET tick = EXCLUDED.tick, state = EXCLUDED.state, updated_at = now()
+`
+
+type UpsertSnapshotParams struct {
+	MatchID pgtype.UUID
+	Tick    int64
+	State   []byte
+}
+
+// S3-02: guarda la última instantánea de la partida (una fila por partida).
+func (q *Queries) UpsertSnapshot(ctx context.Context, arg UpsertSnapshotParams) error {
+	_, err := q.db.Exec(ctx, upsertSnapshot, arg.MatchID, arg.Tick, arg.State)
+	return err
+}

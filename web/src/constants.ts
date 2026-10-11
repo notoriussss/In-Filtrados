@@ -20,6 +20,11 @@ export const ERROR_MESSAGES = {
 export const CONNECTION_MESSAGES = {
   reconnecting: (attempt: number) => `Reconectando… (intento ${attempt})`,
   SESSION_REPLACED: 'Abriste el juego en otra pestaña',
+  // S3-02: la sala espera a alguien o match no responde.
+  pausedFor: (names: string) => `Partida en pausa: esperando a ${names}`,
+  PAUSED: 'Partida en pausa',
+  MATCH_DOWN:
+    'Partida en pausa: reconectando con el servidor de la partida…',
 } as const;
 
 // Textos de la reunión, la votación y el fin de partida (S2-10).

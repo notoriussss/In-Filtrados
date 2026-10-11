@@ -45,6 +45,9 @@ type Room struct {
 	chat          []chatEntry
 	oilDrops      []*oilDrop       // S2-12
 	grace         time.Duration    // S3-01
+	snapshots     SnapshotSaver    // S3-02
+	savedKey      string           // fase de la última instantánea
+	savedTick     int64            // tick de la última instantánea
 	now           func() time.Time // S3-01: reloj, cambiable en tests
 
 	joins   chan Join
@@ -100,14 +103,24 @@ func (r *Room) Run(ctx context.Context) {
 		case n := <-r.nameCh:
 			r.setName(n)
 		case <-ticker.C:
-			r.expireGrace()
-			r.step()
-			r.tick++
-			r.broadcast()
+			r.onTick()
 		case <-ctx.Done():
 			return
 		}
 	}
+}
+
+// onTick es un tick del ticker de 20 Hz.
+func (r *Room) onTick() {
+	r.expireGrace()
+	// S3-02: en pausa el ticker sigue y manda snapshots, pero el tick no
+	// avanza: no suben los tanques ni corren la reunión ni el reloj.
+	if !r.paused() {
+		r.step()
+		r.tick++
+	}
+	r.broadcast()
+	r.maybeSave()
 }
 
 func (r *Room) setName(n Name) {
@@ -128,6 +141,12 @@ func (r *Room) handleAction(a PlayerAction) {
 	}
 	p, ok := r.players[a.PlayerID]
 	if !ok {
+		return
+	}
+	// S3-02: en pausa solo se guarda hacia dónde quiere ir cada uno (para
+	// que al soltar una tecla no siga caminando al reanudar); el resto de
+	// las acciones se ignora para que todo quede exactamente igual.
+	if r.paused() && !a.isMove() {
 		return
 	}
 	switch {
@@ -260,6 +279,25 @@ func (r *Room) expireGrace() {
 			id,
 		)
 	}
+}
+
+// paused: la sala espera a alguien en su periodo de gracia (S3-02).
+// El despliegue del laboratorio pausa con cualquier desconectado
+// (docs/deployment-lab.md, sección 9).
+func (r *Room) paused() bool {
+	return r.inMatch() && len(r.waitingFor()) > 0
+}
+
+// waitingFor son los jugadores en periodo de gracia, ordenados.
+func (r *Room) waitingFor() []string {
+	var ids []string
+	for id, p := range r.players {
+		if !p.graceUntil.IsZero() {
+			ids = append(ids, id)
+		}
+	}
+	sort.Strings(ids)
+	return ids
 }
 
 // inMatch: la partida está en juego (ni en la sala de espera ni terminada).
@@ -465,8 +503,9 @@ func (r *Room) snapshotParticipants() []PlayerInfo {
 
 // step mueve a cada jugador y termina la partida si se cumplió el tiempo.
 func (r *Room) step() {
+	// En ticks y no en reloj: el tiempo en pausa no cuenta (S3-02).
 	if r.phase == matchv1.Phase_PLAYING &&
-		time.Since(r.startedAt) >= r.matchDuration {
+		r.tick-r.startTick >= int64(r.matchDuration/tickInterval) {
 		r.finishMatch()
 	}
 	if r.phase != matchv1.Phase_MEETING {
@@ -508,6 +547,8 @@ type sharedState struct {
 	drops   []*matchv1.OilDrop
 	meeting *matchv1.Meeting
 	chat    []*matchv1.ChatMessage
+	paused  bool
+	waiting []string
 }
 
 func (r *Room) sharedView() sharedState {
@@ -530,6 +571,8 @@ func (r *Room) sharedView() sharedState {
 		drops:   r.oilDropViews(),
 		meeting: r.meetingView(),
 		chat:    r.chatViews(),
+		paused:  r.paused(),
+		waiting: r.waitingFor(),
 	}
 }
 
@@ -549,9 +592,11 @@ func (r *Room) sendTo(p *player, s sharedState) {
 				len(p.assignedTasks) + p.tasksCompleted,
 			),
 		},
-		Meeting:  s.meeting,
-		Chat:     s.chat,
-		OilDrops: s.drops,
+		Meeting:    s.meeting,
+		Chat:       s.chat,
+		OilDrops:   s.drops,
+		Paused:     s.paused,
+		WaitingFor: s.waiting,
 	}
 	select {
 	case p.out <- snap:

@@ -67,6 +67,8 @@ test('snapshot keeps only the fields of the contract', () => {
     oilDrops: [
       { x: 100, y: 200, color: '#e6194b', expiresAtTick: 307 },
     ],
+    paused: false,
+    waitingFor: [],
   });
 });
 
@@ -116,6 +118,8 @@ test('snapshot with meeting result maps ejectedId', () => {
     },
     chat: [],
     oilDrops: [],
+    paused: false,
+    waitingFor: [],
   });
 });
 
@@ -141,6 +145,33 @@ test('snapshot without meeting sends null', () => {
   assert.equal(msg.meeting, null);
   assert.deepEqual(msg.myTaskProgress, { completed: 0, total: 0 });
   assert.deepEqual(msg.oilDrops, []);
+  assert.equal(msg.paused, false);
+  assert.deepEqual(msg.waitingFor, []);
+});
+
+test('snapshot in pause says who it is waiting for', () => {
+  const ev = {
+    event: 'snapshot',
+    snapshot: {
+      tick: 40,
+      phase: 'PLAYING',
+      players: [],
+      tanks: [],
+      reservoir: 0,
+      myRole: 'CREW',
+      myTaskProgress: { completed: 0, total: 4 },
+      meeting: null,
+      chat: [],
+      oilDrops: [],
+      paused: true,
+      waitingFor: ['p2'],
+    },
+  } as unknown as GrpcServerEvent;
+
+  const msg = toServerMessage(ev);
+  if (msg?.type !== 'snapshot') throw new Error('esperaba snapshot');
+  assert.equal(msg.paused, true);
+  assert.deepEqual(msg.waitingFor, ['p2']);
 });
 
 test('matchEnded keeps winner and impostors', () => {

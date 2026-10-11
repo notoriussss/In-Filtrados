@@ -16,4 +16,5 @@ const (
 
 	msgPickImpostors = "pick impostors"
 	msgPickStations  = "pick stations"
+	msgRestoreRoom   = "restore room"
 )

@@ -109,6 +109,10 @@ message Snapshot {
   repeated ChatMessage chat     = 9; // últimos 30 mensajes
   // S2-12: rastro del impostor después de contaminar.
   repeated OilDrop oil_drops    = 10;
+  // S3-02: la sala está en pausa mientras alguien está en su periodo de
+  // gracia; waiting_for son esos jugadores (docs/deployment-lab.md, 9).
+  bool            paused        = 11;
+  repeated string waiting_for   = 12;
 }
 // OilDrop: gota del rastro del impostor tras contaminar (S2-12).
 message OilDrop {

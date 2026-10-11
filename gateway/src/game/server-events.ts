@@ -66,6 +66,8 @@ function toSnapshot(s: GrpcSnapshot): Snapshot {
     meeting: s.meeting ? toMeeting(s.meeting) : null,
     chat: (s.chat ?? []).map(toChat),
     oilDrops: (s.oilDrops ?? []).map(toOilDrop),
+    paused: Boolean(s.paused),
+    waitingFor: [...(s.waitingFor ?? [])],
   };
 }
 

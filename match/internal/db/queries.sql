@@ -17,3 +17,17 @@ WHERE id = $1;
 -- S2-03: una fila de event_log (contaminar, limpiar o visitar un tanque).
 INSERT INTO event_log (match_id, tick, player_id, kind, tank_slot)
 VALUES ($1, $2, $3, $4, $5);
+
+-- name: UpsertSnapshot :exec
+-- S3-02: guarda la última instantánea de la partida (una fila por partida).
+INSERT INTO snapshots (match_id, tick, state, updated_at)
+VALUES ($1, $2, $3, now())
+ON CONFLICT (match_id) DO UPDATE
+SET tick = EXCLUDED.tick, state = EXCLUDED.state, updated_at = now();
+
+-- name: ListUnfinishedSnapshots :many
+-- S3-02: partidas empezadas y sin terminar, para recrearlas al arrancar.
+SELECT s.match_id, s.state
+FROM snapshots s
+JOIN matches m ON m.id = s.match_id
+WHERE m.ended_at IS NULL;

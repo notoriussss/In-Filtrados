@@ -46,6 +46,11 @@ func WithGracePeriod(grace time.Duration) Option {
 	}
 }
 
+// WithSnapshots guarda la sala cada 2 s y en cada cambio de fase (S3-02).
+func WithSnapshots(saver SnapshotSaver) Option {
+	return func(r *Room) { r.snapshots = saver }
+}
+
 // WithClock cambia el reloj de la sala; los tests lo adelantan a mano.
 func WithClock(now func() time.Time) Option {
 	return func(r *Room) { r.now = now }

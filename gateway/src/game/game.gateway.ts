@@ -4,7 +4,7 @@ import type { IncomingMessage } from 'http';
 import type { RawData, WebSocket } from 'ws';
 import { status } from '@grpc/grpc-js';
 import type { ServerMessage } from '@in-filtrados/messages';
-import { MatchClient, type PlayStream } from '../clients/match.client';
+import { MatchClient } from '../clients/match.client';
 import {
   ERROR_CODES,
   ERROR_MESSAGES,
@@ -12,7 +12,7 @@ import {
 } from './game.constants';
 import { parseClientMessage, toGrpcAction } from './client-messages';
 import { PlayersClient } from '../clients/players.client';
-import { type GrpcServerEvent, toServerMessage } from './server-events';
+import { PlayRelay } from './play-relay';
 
 // WebSocket /ws?token=...; one Play stream per player
 @WebSocketGateway({ path: '/ws' })
@@ -46,7 +46,7 @@ export class GameGateway implements OnGatewayConnection {
 
     let isAuthenticated = false;
     const messageQueue: RawData[] = [];
-    let stream: PlayStream | null = null;
+    let relay: PlayRelay | null = null;
     let playerId: string | null = null;
 
     socket.on('message', (raw: RawData) => {
@@ -68,8 +68,8 @@ export class GameGateway implements OnGatewayConnection {
         return;
       }
       if (msg.type === 'join') {
-        if (!stream && playerId) {
-          stream = this.openPlay(
+        if (!relay && playerId) {
+          relay = this.openPlay(
             socket,
             playerId,
             msg.matchId,
@@ -79,7 +79,7 @@ export class GameGateway implements OnGatewayConnection {
         return;
       }
       const action = toGrpcAction(msg);
-      if (stream && action) stream.write(action);
+      if (relay && action) relay.write(action);
     };
 
     socket.on('close', () => {
@@ -90,7 +90,7 @@ export class GameGateway implements OnGatewayConnection {
           this.activeSockets.delete(playerId);
         }
       }
-      stream?.end();
+      relay?.close();
     });
 
     try {
@@ -127,30 +127,33 @@ export class GameGateway implements OnGatewayConnection {
     messageQueue.forEach(processMessage);
   }
 
+  // openPlay abre el stream Play del jugador. Si match se cae, el
+  // WebSocket sigue abierto: el navegador ve SERVICE_UNAVAILABLE y el
+  // relay reabre Play con espera creciente (S3-02).
   private openPlay(
     socket: WebSocket,
     playerId: string,
     matchId: string,
     lastTick: number,
-  ): PlayStream {
-    const stream = this.match.play();
-    stream.write({ join: { matchId, playerId, lastTick } });
-
-    stream.on('data', (ev: GrpcServerEvent) => {
-      const msg = toServerMessage(ev);
-      if (msg) send(socket, msg);
+  ): PlayRelay {
+    const relay = new PlayRelay({
+      open: () => this.match.play(),
+      join: { matchId, playerId, lastTick },
+      onMessage: (msg) => send(socket, msg),
+      onUnavailable: (attempt, err) => {
+        this.logger.warn(
+          `play ${playerId}: ${err?.message ?? ''}; reintento ${attempt}`,
+        );
+        send(socket, {
+          type: 'error',
+          code: ERROR_CODES.SERVICE_UNAVAILABLE,
+          message: ERROR_MESSAGES.MATCH_SERVICE_UNAVAILABLE,
+        });
+      },
+      onEnd: () => socket.close(WS_CLOSE_CODES.NORMAL),
     });
-    stream.on('error', (err) => {
-      this.logger.warn(`play ${playerId}: ${err.message}`);
-      send(socket, {
-        type: 'error',
-        code: ERROR_CODES.SERVICE_UNAVAILABLE,
-        message: ERROR_MESSAGES.MATCH_SERVICE_UNAVAILABLE,
-      });
-      socket.close(WS_CLOSE_CODES.SERVICE_UNAVAILABLE);
-    });
-    stream.on('end', () => socket.close(WS_CLOSE_CODES.NORMAL));
-    return stream;
+    relay.start();
+    return relay;
   }
 }
 

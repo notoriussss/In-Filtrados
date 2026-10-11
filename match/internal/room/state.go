@@ -123,6 +123,12 @@ type PlayerAction struct {
 	ChatText      string
 }
 
+// isMove: la acción solo cambia la dirección (un Move).
+func (a PlayerAction) isMove() bool {
+	return !a.Start && !a.Contaminate && !a.Clean && !a.InteractTask &&
+		!a.Report && !a.Vote && !a.Chat
+}
+
 type player struct {
 	view   *matchv1.PlayerView
 	dx, dy int32

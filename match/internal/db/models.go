@@ -32,3 +32,10 @@ type Participant struct {
 	Role        string
 	Ejected     bool
 }
+
+type Snapshot struct {
+	MatchID   pgtype.UUID
+	Tick      int64
+	State     []byte
+	UpdatedAt pgtype.Timestamptz
+}
