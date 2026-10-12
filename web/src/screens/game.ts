@@ -29,6 +29,7 @@ import {
   CONNECTION_MESSAGES,
   ERROR_CODES,
   ERROR_MESSAGES,
+  RESERVOIR_TEXT,
   TANK_TEXT,
 } from '../constants';
 
@@ -80,6 +81,12 @@ export function mountGame(
       tankAlertTimer = null;
     }, 3000);
   };
+  // S2-09: indicador de nivel del embalse.
+  const reservoirRoot = document.getElementById('reservoir')!;
+  const reservoirLabel = reservoirRoot.querySelector('.reservoir-label')!;
+  const reservoirFill = reservoirRoot.querySelector<HTMLElement>(
+    '.reservoir-fill',
+  )!;
   let matchDown = false;
   let lastSnapshot: Snapshot | null = null;
   const updatePause = () => {
@@ -183,6 +190,14 @@ export function mountGame(
       if (msg.phase === 'LOBBY') {
         show('lobby');
         return;
+      }
+      if (msg.phase === 'ENDED') {
+        reservoirRoot.hidden = true;
+      } else {
+        reservoirRoot.hidden = false;
+        const clamp = Math.min(Math.max(msg.reservoir, 0), 100);
+        reservoirFill.style.width = `${clamp}%`;
+        reservoirLabel.textContent = RESERVOIR_TEXT.label(msg.reservoir);
       }
       chatQueue.onSnapshot(msg, performance.now());
       showMeeting(msg.phase === 'MEETING');
@@ -300,6 +315,7 @@ export function mountGame(
     pauseBanner.hidden = true;
     if (tankAlertTimer !== null) clearTimeout(tankAlertTimer);
     tankAlert.hidden = true;
+    reservoirRoot.hidden = true;
     endPanel?.destroy();
     endPanel = null;
     endRoot.hidden = true;

@@ -80,3 +80,8 @@ export const ACTION_MESSAGES = {
 export const TANK_TEXT = {
   OWN_TANK_ALERT: '¡Tu tanque se está contaminando!',
 } as const;
+
+// Indicador del embalse (S2-09 paso 2).
+export const RESERVOIR_TEXT = {
+  label: (value: number) => `Embalse ${value} %`,
+} as const;
