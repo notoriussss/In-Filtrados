@@ -7,7 +7,7 @@ import type {
 import { gameMap, type Tank } from './map';
 import { isMovementKey } from './input';
 import { type Camera, worldToScreen } from './canvas/camera';
-import { ACTION_MESSAGES } from './constants';
+import { ACTION_LABELS, ACTION_MESSAGES } from './constants';
 
 // Tecla E: acción contextual según lo que haya cerca (S2-09 paso 3).
 // - Tanque muerto no reportado -> report
@@ -26,6 +26,13 @@ const LABEL_FONT = 'bold 16px system-ui, sans-serif';
 const LABEL_BG = 'rgba(0, 0, 0, 0.7)';
 const LABEL_GAP = 8;
 const LABEL_HEIGHT = 22;
+
+const HINT_FONT = 'bold 15px system-ui, sans-serif';
+const HINT_BG = 'rgba(0, 0, 0, 0.75)';
+const HINT_COLOR = '#ffffff';
+const HINT_BORDER = 'rgba(255, 255, 255, 0.3)';
+const HINT_HEIGHT = 32;
+const HINT_BOTTOM_GAP = 28;
 
 type Pending = { slot: number; startedAt: number; before: number };
 
@@ -164,15 +171,39 @@ export class ActionKey {
     }
   }
 
+  // hint devuelve qué acción ejecutará la tecla E, o null si no hay ninguna.
+  hint(): ResolvedAction['type'] | null {
+    const snap = this.snapshot();
+    const me = this.me();
+    if (!snap || !me || !me.alive || snap.phase !== 'PLAYING') {
+      return null;
+    }
+    if (this.pending) return null; // ya se ve el anillo
+    return pickAction(
+      me,
+      snap,
+      gameMap.tanks,
+      this.meId,
+      this.reportedSlots,
+    )?.type ?? null;
+  }
+
   // render dibuja el anillo de 3 s y "¡Quieto! Contaminando…" sobre el
-  // jugador mientras la acción de quedarse quieto está en curso.
+  // jugador mientras la acción de quedarse quieto está en curso, o el
+  // aviso "E · Acción" abajo al centro cuando hay una acción disponible.
   render(ctx: CanvasRenderingContext2D, camera: Camera): void {
     const snap = this.snapshot();
     if (snap?.meeting) {
       this.reportedSlots.add(snap.meeting.tankSlot);
     }
     const p = this.pending;
-    if (!p) return;
+    if (!p) {
+      const h = this.hint();
+      if (h) {
+        drawHint(ctx, camera, ACTION_LABELS[h]);
+      }
+      return;
+    }
     const me = this.me();
     const elapsed = performance.now() - p.startedAt;
     const tank = snap?.tanks.find((t) => t.slot === p.slot);
@@ -231,5 +262,25 @@ function drawLabel(
   ctx.fillStyle = LABEL_BG;
   ctx.fillRect(x - w / 2 - 6, y - 2, w + 12, LABEL_HEIGHT);
   ctx.fillStyle = RING_COLOR;
+  ctx.fillText(text, x, y);
+}
+
+function drawHint(
+  ctx: CanvasRenderingContext2D,
+  camera: Camera,
+  text: string,
+): void {
+  const x = camera.viewWidth / 2;
+  const y = camera.viewHeight - HINT_BOTTOM_GAP;
+  ctx.font = HINT_FONT;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  const w = ctx.measureText(text).width + 24;
+  ctx.fillStyle = HINT_BG;
+  ctx.fillRect(x - w / 2, y - HINT_HEIGHT / 2, w, HINT_HEIGHT);
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = HINT_BORDER;
+  ctx.strokeRect(x - w / 2, y - HINT_HEIGHT / 2, w, HINT_HEIGHT);
+  ctx.fillStyle = HINT_COLOR;
   ctx.fillText(text, x, y);
 }

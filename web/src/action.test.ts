@@ -271,6 +271,7 @@ describe('ActionKey', () => {
       fillText: () => {},
       measureText: () => ({ width: 10 }),
       fillRect: () => {},
+      strokeRect: () => {},
     } as unknown as CanvasRenderingContext2D;
     actionKey.render(ctx, {
       x: 0,
@@ -293,5 +294,58 @@ describe('ActionKey', () => {
 
     actionKey.keyDown({ code: ACTION_KEY });
     expect(sent).toHaveLength(0);
+  });
+});
+
+describe('ActionKey.hint', () => {
+  it('returns contaminate for impostor near alive enemy tank', () => {
+    const snap: Snapshot = {
+      ...baseSnap([tank(1, 'p2', false)]),
+      myRole: 'IMPOSTOR',
+    };
+    const me = player('me');
+    const actionKey = new ActionKey('me', () => me, () => snap, () => {});
+    expect(actionKey.hint()).toBe('contaminate');
+  });
+
+  it('returns null for crew member at same position', () => {
+    const snap: Snapshot = {
+      ...baseSnap([tank(1, 'p2', false)]),
+      myRole: 'CREW',
+    };
+    const me = player('me');
+    const actionKey = new ActionKey('me', () => me, () => snap, () => {});
+    expect(actionKey.hint()).toBeNull();
+  });
+
+  it('returns report for anyone near dead unreported tank', () => {
+    const snap: Snapshot = {
+      ...baseSnap([tank(1, 'p2', true)]),
+      myRole: 'CREW',
+    };
+    const me = player('me');
+    const actionKey = new ActionKey('me', () => me, () => snap, () => {});
+    expect(actionKey.hint()).toBe('report');
+  });
+
+  it('returns null when player is dead (ghost)', () => {
+    const snap: Snapshot = {
+      ...baseSnap([tank(1, 'p2', true)]),
+      myRole: 'CREW',
+    };
+    const me = player('me', false); // dead
+    const actionKey = new ActionKey('me', () => me, () => snap, () => {});
+    expect(actionKey.hint()).toBeNull();
+  });
+
+  it('returns null while an action is already in progress', () => {
+    const snap: Snapshot = {
+      ...baseSnap([tank(1, 'p2', false)]),
+      myRole: 'IMPOSTOR',
+    };
+    const me = player('me');
+    const actionKey = new ActionKey('me', () => me, () => snap, () => {});
+    actionKey.keyDown({ code: ACTION_KEY });
+    expect(actionKey.hint()).toBeNull();
   });
 });

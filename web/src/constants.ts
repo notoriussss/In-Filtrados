@@ -85,3 +85,9 @@ export const TANK_TEXT = {
 export const RESERVOIR_TEXT = {
   label: (value: number) => `Embalse ${value} %`,
 } as const;
+
+// Textos del botón contextual de acción (S2-09 paso 3).
+export const ACTION_LABELS = {
+  report: 'E · Reportar',
+  contaminate: 'E · Contaminar',
+} as const;
