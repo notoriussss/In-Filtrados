@@ -512,7 +512,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 **Pasos:**
 1. Usar `@nestjs/platform-ws` (WebSocket puro, sin Socket.IO, para que el navegador use la API nativa).
-2. Al conectar a `/ws?token=...`: validar el token con `players`. Si no es válido, mandar `{type:'error', code:'UNAUTHORIZED'}` y cerrar con el código 4001. Si el mismo `playerId` abre una segunda conexión, cerrar la anterior con 4002 (sesión reemplazada).
+2. Al conectar a `/ws?token=...`: validar el token con `players`. Si no es válido, mandar `{type:'error', code:'UNAUTHORIZED'}` y cerrar con el código 4001. Si el mismo `playerId` abre una segunda conexión, cerrar la anterior con 4002 (sesión reemplazada). Si supera el límite de mensajes de S2-08, cerrar con 4008 (demasiados mensajes).
 3. Al recibir `join`: abrir un stream `Play` con `match`, mandarle `Join` con el `playerId` **del token**, nunca uno que mande el navegador.
 4. Reenviar cada `move` como `Move`, validando que `dx` y `dy` estén en {-1, 0, 1}. Si un mensaje no se puede parsear, `error BAD_MESSAGE` sin cerrar la conexión.
 5. Reenviar cada `Snapshot` al navegador convertido a `ServerMessage`.
@@ -575,7 +575,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 **Pasos:**
 1. Clase `GameSocket` con `connect()`, `send()` y `onMessage()`.
-2. Si la conexión se cierra con un código distinto de 1000 (cierre normal), 4001 (token inválido) o 4002 (sesión reemplazada), reintentar con espera creciente: 0,5 s, 1 s, 2 s, 4 s, 8 s y luego cada 10 s, indefinidamente.
+2. Si la conexión se cierra con un código distinto de 1000 (cierre normal), 4001 (token inválido) o 4002 (sesión reemplazada), reintentar con espera creciente: 0,5 s, 1 s, 2 s, 4 s, 8 s y luego cada 10 s, indefinidamente. El 4008 (demasiados mensajes, S2-08) es un corte normal: también reintenta.
 3. Mientras reconecta, mostrar sobre el canvas el aviso "Reconectando…" con el número de intento.
 4. Al reconectar, mandar de nuevo `join` con el `matchId` guardado en `session.ts` y el último `tick` recibido.
 5. Si el cierre es 4001, borrar la sesión y volver al login. Con 4002 (reemplazada), no reintentar y mantener la sesión.
@@ -735,9 +735,16 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 **Pasos:**
 1. Reenviar todas las acciones nuevas de S2-01 al stream `Play`, validando cada una (tipos, rangos y largo del chat).
 2. **Rate limiting por jugador** (patrón Gateway Offloading): máximo 30 mensajes por segundo por WebSocket con un token bucket en memoria. Si se pasa, descartar y, tras 3 avisos, cerrar con el código 4008.
-3. Límite en REST: 10 intentos de login por minuto por IP (`@nestjs/throttler`).
+3. Límite en REST: 10 intentos de login por minuto por usuario
+   (`@nestjs/throttler`). Se cuenta por usuario normalizado (`username`)
+   en vez de IP porque en despliegues con Docker Desktop la IP real de los
+   clientes en la LAN no siempre se conserva (lo que provocaría que todos
+   los jugadores compartan el cupo o se evada falseando `X-Forwarded-For`).
 
-**Criterio de verificación:** test unitario del token bucket. Un script que manda 100 `move` en 1 segundo recibe avisos y termina desconectado, mientras el otro jugador de la sala no nota nada. El undécimo login seguido en un minuto responde 429.
+**Criterio de verificación:** test unitario del token bucket. Un script que
+manda 100 `move` en 1 segundo recibe avisos y termina desconectado, mientras
+el otro jugador de la sala no nota nada. El undécimo login seguido en un minuto
+para el mismo usuario responde 429.
 
 ---
 

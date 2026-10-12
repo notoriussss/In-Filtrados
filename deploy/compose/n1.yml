@@ -17,6 +17,7 @@ services:
       PORT: "3000"
       MATCH_GRPC_ADDR: ${MATCH_GRPC_ADDR:?falta MATCH_GRPC_ADDR en lab.env}
       PLAYERS_GRPC_ADDR: ${PLAYERS_GRPC_ADDR:?falta PLAYERS_GRPC_ADDR en lab.env}
+      TRUST_PROXY: ${TRUST_PROXY:-loopback, 172.16.0.0/12}
     ports:
       - "3000:3000"
     restart: unless-stopped
