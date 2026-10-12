@@ -12,7 +12,7 @@ import { ACTION_MESSAGES } from './constants';
 // Tecla E: acción contextual según lo que haya cerca (S2-09 paso 3).
 // - Tanque muerto no reportado -> report
 // - Tanque ajeno vivo (si es impostor) -> contaminate (3 s quieto)
-// - Estación propia pendiente -> interact (preparado para S2-11)
+// - Estación propia pendiente -> interact (lo agrega S2-11)
 export const ACTION_KEY = 'KeyE';
 export const TANK_RANGE = 40; // tankRange en match
 const CONTAMINATE_MS = 3000; // contaminateTicks en match: 3 s quieto
@@ -151,7 +151,6 @@ export class ActionKey {
     );
     if (!act) return;
     if (act.type === 'report') {
-      this.reportedSlots.add(act.tank.slot);
       this.send({ type: 'report', tankSlot: act.tank.slot });
       return;
     }
@@ -200,9 +199,6 @@ export class ActionKey {
     );
   }
 }
-
-// Alias de retrocompatibilidad.
-export { ActionKey as ContaminateKey };
 
 function drawRing(
   ctx: CanvasRenderingContext2D,

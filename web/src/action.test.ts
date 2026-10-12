@@ -157,6 +157,61 @@ describe('ActionKey', () => {
     expect(sent).toEqual([{ type: 'report', tankSlot: 1 }]);
   });
 
+  it('allows retrying report on unconfirmed or rejected attempt', () => {
+    const sent: ClientMessage[] = [];
+    const snap = baseSnap([tank(1, 'p2', true)]);
+    const me = player('me');
+    const actionKey = new ActionKey(
+      'me',
+      () => me,
+      () => snap,
+      (msg) => sent.push(msg),
+    );
+
+    actionKey.keyDown({ code: ACTION_KEY });
+    expect(sent).toEqual([{ type: 'report', tankSlot: 1 }]);
+
+    // Sin meeting del servidor, otra pulsación vuelve a mandar report
+    actionKey.keyDown({ code: ACTION_KEY });
+    expect(sent).toEqual([
+      { type: 'report', tankSlot: 1 },
+      { type: 'report', tankSlot: 1 },
+    ]);
+  });
+
+  it('stops reporting once meeting snapshot confirms reported tank', () => {
+    const sent: ClientMessage[] = [];
+    let snap = baseSnap([tank(1, 'p2', true)]);
+    const me = player('me');
+    const actionKey = new ActionKey(
+      'me',
+      () => me,
+      () => snap,
+      (msg) => sent.push(msg),
+    );
+
+    actionKey.keyDown({ code: ACTION_KEY });
+    expect(sent).toHaveLength(1);
+
+    // Servidor confirma meeting con tankSlot 1
+    snap = {
+      ...snap,
+      meeting: {
+        reporterId: 'me',
+        tankSlot: 1,
+        lastVisitors: [],
+        votesCast: [],
+        endsAtTick: 100,
+        votingClosed: false,
+        ejectedId: null,
+        wasImpostor: false,
+      },
+    };
+
+    actionKey.keyDown({ code: ACTION_KEY });
+    expect(sent).toHaveLength(1);
+  });
+
   it('ignores KeyC and other non-E keys', () => {
     const sent: ClientMessage[] = [];
     const snap = baseSnap([tank(1, 'p2', true)]);

@@ -75,4 +75,3 @@ export const END_TEXT = {
 export const ACTION_MESSAGES = {
   still: (seconds: string) => `¡Quieto! Contaminando… ${seconds} s`,
 } as const;
-export const CONTAMINATE_MESSAGES = ACTION_MESSAGES;
