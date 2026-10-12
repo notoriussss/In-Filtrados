@@ -34,7 +34,7 @@ export class AuthController {
 
   @Post('auth/login')
   @HttpCode(HttpStatus.OK)
-  // S2-08: 10 intentos de login por minuto por IP real; el resto
+  // S2-08: 10 intentos de login por minuto por usuario; el resto
   // responde 429 sin llegar siquiera a players.
   @UseGuards(LoginThrottlerGuard)
   async login(@Body() body: CredentialsDto): Promise<TokenReply> {

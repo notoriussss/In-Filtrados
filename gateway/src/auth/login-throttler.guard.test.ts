@@ -14,25 +14,67 @@ function guard(): LoginThrottlerGuard {
 }
 
 test(
-  'el tracker usa req.ip y no la primera IP de X-Forwarded-For',
+  'el tracker usa username normalizado en minúsculas y con trim',
   async () => {
     const tracker = await (guard() as any).getTracker({
+      body: { username: '  PlayerOne ' },
       ip: '203.0.113.7',
-      ips: ['10.0.0.1', '203.0.113.7'],
     });
-    assert.equal(tracker, '203.0.113.7');
-    assert.notEqual(tracker, '10.0.0.1');
+    assert.equal(tracker, 'user:playerone');
   },
 );
 
 test(
-  'sin cabecera X-Forwarded-For el tracker es la IP de la conexión',
+  'el mismo usuario con IPs distintas comparte el tracker',
+  async () => {
+    const trackerA = await (guard() as any).getTracker({
+      body: { username: 'ana' },
+      ip: '10.0.0.1',
+    });
+    const trackerB = await (guard() as any).getTracker({
+      body: { username: 'ana' },
+      ip: '192.168.1.50',
+    });
+    assert.equal(trackerA, trackerB);
+  },
+);
+
+test(
+  'usuarios distintos con la misma IP tienen trackers separados',
+  async () => {
+    const tracker1 = await (guard() as any).getTracker({
+      body: { username: 'ana' },
+      ip: '192.168.1.50',
+    });
+    const tracker2 = await (guard() as any).getTracker({
+      body: { username: 'bob' },
+      ip: '192.168.1.50',
+    });
+    assert.notEqual(tracker1, tracker2);
+    assert.equal(tracker1, 'user:ana');
+    assert.equal(tracker2, 'user:bob');
+  },
+);
+
+test(
+  'sin username en el cuerpo el tracker hace fallback a ip:${req.ip}',
   async () => {
     const tracker = await (guard() as any).getTracker({
+      body: {},
       ip: '172.18.0.2',
-      ips: [],
     });
-    assert.equal(tracker, '172.18.0.2');
+    assert.equal(tracker, 'ip:172.18.0.2');
+  },
+);
+
+test(
+  'con username en blanco el tracker hace fallback a ip:${req.ip}',
+  async () => {
+    const tracker = await (guard() as any).getTracker({
+      body: { username: '   ' },
+      ip: '172.18.0.2',
+    });
+    assert.equal(tracker, 'ip:172.18.0.2');
   },
 );
 

@@ -1,4 +1,4 @@
-// S2-08: límite de intentos de login por IP (patrón Gateway
+// S2-08: límite de intentos de login por usuario (patrón Gateway
 // Offloading). Solo aplica a POST /api/auth/login.
 export const LOGIN_RATE_LIMIT = {
   TTL_MS: 60_000, // una ventana de un minuto

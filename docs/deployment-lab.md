@@ -114,10 +114,9 @@ Cada integrante lleva el nodo de un servicio que **no** es el suyo cuando se pue
 - Los `/health` de N2 y N3 informan también el estado de su base de datos (`SELECT 1`). Así el monitor sabe si una base cayó sin tener que llegar a ella.
 - S2-08: el `/health` del gateway se consulta directamente en
   `http://<EDGE_HOST>:3000/health` (así una caída de `web` no afecta el
-  estado del gateway en el monitor). El gateway solo confía en
-  `X-Forwarded-For` de la red interna de Docker (`TRUST_PROXY`), por lo que
-  una conexión directa a `:3000` no permite saltarse el límite de login con
-  un encabezado inventado.
+  estado del gateway en el monitor). El límite de login se cuenta por usuario
+  en el gateway, por lo que el puerto :3000 publicado no compromete la
+  protección de fuerza bruta ni depende de la IP reportada por Docker Desktop.
 
 ---
 

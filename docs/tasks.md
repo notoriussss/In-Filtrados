@@ -735,9 +735,16 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 **Pasos:**
 1. Reenviar todas las acciones nuevas de S2-01 al stream `Play`, validando cada una (tipos, rangos y largo del chat).
 2. **Rate limiting por jugador** (patrón Gateway Offloading): máximo 30 mensajes por segundo por WebSocket con un token bucket en memoria. Si se pasa, descartar y, tras 3 avisos, cerrar con el código 4008.
-3. Límite en REST: 10 intentos de login por minuto por IP (`@nestjs/throttler`).
+3. Límite en REST: 10 intentos de login por minuto por usuario
+   (`@nestjs/throttler`). Se cuenta por usuario normalizado (`username`)
+   en vez de IP porque en despliegues con Docker Desktop la IP real de los
+   clientes en la LAN no siempre se conserva (lo que provocaría que todos
+   los jugadores compartan el cupo o se evada falseando `X-Forwarded-For`).
 
-**Criterio de verificación:** test unitario del token bucket. Un script que manda 100 `move` en 1 segundo recibe avisos y termina desconectado, mientras el otro jugador de la sala no nota nada. El undécimo login seguido en un minuto responde 429.
+**Criterio de verificación:** test unitario del token bucket. Un script que
+manda 100 `move` en 1 segundo recibe avisos y termina desconectado, mientras
+el otro jugador de la sala no nota nada. El undécimo login seguido en un minuto
+para el mismo usuario responde 429.
 
 ---
 
