@@ -12,3 +12,6 @@ export function ownTankRose(
   if (!before || !after) return false;
   return after.contamination > before.contamination;
 }
+
+// Duración en milisegundos que permanece visible el aviso en pantalla.
+export const TANK_ALERT_MS = 3000;

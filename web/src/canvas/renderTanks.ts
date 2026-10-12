@@ -16,6 +16,7 @@ const NAME_GAP = 6;
 const NAME_FONT = 'bold 13px system-ui, sans-serif';
 const NAME_COLOR = '#ffffff';
 const NAME_OUTLINE = 'rgba(0, 0, 0, 0.7)';
+const WITHERED_ICON = '🥀';
 const WITHERED_FONT = '16px system-ui, sans-serif';
 
 // tankColor interpola linealmente de verde a café según la contaminación.
@@ -54,7 +55,7 @@ export function renderTanks(
       ctx.font = WITHERED_FONT;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('🥀', s.x, s.y);
+      ctx.fillText(WITHERED_ICON, s.x, s.y);
     }
 
     // Nombre del dueño arriba

@@ -23,7 +23,7 @@ import { api, type MeResponse } from '../api';
 import { type MeetingPanel, mountMeetingPanel } from './meeting';
 import { type EndPanelHandle, mountEndPanel } from './matchEnd';
 import { pauseMessage } from '../pause';
-import { ownTankRose } from '../tankAlert';
+import { ownTankRose, TANK_ALERT_MS } from '../tankAlert';
 import { ChatQueue } from '../net/chatQueue';
 import {
   CONNECTION_MESSAGES,
@@ -79,7 +79,7 @@ export function mountGame(
     tankAlertTimer = window.setTimeout(() => {
       tankAlert.hidden = true;
       tankAlertTimer = null;
-    }, 3000);
+    }, TANK_ALERT_MS);
   };
   // S2-09: indicador de nivel del embalse.
   const reservoirRoot = document.getElementById('reservoir')!;
