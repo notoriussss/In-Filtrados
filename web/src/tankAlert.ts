@@ -7,6 +7,8 @@ export function ownTankRose(
   next: Snapshot,
   meId: string,
 ): boolean {
+  // El tanque del impostor sube solo por drift; no es un ataque.
+  if (next.myRole === 'IMPOSTOR') return false;
   const before = prev?.tanks.find((t) => t.ownerId === meId);
   const after = next.tanks.find((t) => t.ownerId === meId);
   if (!before || !after) return false;

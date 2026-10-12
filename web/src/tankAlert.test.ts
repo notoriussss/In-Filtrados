@@ -63,4 +63,17 @@ describe('ownTankRose', () => {
     const next = snapWithTanks([]);
     expect(ownTankRose(prev, next, 'me')).toBe(false);
   });
+
+  it('returns false when own tank rises but player is impostor', () => {
+    const prev = snapWithTanks([
+      { slot: 0, ownerId: 'me', contamination: 0, dead: false },
+    ]);
+    const next: Snapshot = {
+      ...snapWithTanks([
+        { slot: 0, ownerId: 'me', contamination: 1, dead: false },
+      ]),
+      myRole: 'IMPOSTOR',
+    };
+    expect(ownTankRose(prev, next, 'me')).toBe(false);
+  });
 });
