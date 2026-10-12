@@ -195,6 +195,27 @@ button:disabled {
   display: none;
 }
 
+/* S2-09: aviso de contaminación al dueño del tanque */
+.tank-alert {
+  position: absolute;
+  top: 4.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  background: rgba(185, 28, 28, 0.95);
+  color: #fff;
+  font-weight: 700;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  max-width: calc(100vw - 2rem);
+  text-align: center;
+}
+
+.tank-alert[hidden] {
+  display: none;
+}
+
 /* S2-10: reunión y fin de partida, encima del canvas */
 .overlay {
   position: absolute;

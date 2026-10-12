@@ -23,11 +23,13 @@ import { api, type MeResponse } from '../api';
 import { type MeetingPanel, mountMeetingPanel } from './meeting';
 import { type EndPanelHandle, mountEndPanel } from './matchEnd';
 import { pauseMessage } from '../pause';
+import { ownTankRose } from '../tankAlert';
 import { ChatQueue } from '../net/chatQueue';
 import {
   CONNECTION_MESSAGES,
   ERROR_CODES,
   ERROR_MESSAGES,
+  TANK_TEXT,
 } from '../constants';
 
 let animationFrame: number;
@@ -66,6 +68,18 @@ export function mountGame(
   let lastPlayers: PlayerView[] = [];
   // S3-02: aviso de pausa (alguien en gracia o match caído).
   const pauseBanner = document.getElementById('pause-banner')!;
+  // S2-09: aviso al dueño cuando sube la contaminación de su tanque.
+  const tankAlert = document.getElementById('tank-alert')!;
+  let tankAlertTimer: number | null = null;
+  const showTankAlert = () => {
+    tankAlert.textContent = TANK_TEXT.OWN_TANK_ALERT;
+    tankAlert.hidden = false;
+    if (tankAlertTimer !== null) clearTimeout(tankAlertTimer);
+    tankAlertTimer = window.setTimeout(() => {
+      tankAlert.hidden = true;
+      tankAlertTimer = null;
+    }, 3000);
+  };
   let matchDown = false;
   let lastSnapshot: Snapshot | null = null;
   const updatePause = () => {
@@ -153,6 +167,9 @@ export function mountGame(
       interpolator.push(msg.tick, msg.players, performance.now());
       oilDrops = msg.oilDrops;
       lastPlayers = msg.players;
+      if (ownTankRose(lastSnapshot, msg, meId)) {
+        showTankAlert();
+      }
       lastSnapshot = msg;
       if (matchDown) {
         // match volvió (S3-02): retoma la dirección de las teclas.
@@ -281,6 +298,8 @@ export function mountGame(
     closeGameSocket();
     showMeeting(false);
     pauseBanner.hidden = true;
+    if (tankAlertTimer !== null) clearTimeout(tankAlertTimer);
+    tankAlert.hidden = true;
     endPanel?.destroy();
     endPanel = null;
     endRoot.hidden = true;

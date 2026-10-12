@@ -75,3 +75,8 @@ export const END_TEXT = {
 export const ACTION_MESSAGES = {
   still: (seconds: string) => `¡Quieto! Contaminando… ${seconds} s`,
 } as const;
+
+// Avisos de estado del tanque (S2-09 paso 5).
+export const TANK_TEXT = {
+  OWN_TANK_ALERT: '¡Tu tanque se está contaminando!',
+} as const;
