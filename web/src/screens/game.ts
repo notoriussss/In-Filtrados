@@ -16,7 +16,7 @@ import {
 } from '../net/socket';
 import { Interpolator } from '../net/interpolation';
 import { DirectionInput } from '../input';
-import { ContaminateKey } from '../contaminate';
+import { ActionKey } from '../action';
 import { session } from '../session';
 import { api, type MeResponse } from '../api';
 import { type MeetingPanel, mountMeetingPanel } from './meeting';
@@ -219,14 +219,14 @@ export function mountGame(
     send({ type: 'move', dx, dy });
   });
   const detachInput = input.attach(window);
-  // Tecla C: contaminar el tanque ajeno más cercano.
-  const contaminate = new ContaminateKey(
+  // Tecla E: acción contextual (reportar, contaminar o hacer tarea).
+  const actionKey = new ActionKey(
     meId,
     () => lastPlayers.find((p) => p.id === meId),
     () => lastSnapshot,
     (msg) => send(msg),
   );
-  const detachContaminate = contaminate.attach(window);
+  const detachActionKey = actionKey.attach(window);
   window.addEventListener('resize', resize);
 
   function frame(): void {
@@ -243,7 +243,7 @@ export function mountGame(
     const tick = interpolator.tickAt(now);
     if (tick !== null) renderOilDrops(ctx, oilDrops, camera, tick);
     renderPlayers(ctx, players, camera, meId);
-    contaminate.render(ctx, camera);
+    actionKey.render(ctx, camera);
     if (status.state === 'reconnecting') {
       renderOverlayMessage(
         ctx,
@@ -267,7 +267,7 @@ export function mountGame(
   // para poder limpiar los event listeners en unmountGame.
   (canvas as any)._cleanup = () => {
     detachInput();
-    detachContaminate();
+    detachActionKey();
     window.removeEventListener('resize', resize);
     cancelAnimationFrame(animationFrame);
     closeGameSocket();
