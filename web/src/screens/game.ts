@@ -7,6 +7,7 @@ import type {
 import { gameMap } from '../map';
 import { type Camera, clampCamera, createCamera } from '../canvas/camera';
 import { renderMap } from '../canvas/renderMap';
+import { renderTanks } from '../canvas/renderTanks';
 import { renderPlayers } from '../canvas/renderPlayers';
 import { renderOilDrops } from '../canvas/renderOilDrops';
 import {
@@ -240,6 +241,13 @@ export function mountGame(
     ctx.fillStyle = '#1b2a33';
     ctx.fillRect(0, 0, camera.viewWidth, camera.viewHeight);
     renderMap(ctx, gameMap, camera);
+    renderTanks(
+      ctx,
+      lastSnapshot?.tanks ?? [],
+      gameMap.tanks,
+      lastPlayers,
+      camera,
+    );
     const tick = interpolator.tickAt(now);
     if (tick !== null) renderOilDrops(ctx, oilDrops, camera, tick);
     renderPlayers(ctx, players, camera, meId);
