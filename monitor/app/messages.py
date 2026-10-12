@@ -33,7 +33,7 @@ ERROR_UNEXPECTED_HEALTH_RESPONSE = "Unexpected health response"
 # Descripciones de eventos del juego para el panel (S1-22)
 EVENT_MATCH_STARTED = "Empezó la partida {room} con {players} jugadores"
 EVENT_MATCH_FINISHED = "Terminó una partida: ganó {winner}"
-EVENT_TASK_COMPLETED = "Un jugador completó una tarea ({liters} L ahorrados)"
+EVENT_TASK_COMPLETED = "Tarea de {kind} completada ({liters} L ahorrados)"
 EVENT_PLAYER_EJECTED_IMPOSTOR = "Expulsaron a un jugador: era el impostor"
 EVENT_PLAYER_EJECTED_CREW = "Expulsaron a un jugador: era de la tripulación"
 EVENT_PLAYER_DISCONNECTED = (
@@ -47,6 +47,14 @@ WINNER_LABELS = {
     "impostor": "el impostor",
 }
 WINNER_UNKNOWN = "un bando desconocido"
+
+# Tipos de tarea de las 3R (S2-13), en el orden del gráfico del panel
+TASK_TYPE_LABELS = {
+    "reduce": "Reducir",
+    "reuse": "Reutilizar",
+    "recycle": "Reciclar",
+}
+TASK_TYPE_UNKNOWN = "otro tipo"
 
 # Mensajes de log del consumidor de eventos
 LOG_EVENTS_CONNECT_FAILED = (

@@ -801,9 +801,9 @@ para el mismo usuario responde 429.
 **Pasos:**
 1. Consumir `task.completed` y `player.ejected`: litros ahorrados (total y por partida activa), tareas por tipo (Reducir, Reutilizar, Reciclar) y expulsiones acertadas contra fallidas.
 2. Mostrar en el panel un contador grande de **litros ahorrados** (el número más vistoso para el jurado) y un gráfico de barras simple de tareas por tipo.
-3. Despliegue automático: un job en GitHub Actions que, al hacer merge a `main`, entra por SSH a la máquina de la nube (clave en los secrets del repo) y corre `git pull && docker compose up -d --build`.
+3. Despliegue automático con Docker: el CD ya publica una imagen por servicio en GHCR cuando el CI de `main` sale en verde. `deploy/scripts/update.ps1` en cada nodo hace `docker compose --env-file deploy/lab.env -f deploy/compose/nX.yml pull` y `up -d`, así que no se compila nada en las laptops. El script detecta el nodo comparando las IP de la laptop con las de `lab.env` (o se le pasa `-Nodes N2`).
 
-**Criterio de verificación:** completar 3 tareas en una partida sube el contador de litros en el panel en menos de 3 segundos. Un merge a `main` aparece desplegado en la nube en menos de 10 minutos sin que nadie entre a la máquina.
+**Criterio de verificación:** completar 3 tareas en una partida sube el contador de litros en el panel en menos de 3 segundos. Un merge a `main` queda corriendo en cada laptop con un solo comando por nodo (`.\deploy\scripts\update.ps1`).
 
 ---
 

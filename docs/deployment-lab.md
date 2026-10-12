@@ -166,7 +166,8 @@ deploy/
 ├── compose/
 │   ├── n1.yml ... n5.yml     un compose por nodo, mismas imágenes que docker-compose.yml
 └── scripts/
-    └── check-network.ps1     prueba ping, puertos, 5432 cerrado y WebSocket
+    ├── check-network.ps1     prueba ping, puertos, 5432 cerrado y WebSocket
+    └── update.ps1            pull + up -d de las imágenes del CD en el nodo de esta laptop
 ```
 
 Cada laptop arranca su nodo con (paso a paso en `deploy/README.md`):
