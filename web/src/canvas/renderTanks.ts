@@ -11,7 +11,8 @@ const BAR_WIDTH = 48;
 const BAR_HEIGHT = 7;
 const BAR_GAP = 6;
 const BAR_BG = 'rgba(0, 0, 0, 0.6)';
-const NAME_GAP = 6;
+// Más alto que el de renderPlayers para no encimarse con un jugador al lado.
+const NAME_GAP = 14;
 const NAME_FONT = 'bold 12px system-ui, sans-serif';
 const NAME_COLOR = '#ffffff';
 const NAME_OUTLINE = 'rgba(0, 0, 0, 0.7)';

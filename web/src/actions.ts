@@ -22,6 +22,8 @@ export type Action = {
 // contextAction devuelve la acción para lo que tiene cerca el jugador, con
 // esta prioridad: reportar un tanque muerto, contaminar (solo el impostor
 // junto a un tanque ajeno), limpiar y hacer tarea. null si no hay nada.
+// reported son los tanques que ya tuvieron reunión: no se reportan otra
+// vez y no deben tapar lo que haya cerca.
 export function contextAction(
   me: PlayerView,
   role: Role,
@@ -29,6 +31,7 @@ export function contextAction(
   map: GameMap,
   now: number,
   contaminateReadyAt: number,
+  reported: ReadonlySet<number> = new Set(),
 ): Action | null {
   const tankPos = (slot: number) => map.tanks.find((t) => t.slot === slot);
   const nearestTank = (
@@ -50,7 +53,10 @@ export function contextAction(
   };
 
   if (me.alive) {
-    const dead = nearestTank(GAME_RULES.REPORT_RANGE, (t) => t.dead);
+    const dead = nearestTank(
+      GAME_RULES.REPORT_RANGE,
+      (t) => t.dead && !reported.has(t.slot),
+    );
     if (dead) {
       return {
         kind: 'report',

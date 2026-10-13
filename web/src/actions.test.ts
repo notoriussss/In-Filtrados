@@ -85,6 +85,39 @@ describe('contextAction', () => {
     expect(contextAction(ghost, 'CREW', dead, map, 0, 0)).toBeNull();
   });
 
+  it('does not offer Reportar again for a reported tank', () => {
+    const dead = [tank(0, 'impostor'), tank(1, 'crew', 100, true)];
+    const me = player('x', 450, 100);
+    const reported = new Set([1]);
+    expect(
+      contextAction(me, 'CREW', dead, map, 0, 0, reported),
+    ).toBeNull();
+  });
+
+  it('lets the impostor contaminate near a reported dead tank', () => {
+    const local: GameMap = {
+      ...map,
+      tanks: [...map.tanks, { slot: 2, x: 450, y: 100 }],
+    };
+    const all = [
+      tank(0, 'impostor'),
+      tank(1, 'crew', 100, true),
+      tank(2, 'other'),
+    ];
+    const me = player('impostor', 440, 100);
+    const a = contextAction(
+      me,
+      'IMPOSTOR',
+      all,
+      local,
+      0,
+      0,
+      new Set([1]),
+    );
+    expect(a?.kind).toBe('contaminate');
+    expect(a?.tankSlot).toBe(2);
+  });
+
   it('offers Hacer tarea next to a station, also to ghosts', () => {
     const me = player('x', 790, 800, false);
     const a = contextAction(me, 'CREW', tanks, map, 0, 0);

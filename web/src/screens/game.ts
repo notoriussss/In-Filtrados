@@ -109,7 +109,12 @@ export function mountGame(
   // exige quedarse quieto y el HUD con el embalse y el aviso del tanque.
   let currentAction: Action | null = null;
   let hold: HoldAction | null = null;
+  // El cooldown vive solo aquí: si el impostor recarga, el botón sale
+  // activo y match rechaza la acción hasta que pasen los 20 s.
   let contaminateReadyAt = 0;
+  // Tanques que ya tuvieron reunión. TankView no lo dice todavía y esto
+  // se pierde al recargar.
+  const reportedTanks = new Set<number>();
   const triggerAction = () => {
     const action = currentAction;
     if (!action || !action.enabled || hold) return;
@@ -205,6 +210,7 @@ export function mountGame(
         hud.showTankAlert();
       }
       lastSnapshot = msg;
+      if (msg.meeting) reportedTanks.add(msg.meeting.tankSlot);
       if (matchDown) {
         // match volvió (S3-02): retoma la dirección de las teclas.
         matchDown = false;
@@ -325,6 +331,7 @@ export function mountGame(
             gameMap,
             now,
             contaminateReadyAt,
+            reportedTanks,
           )
         : null;
     hud.setAction(currentAction);
