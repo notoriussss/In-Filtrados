@@ -424,7 +424,7 @@ button:disabled {
   top: 7rem;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 25;
+  z-index: 6;
   background: rgba(185, 28, 28, 0.95);
   color: #fff;
   font-weight: 700;
