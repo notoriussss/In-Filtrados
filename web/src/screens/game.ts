@@ -10,12 +10,25 @@ import { renderMap } from '../canvas/renderMap';
 import { renderPlayers } from '../canvas/renderPlayers';
 import { renderOilDrops } from '../canvas/renderOilDrops';
 import {
+  renderHoldProgress,
+  renderTanks,
+} from '../canvas/renderTanks';
+import {
+  type Action,
+  HoldAction,
+  actionMessage,
+  contextAction,
+  holdDuration,
+  tankRose,
+} from '../actions';
+import { mountHud } from '../hud';
+import {
   closeGameSocket,
   openGameSocket,
   type SocketStatus,
 } from '../net/socket';
 import { Interpolator } from '../net/interpolation';
-import { DirectionInput } from '../input';
+import { DirectionInput, isTyping } from '../input';
 import { session } from '../session';
 import { api, type MeResponse } from '../api';
 import { type MeetingPanel, mountMeetingPanel } from './meeting';
@@ -26,6 +39,7 @@ import {
   CONNECTION_MESSAGES,
   ERROR_CODES,
   ERROR_MESSAGES,
+  GAME_RULES,
 } from '../constants';
 
 let animationFrame: number;
@@ -91,6 +105,41 @@ export function mountGame(
     show('lobby');
   };
 
+  // S2-09: acción contextual (tecla E o botón), la acción en curso que
+  // exige quedarse quieto y el HUD con el embalse y el aviso del tanque.
+  let currentAction: Action | null = null;
+  let hold: HoldAction | null = null;
+  let contaminateReadyAt = 0;
+  const triggerAction = () => {
+    const action = currentAction;
+    if (!action || !action.enabled || hold) return;
+    const { dx, dy } = input.current();
+    if (dx !== 0 || dy !== 0) return; // match exige estar quieto
+    send(actionMessage(action));
+    if (holdDuration(action.kind) > 0) {
+      hold = new HoldAction(action, performance.now());
+    }
+  };
+  const finishHold = (done: HoldAction, now: number) => {
+    const { action } = done;
+    if (action.kind === 'task') {
+      send({
+        type: 'interact',
+        stationId: action.stationId!,
+        completed: true,
+      });
+    } else if (action.kind === 'contaminate') {
+      contaminateReadyAt = now + GAME_RULES.CONTAMINATE_COOLDOWN_MS;
+    }
+  };
+  const hud = mountHud(triggerAction);
+  const onActionKey = (e: KeyboardEvent) => {
+    if (e.code !== 'KeyE' || e.repeat || isTyping(e.target)) return;
+    e.preventDefault();
+    triggerAction();
+  };
+  window.addEventListener('keydown', onActionKey);
+
   // S3-04: el chat escrito sin conexión espera aquí hasta salir.
   const chatQueue = new ChatQueue((msg) => send(msg));
 
@@ -151,6 +200,10 @@ export function mountGame(
       interpolator.push(msg.tick, msg.players, performance.now());
       oilDrops = msg.oilDrops;
       lastPlayers = msg.players;
+      // S2-09: avisa al dueño cuando su tanque sube, sin decir quién.
+      if (lastSnapshot && tankRose(lastSnapshot.tanks, msg.tanks, meId)) {
+        hud.showTankAlert();
+      }
       lastSnapshot = msg;
       if (matchDown) {
         // match volvió (S3-02): retoma la dirección de las teclas.
@@ -233,7 +286,11 @@ export function mountGame(
     renderMap(ctx, gameMap, camera);
     const tick = interpolator.tickAt(now);
     if (tick !== null) renderOilDrops(ctx, oilDrops, camera, tick);
+    if (lastSnapshot) {
+      renderTanks(ctx, lastSnapshot.tanks, players, gameMap, camera);
+    }
     renderPlayers(ctx, players, camera, meId);
+    updateAction(me, now);
     if (status.state === 'reconnecting') {
       renderOverlayMessage(
         ctx,
@@ -250,6 +307,47 @@ export function mountGame(
     animationFrame = requestAnimationFrame(frame);
   }
 
+  // updateAction elige el botón de acción y avanza la acción en curso:
+  // se cancela si el jugador se mueve, se aleja o la partida se detiene.
+  function updateAction(me: PlayerView | undefined, now: number): void {
+    const snap = lastSnapshot;
+    const playing =
+      snap !== null &&
+      snap.phase === 'PLAYING' &&
+      !snap.paused &&
+      !matchDown;
+    currentAction =
+      playing && me
+        ? contextAction(
+            me,
+            snap.myRole,
+            snap.tanks,
+            gameMap,
+            now,
+            contaminateReadyAt,
+          )
+        : null;
+    hud.setAction(currentAction);
+    hud.setReservoir(
+      snap && snap.phase !== 'LOBBY' ? snap.reservoir : null,
+    );
+
+    if (!hold) return;
+    const { dx, dy } = input.current();
+    if (dx !== 0 || dy !== 0 || !hold.sameTarget(currentAction)) {
+      hold = null;
+      return;
+    }
+    if (hold.done(now)) {
+      finishHold(hold, now);
+      hold = null;
+      return;
+    }
+    if (me) {
+      renderHoldProgress(ctx, camera, me.x, me.y, hold.progress(now));
+    }
+  }
+
   resize();
   animationFrame = requestAnimationFrame(frame);
 
@@ -257,6 +355,8 @@ export function mountGame(
   // para poder limpiar los event listeners en unmountGame.
   (canvas as any)._cleanup = () => {
     detachInput();
+    window.removeEventListener('keydown', onActionKey);
+    hud.destroy();
     window.removeEventListener('resize', resize);
     cancelAnimationFrame(animationFrame);
     closeGameSocket();
