@@ -62,24 +62,26 @@ export function renderTanks(
     ctx.fillStyle = BAR_BG;
     ctx.fillRect(barX, barY, BAR_WIDTH, BAR_HEIGHT);
     ctx.fillStyle = color;
+    const clampCont = Math.min(Math.max(tank.contamination, 0), 100);
     ctx.fillRect(
       barX,
       barY,
-      (BAR_WIDTH * Math.min(tank.contamination, 100)) / 100,
+      (BAR_WIDTH * clampCont) / 100,
       BAR_HEIGHT,
     );
 
     const owner = players.find((p) => p.id === tank.ownerId);
-    if (!owner) continue;
+    const name = owner?.name ?? tank.ownerId;
+    if (!name) continue;
     const nameY = s.y - TANK_RADIUS - NAME_GAP;
     ctx.font = NAME_FONT;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
     ctx.lineWidth = 3;
     ctx.strokeStyle = NAME_OUTLINE;
-    ctx.strokeText(owner.name, s.x, nameY);
+    ctx.strokeText(name, s.x, nameY);
     ctx.fillStyle = NAME_COLOR;
-    ctx.fillText(owner.name, s.x, nameY);
+    ctx.fillText(name, s.x, nameY);
   }
 }
 
