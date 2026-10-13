@@ -267,8 +267,8 @@ func lastSnapshot(t *testing.T, r *Room, id string) *matchv1.Snapshot {
 	}
 	r.broadcast()
 	select {
-	case snap := <-out:
-		return snap
+	case ev := <-out:
+		return snapOf(ev)
 	default:
 		t.Fatalf("no llegó snapshot para %s", id)
 		return nil
