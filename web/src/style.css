@@ -384,3 +384,148 @@ button:disabled {
 .end-coins {
   color: #fbbf24;
 }
+
+/* S2-11: lista de misiones, botón "Hacer tarea" y minijuegos */
+.task-list {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 15;
+  background: var(--panel-bg);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  min-width: 220px;
+  max-width: calc(100vw - 2rem);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+
+.task-list[hidden] {
+  display: none;
+}
+
+.task-list h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.task-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.task-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.2rem 0;
+  font-size: 0.9rem;
+}
+
+.task-row.task-done {
+  text-decoration: line-through;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.task-dot {
+  display: inline-block;
+  flex: none;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  border: 2px solid #333a40;
+}
+
+.task-all-done {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  color: #22c55e;
+  font-weight: 700;
+}
+
+.task-button {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 15;
+  flex: none;
+  padding: 0.75rem 1.5rem;
+  background: #ffd166;
+  color: #1b2a33;
+  font-size: 1.1rem;
+  font-weight: 700;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+.task-button[hidden] {
+  display: none;
+}
+
+.task-button kbd {
+  display: inline-block;
+  padding: 0 0.4rem;
+  margin-right: 0.25rem;
+  border: 2px solid #1b2a33;
+  border-radius: 4px;
+  font-family: inherit;
+}
+
+.minigame-panel {
+  background: var(--panel-bg);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  padding: 1rem;
+  width: 100%;
+  max-width: 600px;
+  box-sizing: border-box;
+}
+
+.minigame-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.minigame-header h3 {
+  flex: 1;
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.minigame-close {
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  background: var(--secondary);
+  color: #fff;
+}
+
+.minigame-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  touch-action: none;
+  cursor: pointer;
+  user-select: none;
+}
+
+.minigame-progress {
+  margin-top: 0.75rem;
+  height: 0.75rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.minigame-progress-fill {
+  height: 100%;
+  width: 0;
+  background: #22c55e;
+  transition: width 0.1s linear;
+}

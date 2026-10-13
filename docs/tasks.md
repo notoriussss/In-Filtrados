@@ -117,9 +117,11 @@ chat: { id, playerId, text, tick }[]; // últimos 30
 oilDrops: { x, y, color, expiresAtTick }[]; // S2-12: rastro del impostor
 paused: boolean;                   // S3-02: alguien está en su periodo de gracia
 waitingFor: string[];              // S3-02: ids de quienes se esperan
+myTasks: { stationId, done }[];    // S2-11: solo las del destinatario
+myActiveTask: string | null;       // S2-11: tarea iniciada por el servidor
 ```
 
-- `myRole` viaja **solo en el snapshot de su dueño**: `match` arma un snapshot por jugador y el gateway nunca recibe el rol de otro.
+- `myRole`, `myTasks` y `myActiveTask` viajan **solo en el snapshot de su dueño**: `match` arma un snapshot por jugador y el gateway nunca recibe el rol ni las tareas de otro.
 - `votesCast` dice quién ya votó, nunca por quién.
 - `impostorIds` es una lista porque con 7 o más jugadores hay 2 impostores.
 
