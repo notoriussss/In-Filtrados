@@ -104,3 +104,26 @@ export const GAME_RULES = {
   TANK_ALERT_MIN_RISE: 2,
   TANK_ALERT_MS: 3000,
 } as const;
+
+// Textos de la lista de misiones y los minijuegos de las 3R (S2-11).
+export const TASK_TEXT = {
+  LIST_TITLE: (done: number, total: number) =>
+    `Misiones (${done}/${total})`,
+  ALL_DONE: '¡Completaste tus misiones!',
+  TYPE_NAMES: {
+    reduce: 'Reducir',
+    reuse: 'Reutilizar',
+    recycle: 'Reciclar',
+  },
+  GAME_TITLES: {
+    reduce: 'Reducir: cierra la fuga',
+    reuse: 'Reutilizar: guarda el agua gris',
+    recycle: 'Reciclar: filtra el agua',
+  },
+  ROW: (type: string, zone: string) => `${type} · ${zone}`,
+  UNKNOWN_ZONE: 'Zona desconocida',
+  DO_TASK: 'Hacer tarea',
+  DO_TASK_KEY: 'E',
+  CLOSE: 'Cerrar',
+  DONE: '¡Listo!',
+} as const;

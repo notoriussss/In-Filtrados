@@ -47,6 +47,8 @@ function snap(meeting: Partial<Meeting>, tick = 100): Snapshot {
     oilDrops: [],
     paused: false,
     waitingFor: [],
+    myTasks: [],
+    myActiveTask: null,
   };
 }
 

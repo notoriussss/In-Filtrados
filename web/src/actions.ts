@@ -2,6 +2,7 @@
 // mensaje mandar: match valida rango, rol, quietud y tiempo de espera.
 import type {
   ClientMessage,
+  MyTask,
   PlayerView,
   Role,
   TankView,
@@ -32,6 +33,7 @@ export function contextAction(
   now: number,
   contaminateReadyAt: number,
   reported: ReadonlySet<number> = new Set(),
+  myTasks?: readonly MyTask[],
 ): Action | null {
   const tankPos = (slot: number) => map.tanks.find((t) => t.slot === slot);
   const nearestTank = (
@@ -99,11 +101,14 @@ export function contextAction(
     }
   }
 
-  // El snapshot no dice qué estaciones son mías: se ofrece en cualquiera y
-  // match ignora las que no están asignadas.
+  // Solo se ofrecen estaciones propias pendientes (S2-11). Si no se pasa
+  // myTasks (modo prueba o compatibilidad), se revisan todas.
   let station: string | null = null;
   let stationDist = Infinity;
   for (const s of map.stations) {
+    if (myTasks && !myTasks.some((t) => t.stationId === s.id && !t.done)) {
+      continue;
+    }
     const d = distance(me.x, me.y, s.x, s.y);
     if (d <= GAME_RULES.TASK_RANGE && d < stationDist) {
       station = s.id;

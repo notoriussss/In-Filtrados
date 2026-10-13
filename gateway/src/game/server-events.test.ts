@@ -69,6 +69,8 @@ test('snapshot keeps only the fields of the contract', () => {
     ],
     paused: false,
     waitingFor: [],
+    myTasks: [],
+    myActiveTask: null,
   });
 });
 
@@ -120,6 +122,8 @@ test('snapshot with meeting result maps ejectedId', () => {
     oilDrops: [],
     paused: false,
     waitingFor: [],
+    myTasks: [],
+    myActiveTask: null,
   });
 });
 
@@ -147,6 +151,8 @@ test('snapshot without meeting sends null', () => {
   assert.deepEqual(msg.oilDrops, []);
   assert.equal(msg.paused, false);
   assert.deepEqual(msg.waitingFor, []);
+  assert.deepEqual(msg.myTasks, []);
+  assert.equal(msg.myActiveTask, null);
 });
 
 test('snapshot in pause says who it is waiting for', () => {
@@ -172,6 +178,36 @@ test('snapshot in pause says who it is waiting for', () => {
   if (msg?.type !== 'snapshot') throw new Error('esperaba snapshot');
   assert.equal(msg.paused, true);
   assert.deepEqual(msg.waitingFor, ['p2']);
+});
+
+test('snapshot maps my tasks and the active one', () => {
+  const ev = {
+    event: 'snapshot',
+    snapshot: {
+      tick: 50,
+      phase: 'PLAYING',
+      players: [],
+      tanks: [],
+      reservoir: 3,
+      myRole: 'CREW',
+      myTaskProgress: { completed: 1, total: 2 },
+      meeting: null,
+      chat: [],
+      myTasks: [
+        { stationId: 'leak-1', done: true, extra: 'x' },
+        { stationId: 'rain-1', done: false },
+      ],
+      myActiveTask: 'rain-1',
+    },
+  } as unknown as GrpcServerEvent;
+
+  const msg = toServerMessage(ev);
+  if (msg?.type !== 'snapshot') throw new Error('esperaba snapshot');
+  assert.deepEqual(msg.myTasks, [
+    { stationId: 'leak-1', done: true },
+    { stationId: 'rain-1', done: false },
+  ]);
+  assert.equal(msg.myActiveTask, 'rain-1');
 });
 
 test('matchEnded keeps winner and impostors', () => {

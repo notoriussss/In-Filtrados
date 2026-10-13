@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"math/big"
+	"sort"
 
 	"github.com/notoriussss/in-filtrados/match/gen/matchv1"
 	"github.com/notoriussss/in-filtrados/match/internal/events"
@@ -57,6 +58,7 @@ func (r *Room) assignTasks() error {
 			p.assignedTasks[id] = true
 		}
 		p.tasksCompleted = 0
+		p.completedTasks = nil
 		p.taskStartTick = 0
 		p.taskStation = ""
 	}
@@ -102,6 +104,7 @@ func (r *Room) completeTask(playerID string, p *player, stationID string) {
 
 	// Completado con éxito
 	delete(p.assignedTasks, stationID)
+	p.completedTasks = append(p.completedTasks, stationID)
 	p.tasksCompleted++
 	p.taskStartTick = 0
 	p.taskStation = ""
@@ -145,6 +148,41 @@ func (r *Room) completeTask(playerID string, p *player, stationID string) {
 			}()
 		}
 	}
+}
+
+// cancelFarTasks cancela la tarea en curso de quien se alejó de su
+// estación, para que el navegador cierre el minijuego (S2-11).
+func (r *Room) cancelFarTasks() {
+	for _, p := range r.players {
+		if p.taskStation == "" {
+			continue
+		}
+		s := r.stationAt(p.taskStation)
+		if s == nil || !nearStation(p, s) {
+			p.taskStartTick = 0
+			p.taskStation = ""
+		}
+	}
+}
+
+// myTasks arma la lista de tareas del jugador para su snapshot:
+// pendientes y hechas, ordenadas por estación para que no salten.
+func myTasks(p *player) []*matchv1.MyTask {
+	tasks := make(
+		[]*matchv1.MyTask,
+		0,
+		len(p.assignedTasks)+len(p.completedTasks),
+	)
+	for id := range p.assignedTasks {
+		tasks = append(tasks, &matchv1.MyTask{StationId: id})
+	}
+	for _, id := range p.completedTasks {
+		tasks = append(tasks, &matchv1.MyTask{StationId: id, Done: true})
+	}
+	sort.Slice(tasks, func(i, j int) bool {
+		return tasks[i].StationId < tasks[j].StationId
+	})
+	return tasks
 }
 
 func (r *Room) stationAt(id string) *Station {

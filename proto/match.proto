@@ -113,6 +113,11 @@ message Snapshot {
   // gracia; waiting_for son esos jugadores (docs/deployment-lab.md, 9).
   bool            paused        = 11;
   repeated string waiting_for   = 12;
+  // S2-11: las tareas del destinatario (pendientes y hechas) y la
+  // estación cuya tarea el servidor dio por iniciada ("" si ninguna).
+  // Igual que my_role, nunca viajan las de otro jugador.
+  repeated MyTask my_tasks       = 13;
+  string          my_active_task = 14;
 }
 // OilDrop: gota del rastro del impostor tras contaminar (S2-12).
 message OilDrop {
@@ -126,6 +131,11 @@ message TankView {
   string owner_id      = 2;
   int32  contamination = 3; // 0 a 100
   bool   dead          = 4;
+}
+// MyTask: una estación asignada al jugador y si ya la completó (S2-11).
+message MyTask {
+  string station_id = 1;
+  bool   done       = 2;
 }
 message TaskProgress {
   int32 completed = 1;

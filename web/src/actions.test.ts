@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import type { PlayerView, TankView } from '@in-filtrados/messages';
+import type {
+  MyTask,
+  PlayerView,
+  TankView,
+} from '@in-filtrados/messages';
 import {
   HoldAction,
   actionMessage,
@@ -127,6 +131,37 @@ describe('contextAction', () => {
       type: 'interact',
       stationId: 'st-1',
     });
+  });
+
+  it('offers Hacer tarea only for own pending stations', () => {
+    const me = player('x', 790, 800);
+    const pending: MyTask[] = [{ stationId: 'st-1', done: false }];
+    const a = contextAction(
+      me,
+      'CREW',
+      tanks,
+      map,
+      0,
+      0,
+      new Set(),
+      pending,
+    );
+    expect(a?.kind).toBe('task');
+    expect(a?.stationId).toBe('st-1');
+
+    const done: MyTask[] = [{ stationId: 'st-1', done: true }];
+    expect(
+      contextAction(me, 'CREW', tanks, map, 0, 0, new Set(), done),
+    ).toBeNull();
+
+    const other: MyTask[] = [{ stationId: 'other-2', done: false }];
+    expect(
+      contextAction(me, 'CREW', tanks, map, 0, 0, new Set(), other),
+    ).toBeNull();
+
+    expect(
+      contextAction(me, 'CREW', tanks, map, 0, 0, new Set(), []),
+    ).toBeNull();
   });
 
   it('offers nothing far from everything', () => {

@@ -6,7 +6,7 @@ import type {
 } from '@in-filtrados/messages';
 import { gameMap } from '../map';
 import { type Camera, clampCamera, createCamera } from '../canvas/camera';
-import { renderMap } from '../canvas/renderMap';
+import { renderMap, type StationMarks } from '../canvas/renderMap';
 import { renderPlayers } from '../canvas/renderPlayers';
 import { renderOilDrops } from '../canvas/renderOilDrops';
 import {
@@ -35,6 +35,9 @@ import { type MeetingPanel, mountMeetingPanel } from './meeting';
 import { type EndPanelHandle, mountEndPanel } from './matchEnd';
 import { pauseMessage } from '../pause';
 import { ChatQueue } from '../net/chatQueue';
+import { type TaskListPanel, mountTaskList } from '../tasks/taskList';
+import { TaskSession } from '../tasks/taskSession';
+import { mountMinigame } from '../tasks/minigameView';
 import {
   CONNECTION_MESSAGES,
   ERROR_CODES,
@@ -105,6 +108,26 @@ export function mountGame(
     show('lobby');
   };
 
+  // S2-11: lista de misiones y minijuegos.
+  const taskList: TaskListPanel = mountTaskList(
+    document.getElementById('task-list')!,
+  );
+  const taskRoot = document.getElementById('task-overlay')!;
+  const tasks = new TaskSession({
+    stations: gameMap.stations,
+    send: (msg) => send(msg),
+    me: () =>
+      interpolator
+        .playersAt(performance.now())
+        .find((p) => p.id === meId),
+    snapshot: () => lastSnapshot,
+    mount: (type, opts) => mountMinigame(taskRoot, type, opts),
+    // Con el minijuego abierto el jugador se queda quieto.
+    onOpen: () => send({ type: 'move', dx: 0, dy: 0 }),
+    onClose: () => input.clear(),
+    now: () => performance.now(),
+  });
+
   // S2-09: acción contextual (tecla E o botón), la acción en curso que
   // exige quedarse quieto y el HUD con el embalse y el aviso del tanque.
   let currentAction: Action | null = null;
@@ -120,6 +143,10 @@ export function mountGame(
     if (!action || !action.enabled || hold) return;
     const { dx, dy } = input.current();
     if (dx !== 0 || dy !== 0) return; // match exige estar quieto
+    if (action.kind === 'task') {
+      tasks.start();
+      return;
+    }
     send(actionMessage(action));
     if (holdDuration(action.kind) > 0) {
       hold = new HoldAction(action, performance.now());
@@ -127,19 +154,14 @@ export function mountGame(
   };
   const finishHold = (done: HoldAction, now: number) => {
     const { action } = done;
-    if (action.kind === 'task') {
-      send({
-        type: 'interact',
-        stationId: action.stationId!,
-        completed: true,
-      });
-    } else if (action.kind === 'contaminate') {
+    if (action.kind === 'contaminate') {
       contaminateReadyAt = now + GAME_RULES.CONTAMINATE_COOLDOWN_MS;
     }
   };
   const hud = mountHud(triggerAction);
   const onActionKey = (e: KeyboardEvent) => {
     if (e.code !== 'KeyE' || e.repeat || isTyping(e.target)) return;
+    if (tasks.isOpen()) return;
     e.preventDefault();
     triggerAction();
   };
@@ -230,6 +252,8 @@ export function mountGame(
         return;
       }
       chatQueue.onSnapshot(msg, performance.now());
+      taskList.update(msg);
+      tasks.onSnapshot(msg);
       showMeeting(msg.phase === 'MEETING');
       meetingPanel?.update(msg, chatQueue.waiting());
       if (msg.phase === 'ENDED') showEnd();
@@ -279,9 +303,11 @@ export function mountGame(
 
   // S1-19: move goes out only when the direction changes.
   const input = new DirectionInput(({ dx, dy }) => {
+    if (tasks.isOpen()) return; // S2-11: quieto durante el minijuego
     send({ type: 'move', dx, dy });
   });
   const detachInput = input.attach(window);
+  const detachTasks = tasks.attach(window);
   window.addEventListener('resize', resize);
 
   function frame(): void {
@@ -294,13 +320,14 @@ export function mountGame(
 
     ctx.fillStyle = '#1b2a33';
     ctx.fillRect(0, 0, camera.viewWidth, camera.viewHeight);
-    renderMap(ctx, gameMap, camera);
+    renderMap(ctx, gameMap, camera, stationMarks(lastSnapshot, now));
     const tick = interpolator.tickAt(now);
     if (tick !== null) renderOilDrops(ctx, oilDrops, camera, tick);
     if (lastSnapshot) {
       renderTanks(ctx, lastSnapshot.tanks, players, gameMap, camera);
     }
     renderPlayers(ctx, players, camera, meId);
+    tasks.frame();
     updateAction(me, now);
     if (status.state === 'reconnecting') {
       renderOverlayMessage(
@@ -326,7 +353,8 @@ export function mountGame(
       snap !== null &&
       snap.phase === 'PLAYING' &&
       !snap.paused &&
-      !matchDown;
+      !matchDown &&
+      !tasks.isOpen();
     currentAction =
       playing && me
         ? contextAction(
@@ -337,6 +365,7 @@ export function mountGame(
             now,
             contaminateReadyAt,
             reportedTanks,
+            snap.myTasks,
           )
         : null;
     hud.setAction(currentAction);
@@ -367,6 +396,9 @@ export function mountGame(
   // para poder limpiar los event listeners en unmountGame.
   (canvas as any)._cleanup = () => {
     detachInput();
+    detachTasks();
+    tasks.destroy();
+    taskList.hide();
     window.removeEventListener('keydown', onActionKey);
     hud.destroy();
     window.removeEventListener('resize', resize);
@@ -386,6 +418,21 @@ export function unmountGame(): void {
     (canvas as any)._cleanup();
     delete (canvas as any)._cleanup;
   }
+}
+
+// stationMarks: estaciones propias pendientes y hechas para el mapa
+// (S2-11). Fuera de PLAYING el mapa se dibuja sin marcas.
+function stationMarks(
+  snap: Snapshot | null,
+  now: number,
+): StationMarks | undefined {
+  if (!snap || snap.phase !== 'PLAYING' || snap.myTasks.length === 0) {
+    return undefined;
+  }
+  const pending = new Set<string>();
+  const done = new Set<string>();
+  for (const t of snap.myTasks) (t.done ? done : pending).add(t.stationId);
+  return { pending, done, now };
 }
 
 // Aviso sobre el canvas mientras el socket reconecta o es reemplazado (S1-20).
