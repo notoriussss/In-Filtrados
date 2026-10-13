@@ -4,10 +4,11 @@ import {
   HoldAction,
   actionMessage,
   contextAction,
+  holdDuration,
   tankRose,
 } from './actions';
 import type { GameMap } from './map';
-import { ACTION_TEXT, GAME_RULES } from './constants';
+import { ACTION_TEXT, GAME_RULES, HUD_TEXT } from './constants';
 
 const map: GameMap = {
   width: 1000,
@@ -160,9 +161,36 @@ describe('tankRose', () => {
     expect(tankRose(tanks, next, 'impostor')).toBe(false);
   });
 
+  it('never warns when player is IMPOSTOR even if contamination rises', () => {
+    const next = [tank(0, 'impostor', 35), tank(1, 'crew')];
+    expect(tankRose(tanks, next, 'impostor', 'IMPOSTOR')).toBe(false);
+  });
+
+  it('returns false when tank is missing in previous or next', () => {
+    expect(tankRose([], tanks, 'crew')).toBe(false);
+    expect(tankRose(tanks, [], 'crew')).toBe(false);
+  });
+
   it('ignores cleaning', () => {
     const before = [tank(1, 'crew', 35)];
     const after = [tank(1, 'crew', 20)];
     expect(tankRose(before, after, 'crew')).toBe(false);
+  });
+});
+
+describe('holdDuration', () => {
+  it('returns correct durations for each kind', () => {
+    expect(holdDuration('contaminate')).toBe(GAME_RULES.CONTAMINATE_MS);
+    expect(holdDuration('clean')).toBe(GAME_RULES.CLEAN_MS);
+    expect(holdDuration('task')).toBe(GAME_RULES.TASK_MS);
+    expect(holdDuration('report')).toBe(0);
+  });
+});
+
+describe('HUD_TEXT', () => {
+  it('formats reservoir percentage label correctly', () => {
+    expect(HUD_TEXT.reservoir(0)).toBe('Embalse 0 %');
+    expect(HUD_TEXT.reservoir(42)).toBe('Embalse 42 %');
+    expect(HUD_TEXT.reservoir(100)).toBe('Embalse 100 %');
   });
 });
