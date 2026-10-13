@@ -84,16 +84,16 @@ var colors = []string{
 	"#f032e6",
 }
 
-// Join registers a player; Out receives the snapshots for that player.
+// Join registers a player; Out receives server events.
 type Join struct {
 	PlayerID string
-	Out      chan *matchv1.Snapshot
+	Out      chan *matchv1.ServerEvent
 }
 
-// Leave says that the stream with channel Out ended.
+// Leave says that the stream ended.
 type Leave struct {
 	PlayerID string
-	Out      chan *matchv1.Snapshot
+	Out      chan *matchv1.ServerEvent
 }
 
 // Name dice cómo se llama un jugador (viene de CreateRoom o JoinRoom).
@@ -132,9 +132,10 @@ func (a PlayerAction) isMove() bool {
 }
 
 type player struct {
-	view   *matchv1.PlayerView
-	dx, dy int32
-	out    chan *matchv1.Snapshot
+	view         *matchv1.PlayerView
+	dx, dy       int32
+	out          chan *matchv1.ServerEvent
+	pendingEnded bool
 
 	role     matchv1.Role // NO_ROLE hasta que empieza la partida
 	tankSlot int          // noTank si no le tocó tanque

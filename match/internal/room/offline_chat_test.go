@@ -8,7 +8,7 @@ import (
 	"github.com/notoriussss/in-filtrados/match/internal/events"
 )
 
-func meetingRoom(t *testing.T) (*Room, map[string]chan *matchv1.Snapshot) {
+func meetingRoom(t *testing.T) (*Room, map[string]chan *matchv1.ServerEvent) {
 	t.Helper()
 	r, _, outs := graceRoom(t)
 	r.phase = matchv1.Phase_MEETING
@@ -62,9 +62,9 @@ func TestSeenChatIDsSurviveARestore(t *testing.T) {
 		t.Fatal(err)
 	}
 	got.chat = nil
-	got.addPlayer(Join{PlayerID: "a", Out: make(chan *matchv1.Snapshot, 8)})
-	got.addPlayer(Join{PlayerID: "b", Out: make(chan *matchv1.Snapshot, 8)})
-	got.addPlayer(Join{PlayerID: "c", Out: make(chan *matchv1.Snapshot, 8)})
+	got.addPlayer(Join{PlayerID: "a", Out: make(chan *matchv1.ServerEvent, 8)})
+	got.addPlayer(Join{PlayerID: "b", Out: make(chan *matchv1.ServerEvent, 8)})
+	got.addPlayer(Join{PlayerID: "c", Out: make(chan *matchv1.ServerEvent, 8)})
 	got.tick += chatCooldownTicks
 	got.handleChat("a", "id-1", "hola")
 	if len(got.chat) != 0 {
@@ -91,7 +91,7 @@ func TestDisconnectAndReconnectArePublished(t *testing.T) {
 		t.Errorf("grace_ends_at = %s, quiero %s", ev.GraceEndsAt, want)
 	}
 
-	r.addPlayer(Join{PlayerID: "b", Out: make(chan *matchv1.Snapshot, 8)})
+	r.addPlayer(Join{PlayerID: "b", Out: make(chan *matchv1.ServerEvent, 8)})
 	back := waitForEvents(t, pub, events.RoutingKeyPlayerReconnected, 1)
 	if back[0].payload.(events.PlayerReconnected).PlayerID != "b" {
 		t.Error("player.reconnected sin el jugador")
@@ -101,7 +101,7 @@ func TestDisconnectAndReconnectArePublished(t *testing.T) {
 func TestLobbyDisconnectIsNotPublished(t *testing.T) {
 	pub := &fakePublisher{}
 	r := NewRoom("TEST", "match-1", mapWithStations(), WithPublisher(pub))
-	out := make(chan *matchv1.Snapshot, 1)
+	out := make(chan *matchv1.ServerEvent, 1)
 	r.addPlayer(Join{PlayerID: "a", Out: out})
 	r.removePlayer(Leave{PlayerID: "a", Out: out})
 	r.addPlayer(Join{PlayerID: "a", Out: out})

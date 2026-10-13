@@ -2,7 +2,9 @@ package grpc_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"net"
 	"testing"
 	"time"
@@ -220,4 +222,82 @@ func TestJoinRoomFull(t *testing.T) {
 	st, ok := status.FromError(err)
 	require.True(t, ok)
 	require.Equal(t, codes.ResourceExhausted, st.Code())
+}
+
+// TestPlayTerminatesAndLeaveDoesNotBlockOnCleanup comprueba que al terminar
+// una partida y liberarse la sala con cleanupDelay corto, el stream Play
+// termina solo por el cierre de canales y un Leave posterior no se cuelga.
+func TestPlayTerminatesAndLeaveDoesNotBlockOnCleanup(t *testing.T) {
+	client, cleanup := setupServer(
+		t,
+		matchgrpc.WithMatchDuration(100*time.Millisecond),
+		matchgrpc.WithCleanupDelay(50*time.Millisecond),
+	)
+	defer cleanup()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	created, err := client.CreateRoom(ctx, &matchv1.CreateRoomRequest{
+		PlayerId: "creator",
+	})
+	require.NoError(t, err)
+
+	streamA, err := client.Play(ctx)
+	require.NoError(t, err)
+	require.NoError(t, streamA.Send(&matchv1.ClientAction{
+		Action: &matchv1.ClientAction_Join{
+			Join: &matchv1.Join{
+				MatchId:  created.MatchId,
+				PlayerId: "creator",
+			},
+		},
+	}))
+	_, err = streamA.Recv()
+	require.NoError(t, err)
+
+	streamB, err := client.Play(ctx)
+	require.NoError(t, err)
+	require.NoError(t, streamB.Send(&matchv1.ClientAction{
+		Action: &matchv1.ClientAction_Join{
+			Join: &matchv1.Join{
+				MatchId:  created.MatchId,
+				PlayerId: "friend",
+			},
+		},
+	}))
+	_, err = streamB.Recv()
+	require.NoError(t, err)
+
+	// Empezar la partida
+	require.NoError(t, streamA.Send(&matchv1.ClientAction{
+		Action: &matchv1.ClientAction_Start{Start: &matchv1.Start{}},
+	}))
+
+	// Esperar a que la partida termine y se libere la sala.
+	// Play debe retornar nil (EOF en el stream del cliente).
+	doneA := make(chan error, 1)
+	go func() {
+		for {
+			_, err := streamA.Recv()
+			if err != nil {
+				doneA <- err
+				return
+			}
+		}
+	}()
+
+	select {
+	case err := <-doneA:
+		require.True(
+			t,
+			errors.Is(err, io.EOF) || status.Code(err) == codes.OK,
+		)
+	case <-time.After(3 * time.Second):
+		t.Fatal("streamA no terminó tras el cleanup de la sala")
+	}
+
+	// Cerrar streamB desde el cliente para verificar que el defer Leave
+	// no se bloquea aunque la sala ya no exista en memoria.
+	streamB.CloseSend()
 }

@@ -28,7 +28,7 @@ func playingRoomTasks(
 		opts...,
 	)
 	for _, id := range []string{"crew1", "imp"} {
-		out := make(chan *matchv1.Snapshot, 1)
+		out := make(chan *matchv1.ServerEvent, 1)
 		r.addPlayer(Join{PlayerID: id, Out: out})
 	}
 	r.startMatch("crew1")
@@ -267,8 +267,8 @@ func lastSnapshot(t *testing.T, r *Room, id string) *matchv1.Snapshot {
 	}
 	r.broadcast()
 	select {
-	case snap := <-out:
-		return snap
+	case ev := <-out:
+		return snapOf(ev)
 	default:
 		t.Fatalf("no llegó snapshot para %s", id)
 		return nil

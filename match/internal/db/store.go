@@ -75,19 +75,61 @@ func (s *Store) StartMatch(
 	return nil
 }
 
-// FinishMatch marca el final y el ganador de la partida.
-func (s *Store) FinishMatch(ctx context.Context, matchID, winner string) error {
+// FinishMatch marca el final, el ganador y actualiza participants (S2-06).
+func (s *Store) FinishMatch(
+	ctx context.Context,
+	matchID string,
+	winner string,
+	participants []room.ParticipantResult,
+) error {
 	id, err := parseUUID(matchID, "match_id")
 	if err != nil {
 		return err
 	}
 
-	err = s.queries.FinishMatch(ctx, FinishMatchParams{
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("store: abriendo transacción de fin: %w", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	queries := s.queries.WithTx(tx)
+	err = queries.FinishMatch(ctx, FinishMatchParams{
 		ID:     id,
 		Winner: pgtype.Text{String: winner, Valid: true},
 	})
 	if err != nil {
 		return fmt.Errorf("store: terminando partida: %w", err)
+	}
+
+	for _, p := range participants {
+		playerID, err := uuid.Parse(p.PlayerID)
+		if err != nil {
+			log.Printf(
+				"store: player_id inválido %q en fin, se ignora",
+				p.PlayerID,
+			)
+			continue
+		}
+		err = queries.UpdateParticipantEjected(
+			ctx,
+			UpdateParticipantEjectedParams{
+				MatchID:  id,
+				PlayerID: toPgUUID(playerID),
+				Ejected:  p.Ejected,
+			},
+		)
+		if err != nil {
+			return fmt.Errorf(
+				"store: actualizando participante %s: %w",
+				p.PlayerID,
+				err,
+			)
+		}
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("store: confirmando fin de partida: %w", err)
 	}
 	return nil
 }

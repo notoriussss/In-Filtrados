@@ -23,9 +23,10 @@ const (
 
 // Roles y ganadores de match.finished (docs/tasks.md 0.7).
 const (
-	RoleCrew     = "crew"
-	RoleImpostor = "impostor"
-	WinnerCrew   = "crew"
+	RoleCrew       = "crew"
+	RoleImpostor   = "impostor"
+	WinnerCrew     = "crew"
+	WinnerImpostor = "impostor"
 )
 
 // Publisher publica un evento en el exchange `game.events`.

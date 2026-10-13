@@ -710,11 +710,17 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 #### S2-06 — Fin de partida real (`match/`)
 
 **Pasos:**
-1. Ganan los tripulantes si el embalse llega a 100 **o** todos los impostores fueron expulsados.
-2. Gana el impostor si quedan tantos impostores vivos como tripulantes vivos **o** pasan 8 minutos sin que el embalse llegue a 100.
-3. `harvest` por jugador = tareas completadas × 5 + (10 si su tanque sigue vivo).
-4. Quitar la regla temporal de 3 minutos de S1-11.
-5. Fase `ENDED`: snapshot con `MatchEnded { winner, impostor_id }`, guardar en `matches` y `participants`, publicar `match.finished` y liberar la sala de memoria a los 30 segundos.
+1. Ganan los tripulantes si el embalse llega a 100 **o** todos los impostores
+   fueron expulsados/desconectados (`aliveImp == 0`).
+2. Gana el impostor si quedan tantos impostores vivos como tripulantes vivos
+   habiendo muerto al menos un tripulante (`deadCrew > 0`, para evitar fin
+   inmediato al iniciar salas de prueba de 2 jugadores con 1 impostor) **o**
+   pasan 8 minutos sin que el embalse llegue a 100.
+3. `harvest` por jugador = tareas completadas × 5 + (10 si su tanque vivo).
+4. Quitar la regla temporal de 3 minutos de S1-11; contar duración en ticks.
+5. Fase `ENDED`: snapshot con `MatchEnded { winner, impostor_ids }`, guardar
+   en `matches` y `participants`, publicar `match.finished` asíncrono y
+   liberar la sala a los 30 s (cerrando streams gRPC con canal `done`).
 
 **Criterio de verificación:** tests de cada una de las 4 condiciones de fin. Una partida real termina sola, muestra quién era el impostor y las monedas aparecen en el perfil según la fórmula.
 

@@ -25,6 +25,7 @@ type Server struct {
 	eventLog      room.EventLog
 	matchDuration time.Duration
 	gracePeriod   time.Duration
+	cleanupDelay  time.Duration
 	snapshots     room.SnapshotSaver
 }
 
@@ -54,6 +55,11 @@ func WithMatchDuration(duration time.Duration) ServerOption {
 // WithGracePeriod guarda el lugar del que se desconecta (S3-01).
 func WithGracePeriod(grace time.Duration) ServerOption {
 	return func(s *Server) { s.gracePeriod = grace }
+}
+
+// WithCleanupDelay configura la espera para liberar la sala (S2-06).
+func WithCleanupDelay(delay time.Duration) ServerOption {
+	return func(s *Server) { s.cleanupDelay = delay }
 }
 
 // WithSnapshots guarda una instantánea de cada sala (S3-02).
@@ -104,6 +110,11 @@ func (s *Server) CreateRoom(
 // roomOptions arma las opciones de la sala con las dependencias del server.
 func (s *Server) roomOptions(creatorID string) []room.Option {
 	opts := []room.Option{room.WithCreator(creatorID)}
+	if s.registry != nil {
+		opts = append(opts, room.WithOnCleanup(func(code string) {
+			s.registry.Remove(code)
+		}))
+	}
 	if s.publisher != nil {
 		opts = append(opts, room.WithPublisher(s.publisher))
 	}
@@ -118,6 +129,9 @@ func (s *Server) roomOptions(creatorID string) []room.Option {
 	}
 	if s.gracePeriod > 0 {
 		opts = append(opts, room.WithGracePeriod(s.gracePeriod))
+	}
+	if s.cleanupDelay > 0 {
+		opts = append(opts, room.WithCleanupDelay(s.cleanupDelay))
 	}
 	if s.snapshots != nil {
 		opts = append(opts, room.WithSnapshots(s.snapshots))
@@ -194,11 +208,17 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 	}
 
 	playerID := join.GetPlayerId()
-	out := make(chan *matchv1.Snapshot, 8)
-	r.Join(room.Join{PlayerID: playerID, Out: out})
+	out := make(chan *matchv1.ServerEvent, 16)
+	r.Join(room.Join{
+		PlayerID: playerID,
+		Out:      out,
+	})
 	log.Printf("play: %s joined %s", playerID, r.Code)
 	defer func() {
-		r.Leave(room.Leave{PlayerID: playerID, Out: out})
+		r.Leave(room.Leave{
+			PlayerID: playerID,
+			Out:      out,
+		})
 		log.Printf("play: %s left %s", playerID, r.Code)
 	}()
 
@@ -212,11 +232,9 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 		defer close(sent)
 		for {
 			select {
-			case snap := <-out:
-				event := &matchv1.ServerEvent{
-					Event: &matchv1.ServerEvent_Snapshot{
-						Snapshot: snap,
-					},
+			case event, ok := <-out:
+				if !ok {
+					return
 				}
 				if err := stream.Send(event); err != nil {
 					return
@@ -227,61 +245,81 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 		}
 	}()
 
+	msgs := make(chan *matchv1.ClientAction)
+	recvErr := make(chan error, 1)
+	go func() {
+		for {
+			msg, err := stream.Recv()
+			if err != nil {
+				recvErr <- err
+				return
+			}
+			select {
+			case msgs <- msg:
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
 	for {
-		msg, err := stream.Recv()
-		if errors.Is(err, io.EOF) {
+		select {
+		case <-sent:
 			return nil
-		}
-		if err != nil {
+		case err := <-recvErr:
+			if errors.Is(err, io.EOF) {
+				return nil
+			}
 			return err
-		}
-		switch {
-		case msg.GetMove() != nil:
-			mv := msg.GetMove()
-			r.Act(room.PlayerAction{
-				PlayerID: playerID,
-				DX:       mv.GetDx(),
-				DY:       mv.GetDy(),
-			})
-		case msg.GetStart() != nil:
-			r.Act(room.PlayerAction{PlayerID: playerID, Start: true})
-		case msg.GetContaminate() != nil:
-			r.Act(room.PlayerAction{
-				PlayerID:    playerID,
-				Contaminate: true,
-				TankSlot:    msg.GetContaminate().GetTankSlot(),
-			})
-		case msg.GetInteract() != nil:
-			if action, ok := interactAction(playerID, msg.GetInteract()); ok {
+		case msg := <-msgs:
+			switch {
+			case msg.GetMove() != nil:
+				mv := msg.GetMove()
+				r.Act(room.PlayerAction{
+					PlayerID: playerID,
+					DX:       mv.GetDx(),
+					DY:       mv.GetDy(),
+				})
+			case msg.GetStart() != nil:
+				r.Act(room.PlayerAction{PlayerID: playerID, Start: true})
+			case msg.GetContaminate() != nil:
+				r.Act(room.PlayerAction{
+					PlayerID:    playerID,
+					Contaminate: true,
+					TankSlot:    msg.GetContaminate().GetTankSlot(),
+				})
+			case msg.GetInteract() != nil:
+				if action, ok := interactAction(playerID, msg.GetInteract()); ok {
+					r.Act(action)
+				}
+			case msg.GetReport() != nil:
+				r.Act(room.PlayerAction{
+					PlayerID: playerID,
+					Report:   true,
+					TankSlot: msg.GetReport().GetTankSlot(),
+				})
+			case msg.GetVote() != nil:
+				v := msg.GetVote()
+				action := room.PlayerAction{
+					PlayerID: playerID,
+					Vote:     true,
+				}
+				switch choice := v.GetChoice().(type) {
+				case *matchv1.Vote_TargetPlayerId:
+					action.VoteTargetID = choice.TargetPlayerId
+				case *matchv1.Vote_Skip:
+					action.VoteSkip = choice.Skip
+				}
 				r.Act(action)
+			case msg.GetChat() != nil:
+				c := msg.GetChat()
+				r.Act(room.PlayerAction{
+					PlayerID:      playerID,
+					Chat:          true,
+					ChatMessageID: c.GetClientMsgId(),
+					ChatText:      c.GetText(),
+				})
 			}
-		case msg.GetReport() != nil:
-			r.Act(room.PlayerAction{
-				PlayerID: playerID,
-				Report:   true,
-				TankSlot: msg.GetReport().GetTankSlot(),
-			})
-		case msg.GetVote() != nil:
-			v := msg.GetVote()
-			action := room.PlayerAction{
-				PlayerID: playerID,
-				Vote:     true,
-			}
-			switch choice := v.GetChoice().(type) {
-			case *matchv1.Vote_TargetPlayerId:
-				action.VoteTargetID = choice.TargetPlayerId
-			case *matchv1.Vote_Skip:
-				action.VoteSkip = choice.Skip
-			}
-			r.Act(action)
-		case msg.GetChat() != nil:
-			c := msg.GetChat()
-			r.Act(room.PlayerAction{
-				PlayerID:      playerID,
-				Chat:          true,
-				ChatMessageID: c.GetClientMsgId(),
-				ChatText:      c.GetText(),
-			})
 		}
 	}
 }

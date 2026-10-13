@@ -105,7 +105,8 @@ func TestSnapshotCarriesOilDrops(t *testing.T) {
 	default:
 	}
 	r.broadcast()
-	snap := <-out
+	ev := <-out
+	snap := snapOf(ev)
 	drops := snap.GetOilDrops()
 	if len(drops) != 1 {
 		t.Fatalf("want 1 gota en el snapshot, got %d", len(drops))

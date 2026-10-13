@@ -18,6 +18,12 @@ WHERE id = $1;
 INSERT INTO event_log (match_id, tick, player_id, kind, tank_slot)
 VALUES ($1, $2, $3, $4, $5);
 
+-- name: UpdateParticipantEjected :exec
+-- S2-06: guardar si el participante fue expulsado al terminar la partida.
+UPDATE participants
+SET ejected = $3
+WHERE match_id = $1 AND player_id = $2;
+
 -- name: UpsertSnapshot :exec
 -- S3-02: guarda la última instantánea de la partida (una fila por partida).
 INSERT INTO snapshots (match_id, tick, state, updated_at)

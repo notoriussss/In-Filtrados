@@ -84,7 +84,7 @@ func TestPauseFreezesTheRoomWhileSomeoneIsInGrace(t *testing.T) {
 			snap.Paused, snap.WaitingFor)
 	}
 
-	r.addPlayer(Join{PlayerID: "c", Out: make(chan *matchv1.Snapshot, 8)})
+	r.addPlayer(Join{PlayerID: "c", Out: make(chan *matchv1.ServerEvent, 8)})
 	if r.paused() {
 		t.Fatal("al volver c la sala sigue")
 	}
@@ -108,7 +108,7 @@ func TestPausedTimeDoesNotCountForTheMatchClock(t *testing.T) {
 
 func TestLobbyIsNeverPaused(t *testing.T) {
 	r := NewRoom("TEST", "match-1", mapWithStations())
-	out := make(chan *matchv1.Snapshot, 1)
+	out := make(chan *matchv1.ServerEvent, 1)
 	r.addPlayer(Join{PlayerID: "a", Out: out})
 	r.removePlayer(Leave{PlayerID: "a", Out: out})
 	if r.paused() {
@@ -128,7 +128,7 @@ func TestSavesOnPhaseChangeAndEveryTwoSeconds(t *testing.T) {
 	for _, id := range []string{"a", "b"} {
 		r.addPlayer(Join{
 			PlayerID: id,
-			Out:      make(chan *matchv1.Snapshot, 64),
+			Out:      make(chan *matchv1.ServerEvent, 64),
 		})
 	}
 	for i := 0; i < 50; i++ {
@@ -239,7 +239,7 @@ func TestRestoreBringsBackTheMatchPausedAndComplete(t *testing.T) {
 	for _, id := range []string{"a", "b", "c"} {
 		got.addPlayer(Join{
 			PlayerID: id,
-			Out:      make(chan *matchv1.Snapshot, 8),
+			Out:      make(chan *matchv1.ServerEvent, 8),
 		})
 	}
 	if got.paused() {
@@ -259,14 +259,16 @@ func TestRestoreRejectsBrokenState(t *testing.T) {
 // waitSnapshot toma el último snapshot del canal.
 func waitSnapshot(
 	t *testing.T,
-	ch chan *matchv1.Snapshot,
+	ch chan *matchv1.ServerEvent,
 ) *matchv1.Snapshot {
 	t.Helper()
 	var last *matchv1.Snapshot
 	for {
 		select {
-		case s := <-ch:
-			last = s
+		case ev := <-ch:
+			if s := snapOf(ev); s != nil {
+				last = s
+			}
 		default:
 			if last == nil {
 				t.Fatal("no hay snapshots")

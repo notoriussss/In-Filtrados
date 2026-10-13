@@ -17,7 +17,7 @@ func (c *fakeClock) advance(d time.Duration) { c.t = c.t.Add(d) }
 // graceRoom: 3 jugadores en PLAYING, con reloj falso y 90 s de gracia.
 func graceRoom(
 	t *testing.T,
-) (*Room, *fakeClock, map[string]chan *matchv1.Snapshot) {
+) (*Room, *fakeClock, map[string]chan *matchv1.ServerEvent) {
 	t.Helper()
 	clock := &fakeClock{t: time.Unix(1_700_000_000, 0)}
 	r := NewRoom(
@@ -28,9 +28,9 @@ func graceRoom(
 		WithClock(clock.now),
 		WithGracePeriod(90*time.Second),
 	)
-	outs := make(map[string]chan *matchv1.Snapshot)
+	outs := make(map[string]chan *matchv1.ServerEvent)
 	for _, id := range []string{"a", "b", "c"} {
-		outs[id] = make(chan *matchv1.Snapshot, 8)
+		outs[id] = make(chan *matchv1.ServerEvent, 8)
 		r.addPlayer(Join{PlayerID: id, Out: outs[id]})
 	}
 	r.startMatch("a")
@@ -46,7 +46,7 @@ func disconnect(
 	r *Room,
 	clock *fakeClock,
 	id string,
-	out chan *matchv1.Snapshot,
+	out chan *matchv1.ServerEvent,
 ) {
 	r.removePlayer(Leave{PlayerID: id, Out: out})
 	clock.advance(disconnectDebounce)
@@ -65,7 +65,7 @@ func TestASocketSwapIsNotADisconnection(t *testing.T) {
 	if r.paused() {
 		t.Error("un corte de 200 ms no pausa la sala")
 	}
-	r.addPlayer(Join{PlayerID: "a", Out: make(chan *matchv1.Snapshot, 8)})
+	r.addPlayer(Join{PlayerID: "a", Out: make(chan *matchv1.ServerEvent, 8)})
 	clock.advance(5 * time.Second)
 	r.updateGrace()
 	if r.paused() || len(pub.forKey(events.RoutingKeyPlayerDisconnected)) > 0 {
@@ -88,7 +88,7 @@ func TestDisconnectedPlayerKeepsEverythingWithinGrace(t *testing.T) {
 	clock.advance(30 * time.Second) // 30 s sin wifi
 	r.updateGrace()
 
-	back := make(chan *matchv1.Snapshot, 8)
+	back := make(chan *matchv1.ServerEvent, 8)
 	r.addPlayer(Join{PlayerID: "b", Out: back})
 
 	if !b.view.Connected || !b.view.Alive {
@@ -124,7 +124,7 @@ func TestGraceExpiredTurnsIntoGhost(t *testing.T) {
 	}
 
 	// Si vuelve tarde, sigue en la partida pero como fantasma.
-	late := make(chan *matchv1.Snapshot, 8)
+	late := make(chan *matchv1.ServerEvent, 8)
 	r.addPlayer(Join{PlayerID: "c", Out: late})
 	if r.players["c"].view.Alive || !r.players["c"].view.Connected {
 		t.Error("al volver tarde sigue como fantasma conectado")
@@ -133,7 +133,7 @@ func TestGraceExpiredTurnsIntoGhost(t *testing.T) {
 
 func TestLobbyDisconnectHasNoGrace(t *testing.T) {
 	r := NewRoom("TEST", "match-1", mapWithStations())
-	out := make(chan *matchv1.Snapshot, 1)
+	out := make(chan *matchv1.ServerEvent, 1)
 	r.addPlayer(Join{PlayerID: "a", Out: out})
 	r.removePlayer(Leave{PlayerID: "a", Out: out})
 	if !r.players["a"].graceUntil.IsZero() {
@@ -143,7 +143,7 @@ func TestLobbyDisconnectHasNoGrace(t *testing.T) {
 
 func TestStaleStreamCannotDisconnectAResumedPlayer(t *testing.T) {
 	r, _, outs := graceRoom(t)
-	back := make(chan *matchv1.Snapshot, 8)
+	back := make(chan *matchv1.ServerEvent, 8)
 	// Reconecta antes de que el stream viejo termine de cerrar.
 	r.addPlayer(Join{PlayerID: "a", Out: back})
 	r.removePlayer(Leave{PlayerID: "a", Out: outs["a"]})
@@ -162,12 +162,13 @@ func TestResumeSendsAFullSnapshotRightAway(t *testing.T) {
 	r.chat = []chatEntry{{id: "m1", playerID: "a", text: "hola", tick: 3}}
 	r.removePlayer(Leave{PlayerID: "b", Out: outs["b"]})
 
-	back := make(chan *matchv1.Snapshot, 8)
+	back := make(chan *matchv1.ServerEvent, 8)
 	r.addPlayer(Join{PlayerID: "b", Out: back}) // sin esperar al ticker
 
 	select {
-	case snap := <-back:
-		if snap.Phase != matchv1.Phase_MEETING || snap.Meeting == nil {
+	case ev := <-back:
+		snap := snapOf(ev)
+		if snap == nil || snap.Phase != matchv1.Phase_MEETING || snap.Meeting == nil {
 			t.Error("falta el estado de la reunión")
 		}
 		if len(snap.Chat) != 1 || snap.Chat[0].Text != "hola" {

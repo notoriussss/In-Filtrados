@@ -19,7 +19,7 @@ func playingRoomWithDeadTank(t *testing.T) *Room {
 		WithCreator("crew1"),
 	)
 	for _, id := range []string{"crew1", "crew2", "imp"} {
-		out := make(chan *matchv1.Snapshot, 1)
+		out := make(chan *matchv1.ServerEvent, 1)
 		r.addPlayer(Join{PlayerID: id, Out: out})
 	}
 	r.startMatch("crew1")
@@ -647,7 +647,7 @@ func TestPlayerEjectedEventPublished(t *testing.T) {
 		WithPublisher(pub),
 	)
 	for _, id := range []string{"crew1", "imp"} {
-		out := make(chan *matchv1.Snapshot, 1)
+		out := make(chan *matchv1.ServerEvent, 1)
 		r.addPlayer(Join{PlayerID: id, Out: out})
 	}
 	r.startMatch("crew1")
@@ -893,7 +893,7 @@ func TestFullMeetingCycleIntegration(t *testing.T) {
 		WithPublisher(pub),
 	)
 	for _, id := range []string{"crew1", "crew2", "crew3", "imp"} {
-		out := make(chan *matchv1.Snapshot, 1)
+		out := make(chan *matchv1.ServerEvent, 1)
 		r.addPlayer(Join{PlayerID: id, Out: out})
 	}
 	r.startMatch("crew1")
