@@ -7,6 +7,7 @@ export type Hud = {
   setReservoir: (value: number | null) => void;
   setAction: (action: Action | null) => void;
   showTankAlert: () => void;
+  hideTankAlert: () => void;
   destroy: () => void;
 };
 
@@ -30,7 +31,7 @@ export function mountHud(onAction: () => void): Hud {
 
   let lastReservoir: number | null = null;
   let lastAction = '';
-  let alertTimer: number | undefined;
+  let alertTimer: ReturnType<typeof setTimeout> | undefined;
 
   return {
     setReservoir(value) {
@@ -57,14 +58,18 @@ export function mountHud(onAction: () => void): Hud {
     },
     showTankAlert() {
       alert.hidden = false;
-      window.clearTimeout(alertTimer);
-      alertTimer = window.setTimeout(() => {
+      clearTimeout(alertTimer);
+      alertTimer = setTimeout(() => {
         alert.hidden = true;
       }, GAME_RULES.TANK_ALERT_MS);
     },
+    hideTankAlert() {
+      alert.hidden = true;
+      clearTimeout(alertTimer);
+    },
     destroy() {
       button.removeEventListener('click', onClick);
-      window.clearTimeout(alertTimer);
+      clearTimeout(alertTimer);
       reservoir.hidden = true;
       button.hidden = true;
       alert.hidden = true;
