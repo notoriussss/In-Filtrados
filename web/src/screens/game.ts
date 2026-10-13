@@ -149,6 +149,7 @@ export function mountGame(
   const chatQueue = new ChatQueue((msg) => send(msg));
 
   const showMeeting = (on: boolean) => {
+    if (on) hud.hideTankAlert();
     meetingRoot.hidden = !on;
     if (on && !meetingPanel) {
       meetingPanel = mountMeetingPanel(
@@ -169,6 +170,7 @@ export function mountGame(
   };
 
   const showEnd = () => {
+    hud.hideTankAlert();
     if (endPanel) {
       endPanel.update(winner, impostorIds, lastPlayers);
       return;
@@ -206,7 +208,10 @@ export function mountGame(
       oilDrops = msg.oilDrops;
       lastPlayers = msg.players;
       // S2-09: avisa al dueño cuando su tanque sube, sin decir quién.
-      if (lastSnapshot && tankRose(lastSnapshot.tanks, msg.tanks, meId)) {
+      if (
+        lastSnapshot &&
+        tankRose(lastSnapshot.tanks, msg.tanks, meId, msg.myRole)
+      ) {
         hud.showTankAlert();
       }
       lastSnapshot = msg;
@@ -336,7 +341,7 @@ export function mountGame(
         : null;
     hud.setAction(currentAction);
     hud.setReservoir(
-      snap && snap.phase !== 'LOBBY' ? snap.reservoir : null,
+      snap && snap.phase === 'PLAYING' ? snap.reservoir : null,
     );
 
     if (!hold) return;
