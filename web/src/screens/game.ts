@@ -6,26 +6,43 @@ import type {
 } from '@in-filtrados/messages';
 import { gameMap } from '../map';
 import { type Camera, clampCamera, createCamera } from '../canvas/camera';
-import { renderMap } from '../canvas/renderMap';
+import { renderMap, type StationMarks } from '../canvas/renderMap';
 import { renderPlayers } from '../canvas/renderPlayers';
 import { renderOilDrops } from '../canvas/renderOilDrops';
+import {
+  renderHoldProgress,
+  renderTanks,
+} from '../canvas/renderTanks';
+import {
+  type Action,
+  HoldAction,
+  actionMessage,
+  contextAction,
+  holdDuration,
+  tankRose,
+} from '../actions';
+import { mountHud } from '../hud';
 import {
   closeGameSocket,
   openGameSocket,
   type SocketStatus,
 } from '../net/socket';
 import { Interpolator } from '../net/interpolation';
-import { DirectionInput } from '../input';
+import { DirectionInput, isTyping } from '../input';
 import { session } from '../session';
 import { api, type MeResponse } from '../api';
 import { type MeetingPanel, mountMeetingPanel } from './meeting';
 import { type EndPanelHandle, mountEndPanel } from './matchEnd';
 import { pauseMessage } from '../pause';
 import { ChatQueue } from '../net/chatQueue';
+import { type TaskListPanel, mountTaskList } from '../tasks/taskList';
+import { TaskSession } from '../tasks/taskSession';
+import { mountMinigame } from '../tasks/minigameView';
 import {
   CONNECTION_MESSAGES,
   ERROR_CODES,
   ERROR_MESSAGES,
+  GAME_RULES,
 } from '../constants';
 
 let animationFrame: number;
@@ -91,10 +108,70 @@ export function mountGame(
     show('lobby');
   };
 
+  // S2-11: lista de misiones y minijuegos.
+  const taskList: TaskListPanel = mountTaskList(
+    document.getElementById('task-list')!,
+  );
+  const taskRoot = document.getElementById('task-overlay')!;
+  const tasks = new TaskSession({
+    stations: gameMap.stations,
+    send: (msg) => send(msg),
+    me: () =>
+      interpolator
+        .playersAt(performance.now())
+        .find((p) => p.id === meId),
+    snapshot: () => lastSnapshot,
+    mount: (type, opts) => mountMinigame(taskRoot, type, opts),
+    // Con el minijuego abierto el jugador se queda quieto.
+    onOpen: () => send({ type: 'move', dx: 0, dy: 0 }),
+    onClose: () => input.clear(),
+    now: () => performance.now(),
+  });
+
+  // S2-09: acción contextual (tecla E o botón), la acción en curso que
+  // exige quedarse quieto y el HUD con el embalse y el aviso del tanque.
+  let currentAction: Action | null = null;
+  let hold: HoldAction | null = null;
+  // El cooldown vive solo aquí: si el impostor recarga, el botón sale
+  // activo y match rechaza la acción hasta que pasen los 20 s.
+  let contaminateReadyAt = 0;
+  // Tanques que ya tuvieron reunión. TankView no lo dice todavía y esto
+  // se pierde al recargar.
+  const reportedTanks = new Set<number>();
+  const triggerAction = () => {
+    const action = currentAction;
+    if (!action || !action.enabled || hold) return;
+    const { dx, dy } = input.current();
+    if (dx !== 0 || dy !== 0) return; // match exige estar quieto
+    if (action.kind === 'task') {
+      tasks.start();
+      return;
+    }
+    send(actionMessage(action));
+    if (holdDuration(action.kind) > 0) {
+      hold = new HoldAction(action, performance.now());
+    }
+  };
+  const finishHold = (done: HoldAction, now: number) => {
+    const { action } = done;
+    if (action.kind === 'contaminate') {
+      contaminateReadyAt = now + GAME_RULES.CONTAMINATE_COOLDOWN_MS;
+    }
+  };
+  const hud = mountHud(triggerAction);
+  const onActionKey = (e: KeyboardEvent) => {
+    if (e.code !== 'KeyE' || e.repeat || isTyping(e.target)) return;
+    if (tasks.isOpen()) return;
+    e.preventDefault();
+    triggerAction();
+  };
+  window.addEventListener('keydown', onActionKey);
+
   // S3-04: el chat escrito sin conexión espera aquí hasta salir.
   const chatQueue = new ChatQueue((msg) => send(msg));
 
   const showMeeting = (on: boolean) => {
+    if (on) hud.hideTankAlert();
     meetingRoot.hidden = !on;
     if (on && !meetingPanel) {
       meetingPanel = mountMeetingPanel(
@@ -115,6 +192,7 @@ export function mountGame(
   };
 
   const showEnd = () => {
+    hud.hideTankAlert();
     if (endPanel) {
       endPanel.update(winner, impostorIds, lastPlayers);
       return;
@@ -151,7 +229,15 @@ export function mountGame(
       interpolator.push(msg.tick, msg.players, performance.now());
       oilDrops = msg.oilDrops;
       lastPlayers = msg.players;
+      // S2-09: avisa al dueño cuando su tanque sube, sin decir quién.
+      if (
+        lastSnapshot &&
+        tankRose(lastSnapshot.tanks, msg.tanks, meId, msg.myRole)
+      ) {
+        hud.showTankAlert();
+      }
       lastSnapshot = msg;
+      if (msg.meeting) reportedTanks.add(msg.meeting.tankSlot);
       if (matchDown) {
         // match volvió (S3-02): retoma la dirección de las teclas.
         matchDown = false;
@@ -166,6 +252,8 @@ export function mountGame(
         return;
       }
       chatQueue.onSnapshot(msg, performance.now());
+      taskList.update(msg);
+      tasks.onSnapshot(msg);
       showMeeting(msg.phase === 'MEETING');
       meetingPanel?.update(msg, chatQueue.waiting());
       if (msg.phase === 'ENDED') showEnd();
@@ -215,9 +303,11 @@ export function mountGame(
 
   // S1-19: move goes out only when the direction changes.
   const input = new DirectionInput(({ dx, dy }) => {
+    if (tasks.isOpen()) return; // S2-11: quieto durante el minijuego
     send({ type: 'move', dx, dy });
   });
   const detachInput = input.attach(window);
+  const detachTasks = tasks.attach(window);
   window.addEventListener('resize', resize);
 
   function frame(): void {
@@ -230,10 +320,15 @@ export function mountGame(
 
     ctx.fillStyle = '#1b2a33';
     ctx.fillRect(0, 0, camera.viewWidth, camera.viewHeight);
-    renderMap(ctx, gameMap, camera);
+    renderMap(ctx, gameMap, camera, stationMarks(lastSnapshot, now));
     const tick = interpolator.tickAt(now);
     if (tick !== null) renderOilDrops(ctx, oilDrops, camera, tick);
+    if (lastSnapshot) {
+      renderTanks(ctx, lastSnapshot.tanks, players, gameMap, camera);
+    }
     renderPlayers(ctx, players, camera, meId);
+    tasks.frame();
+    updateAction(me, now);
     if (status.state === 'reconnecting') {
       renderOverlayMessage(
         ctx,
@@ -250,6 +345,50 @@ export function mountGame(
     animationFrame = requestAnimationFrame(frame);
   }
 
+  // updateAction elige el botón de acción y avanza la acción en curso:
+  // se cancela si el jugador se mueve, se aleja o la partida se detiene.
+  function updateAction(me: PlayerView | undefined, now: number): void {
+    const snap = lastSnapshot;
+    const playing =
+      snap !== null &&
+      snap.phase === 'PLAYING' &&
+      !snap.paused &&
+      !matchDown &&
+      !tasks.isOpen();
+    currentAction =
+      playing && me
+        ? contextAction(
+            me,
+            snap.myRole,
+            snap.tanks,
+            gameMap,
+            now,
+            contaminateReadyAt,
+            reportedTanks,
+            snap.myTasks,
+          )
+        : null;
+    hud.setAction(currentAction);
+    hud.setReservoir(
+      snap && snap.phase === 'PLAYING' ? snap.reservoir : null,
+    );
+
+    if (!hold) return;
+    const { dx, dy } = input.current();
+    if (dx !== 0 || dy !== 0 || !hold.sameTarget(currentAction)) {
+      hold = null;
+      return;
+    }
+    if (hold.done(now)) {
+      finishHold(hold, now);
+      hold = null;
+      return;
+    }
+    if (me) {
+      renderHoldProgress(ctx, camera, me.x, me.y, hold.progress(now));
+    }
+  }
+
   resize();
   animationFrame = requestAnimationFrame(frame);
 
@@ -257,6 +396,11 @@ export function mountGame(
   // para poder limpiar los event listeners en unmountGame.
   (canvas as any)._cleanup = () => {
     detachInput();
+    detachTasks();
+    tasks.destroy();
+    taskList.hide();
+    window.removeEventListener('keydown', onActionKey);
+    hud.destroy();
     window.removeEventListener('resize', resize);
     cancelAnimationFrame(animationFrame);
     closeGameSocket();
@@ -274,6 +418,21 @@ export function unmountGame(): void {
     (canvas as any)._cleanup();
     delete (canvas as any)._cleanup;
   }
+}
+
+// stationMarks: estaciones propias pendientes y hechas para el mapa
+// (S2-11). Fuera de PLAYING el mapa se dibuja sin marcas.
+function stationMarks(
+  snap: Snapshot | null,
+  now: number,
+): StationMarks | undefined {
+  if (!snap || snap.phase !== 'PLAYING' || snap.myTasks.length === 0) {
+    return undefined;
+  }
+  const pending = new Set<string>();
+  const done = new Set<string>();
+  for (const t of snap.myTasks) (t.done ? done : pending).add(t.stationId);
+  return { pending, done, now };
 }
 
 // Aviso sobre el canvas mientras el socket reconecta o es reemplazado (S1-20).

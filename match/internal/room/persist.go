@@ -42,21 +42,23 @@ type savedRoom struct {
 }
 
 type savedPlayer struct {
-	ID              string       `json:"id"`
-	Name            string       `json:"name"`
-	Color           string       `json:"color"`
-	X               float32      `json:"x"`
-	Y               float32      `json:"y"`
-	Alive           bool         `json:"alive"`
-	Role            matchv1.Role `json:"role"`
-	TankSlot        int          `json:"tank_slot"`
-	AssignedTasks   []string     `json:"assigned_tasks"`
-	TasksCompleted  int          `json:"tasks_completed"`
-	NextContaminate int64        `json:"next_contaminate"`
-	NextChatTick    int64        `json:"next_chat_tick"`
-	Ejected         bool         `json:"ejected"`
-	OilUntil        int64        `json:"oil_until"`
-	NextOilDrop     int64        `json:"next_oil_drop"`
+	ID             string       `json:"id"`
+	Name           string       `json:"name"`
+	Color          string       `json:"color"`
+	X              float32      `json:"x"`
+	Y              float32      `json:"y"`
+	Alive          bool         `json:"alive"`
+	Role           matchv1.Role `json:"role"`
+	TankSlot       int          `json:"tank_slot"`
+	AssignedTasks  []string     `json:"assigned_tasks"`
+	TasksCompleted int          `json:"tasks_completed"`
+	// S2-11: opcional para que sirvan las instantáneas viejas.
+	CompletedTasks  []string `json:"completed_tasks,omitempty"`
+	NextContaminate int64    `json:"next_contaminate"`
+	NextChatTick    int64    `json:"next_chat_tick"`
+	Ejected         bool     `json:"ejected"`
+	OilUntil        int64    `json:"oil_until"`
+	NextOilDrop     int64    `json:"next_oil_drop"`
 }
 
 type savedTank struct {
@@ -165,6 +167,7 @@ func (r *Room) toSaved() savedRoom {
 			TankSlot:        p.tankSlot,
 			AssignedTasks:   tasks,
 			TasksCompleted:  p.tasksCompleted,
+			CompletedTasks:  p.completedTasks,
 			NextContaminate: p.nextContaminate,
 			NextChatTick:    p.nextChatTick,
 			Ejected:         p.ejected,
@@ -276,6 +279,7 @@ func Restore(state []byte, m *Map, opts ...Option) (*Room, error) {
 			tankSlot:        sp.TankSlot,
 			assignedTasks:   tasks,
 			tasksCompleted:  sp.TasksCompleted,
+			completedTasks:  sp.CompletedTasks,
 			nextContaminate: sp.NextContaminate,
 			nextChatTick:    sp.NextChatTick,
 			ejected:         sp.Ejected,

@@ -171,6 +171,7 @@ func TestRestoreBringsBackTheMatchPausedAndComplete(t *testing.T) {
 	a := r.players["a"]
 	a.view.X, a.view.Y = 333, 222
 	a.tasksCompleted = 2
+	a.completedTasks = []string{"filter-1", "leak-1"}
 	r.reservoir = 37
 	r.tick = 1234
 	r.tanks[0].contamination = 70
@@ -212,6 +213,7 @@ func TestRestoreBringsBackTheMatchPausedAndComplete(t *testing.T) {
 	ra := got.players["a"]
 	if ra.view.X != 333 || ra.view.Y != 222 || ra.role != a.role ||
 		ra.tasksCompleted != 2 ||
+		len(ra.completedTasks) != 2 ||
 		len(ra.assignedTasks) != len(a.assignedTasks) ||
 		ra.tankSlot != a.tankSlot {
 		t.Errorf("el jugador no volvió igual: %+v", ra)

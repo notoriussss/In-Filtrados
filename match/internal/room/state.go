@@ -148,6 +148,7 @@ type player struct {
 	// S2-04: Tasks
 	tasksCompleted int
 	assignedTasks  map[string]bool
+	completedTasks []string // S2-11: para tacharlas en la lista
 	taskStartTick  int64
 	taskStation    string
 

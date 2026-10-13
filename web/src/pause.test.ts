@@ -26,6 +26,8 @@ function snap(paused: boolean, waitingFor: string[]): Snapshot {
     oilDrops: [],
     paused,
     waitingFor,
+    myTasks: [],
+    myActiveTask: null,
   };
 }
 

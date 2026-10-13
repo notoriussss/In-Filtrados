@@ -314,3 +314,114 @@ def test_grace_over_or_match_finished_removes_the_player():
 
     stats.handle("match.finished", finished(event_id="f2", match_id="m2"))
     assert stats.snapshot()["players_in_grace"] == 0
+
+
+# S2-13: litros ahorrados, tareas por tipo y expulsiones.
+
+
+def task(event_id="t1", match_id="m1", task_type="reduce", liters=300):
+    return {
+        "event_id": event_id,
+        "match_id": match_id,
+        "player_id": "p1",
+        "task_type": task_type,
+        "liters_saved": liters,
+    }
+
+
+def ejected(event_id="x1", match_id="m1", was_impostor=True):
+    return {
+        "event_id": event_id,
+        "match_id": match_id,
+        "player_id": "p2",
+        "was_impostor": was_impostor,
+    }
+
+
+def counts_by_type(snapshot):
+    return {
+        row["type"]: row["count"]
+        for row in snapshot["tasks_by_type"]
+    }
+
+
+def test_three_tasks_add_liters_total_and_per_match():
+    stats = EventStats()
+    stats.handle("match.started", started())
+    for i, kind in enumerate(("reduce", "reuse", "recycle")):
+        stats.handle("task.completed", task(f"t{i}", task_type=kind))
+
+    snapshot = stats.snapshot()
+    assert snapshot["liters_saved_total"] == 900
+    assert snapshot["liters_by_match"] == [
+        {"match_id": "m1", "room_code": "ABCD", "liters": 900},
+    ]
+    assert counts_by_type(snapshot) == {
+        "reduce": 1,
+        "reuse": 1,
+        "recycle": 1,
+    }
+    assert [row["label"] for row in snapshot["tasks_by_type"]] == [
+        "Reducir",
+        "Reutilizar",
+        "Reciclar",
+    ]
+
+
+def test_duplicate_task_does_not_add_liters_twice():
+    stats = EventStats()
+    stats.handle("task.completed", task())
+
+    assert not stats.handle("task.completed", task())
+
+    snapshot = stats.snapshot()
+    assert snapshot["liters_saved_total"] == 300
+    assert counts_by_type(snapshot)["reduce"] == 1
+
+
+def test_unknown_task_type_still_adds_liters():
+    stats = EventStats()
+
+    assert stats.handle("task.completed", task(task_type="mystery"))
+
+    snapshot = stats.snapshot()
+    assert snapshot["liters_saved_total"] == 300
+    assert set(counts_by_type(snapshot).values()) == {0}
+
+
+@pytest.mark.parametrize("liters", ["300", -100, True, None, 1.5])
+def test_invalid_liters_count_as_zero(liters):
+    stats = EventStats()
+
+    stats.handle("task.completed", task(liters=liters))
+
+    assert stats.snapshot()["liters_saved_total"] == 0
+
+
+def test_finished_match_leaves_active_list_but_keeps_total():
+    stats = EventStats()
+    stats.handle("match.started", started())
+    stats.handle("task.completed", task(liters=200))
+    stats.handle("task.completed", task("t2", match_id="m2", liters=500))
+    assert [
+        row["match_id"] for row in stats.snapshot()["liters_by_match"]
+    ] == ["m2", "m1"]
+
+    stats.handle("match.finished", finished())
+
+    snapshot = stats.snapshot()
+    assert snapshot["liters_saved_total"] == 700
+    assert [row["match_id"] for row in snapshot["liters_by_match"]] == [
+        "m2",
+    ]
+
+
+def test_ejections_count_correct_and_wrong():
+    stats = EventStats()
+    stats.handle("player.ejected", ejected("x1", was_impostor=True))
+    stats.handle("player.ejected", ejected("x2", was_impostor=False))
+    stats.handle("player.ejected", ejected("x3", was_impostor=False))
+    # Duplicado: no cuenta otra vez.
+    stats.handle("player.ejected", ejected("x3", was_impostor=False))
+
+    assert stats.snapshot()["ejections"] == {"correct": 1, "wrong": 2}

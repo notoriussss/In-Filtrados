@@ -768,6 +768,7 @@ func (r *Room) step() {
 	}
 	if r.phase == matchv1.Phase_PLAYING {
 		r.stepTanks()
+		r.cancelFarTasks()
 	}
 	if r.phase == matchv1.Phase_MEETING {
 		r.stepMeeting()
@@ -849,11 +850,13 @@ func (r *Room) sendTo(p *player, s sharedState) {
 				len(p.assignedTasks) + p.tasksCompleted,
 			),
 		},
-		Meeting:    s.meeting,
-		Chat:       s.chat,
-		OilDrops:   s.drops,
-		Paused:     s.paused,
-		WaitingFor: s.waiting,
+		Meeting:      s.meeting,
+		Chat:         s.chat,
+		OilDrops:     s.drops,
+		Paused:       s.paused,
+		WaitingFor:   s.waiting,
+		MyTasks:      myTasks(p),
+		MyActiveTask: p.taskStation,
 	}
 	ev := &matchv1.ServerEvent{
 		Event: &matchv1.ServerEvent_Snapshot{

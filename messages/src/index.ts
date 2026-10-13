@@ -43,6 +43,16 @@ export type Snapshot = {
   // waitingFor son los ids de esos jugadores.
   paused: boolean;
   waitingFor: string[];
+  // S2-11: las tareas propias (nunca las de otro) y la estación cuya
+  // tarea el servidor dio por iniciada; null si ninguna.
+  myTasks: MyTask[];
+  myActiveTask: string | null;
+};
+
+// MyTask: una estación asignada al jugador y si ya la hizo (S2-11).
+export type MyTask = {
+  stationId: string;
+  done: boolean;
 };
 
 // OilDrop: gota del rastro que deja el impostor tras contaminar (S2-12).

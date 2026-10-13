@@ -71,3 +71,59 @@ export const END_TEXT = {
   BACK_TO_LOBBY: 'Volver a la sala',
 } as const;
 
+// S2-09: botón de acción contextual, embalse y aviso del tanque.
+export const ACTION_TEXT = {
+  TASK: 'Hacer tarea',
+  CLEAN: 'Limpiar',
+  REPORT: 'Reportar',
+  CONTAMINATE: 'Contaminar',
+  contaminateWait: (seconds: number) => `Contaminar (${seconds} s)`,
+  KEY_HINT: 'E',
+} as const;
+
+export const HUD_TEXT = {
+  reservoir: (pct: number) => `Embalse ${pct} %`,
+  TANK_ALERT: '¡Tu tanque se está contaminando!',
+} as const;
+
+// Espejo de las reglas de match/internal/room/state.go (S2-03, S2-04).
+// El servidor sigue decidiendo; la web solo las usa para el botón y el
+// círculo de progreso.
+export const GAME_RULES = {
+  TANK_RANGE: 40,
+  TASK_RANGE: 40,
+  REPORT_RANGE: 60,
+  CONTAMINATE_MS: 3000,
+  CLEAN_MS: 2000,
+  // match exige 60 ticks desde que recibe el inicio; con latencia
+  // irregular 3000 ms justos a veces le llegan como 59 y la rechaza.
+  TASK_MS: 3000 + 150,
+  CONTAMINATE_COOLDOWN_MS: 20000,
+  // El tanque del impostor sube 1 punto solo cada 5 s: eso no es una
+  // contaminación y no debe avisar.
+  TANK_ALERT_MIN_RISE: 2,
+  TANK_ALERT_MS: 3000,
+} as const;
+
+// Textos de la lista de misiones y los minijuegos de las 3R (S2-11).
+export const TASK_TEXT = {
+  LIST_TITLE: (done: number, total: number) =>
+    `Misiones (${done}/${total})`,
+  ALL_DONE: '¡Completaste tus misiones!',
+  TYPE_NAMES: {
+    reduce: 'Reducir',
+    reuse: 'Reutilizar',
+    recycle: 'Reciclar',
+  },
+  GAME_TITLES: {
+    reduce: 'Reducir: cierra la fuga',
+    reuse: 'Reutilizar: guarda el agua gris',
+    recycle: 'Reciclar: filtra el agua',
+  },
+  ROW: (type: string, zone: string) => `${type} · ${zone}`,
+  UNKNOWN_ZONE: 'Zona desconocida',
+  DO_TASK: 'Hacer tarea',
+  DO_TASK_KEY: 'E',
+  CLOSE: 'Cerrar',
+  DONE: '¡Listo!',
+} as const;

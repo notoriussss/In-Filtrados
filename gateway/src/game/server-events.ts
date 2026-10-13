@@ -2,6 +2,7 @@ import type {
   ChatMessage,
   ErrorCode,
   Meeting,
+  MyTask,
   OilDrop,
   ServerMessage,
   Snapshot,
@@ -14,8 +15,13 @@ type GrpcMeeting = Omit<Meeting, 'ejectedId'> & {
   ejectedId?: string | null;
 };
 
-type GrpcSnapshot = Omit<Snapshot, 'type' | 'meeting'> & {
+type GrpcSnapshot = Omit<
+  Snapshot,
+  'type' | 'meeting' | 'myTasks' | 'myActiveTask'
+> & {
   meeting: GrpcMeeting | null;
+  myTasks?: MyTask[];
+  myActiveTask?: string;
 };
 
 type GrpcMatchEnded = { winner: string; impostorIds: string[] };
@@ -68,6 +74,11 @@ function toSnapshot(s: GrpcSnapshot): Snapshot {
     oilDrops: (s.oilDrops ?? []).map(toOilDrop),
     paused: Boolean(s.paused),
     waitingFor: [...(s.waitingFor ?? [])],
+    myTasks: (s.myTasks ?? []).map(toMyTask),
+    myActiveTask:
+      s.myActiveTask && s.myActiveTask.length > 0
+        ? s.myActiveTask
+        : null,
   };
 }
 
@@ -109,5 +120,12 @@ function toOilDrop(d: OilDrop): OilDrop {
     y: d.y,
     color: d.color,
     expiresAtTick: d.expiresAtTick,
+  };
+}
+
+function toMyTask(t: MyTask): MyTask {
+  return {
+    stationId: t.stationId,
+    done: Boolean(t.done),
   };
 }
