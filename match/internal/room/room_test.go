@@ -33,27 +33,19 @@ func startRoom(t *testing.T, opts ...Option) *Room {
 	return r
 }
 
-// drain returns the last snapshot in ch, or nil if it is empty.
-func drain(ch chan *matchv1.Snapshot) *matchv1.Snapshot {
-	var last *matchv1.Snapshot
-	for len(ch) > 0 {
-		last = <-ch
-	}
-	return last
-}
-
 // waitPlayers waits for a snapshot in ch that has n players.
 func waitPlayers(
 	t *testing.T,
-	ch chan *matchv1.Snapshot,
+	ch chan *matchv1.ServerEvent,
 	n int,
 ) *matchv1.Snapshot {
 	t.Helper()
 	timeout := time.After(time.Second)
 	for {
 		select {
-		case snap := <-ch:
-			if len(snap.Players) == n {
+		case ev := <-ch:
+			snap := snapOf(ev)
+			if snap != nil && len(snap.Players) == n {
 				return snap
 			}
 		case <-timeout:
@@ -74,8 +66,8 @@ func findPlayer(snap *matchv1.Snapshot, id string) *matchv1.PlayerView {
 func TestTwoPlayersSeeEachOtherMove(t *testing.T) {
 	r := startRoom(t)
 
-	a := make(chan *matchv1.Snapshot, 64)
-	b := make(chan *matchv1.Snapshot, 64)
+	a := make(chan *matchv1.ServerEvent, 64)
+	b := make(chan *matchv1.ServerEvent, 64)
 	r.Join(Join{PlayerID: "a", Out: a})
 	r.Join(Join{PlayerID: "b", Out: b})
 	r.Act(PlayerAction{PlayerID: "a", DX: 1})
@@ -104,7 +96,7 @@ func TestThreePlayersConcurrentMoves(t *testing.T) {
 	type mover struct {
 		id     string
 		dx, dy int32
-		out    chan *matchv1.Snapshot
+		out    chan *matchv1.ServerEvent
 	}
 	movers := []*mover{
 		{id: "a", dx: 1, dy: 0},
@@ -113,7 +105,7 @@ func TestThreePlayersConcurrentMoves(t *testing.T) {
 	}
 	for _, mv := range movers {
 		// 64 is more than the ~20 snapshots of one second: nothing is dropped.
-		mv.out = make(chan *matchv1.Snapshot, 64)
+		mv.out = make(chan *matchv1.ServerEvent, 64)
 		r.Join(Join{PlayerID: mv.id, Out: mv.out})
 	}
 
@@ -169,7 +161,7 @@ func TestColorsByArrivalOrder(t *testing.T) {
 	r := startRoom(t)
 
 	n := len(colors) + 1
-	out := make(chan *matchv1.Snapshot, 64)
+	out := make(chan *matchv1.ServerEvent, 64)
 	for i := 0; i < n; i++ {
 		r.Join(Join{PlayerID: fmt.Sprintf("p%d", i), Out: out})
 	}
@@ -186,8 +178,8 @@ func TestColorsByArrivalOrder(t *testing.T) {
 func TestLeaveMarksDisconnected(t *testing.T) {
 	r := startRoom(t)
 
-	a := make(chan *matchv1.Snapshot, 64)
-	b := make(chan *matchv1.Snapshot, 64)
+	a := make(chan *matchv1.ServerEvent, 64)
+	b := make(chan *matchv1.ServerEvent, 64)
 	r.Join(Join{PlayerID: "a", Out: a})
 	r.Join(Join{PlayerID: "b", Out: b})
 	r.Leave(Leave{PlayerID: "b", Out: b})

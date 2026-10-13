@@ -173,3 +173,433 @@ button:disabled {
   border-radius: 50%;
   display: inline-block;
 }
+
+/* S3-02: aviso de pausa, encima de todo menos las pantallas */
+.pause-banner {
+  position: absolute;
+  top: 4rem; /* debajo del embalse (S2-09) */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  background: rgba(180, 83, 9, 0.95);
+  color: #fff;
+  font-weight: 700;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  max-width: calc(100vw - 2rem);
+  text-align: center;
+}
+
+.pause-banner[hidden] {
+  display: none;
+}
+
+/* S2-10: reunión y fin de partida, encima del canvas */
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  background: rgba(10, 16, 20, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.overlay[hidden] {
+  display: none !important;
+}
+
+.meeting-panel {
+  position: relative;
+  background: var(--panel-bg);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  width: 100%;
+  max-width: 860px;
+  max-height: 100%;
+  overflow: auto;
+  padding: 1.25rem 1.5rem;
+  box-sizing: border-box;
+}
+
+.meeting-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.meeting-countdown {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fbbf24;
+  white-space: nowrap;
+}
+
+.meeting-report p {
+  margin: 0.25rem 0;
+}
+
+.meeting-reporter {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.meeting-visitors-title,
+.meeting-tank,
+.meeting-hint {
+  color: var(--text-muted);
+}
+
+.meeting-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+@media (max-width: 640px) {
+  .meeting-body {
+    grid-template-columns: 1fr;
+  }
+}
+
+.meeting-body h3 {
+  margin: 0 0 0.5rem;
+}
+
+.meeting-players,
+.meeting-messages {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0.75rem;
+}
+
+.meeting-player {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 0.35rem;
+}
+
+.meeting-player.votable {
+  cursor: pointer;
+}
+
+.meeting-player.votable:hover {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: var(--primary);
+}
+
+.meeting-player.ghost {
+  opacity: 0.45;
+}
+
+.meeting-player-name {
+  font-weight: 600;
+}
+
+.meeting-player-tags {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.meeting-voted {
+  margin-left: auto;
+  color: #34d399;
+  font-size: 0.85rem;
+}
+
+.meeting-messages {
+  height: 220px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+  padding: 0.5rem;
+  box-sizing: border-box;
+  text-align: left;
+  word-break: break-word;
+}
+
+.meeting-messages li {
+  margin-bottom: 0.25rem;
+}
+
+.meeting-pending {
+  opacity: 0.55;
+}
+
+.meeting-chat-form {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.meeting-chat-form input {
+  margin-bottom: 0;
+}
+
+.meeting-chat-form button {
+  flex: 0 0 auto;
+}
+
+.meeting-result {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(20, 30, 38, 0.96);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.meeting-result[hidden] {
+  display: none;
+}
+
+.meeting-result-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+}
+
+.meeting-result-detail {
+  font-size: 1.25rem;
+  color: #fbbf24;
+  margin: 0;
+}
+
+.end-winner {
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.end-coins {
+  color: #fbbf24;
+}
+
+/* S2-11: lista de misiones y modal de minijuegos */
+.task-list {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 15;
+  background: var(--panel-bg);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  min-width: 220px;
+  max-width: calc(100vw - 2rem);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+
+.task-list[hidden] {
+  display: none;
+}
+
+.task-list h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.task-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.task-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.2rem 0;
+  font-size: 0.9rem;
+}
+
+.task-row.task-done {
+  text-decoration: line-through;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.task-dot {
+  display: inline-block;
+  flex: none;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  border: 2px solid #333a40;
+}
+
+.task-all-done {
+  margin: 0.5rem 0 0;
+  font-size: 0.85rem;
+  color: #22c55e;
+  font-weight: 700;
+}
+
+.minigame-panel {
+  background: var(--panel-bg);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  padding: 1rem;
+  width: 100%;
+  max-width: 600px;
+  box-sizing: border-box;
+}
+
+.minigame-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.minigame-header h3 {
+  flex: 1;
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.minigame-close {
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  background: var(--secondary);
+  color: #fff;
+}
+
+.minigame-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  touch-action: none;
+  cursor: pointer;
+  user-select: none;
+}
+
+.minigame-progress {
+  margin-top: 0.75rem;
+  height: 0.75rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.minigame-progress-fill {
+  height: 100%;
+  width: 0;
+  background: #22c55e;
+  transition: width 0.1s linear;
+}
+
+/* S2-09: embalse arriba, aviso del tanque y botón de acción */
+.reservoir {
+  position: absolute;
+  top: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--panel-bg);
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  font-weight: 700;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.reservoir-bar {
+  width: min(220px, 40vw);
+  height: 10px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.reservoir-fill {
+  height: 100%;
+  width: 0;
+  background: #38bdf8;
+  transition: width 0.3s ease;
+}
+
+.tank-alert {
+  position: absolute;
+  top: 7rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  background: rgba(185, 28, 28, 0.95);
+  color: #fff;
+  font-weight: 700;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  max-width: calc(100vw - 2rem);
+  text-align: center;
+}
+
+.action-button {
+  position: absolute;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.9rem 1.4rem;
+  border: none;
+  border-radius: 12px;
+  background: var(--primary);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  font-size: 1.1rem;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+.action-button:hover:not(:disabled) {
+  background: var(--primary-hover);
+}
+
+.action-button.contaminate {
+  background: #7a4a1e;
+}
+
+.action-button.report {
+  background: var(--error);
+}
+
+.action-button:disabled {
+  background: var(--secondary);
+  cursor: default;
+  opacity: 0.8;
+}
+
+.action-key {
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 4px;
+  padding: 0 0.4rem;
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+
+.reservoir[hidden],
+.tank-alert[hidden],
+.action-button[hidden] {
+  display: none;
+}

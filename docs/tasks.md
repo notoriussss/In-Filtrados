@@ -112,11 +112,16 @@ tanks: { slot, ownerId, contamination /* 0 a 100 */, dead }[];
 reservoir: number;                 // 0 a 100
 myRole: 'NO_ROLE' | 'CREW' | 'IMPOSTOR'; // solo el del destinatario
 myTaskProgress: { completed, total };
-meeting: { reporterId, tankSlot, lastVisitors[], votesCast[], endsAtTick } | null;
+meeting: { reporterId, tankSlot, lastVisitors[], votesCast[], endsAtTick, votingClosed, ejectedId, wasImpostor } | null;
 chat: { id, playerId, text, tick }[]; // últimos 30
+oilDrops: { x, y, color, expiresAtTick }[]; // S2-12: rastro del impostor
+paused: boolean;                   // S3-02: alguien está en su periodo de gracia
+waitingFor: string[];              // S3-02: ids de quienes se esperan
+myTasks: { stationId, done }[];    // S2-11: solo las del destinatario
+myActiveTask: string | null;       // S2-11: tarea iniciada por el servidor
 ```
 
-- `myRole` viaja **solo en el snapshot de su dueño**: `match` arma un snapshot por jugador y el gateway nunca recibe el rol de otro.
+- `myRole`, `myTasks` y `myActiveTask` viajan **solo en el snapshot de su dueño**: `match` arma un snapshot por jugador y el gateway nunca recibe el rol ni las tareas de otro.
 - `votesCast` dice quién ya votó, nunca por quién.
 - `impostorIds` es una lista porque con 7 o más jugadores hay 2 impostores.
 
@@ -143,6 +148,10 @@ El WebSocket se abre en `/ws?token=<token>`.
 | `match.finished` | `match` | `{ event_id, match_id, finished_at, winner: "crew" \| "impostor", players: [{ player_id, role, ejected, harvest }] }` |
 | `task.completed` | `match` (semana 2) | `{ event_id, match_id, player_id, task_type, liters_saved }` |
 | `player.ejected` | `match` (semana 2) | `{ event_id, match_id, player_id, was_impostor }` |
+| `player.disconnected` | `match` (S3-04) | `{ event_id, match_id, player_id, display_name, grace_seconds, grace_ends_at, at }` |
+| `player.reconnected` | `match` (S3-04) | `{ event_id, match_id, player_id, display_name, at }` |
+
+`at` (RFC 3339 con nanosegundos) ordena la desconexión y la reconexión de un mismo jugador aunque lleguen al revés. El monitor los usa para mostrar quién está en periodo de gracia y su cuenta regresiva.
 
 | Cola (durable) | Enlazada a | La consume |
 |---|---|---|
@@ -505,7 +514,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 **Pasos:**
 1. Usar `@nestjs/platform-ws` (WebSocket puro, sin Socket.IO, para que el navegador use la API nativa).
-2. Al conectar a `/ws?token=...`: validar el token con `players`. Si no es válido, mandar `{type:'error', code:'UNAUTHORIZED'}` y cerrar con el código 4001. Si el mismo `playerId` abre una segunda conexión, cerrar la anterior con 4002 (sesión reemplazada).
+2. Al conectar a `/ws?token=...`: validar el token con `players`. Si no es válido, mandar `{type:'error', code:'UNAUTHORIZED'}` y cerrar con el código 4001. Si el mismo `playerId` abre una segunda conexión, cerrar la anterior con 4002 (sesión reemplazada). Si supera el límite de mensajes de S2-08, cerrar con 4008 (demasiados mensajes).
 3. Al recibir `join`: abrir un stream `Play` con `match`, mandarle `Join` con el `playerId` **del token**, nunca uno que mande el navegador.
 4. Reenviar cada `move` como `Move`, validando que `dx` y `dy` estén en {-1, 0, 1}. Si un mensaje no se puede parsear, `error BAD_MESSAGE` sin cerrar la conexión.
 5. Reenviar cada `Snapshot` al navegador convertido a `ServerMessage`.
@@ -568,7 +577,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 **Pasos:**
 1. Clase `GameSocket` con `connect()`, `send()` y `onMessage()`.
-2. Si la conexión se cierra con un código distinto de 1000 (cierre normal), 4001 (token inválido) o 4002 (sesión reemplazada), reintentar con espera creciente: 0,5 s, 1 s, 2 s, 4 s, 8 s y luego cada 10 s, indefinidamente.
+2. Si la conexión se cierra con un código distinto de 1000 (cierre normal), 4001 (token inválido) o 4002 (sesión reemplazada), reintentar con espera creciente: 0,5 s, 1 s, 2 s, 4 s, 8 s y luego cada 10 s, indefinidamente. El 4008 (demasiados mensajes, S2-08) es un corte normal: también reintenta.
 3. Mientras reconecta, mostrar sobre el canvas el aviso "Reconectando…" con el número de intento.
 4. Al reconectar, mandar de nuevo `join` con el `matchId` guardado en `session.ts` y el último `tick` recibido.
 5. Si el cierre es 4001, borrar la sesión y volver al login. Con 4002 (reemplazada), no reintentar y mantener la sesión.
@@ -612,18 +621,20 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S1-23 — Desplegar en la nube (infraestructura)
+#### S1-23 — Un `compose` por nodo y `lab.env` para el laboratorio (infraestructura)
 
-**Archivos:** `deploy/README.md` y `deploy/setup.sh`.
+**Cambio (7 de octubre):** reemplaza a "desplegar en la nube". Las 5 laptops del equipo son los nodos servidor y cada una corre su nodo con Docker (`docs/deployment-lab.md`, secciones 3 a 6).
+
+**Archivos:** `deploy/compose/n1.yml` a `n5.yml`, `deploy/lab.env.example`, `deploy/scripts/check-network.ps1` y `deploy/README.md`.
 
 **Pasos:**
-1. Crear una máquina virtual en una capa gratuita (Azure for Students, Oracle Cloud Always Free o AWS), con Ubuntu 22.04, 2 vCPU y 4 GB de RAM o más.
-2. Abrir **solo** los puertos 80 (juego) y 8000 (panel) en el firewall de la nube. No exponer Postgres, RabbitMQ ni los puertos gRPC.
-3. `setup.sh`: instalar Docker y el plugin de compose, clonar el repo, copiar `.env` con contraseñas **distintas** a las de `.env.example` y correr `docker compose up -d --build`.
-4. En la nube, `web` publica el puerto 80 en lugar del 8080.
-5. Documentar en `deploy/README.md` cómo actualizar: `git pull && docker compose up -d --build`.
+1. Un `compose` por nodo con las imágenes del CD: N1 edge (`web` y `gateway`), N2 (`match` y `match-db`), N3 (`players` y `players-db`), N4 (`rabbitmq`) y N5 (`monitor`).
+2. `match-db` y `players-db` sin publicar el 5432; `restart: unless-stopped` en todos.
+3. `lab.env.example` con las IP de cada nodo, las direcciones derivadas, las URL de las bases, un usuario propio de RabbitMQ y `RECONNECT_GRACE_SECONDS=600`. El `lab.env` real no se sube.
+4. `check-network.ps1`: ping, puertos publicados, 5432 cerrado y WebSocket hacia los otros nodos.
+5. `deploy/README.md`: preparar cada laptop, arrancar cada nodo y agrupar nodos.
 
-**Criterio de verificación:** desde el celular, con datos móviles (no el wifi de la universidad), abrir `http://<ip-pública>` y jugar contra alguien en una laptop. `http://<ip-pública>:8000` muestra el panel. `nc -zv <ip-pública> 5432` y `nc -zv <ip-pública> 5672` fallan (los puertos no están expuestos).
+**Criterio de verificación:** con 2 laptops (`-f n1.yml -f n2.yml` en una y `-f n3.yml -f n4.yml -f n5.yml` en otra) y `lab.env` con sus IP, un navegador en una tercera máquina abre `http://<EDGE_HOST>:8080` y el panel del monitor está en verde. Desde otra máquina, conectar al 5432 de N2 o N3 falla. Tras una caída del proceso (`docker compose exec match sh -c 'kill -9 1'`), Docker lo relanza solo y el panel vuelve a verde. `check-network.ps1` reporta todo en verde.
 
 ---
 
@@ -687,7 +698,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 **Pasos:**
 1. `Report { tank_slot }`: solo sobre un tanque `dead`, a 60 unidades o menos, y por un jugador vivo. Pasa a fase `MEETING` y teletransporta a todos a la plaza.
 2. `meeting.last_visitors`: los últimos 3 jugadores **distintos** que pasaron a 40 unidades o menos de ese tanque, según `event_log`.
-3. La reunión dura 60 segundos: 45 para discutir por chat y votar, y se cierra antes si todos los vivos ya votaron.
+3. La reunión dura 50 segundos: 45 para discutir por chat y votar (se cierra antes si todos los vivos ya votaron), y 5 de pantalla de resultado.
 4. **Chat (C):** `Chat` solo en `MEETING` y de jugadores vivos, máximo 200 caracteres, máximo 1 mensaje por segundo por jugador. Se guarda en el estado de la sala y va en los snapshots.
 5. Resultado: el más votado es expulsado (`ejected = true`, `alive = false`). Empate o mayoría de `skip`: nadie sale. Publicar `player.ejected`.
 6. Tras la reunión, 5 segundos de pantalla de resultado ("Morado era el impostor" o "Morado no era el impostor") y vuelta a `PLAYING`.
@@ -699,11 +710,17 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 #### S2-06 — Fin de partida real (`match/`)
 
 **Pasos:**
-1. Ganan los tripulantes si el embalse llega a 100 **o** todos los impostores fueron expulsados.
-2. Gana el impostor si quedan tantos impostores vivos como tripulantes vivos **o** pasan 8 minutos sin que el embalse llegue a 100.
-3. `harvest` por jugador = tareas completadas × 5 + (10 si su tanque sigue vivo).
-4. Quitar la regla temporal de 3 minutos de S1-11.
-5. Fase `ENDED`: snapshot con `MatchEnded { winner, impostor_id }`, guardar en `matches` y `participants`, publicar `match.finished` y liberar la sala de memoria a los 30 segundos.
+1. Ganan los tripulantes si el embalse llega a 100 **o** todos los impostores
+   fueron expulsados/desconectados (`aliveImp == 0`).
+2. Gana el impostor si quedan tantos impostores vivos como tripulantes vivos
+   habiendo muerto al menos un tripulante (`deadCrew > 0`, para evitar fin
+   inmediato al iniciar salas de prueba de 2 jugadores con 1 impostor) **o**
+   pasan 8 minutos sin que el embalse llegue a 100.
+3. `harvest` por jugador = tareas completadas × 5 + (10 si su tanque vivo).
+4. Quitar la regla temporal de 3 minutos de S1-11; contar duración en ticks.
+5. Fase `ENDED`: snapshot con `MatchEnded { winner, impostor_ids }`, guardar
+   en `matches` y `participants`, publicar `match.finished` asíncrono y
+   liberar la sala a los 30 s (cerrando streams gRPC con canal `done`).
 
 **Criterio de verificación:** tests de cada una de las 4 condiciones de fin. Una partida real termina sola, muestra quién era el impostor y las monedas aparecen en el perfil según la fórmula.
 
@@ -726,9 +743,16 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 **Pasos:**
 1. Reenviar todas las acciones nuevas de S2-01 al stream `Play`, validando cada una (tipos, rangos y largo del chat).
 2. **Rate limiting por jugador** (patrón Gateway Offloading): máximo 30 mensajes por segundo por WebSocket con un token bucket en memoria. Si se pasa, descartar y, tras 3 avisos, cerrar con el código 4008.
-3. Límite en REST: 10 intentos de login por minuto por IP (`@nestjs/throttler`).
+3. Límite en REST: 10 intentos de login por minuto por usuario
+   (`@nestjs/throttler`). Se cuenta por usuario normalizado (`username`)
+   en vez de IP porque en despliegues con Docker Desktop la IP real de los
+   clientes en la LAN no siempre se conserva (lo que provocaría que todos
+   los jugadores compartan el cupo o se evada falseando `X-Forwarded-For`).
 
-**Criterio de verificación:** test unitario del token bucket. Un script que manda 100 `move` en 1 segundo recibe avisos y termina desconectado, mientras el otro jugador de la sala no nota nada. El undécimo login seguido en un minuto responde 429.
+**Criterio de verificación:** test unitario del token bucket. Un script que
+manda 100 `move` en 1 segundo recibe avisos y termina desconectado, mientras
+el otro jugador de la sala no nota nada. El undécimo login seguido en un minuto
+para el mismo usuario responde 429.
 
 ---
 
@@ -757,16 +781,43 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S2-11 — Minijuegos de las 3R (`web/`)
+#### S2-11 — Minijuegos de las 3R (`web/`, con un cambio chico de contrato en `proto/`, `match/`, `gateway/` y `messages/`)
 
-**Pasos (cada minijuego dura de 3 a 6 segundos):**
-1. **Reducir (cerrar fuga):** girar una válvula manteniendo presionado el clic hasta llenar una barra.
-2. **Reutilizar (agua gris):** arrastrar 3 cubetas al tanque.
-3. **Reciclar (filtrar):** hacer clic en 4 partículas de suciedad que flotan en el agua.
-4. Al terminar, mandar `Interact { completed: true }`. Si el jugador se aleja, se cancela.
-5. Lista de tareas pendientes en una esquina, con la zona donde está cada una.
+**Estado al 11 de octubre:** `match` ya asigna 4 estaciones al azar a cada jugador y valida `Interact` (S2-04, `match/internal/room/tasks.go`), y el gateway ya traduce `interact` a gRPC (`gateway/src/game/client-messages.ts`). Pero el jugador no puede ver ni hacer sus misiones:
+- El snapshot solo trae `myTaskProgress { completed, total }`: no dice **cuáles** estaciones le tocan.
+- `web/` dibuja todas las estaciones iguales (`web/src/canvas/renderMap.ts`), no muestra `myTaskProgress` y nunca manda `interact`.
 
-**Criterio de verificación:** cada minijuego se completa en el tiempo indicado sin instrucciones escritas, y la tarea aparece tachada en la lista. Tres compañeros que no lo programaron completan los 3 al primer intento.
+Sin esta tarea tampoco se puede verificar S2-13 jugando (completar 3 tareas y ver subir los litros).
+
+**Pasos:**
+
+*A. Contrato (un solo PR, con la skill `change-contract`; agrega campos, no rompe nada):*
+1. `proto/match.proto`: en `Snapshot`, `repeated MyTask my_tasks = 13;` con `message MyTask { string station_id = 1; bool done = 2; }`, y `string my_active_task = 14;` (estación cuya tarea el servidor dio por iniciada; vacío si ninguna). Solo viajan en el snapshot de su dueño, igual que `my_role`.
+2. Regenerar `match/gen/` con `match/gen.sh`.
+3. `messages/src/index.ts`: `myTasks: { stationId: string; done: boolean }[]` y `myActiveTask: string | null` en `Snapshot`. Actualizar el ejemplo de la sección 0.5 de este documento.
+4. `gateway/src/game/server-events.ts`: mapear los dos campos (`[]` y `null` si no vienen) y su prueba en `server-events.test.ts`.
+
+*B. `match/`:*
+5. Hoy `completeTask` borra la estación de `assignedTasks`, así que se pierde cuál se hizo. Guardar también `completedTasks []string` en `player` y en la instantánea (`persist.go`: campo nuevo `completed_tasks`, opcional al restaurar para no romper instantáneas viejas).
+6. En `room.go`, al armar el snapshot de cada jugador: `my_tasks` = pendientes + hechas, en orden estable (por id de estación), y `my_active_task` = `p.taskStation`.
+7. Cancelar la tarea en curso (`taskStation = ""`) si el jugador se aleja más de 40 unidades de la estación, para que el navegador cierre el minijuego al ver `myActiveTask` vacío.
+8. Pruebas: el snapshot trae las 4 tareas y marca `done` la completada; alejarse cancela; restaurar una instantánea conserva las hechas.
+
+*C. `web/` (cada minijuego dura de 3 a 6 segundos):*
+9. **Lista de misiones** en la esquina superior izquierda, sobre el canvas: "Misiones (2/4)" y una fila por tarea con su tipo (Reducir, Reutilizar, Reciclar) y la zona donde está, por ejemplo "Reducir · Cuarto de bombas". La zona se calcula en el navegador con `shared/map.json`: la zona más pequeña que contiene la estación (así se ignora "Arroyo", que cubre todo el mapa). Las hechas aparecen tachadas. Se oculta en `LOBBY` y durante la reunión.
+10. **En el mapa:** resaltar solo las estaciones pendientes del jugador (anillo pulsante o signo "!"); las demás y las hechas se dibujan atenuadas.
+11. **Iniciar:** junto a una estación propia pendiente a 40 unidades o menos, el botón contextual de S2-09 (tecla `E`) dice "Hacer tarea" y manda `interact { stationId }`. El minijuego se abre cuando el snapshot trae `myActiveTask === stationId` (lo confirma el servidor, no el navegador).
+12. **Minijuegos**, en un panel encima del canvas; mientras está abierto no se manda `move`:
+    1. **Reducir (cerrar fuga):** girar una válvula manteniendo presionado el clic hasta llenar una barra.
+    2. **Reutilizar (agua gris):** arrastrar 3 cubetas al tanque.
+    3. **Reciclar (filtrar):** hacer clic en 4 partículas de suciedad que flotan en el agua.
+13. **Terminar:** al completar el minijuego, mandar `interact { stationId, completed: true }`. Si se completó antes de 3 s desde el inicio, esperar a que pasen antes de mandarlo (el servidor rechaza los menores de 3 s). Se cierra con `Esc`, al empezar una reunión o si `myActiveTask` deja de ser esa estación (el jugador se alejó).
+14. El impostor ve sus tareas y los minijuegos igual que un tripulante (las "finge"; `match` no suma nada).
+15. Textos que ve el jugador como constantes en `web/src/constants.ts` (regla 9). Pruebas con `vitest` del cálculo de zona, del armado de la lista y de la lógica de cada minijuego (sin canvas).
+
+**Depende de:** S2-04 (hecha) y del botón contextual de S2-09; si S2-09 todavía no está en `develop`, la tecla `E` se agrega aquí y luego se unen.
+
+**Criterio de verificación:** cada minijuego se completa en el tiempo indicado sin instrucciones escritas, y la tarea aparece tachada en la lista. Tres compañeros que no lo programaron completan los 3 al primer intento. Desde las herramientas del navegador de un tripulante no se ven las tareas de otro jugador. Completar 3 tareas sube el embalse para todos y el contador de litros del monitor (S2-13) en menos de 3 segundos.
 
 ---
 
@@ -785,9 +836,9 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 **Pasos:**
 1. Consumir `task.completed` y `player.ejected`: litros ahorrados (total y por partida activa), tareas por tipo (Reducir, Reutilizar, Reciclar) y expulsiones acertadas contra fallidas.
 2. Mostrar en el panel un contador grande de **litros ahorrados** (el número más vistoso para el jurado) y un gráfico de barras simple de tareas por tipo.
-3. Despliegue automático: un job en GitHub Actions que, al hacer merge a `main`, entra por SSH a la máquina de la nube (clave en los secrets del repo) y corre `git pull && docker compose up -d --build`.
+3. Despliegue automático con Docker: el CD ya publica una imagen por servicio en GHCR cuando el CI de `main` sale en verde. `deploy/scripts/update.ps1` en cada nodo hace `docker compose --env-file deploy/lab.env -f deploy/compose/nX.yml pull` y `up -d`, así que no se compila nada en las laptops. El script detecta el nodo comparando las IP de la laptop con las de `lab.env` (o se le pasa `-Nodes N2`).
 
-**Criterio de verificación:** completar 3 tareas en una partida sube el contador de litros en el panel en menos de 3 segundos. Un merge a `main` aparece desplegado en la nube en menos de 10 minutos sin que nadie entre a la máquina.
+**Criterio de verificación:** completar 3 tareas en una partida sube el contador de litros en el panel en menos de 3 segundos. Un merge a `main` queda corriendo en cada laptop con un solo comando por nodo (`.\deploy\scripts\update.ps1`).
 
 ---
 
@@ -796,7 +847,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 #### S3-01 — Periodo de gracia y `Resume` · en pareja
 
 **Pasos:**
-1. **`match`:** cuando el stream de un jugador se corta, marcarlo `connected: false` y conservar su lugar 90 segundos. Si vuelve, recupera todo. Si no, pasa a fantasma.
+1. **`match`:** cuando el stream de un jugador se corta, marcarlo `connected: false` y conservar su lugar durante `RECONNECT_GRACE_SECONDS` (90 por defecto en `.env.example`; 600 en el laboratorio, `deploy/lab.env.example`). Si vuelve, recupera todo. Si no, pasa a fantasma.
 2. **`match`:** si un desconectado no vota antes de que termine la reunión, su voto cuenta como `skip`.
 3. **`match`:** al recibir `Join` de alguien que ya está en la sala, reemplazar su canal de salida y mandarle de inmediato un snapshot completo (con chat y estado de la reunión).
 4. **`web`:** al cargar la página, si `session.ts` tiene `matchId`, ir directo a la partida en lugar de al lobby.
@@ -811,8 +862,8 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 1. Tabla `snapshots (match_id UUID PRIMARY KEY, tick BIGINT, state JSONB, updated_at TIMESTAMPTZ)`.
 2. Cada 2 segundos y en cada cambio de fase, la goroutine de la sala serializa su estado y hace `INSERT ... ON CONFLICT (match_id) DO UPDATE`. La escritura va en **otra goroutine**, para que la base de datos lenta no frene el ticker.
 3. Al arrancar `match`: buscar partidas con `ended_at IS NULL` y snapshot, recrear su sala en pausa y esperar a que los jugadores se reconecten.
-4. Si no queda ningún jugador conectado, la sala se pausa: el ticker sigue, pero no suma contaminación ni tiempo.
-5. **`gateway`:** el gateway, al reconectar un jugador, reabre el stream `Play` y reintenta con espera creciente si `match` todavía está arrancando.
+4. Si no queda ningún jugador conectado, la sala se pausa: el ticker sigue, pero no suma contaminación ni tiempo. **Implementado como en `deployment-lab.md`, sección 9:** la sala se pausa mientras **cualquier** jugador esté en su periodo de gracia; el snapshot lleva `paused` y `waitingFor` y el navegador muestra "Partida en pausa: esperando a X". Un corte de menos de 1 s (la página cambia el socket de la sala de espera por el de la partida, o recarga) no abre el periodo de gracia ni pausa.
+5. **`gateway`:** el gateway, al reconectar un jugador, reabre el stream `Play` y reintenta con espera creciente si `match` todavía está arrancando. Si el stream se cae, el WebSocket sigue abierto: el navegador recibe `SERVICE_UNAVAILABLE` y el gateway reabre `Play` (0,5 s, 1 s, 2 s, 4 s, 8 s y luego cada 10 s).
 
 **Criterio de verificación:** en plena partida, `docker compose restart match`: en menos de 15 segundos todos los navegadores vuelven a la misma partida, con a lo sumo 2 segundos de movimiento perdidos, y el tiempo restante de la partida no avanzó mientras `match` estaba caído.
 
@@ -822,7 +873,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 **Pasos:**
 1. Revisar que exchange, colas y mensajes sean durables y persistentes (sección 0.7), y que `players` haga `ack` solo después del `COMMIT`.
-2. `match` usa publisher confirms; si RabbitMQ no confirma, guarda el evento en una tabla `outbox` y lo reintenta cada 5 segundos.
+2. `match` usa publisher confirms; si RabbitMQ no confirma, guarda el evento en una tabla `outbox` y lo reintenta cada 5 segundos. Mientras quede algo en `outbox`, los eventos nuevos también esperan ahí, para que salgan en orden (`match/internal/events/outbox.go`).
 3. Probar: matar `players` con `docker compose kill players` **en medio** de procesar un mensaje (con un `sleep` temporal de prueba) y comprobar que al volver se procesa una sola vez.
 
 **Criterio de verificación:** las tres pruebas pasan: (a) `players` apagado durante el fin de partida, (b) RabbitMQ reiniciado durante el fin de partida y (c) `players` muerto a mitad de un mensaje. En las tres, las monedas se suman exactamente una vez.

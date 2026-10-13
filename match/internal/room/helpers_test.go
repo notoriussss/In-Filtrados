@@ -7,6 +7,26 @@ import (
 	"github.com/notoriussss/in-filtrados/match/gen/matchv1"
 )
 
+// snapOf extrae el Snapshot de un ServerEvent si existe.
+func snapOf(ev *matchv1.ServerEvent) *matchv1.Snapshot {
+	if ev == nil {
+		return nil
+	}
+	return ev.GetSnapshot()
+}
+
+// drain descarta lo acumulado y devuelve el último Snapshot recibido.
+func drain(ch chan *matchv1.ServerEvent) *matchv1.Snapshot {
+	var last *matchv1.Snapshot
+	for len(ch) > 0 {
+		ev := <-ch
+		if snap := snapOf(ev); snap != nil {
+			last = snap
+		}
+	}
+	return last
+}
+
 // mapWithTanks es testMap con los 10 tanques del huerto de shared/map.json.
 func mapWithTanks() *Map {
 	m := testMap()
@@ -39,7 +59,7 @@ func mapWithStations() *Map {
 // waitTicks descarta lo que haya en ch y espera n snapshots nuevos.
 func waitTicks(
 	t *testing.T,
-	ch chan *matchv1.Snapshot,
+	ch chan *matchv1.ServerEvent,
 	n int,
 ) *matchv1.Snapshot {
 	t.Helper()
@@ -48,7 +68,10 @@ func waitTicks(
 	timeout := time.After(2 * time.Second)
 	for i := 0; i < n; i++ {
 		select {
-		case last = <-ch:
+		case ev := <-ch:
+			if snap := snapOf(ev); snap != nil {
+				last = snap
+			}
 		case <-timeout:
 			t.Fatalf("esperaba %d snapshots", n)
 		}

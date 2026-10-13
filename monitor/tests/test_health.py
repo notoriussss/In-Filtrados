@@ -4,6 +4,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from fastapi.testclient import TestClient
 
+from app import main
 from app.health import HealthMonitor
 from app.main import app
 from app.messages import (
@@ -39,7 +40,11 @@ def client(monkeypatch):
                 "detail": "Simulated check",
             })
 
+    async def fake_consume(stats):
+        await asyncio.Event().wait()
+
     monkeypatch.setattr(HealthMonitor, "scan", fake_scan)
+    monkeypatch.setattr(main, "consume_events", fake_consume)
 
     # El bloque with ejecuta el lifespan de FastAPI.
     with TestClient(app) as test_client:

@@ -45,13 +45,14 @@ func (f *fakePublisher) forKey(routingKey string) []publishedEvent {
 }
 
 type fakeStore struct {
-	mu           sync.Mutex
-	starts       int
-	finishes     int
-	winner       string
-	startID      string
-	startCode    string
-	startPlayers []PlayerInfo
+	mu              sync.Mutex
+	starts          int
+	finishes        int
+	winner          string
+	startID         string
+	startCode       string
+	startPlayers    []PlayerInfo
+	endParticipants []ParticipantResult
 }
 
 func (f *fakeStore) StartMatch(
@@ -73,26 +74,29 @@ func (f *fakeStore) FinishMatch(
 	_ context.Context,
 	_ string,
 	winner string,
+	participants []ParticipantResult,
 ) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.finishes++
 	f.winner = winner
+	f.endParticipants = append([]ParticipantResult(nil), participants...)
 	return nil
 }
 
 // waitPhase waits for a snapshot with the given phase.
 func waitPhase(
 	t *testing.T,
-	ch chan *matchv1.Snapshot,
+	ch chan *matchv1.ServerEvent,
 	phase matchv1.Phase,
 ) *matchv1.Snapshot {
 	t.Helper()
 	timeout := time.After(time.Second)
 	for {
 		select {
-		case snap := <-ch:
-			if snap.Phase == phase {
+		case ev := <-ch:
+			snap := snapOf(ev)
+			if snap != nil && snap.Phase == phase {
 				return snap
 			}
 		case <-timeout:
@@ -110,7 +114,7 @@ func TestStartNeedsTwoPlayers(t *testing.T) {
 		WithStore(store),
 	)
 
-	out := make(chan *matchv1.Snapshot, 64)
+	out := make(chan *matchv1.ServerEvent, 64)
 	r.Join(Join{PlayerID: "creator", Out: out})
 	waitPlayers(t, out, 1)
 
@@ -140,8 +144,8 @@ func TestStartIsIgnoredAfterPlaying(t *testing.T) {
 		WithStore(store),
 	)
 
-	a := make(chan *matchv1.Snapshot, 64)
-	b := make(chan *matchv1.Snapshot, 64)
+	a := make(chan *matchv1.ServerEvent, 64)
+	b := make(chan *matchv1.ServerEvent, 64)
 	r.Join(Join{PlayerID: "creator", Out: a})
 	r.Join(Join{PlayerID: "friend", Out: b})
 	waitPlayers(t, b, 2)
@@ -172,8 +176,8 @@ func TestStartSavesAndPublishes(t *testing.T) {
 		WithStore(store),
 	)
 
-	a := make(chan *matchv1.Snapshot, 64)
-	b := make(chan *matchv1.Snapshot, 64)
+	a := make(chan *matchv1.ServerEvent, 64)
+	b := make(chan *matchv1.ServerEvent, 64)
 	r.Join(Join{PlayerID: "creator", Out: a})
 	r.Join(Join{PlayerID: "friend", Out: b})
 	waitPlayers(t, b, 2)
@@ -205,7 +209,12 @@ func TestStartSavesAndPublishes(t *testing.T) {
 		)
 	}
 
-	started := pub.forKey(events.RoutingKeyStarted)
+	started := waitForEvents(
+		t,
+		pub,
+		events.RoutingKeyStarted,
+		1,
+	)
 	if len(started) != 1 {
 		t.Fatalf("debe publicarse un match.started, got %d", len(started))
 	}
@@ -237,8 +246,8 @@ func TestMatchFinishesAfterDuration(t *testing.T) {
 		WithMatchDuration(150*time.Millisecond),
 	)
 
-	a := make(chan *matchv1.Snapshot, 64)
-	b := make(chan *matchv1.Snapshot, 64)
+	a := make(chan *matchv1.ServerEvent, 64)
+	b := make(chan *matchv1.ServerEvent, 64)
 	r.Join(Join{PlayerID: "creator", Out: a})
 	r.Join(Join{PlayerID: "friend", Out: b})
 	waitPlayers(t, b, 2)
@@ -247,15 +256,20 @@ func TestMatchFinishesAfterDuration(t *testing.T) {
 	waitPhase(t, b, matchv1.Phase_PLAYING)
 	waitPhase(t, b, matchv1.Phase_ENDED)
 
-	if store.finishes != 1 || store.winner != events.WinnerCrew {
+	if store.finishes != 1 || store.winner != events.WinnerImpostor {
 		t.Fatalf(
-			"debe terminarse la partida con crew: finishes=%d winner=%s",
+			"debe terminarse la partida con impostor: finishes=%d winner=%s",
 			store.finishes,
 			store.winner,
 		)
 	}
 
-	finished := pub.forKey(events.RoutingKeyFinished)
+	finished := waitForEvents(
+		t,
+		pub,
+		events.RoutingKeyFinished,
+		1,
+	)
 	if len(finished) != 1 {
 		t.Fatalf("debe publicarse un match.finished, got %d", len(finished))
 	}
@@ -263,7 +277,7 @@ func TestMatchFinishesAfterDuration(t *testing.T) {
 	if !ok {
 		t.Fatalf("payload inesperado: %T", finished[0].payload)
 	}
-	if event.Winner != events.WinnerCrew {
+	if event.Winner != events.WinnerImpostor {
 		t.Errorf("winner inesperado: %s", event.Winner)
 	}
 	if event.EventID == "" || event.FinishedAt == "" {

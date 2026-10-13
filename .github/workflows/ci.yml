@@ -20,6 +20,7 @@ jobs:
   # workflow did) and the project already exists. Services not scaffolded yet are skipped.
   changes:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     outputs:
       match: ${{ steps.exists.outputs.match }}
       players: ${{ steps.exists.outputs.players }}
@@ -57,6 +58,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.match == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: match
@@ -73,6 +75,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.players == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: players
@@ -95,6 +98,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.node == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -110,6 +114,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.monitor == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: monitor
@@ -129,6 +134,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.compose == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - run: cp .env.example .env

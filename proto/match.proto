@@ -107,12 +107,35 @@ message Snapshot {
   TaskProgress my_task_progress = 7;
   Meeting      meeting          = 8; // solo en MEETING
   repeated ChatMessage chat     = 9; // últimos 30 mensajes
+  // S2-12: rastro del impostor después de contaminar.
+  repeated OilDrop oil_drops    = 10;
+  // S3-02: la sala está en pausa mientras alguien está en su periodo de
+  // gracia; waiting_for son esos jugadores (docs/deployment-lab.md, 9).
+  bool            paused        = 11;
+  repeated string waiting_for   = 12;
+  // S2-11: las tareas del destinatario (pendientes y hechas) y la
+  // estación cuya tarea el servidor dio por iniciada ("" si ninguna).
+  // Igual que my_role, nunca viajan las de otro jugador.
+  repeated MyTask my_tasks       = 13;
+  string          my_active_task = 14;
+}
+// OilDrop: gota del rastro del impostor tras contaminar (S2-12).
+message OilDrop {
+  float  x               = 1;
+  float  y               = 2;
+  string color           = 3;
+  int64  expires_at_tick = 4;
 }
 message TankView {
   int32  slot          = 1;
   string owner_id      = 2;
   int32  contamination = 3; // 0 a 100
   bool   dead          = 4;
+}
+// MyTask: una estación asignada al jugador y si ya la completó (S2-11).
+message MyTask {
+  string station_id = 1;
+  bool   done       = 2;
 }
 message TaskProgress {
   int32 completed = 1;
@@ -124,6 +147,9 @@ message Meeting {
   repeated string last_visitors = 3; // últimos 3 jugadores distintos
   repeated string votes_cast    = 4; // quién ya votó, nunca por quién
   int64           ends_at_tick  = 5;
+  bool            voting_closed = 6; // true durante los 5 s de resultado
+  string          ejected_id    = 7; // vacío si nadie salió
+  bool            was_impostor  = 8; // solo vale si ejected_id no está vacío
 }
 message ChatMessage {
   string id        = 1; // client_msg_id

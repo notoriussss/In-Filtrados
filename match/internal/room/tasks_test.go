@@ -28,7 +28,7 @@ func playingRoomTasks(
 		opts...,
 	)
 	for _, id := range []string{"crew1", "imp"} {
-		out := make(chan *matchv1.Snapshot, 1)
+		out := make(chan *matchv1.ServerEvent, 1)
 		r.addPlayer(Join{PlayerID: id, Out: out})
 	}
 	r.startMatch("crew1")
@@ -254,5 +254,87 @@ func TestTaskFailsIfTooFar(t *testing.T) {
 	}
 	if len(pub.forKey(events.RoutingKeyTaskCompleted)) != 0 {
 		t.Error("no debe emitir task.completed si falló por distancia")
+	}
+}
+
+// lastSnapshot devuelve el último snapshot que la sala dejó en el canal
+// del jugador después de un broadcast.
+func lastSnapshot(t *testing.T, r *Room, id string) *matchv1.Snapshot {
+	t.Helper()
+	out := r.players[id].out
+	for len(out) > 0 {
+		<-out
+	}
+	r.broadcast()
+	select {
+	case ev := <-out:
+		return snapOf(ev)
+	default:
+		t.Fatalf("no llegó snapshot para %s", id)
+		return nil
+	}
+}
+
+func TestSnapshotListsMyTasksAndMarksDone(t *testing.T) {
+	r := playingRoomTasks(t, nil)
+	r.handleAction(PlayerAction{
+		PlayerID:     "crew1",
+		InteractTask: true,
+		StationID:    "leak-1",
+	})
+
+	snap := lastSnapshot(t, r, "crew1")
+	if snap.MyActiveTask != "leak-1" {
+		t.Errorf("my_active_task debe ser leak-1, fue %q", snap.MyActiveTask)
+	}
+
+	r.tick += taskMinTicks + 1
+	r.handleAction(PlayerAction{
+		PlayerID:     "crew1",
+		InteractTask: true,
+		StationID:    "leak-1",
+		Completed:    true,
+	})
+
+	snap = lastSnapshot(t, r, "crew1")
+	got := snap.MyTasks
+	if len(got) != 2 ||
+		got[0].StationId != "leak-1" || !got[0].Done ||
+		got[1].StationId != "rain-1" || got[1].Done {
+		t.Errorf("my_tasks inesperado: %v", got)
+	}
+	if snap.MyActiveTask != "" {
+		t.Error("al completar no debe quedar tarea activa")
+	}
+}
+
+func TestSnapshotNeverCarriesOtherPlayersTasks(t *testing.T) {
+	r := playingRoomTasks(t, nil)
+	r.players["imp"].assignedTasks = map[string]bool{"filter-1": true}
+
+	for _, task := range lastSnapshot(t, r, "crew1").MyTasks {
+		if task.StationId == "filter-1" {
+			t.Error("crew1 recibió una tarea del otro jugador")
+		}
+	}
+}
+
+func TestMovingAwayCancelsTheTask(t *testing.T) {
+	r := playingRoomTasks(t, nil)
+	p := r.players["crew1"]
+	r.handleAction(PlayerAction{
+		PlayerID:     "crew1",
+		InteractTask: true,
+		StationID:    "leak-1",
+	})
+
+	p.view.X += float32(taskRadius * 2)
+	r.step()
+
+	if p.taskStation != "" {
+		t.Error("alejarse debe cancelar la tarea")
+	}
+	if lastSnapshot(t, r, "crew1").MyActiveTask != "" {
+		t.Error("el snapshot no debe traer tarea activa")
 	}
 }

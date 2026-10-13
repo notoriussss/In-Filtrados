@@ -2,6 +2,8 @@ import type {
   ChatMessage,
   ErrorCode,
   Meeting,
+  MyTask,
+  OilDrop,
   ServerMessage,
   Snapshot,
   TankView,
@@ -9,8 +11,17 @@ import type {
 
 // Shapes of the gRPC ServerEvent as @grpc/proto-loader decodes it
 // (camelCase, enums as strings, longs as numbers, defaults on).
-type GrpcSnapshot = Omit<Snapshot, 'type' | 'meeting'> & {
-  meeting: Meeting | null;
+type GrpcMeeting = Omit<Meeting, 'ejectedId'> & {
+  ejectedId?: string | null;
+};
+
+type GrpcSnapshot = Omit<
+  Snapshot,
+  'type' | 'meeting' | 'myTasks' | 'myActiveTask'
+> & {
+  meeting: GrpcMeeting | null;
+  myTasks?: MyTask[];
+  myActiveTask?: string;
 };
 
 type GrpcMatchEnded = { winner: string; impostorIds: string[] };
@@ -60,6 +71,14 @@ function toSnapshot(s: GrpcSnapshot): Snapshot {
     },
     meeting: s.meeting ? toMeeting(s.meeting) : null,
     chat: (s.chat ?? []).map(toChat),
+    oilDrops: (s.oilDrops ?? []).map(toOilDrop),
+    paused: Boolean(s.paused),
+    waitingFor: [...(s.waitingFor ?? [])],
+    myTasks: (s.myTasks ?? []).map(toMyTask),
+    myActiveTask:
+      s.myActiveTask && s.myActiveTask.length > 0
+        ? s.myActiveTask
+        : null,
   };
 }
 
@@ -72,13 +91,17 @@ function toTank(t: TankView): TankView {
   };
 }
 
-function toMeeting(m: Meeting): Meeting {
+function toMeeting(m: GrpcMeeting): Meeting {
   return {
     reporterId: m.reporterId,
     tankSlot: m.tankSlot,
     lastVisitors: [...(m.lastVisitors ?? [])],
     votesCast: [...(m.votesCast ?? [])],
     endsAtTick: m.endsAtTick,
+    votingClosed: Boolean(m.votingClosed),
+    ejectedId:
+      m.ejectedId && m.ejectedId.length > 0 ? m.ejectedId : null,
+    wasImpostor: Boolean(m.wasImpostor),
   };
 }
 
@@ -88,5 +111,21 @@ function toChat(c: ChatMessage): ChatMessage {
     playerId: c.playerId,
     text: c.text,
     tick: c.tick,
+  };
+}
+
+function toOilDrop(d: OilDrop): OilDrop {
+  return {
+    x: d.x,
+    y: d.y,
+    color: d.color,
+    expiresAtTick: d.expiresAtTick,
+  };
+}
+
+function toMyTask(t: MyTask): MyTask {
+  return {
+    stationId: t.stationId,
+    done: Boolean(t.done),
   };
 }

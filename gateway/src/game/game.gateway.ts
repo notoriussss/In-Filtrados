@@ -3,27 +3,29 @@ import { OnGatewayConnection, WebSocketGateway } from '@nestjs/websockets';
 import type { IncomingMessage } from 'http';
 import type { RawData, WebSocket } from 'ws';
 import { status } from '@grpc/grpc-js';
-import type {
-  ClientMessage,
-  InteractMessage,
-  ServerMessage,
-} from '@in-filtrados/messages';
-import { MatchClient, type PlayStream } from '../clients/match.client';
+import type { ServerMessage } from '@in-filtrados/messages';
+import { MatchClient } from '../clients/match.client';
 import {
   ERROR_CODES,
   ERROR_MESSAGES,
-  MAX_STATION_ID_LENGTH,
-  MAX_TANK_SLOT,
+  RATE_LIMIT_CAPACITY,
+  RATE_LIMIT_PER_SECOND,
+  RATE_LIMIT_WARNING_RESET_MS,
+  RATE_LIMIT_WARNINGS,
   WS_CLOSE_CODES,
 } from './game.constants';
+import { parseClientMessage, toGrpcAction } from './client-messages';
+import { FloodLimiter, TokenBucket } from './rate-limit';
 import { PlayersClient } from '../clients/players.client';
-import { type GrpcServerEvent, toServerMessage } from './server-events';
+import { PlayRelay } from './play-relay';
+import { ChatDeduper } from './chat-dedupe';
 
 // WebSocket /ws?token=...; one Play stream per player
 @WebSocketGateway({ path: '/ws' })
 export class GameGateway implements OnGatewayConnection {
   private readonly logger = new Logger(GameGateway.name);
   private readonly activeSockets = new Map<string, WebSocket>();
+  private readonly chatIds = new ChatDeduper();
 
   constructor(
     private readonly match: MatchClient,
@@ -51,8 +53,17 @@ export class GameGateway implements OnGatewayConnection {
 
     let isAuthenticated = false;
     const messageQueue: RawData[] = [];
-    let stream: PlayStream | null = null;
+    let relay: PlayRelay | null = null;
+    let matchId: string | null = null;
     let playerId: string | null = null;
+
+    // S2-08: un token bucket por conexión (un jugador = un socket
+    // activo), así un flood no toca a nadie más de la sala.
+    const limiter = new FloodLimiter(
+      new TokenBucket(RATE_LIMIT_CAPACITY, RATE_LIMIT_PER_SECOND),
+      RATE_LIMIT_WARNINGS,
+      RATE_LIMIT_WARNING_RESET_MS,
+    );
 
     socket.on('message', (raw: RawData) => {
       if (!isAuthenticated) {
@@ -63,7 +74,20 @@ export class GameGateway implements OnGatewayConnection {
     });
 
     const processMessage = (raw: RawData) => {
-      const msg = parse(raw.toString());
+      const outcome = limiter.check();
+      if (outcome !== 'allow') {
+        // S2-08: se descarta, se avisa y a la tercera se corta.
+        send(socket, {
+          type: 'error',
+          code: ERROR_CODES.BAD_MESSAGE,
+          message: ERROR_MESSAGES.RATE_LIMITED,
+        });
+        if (outcome === 'close') {
+          socket.close(WS_CLOSE_CODES.RATE_LIMITED);
+        }
+        return;
+      }
+      const msg = parseClientMessage(raw.toString());
       if (!msg) {
         send(socket, {
           type: 'error',
@@ -72,22 +96,27 @@ export class GameGateway implements OnGatewayConnection {
         });
         return;
       }
-      if (msg.type === 'join' && !stream && playerId) {
-        stream = this.openPlay(
-          socket,
-          playerId,
-          msg.matchId,
-          msg.lastTick,
-        );
-      } else if (msg.type === 'move' && stream) {
-        stream.write({ move: { dx: msg.dx, dy: msg.dy } });
-      } else if (msg.type === 'start' && stream) {
-        stream.write({ start: {} });
-      } else if (msg.type === 'contaminate' && stream) {
-        stream.write({ contaminate: { tankSlot: msg.tankSlot } });
-      } else if (msg.type === 'interact' && stream) {
-        stream.write({ interact: toGrpcInteract(msg) });
+      if (msg.type === 'join') {
+        if (!relay && playerId) {
+          matchId = msg.matchId;
+          relay = this.openPlay(
+            socket,
+            playerId,
+            msg.matchId,
+            msg.lastTick,
+          );
+        }
+        return;
       }
+      const action = toGrpcAction(msg);
+      if (!relay || !action) return;
+      if (msg.type === 'chat') {
+        // S3-04: solo se anota si de verdad sale hacia match; mientras
+        // Play se reabre, el navegador lo reintentará.
+        if (!relay.connected) return;
+        if (!this.chatIds.firstTime(matchId!, msg.clientMsgId)) return;
+      }
+      relay.write(action);
     };
 
     socket.on('close', () => {
@@ -98,7 +127,7 @@ export class GameGateway implements OnGatewayConnection {
           this.activeSockets.delete(playerId);
         }
       }
-      stream?.end();
+      relay?.close();
     });
 
     try {
@@ -135,109 +164,36 @@ export class GameGateway implements OnGatewayConnection {
     messageQueue.forEach(processMessage);
   }
 
+  // openPlay abre el stream Play del jugador. Si match se cae, el
+  // WebSocket sigue abierto: el navegador ve SERVICE_UNAVAILABLE y el
+  // relay reabre Play con espera creciente (S3-02).
   private openPlay(
     socket: WebSocket,
     playerId: string,
     matchId: string,
     lastTick: number,
-  ): PlayStream {
-    const stream = this.match.play();
-    stream.write({ join: { matchId, playerId, lastTick } });
-
-    stream.on('data', (ev: GrpcServerEvent) => {
-      const msg = toServerMessage(ev);
-      if (msg) send(socket, msg);
+  ): PlayRelay {
+    const relay = new PlayRelay({
+      open: () => this.match.play(),
+      join: { matchId, playerId, lastTick },
+      onMessage: (msg) => send(socket, msg),
+      onUnavailable: (attempt, err) => {
+        this.logger.warn(
+          `play ${playerId}: ${err?.message ?? ''}; reintento ${attempt}`,
+        );
+        send(socket, {
+          type: 'error',
+          code: ERROR_CODES.SERVICE_UNAVAILABLE,
+          message: ERROR_MESSAGES.MATCH_SERVICE_UNAVAILABLE,
+        });
+      },
+      onEnd: () => socket.close(WS_CLOSE_CODES.NORMAL),
     });
-    stream.on('error', (err) => {
-      this.logger.warn(`play ${playerId}: ${err.message}`);
-      send(socket, {
-        type: 'error',
-        code: ERROR_CODES.SERVICE_UNAVAILABLE,
-        message: ERROR_MESSAGES.MATCH_SERVICE_UNAVAILABLE,
-      });
-      socket.close(WS_CLOSE_CODES.SERVICE_UNAVAILABLE);
-    });
-    stream.on('end', () => socket.close(WS_CLOSE_CODES.NORMAL));
-    return stream;
+    relay.start();
+    return relay;
   }
 }
 
 function send(socket: WebSocket, msg: ServerMessage): void {
   if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(msg));
-}
-
-// Only messages from messages/src/index.ts get through;
-// anything else is ignored.
-function parse(raw: string): ClientMessage | null {
-  try {
-    const msg = JSON.parse(raw);
-    if (msg?.type === 'join' && typeof msg.matchId === 'string') {
-      return {
-        type: 'join',
-        matchId: msg.matchId,
-        lastTick: Number(msg.lastTick) || 0,
-      };
-    }
-    if (msg?.type === 'move') {
-      const dx = msg.dx;
-      const dy = msg.dy;
-      if (
-        (dx === -1 || dx === 0 || dx === 1) &&
-        (dy === -1 || dy === 0 || dy === 1)
-      ) {
-        return { type: 'move', dx, dy };
-      }
-      return null;
-    }
-    if (msg?.type === 'start') {
-      return { type: 'start' };
-    }
-    if (msg?.type === 'contaminate' && isSlot(msg.tankSlot)) {
-      return { type: 'contaminate', tankSlot: msg.tankSlot };
-    }
-    if (msg?.type === 'interact') {
-      return parseInteract(msg);
-    }
-  } catch {
-    // not JSON
-  }
-  return null;
-}
-
-// S2-03: interact sobre un tanque (limpiar) o una estación (S2-04).
-function parseInteract(msg: {
-  stationId?: unknown;
-  tankSlot?: unknown;
-  completed?: unknown;
-}): InteractMessage | null {
-  if (isSlot(msg.tankSlot)) {
-    return { type: 'interact', tankSlot: msg.tankSlot };
-  }
-  if (
-    typeof msg.stationId === 'string' &&
-    msg.stationId.length > 0 &&
-    msg.stationId.length <= MAX_STATION_ID_LENGTH
-  ) {
-    return {
-      type: 'interact',
-      stationId: msg.stationId,
-      completed: msg.completed === true,
-    };
-  }
-  return null;
-}
-
-function toGrpcInteract(msg: InteractMessage): object {
-  if ('tankSlot' in msg) {
-    return { tankSlot: msg.tankSlot };
-  }
-  return { stationId: msg.stationId, completed: msg.completed ?? false };
-}
-
-function isSlot(value: unknown): value is number {
-  return (
-    Number.isInteger(value) &&
-    (value as number) >= 0 &&
-    (value as number) <= MAX_TANK_SLOT
-  );
 }

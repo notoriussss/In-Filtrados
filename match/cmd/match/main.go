@@ -10,7 +10,9 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strconv"
 	"syscall"
+	"time"
 
 	"github.com/golang-migrate/migrate/v4"
 	migratepgx "github.com/golang-migrate/migrate/v4/database/pgx/v5"
@@ -31,12 +33,19 @@ import (
 // `/app` en la imagen (el Dockerfile copia las migraciones ahí).
 const migrationsDir = "migrations"
 
+// restoreTimeout limita la lectura de instantáneas al arrancar.
+const restoreTimeout = 5 * time.Second
+
+// defaultGraceSeconds es el periodo de gracia sin RECONNECT_GRACE_SECONDS.
+const defaultGraceSeconds = 90
+
 func main() {
 	httpPort := getenv("HTTP_PORT", "8081")
 	grpcPort := getenv("GRPC_PORT", "50051")
 	mapPath := getenv("MAP_PATH", "../shared/map.json")
 	dbURL := os.Getenv("MATCH_DB_URL")
 	rabbitURL := os.Getenv("RABBITMQ_URL")
+	grace := graceFromEnv(os.Getenv("RECONNECT_GRACE_SECONDS"))
 
 	ctx, stop := signal.NotifyContext(
 		context.Background(),
@@ -70,23 +79,35 @@ func main() {
 	store := matchdb.NewStore(pool)
 	eventLog := matchdb.NewEventLogWriter(pool)
 	go eventLog.Run(ctx)
+	snapshots := matchdb.NewSnapshotWriter(pool)
+	go snapshots.Run(ctx)
 	serverOpts := []matchgrpc.ServerOption{
 		matchgrpc.WithStore(store),
 		matchgrpc.WithEventLog(eventLog),
+		matchgrpc.WithGracePeriod(grace),
+		matchgrpc.WithSnapshots(snapshots),
 	}
 	if publisher != nil {
-		serverOpts = append(serverOpts, matchgrpc.WithPublisher(publisher))
+		// S3-03: lo que RabbitMQ no confirme espera en la tabla outbox.
+		outbox := events.NewOutboxPublisher(
+			publisher,
+			matchdb.NewOutboxStore(pool),
+		)
+		go outbox.Run(ctx)
+		serverOpts = append(serverOpts, matchgrpc.WithPublisher(outbox))
 	}
 
 	lis, err := net.Listen("tcp", ":"+grpcPort)
 	if err != nil {
 		log.Fatalf("grpc listen: %v", err)
 	}
+	server := matchgrpc.NewServer(reg, m, serverOpts...)
+	// S3-02: las partidas sin terminar vuelven antes de aceptar streams,
+	// así el primer Join de cada jugador ya encuentra su sala.
+	restoreRooms(ctx, store, server)
+
 	grpcServer := grpc.NewServer()
-	matchv1.RegisterMatchServer(
-		grpcServer,
-		matchgrpc.NewServer(reg, m, serverOpts...),
-	)
+	matchv1.RegisterMatchServer(grpcServer, server)
 	go func() {
 		log.Printf("match gRPC listening on :%s", grpcPort)
 		if err := grpcServer.Serve(lis); err != nil {
@@ -112,6 +133,24 @@ func main() {
 	if publisher != nil {
 		publisher.Close()
 	}
+}
+
+// restoreRooms lee las instantáneas de las partidas sin terminar. Si la
+// base no responde, match arranca igual, sin esas partidas.
+func restoreRooms(
+	ctx context.Context,
+	store *matchdb.Store,
+	server *matchgrpc.Server,
+) {
+	readCtx, cancel := context.WithTimeout(ctx, restoreTimeout)
+	defer cancel()
+	saved, err := store.UnfinishedSnapshots(readCtx)
+	if err != nil {
+		log.Printf("restore: %v", err)
+		return
+	}
+	n := server.RestoreRooms(ctx, saved)
+	log.Printf("restore: %d partida(s) recuperada(s)", n)
 }
 
 // runMigrations aplica las migraciones de golang-migrate al arrancar.
@@ -153,6 +192,24 @@ func newPublisher(rabbitURL string) *events.AMQPPublisher {
 		return nil
 	}
 	return events.NewAMQPPublisher(rabbitURL)
+}
+
+// graceFromEnv lee RECONNECT_GRACE_SECONDS (S3-01). Vacía o inválida,
+// usa los 90 s de docs/tasks.md; el laboratorio usa 600.
+func graceFromEnv(raw string) time.Duration {
+	if raw == "" {
+		return defaultGraceSeconds * time.Second
+	}
+	seconds, err := strconv.Atoi(raw)
+	if err != nil || seconds <= 0 {
+		log.Printf(
+			"RECONNECT_GRACE_SECONDS=%q no es válido; se usan %d s",
+			raw,
+			defaultGraceSeconds,
+		)
+		return defaultGraceSeconds * time.Second
+	}
+	return time.Duration(seconds) * time.Second
 }
 
 func getenv(key, fallback string) string {

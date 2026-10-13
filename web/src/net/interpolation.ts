@@ -39,6 +39,13 @@ export class Interpolator {
     if (this.buffer.length > BUFFER_SIZE) this.buffer.shift();
   }
 
+  // tickAt is the server tick drawn at local time now, with the same
+  // delay as the players; null before the first snapshot (S2-12).
+  tickAt(now: number): number | null {
+    if (this.offset === null) return null;
+    return (now - INTERPOLATION_DELAY_MS - this.offset) / TICK_MS;
+  }
+
   playersAt(now: number): PlayerView[] {
     const first = this.buffer[0];
     const last = this.buffer.at(-1);

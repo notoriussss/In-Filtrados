@@ -1,0 +1,16 @@
+# N5 monitor: panel de salud y eventos, proyectado en la pantalla.
+# docker compose --env-file deploy/lab.env -f deploy/compose/n5.yml up -d
+name: in-filtrados-lab
+
+services:
+  monitor:
+    image: ${IMAGE_REGISTRY:-ghcr.io/notoriussss}/in-filtrados-monitor:${IMAGE_TAG:-latest}
+    environment:
+      RABBITMQ_URL: ${RABBITMQ_URL:?falta RABBITMQ_URL en lab.env}
+      WEB_HEALTH_URL: ${WEB_HEALTH_URL:?falta WEB_HEALTH_URL en lab.env}
+      GATEWAY_HEALTH_URL: ${GATEWAY_HEALTH_URL:?falta GATEWAY_HEALTH_URL en lab.env}
+      MATCH_HEALTH_URL: ${MATCH_HEALTH_URL:?falta MATCH_HEALTH_URL en lab.env}
+      PLAYERS_HEALTH_URL: ${PLAYERS_HEALTH_URL:?falta PLAYERS_HEALTH_URL en lab.env}
+    ports:
+      - "8000:8000"
+    restart: unless-stopped

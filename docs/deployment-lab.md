@@ -112,6 +112,11 @@ Cada integrante lleva el nodo de un servicio que **no** es el suyo cuando se pue
 **Notas:**
 - Son los mismos puertos que `tasks.md`, 0.1, así que no cambia nada del código.
 - Los `/health` de N2 y N3 informan también el estado de su base de datos (`SELECT 1`). Así el monitor sabe si una base cayó sin tener que llegar a ella.
+- S2-08: el `/health` del gateway se consulta directamente en
+  `http://<EDGE_HOST>:3000/health` (así una caída de `web` no afecta el
+  estado del gateway en el monitor). El límite de login se cuenta por usuario
+  en el gateway, por lo que el puerto :3000 publicado no compromete la
+  protección de fuerza bruta ni depende de la IP reportada por Docker Desktop.
 
 ---
 
@@ -120,25 +125,22 @@ Cada integrante lleva el nodo de un servicio que **no** es el suyo cuando se pue
 Las 5 laptops leen el mismo `deploy/lab.env`. El día de la presentación solo se cambian las IP y se copia el archivo a las 5 (USB, chat del equipo o carpeta compartida).
 
 ```ini
-# deploy/lab.env — IP del día (las asigna el DHCP del laboratorio)
+# deploy/lab.env — IP del día (las asigna el DHCP del laboratorio).
+# Extracto: el archivo completo es deploy/lab.env.example.
 EDGE_HOST=192.168.10.21
 MATCH_HOST=192.168.10.22
 PLAYERS_HOST=192.168.10.23
 BROKER_HOST=192.168.10.24
 MONITOR_HOST=192.168.10.25
 
-# Direcciones que usa cada servicio
-MATCH_ADDR=${MATCH_HOST}:50051
-PLAYERS_ADDR=${PLAYERS_HOST}:50052
-AMQP_URL=amqp://game:CHANGE_ME@${BROKER_HOST}:5672/
+# Direcciones que usa cada servicio (derivadas de las IP)
+MATCH_GRPC_ADDR=${MATCH_HOST}:50051
+PLAYERS_GRPC_ADDR=${PLAYERS_HOST}:50052
+RABBITMQ_URL=amqp://${RABBITMQ_USER}:${RABBITMQ_PASSWORD}@${BROKER_HOST}:5672
 
 # Bases de datos: siempre en la red interna de su nodo
-MATCH_DB_URL=postgres://match:CHANGE_ME@match-db:5432/match
-PLAYERS_DB_URL=postgres://players:CHANGE_ME@players-db:5432/players
-
-# JWT: players firma con la privada; gateway y match validan con la pública
-JWT_PRIVATE_KEY_FILE=keys/jwt.key      # solo en N3
-JWT_PUBLIC_KEY_FILE=keys/jwt.pub       # en N1 y N2
+MATCH_DB_URL=postgresql://${MATCH_DB_USER}:${MATCH_DB_PASSWORD}@match-db:5432/${MATCH_DB_NAME}
+PLAYERS_DB_URL=postgresql://${PLAYERS_DB_USER}:${PLAYERS_DB_PASSWORD}@players-db:5432/${PLAYERS_DB_NAME}
 
 # Reconexión (sección 9)
 RECONNECT_GRACE_SECONDS=600
@@ -149,6 +151,9 @@ GATEWAY_HEALTH_URL=http://${EDGE_HOST}:3000/health
 MATCH_HEALTH_URL=http://${MATCH_HOST}:8081/health
 PLAYERS_HEALTH_URL=http://${PLAYERS_HOST}:8082/health
 ```
+
+> La validación local del JWT (sección 9, punto 2) todavía no está
+> implementada: el gateway sigue validando el token con `players`.
 
 **Reglas:**
 - **Ningún servicio tiene una IP o `localhost` escrito en el código.** Todo sale de variables de entorno: en desarrollo de `.env` y en el laboratorio de `lab.env`.
@@ -161,15 +166,20 @@ deploy/
 ├── compose/
 │   ├── n1.yml ... n5.yml     un compose por nodo, mismas imágenes que docker-compose.yml
 └── scripts/
-    ├── check-network.ps1     prueba ping y puertos hacia los otros nodos
-    └── seed.ps1              crea cuentas de prueba para la demo
+    ├── check-network.ps1     prueba ping, puertos, 5432 cerrado y WebSocket
+    └── update.ps1            pull + up -d de las imágenes del CD en el nodo de esta laptop
 ```
 
-Cada laptop arranca su nodo con:
+Cada laptop arranca su nodo con (paso a paso en `deploy/README.md`):
 
 ```bash
 docker compose --env-file deploy/lab.env -f deploy/compose/n2.yml up -d
 ```
+
+Todos los contenedores llevan `restart: unless-stopped`. Ojo: para Docker,
+`docker compose kill` y `stop` son paradas **manuales** y no se relanzan. Para
+simular una caída real del proceso se usa
+`docker compose ... exec match sh -c 'kill -9 1'`, y Docker lo levanta solo.
 
 ---
 
@@ -230,7 +240,7 @@ Es la prueba del profesor: quitar el cable de red y, al reconectarlo, el juego s
 **Requisitos que este despliegue agrega a `architecture.md`:**
 1. **Heartbeat propio:** quitar el cable **no cierra** la conexión TCP; queda abierta a medias durante minutos. Por eso el navegador y el gateway se mandan un ping cada 2 s y dan la conexión por caída si pasan 5 s sin respuesta. Entre servicios se usa el keepalive de gRPC con los mismos tiempos.
 2. **JWT validado localmente:** el gateway y `match` validan el token con la clave pública, sin llamar a `players`. Así, si N3 se cae, nadie pierde la partida ni la posibilidad de reconectarse.
-3. **Outbox en `match`:** los eventos se guardan primero en una tabla `outbox` de PostgreSQL #1, en la misma transacción que el cambio, y un publicador los envía a RabbitMQ. Si N4 no está, los eventos esperan en N2 y salen al volver (patrón Transactional Outbox).
+3. **Outbox en `match`:** si RabbitMQ no confirma la publicación de un evento (o está caído), este se persiste en la tabla `outbox` de PostgreSQL #1. Un publicador reintenta periódicamente y en orden los eventos pendientes, y los borra una vez confirmados (patrón Outbox). Si N4 no está, los eventos esperan en N2 y salen al volver.
 4. **Pausa por cualquier desconexión:** la sala se pausa en cuanto **un** jugador se desconecta, no solo cuando se van todos. Los relojes, la contaminación y los votos se congelan. Al volver el jugador, todo está exactamente igual. Es más simple que mantener la partida corriendo con un jugador quieto, y es lo que el profe espera ver.
 5. **Gracia configurable:** mientras la sala está pausada, el jugador desconectado conserva su lugar durante `RECONNECT_GRACE_SECONDS` (10 minutos en el laboratorio). Solo al vencer pasa a fantasma y la sala sigue sin él, para que alguien que se fue de verdad no trabe la partida para siempre. Esto reemplaza los 90 s fijos de `architecture.md`, 6.1.
 

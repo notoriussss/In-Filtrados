@@ -3,7 +3,8 @@
 
 // Browser -> gateway
 export type ClientMessage =
-  | { type: 'join'; matchId: string; lastTick: number } // first message after connecting
+  // primer mensaje al conectar
+  | { type: 'join'; matchId: string; lastTick: number }
   | { type: 'move'; dx: -1 | 0 | 1; dy: -1 | 0 | 1 }
   | { type: 'start' } // solo el creador; match lo valida
   // S2-01: acciones del juego completo.
@@ -37,6 +38,29 @@ export type Snapshot = {
   myTaskProgress: TaskProgress;
   meeting: Meeting | null; // solo en MEETING
   chat: ChatMessage[]; // últimos 30 mensajes
+  oilDrops: OilDrop[]; // S2-12: rastro del impostor
+  // S3-02: en pausa mientras alguien está en su periodo de gracia;
+  // waitingFor son los ids de esos jugadores.
+  paused: boolean;
+  waitingFor: string[];
+  // S2-11: las tareas propias (nunca las de otro) y la estación cuya
+  // tarea el servidor dio por iniciada; null si ninguna.
+  myTasks: MyTask[];
+  myActiveTask: string | null;
+};
+
+// MyTask: una estación asignada al jugador y si ya la hizo (S2-11).
+export type MyTask = {
+  stationId: string;
+  done: boolean;
+};
+
+// OilDrop: gota del rastro que deja el impostor tras contaminar (S2-12).
+export type OilDrop = {
+  x: number;
+  y: number;
+  color: string;
+  expiresAtTick: number;
 };
 
 export type Phase = 'LOBBY' | 'PLAYING' | 'MEETING' | 'ENDED';
@@ -73,6 +97,9 @@ export type Meeting = {
   lastVisitors: string[]; // últimos 3 jugadores distintos junto al tanque
   votesCast: string[]; // quién ya votó, nunca por quién
   endsAtTick: number;
+  votingClosed: boolean;
+  ejectedId: string | null;
+  wasImpostor: boolean;
 };
 
 export type ChatMessage = {

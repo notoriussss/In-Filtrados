@@ -50,6 +50,15 @@ func (q *Queries) CreateParticipant(ctx context.Context, arg CreateParticipantPa
 	return err
 }
 
+const deleteOutbox = `-- name: DeleteOutbox :exec
+DELETE FROM outbox WHERE id = $1
+`
+
+func (q *Queries) DeleteOutbox(ctx context.Context, id int64) error {
+	_, err := q.db.Exec(ctx, deleteOutbox, id)
+	return err
+}
+
 const finishMatch = `-- name: FinishMatch :exec
 UPDATE matches
 SET ended_at = now(), winner = $2
@@ -88,5 +97,142 @@ func (q *Queries) InsertEvent(ctx context.Context, arg InsertEventParams) error 
 		arg.Kind,
 		arg.TankSlot,
 	)
+	return err
+}
+
+const updateParticipantEjected = `-- name: UpdateParticipantEjected :exec
+UPDATE participants
+SET ejected = $3
+WHERE match_id = $1 AND player_id = $2
+`
+
+type UpdateParticipantEjectedParams struct {
+	MatchID  pgtype.UUID
+	PlayerID pgtype.UUID
+	Ejected  bool
+}
+
+// S2-06: guardar si el participante fue expulsado al terminar la partida.
+func (q *Queries) UpdateParticipantEjected(
+	ctx context.Context,
+	arg UpdateParticipantEjectedParams,
+) error {
+	_, err := q.db.Exec(
+		ctx,
+		updateParticipantEjected,
+		arg.MatchID,
+		arg.PlayerID,
+		arg.Ejected,
+	)
+	return err
+}
+
+const insertOutbox = `-- name: InsertOutbox :exec
+INSERT INTO outbox (event_id, routing_key, payload)
+VALUES ($1, $2, $3)
+ON CONFLICT (event_id) DO NOTHING
+`
+
+type InsertOutboxParams struct {
+	EventID    pgtype.UUID
+	RoutingKey string
+	Payload    []byte
+}
+
+// S3-03: un evento que RabbitMQ no confirmó.
+func (q *Queries) InsertOutbox(ctx context.Context, arg InsertOutboxParams) error {
+	_, err := q.db.Exec(ctx, insertOutbox, arg.EventID, arg.RoutingKey, arg.Payload)
+	return err
+}
+
+const listOutbox = `-- name: ListOutbox :many
+SELECT id, event_id, routing_key, payload
+FROM outbox
+ORDER BY id
+LIMIT $1
+`
+
+type ListOutboxRow struct {
+	ID         int64
+	EventID    pgtype.UUID
+	RoutingKey string
+	Payload    []byte
+}
+
+// S3-03: los pendientes más viejos primero.
+func (q *Queries) ListOutbox(ctx context.Context, limit int32) ([]ListOutboxRow, error) {
+	rows, err := q.db.Query(ctx, listOutbox, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListOutboxRow
+	for rows.Next() {
+		var i ListOutboxRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.EventID,
+			&i.RoutingKey,
+			&i.Payload,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUnfinishedSnapshots = `-- name: ListUnfinishedSnapshots :many
+SELECT s.match_id, s.state
+FROM snapshots s
+JOIN matches m ON m.id = s.match_id
+WHERE m.ended_at IS NULL
+`
+
+type ListUnfinishedSnapshotsRow struct {
+	MatchID pgtype.UUID
+	State   []byte
+}
+
+// S3-02: partidas empezadas y sin terminar, para recrearlas al arrancar.
+func (q *Queries) ListUnfinishedSnapshots(ctx context.Context) ([]ListUnfinishedSnapshotsRow, error) {
+	rows, err := q.db.Query(ctx, listUnfinishedSnapshots)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListUnfinishedSnapshotsRow
+	for rows.Next() {
+		var i ListUnfinishedSnapshotsRow
+		if err := rows.Scan(&i.MatchID, &i.State); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const upsertSnapshot = `-- name: UpsertSnapshot :exec
+INSERT INTO snapshots (match_id, tick, state, updated_at)
+VALUES ($1, $2, $3, now())
+ON CONFLICT (match_id) DO UPDATE
+SET tick = EXCLUDED.tick, state = EXCLUDED.state, updated_at = now()
+`
+
+type UpsertSnapshotParams struct {
+	MatchID pgtype.UUID
+	Tick    int64
+	State   []byte
+}
+
+// S3-02: guarda la última instantánea de la partida (una fila por partida).
+func (q *Queries) UpsertSnapshot(ctx context.Context, arg UpsertSnapshotParams) error {
+	_, err := q.db.Exec(ctx, upsertSnapshot, arg.MatchID, arg.Tick, arg.State)
 	return err
 }

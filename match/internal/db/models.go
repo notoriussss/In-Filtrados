@@ -25,10 +25,25 @@ type Match struct {
 	Winner    pgtype.Text
 }
 
+type Outbox struct {
+	ID         int64
+	EventID    pgtype.UUID
+	RoutingKey string
+	Payload    []byte
+	CreatedAt  pgtype.Timestamptz
+}
+
 type Participant struct {
 	MatchID     pgtype.UUID
 	PlayerID    pgtype.UUID
 	DisplayName string
 	Role        string
 	Ejected     bool
+}
+
+type Snapshot struct {
+	MatchID   pgtype.UUID
+	Tick      int64
+	State     []byte
+	UpdatedAt pgtype.Timestamptz
 }

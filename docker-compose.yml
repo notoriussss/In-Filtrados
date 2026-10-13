@@ -104,6 +104,7 @@ services:
       MATCH_DB_URL: ${MATCH_DB_URL}
       RABBITMQ_URL: ${RABBITMQ_URL}
       MAP_PATH: ${MAP_PATH}
+      RECONNECT_GRACE_SECONDS: ${RECONNECT_GRACE_SECONDS:-90}
     ports:
       - "8081:8081"
     depends_on:

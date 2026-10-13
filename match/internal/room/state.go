@@ -44,6 +44,26 @@ const (
 	pointsReuse    = 4
 	pointsRecycle  = 5
 	litersPerPoint = 100
+
+	// S2-05: reunión, chat y votación
+	reportRange        = 60  // unidades para reportar tanque muerto
+	meetingVotingTicks = 900 // 45 s para discutir y votar
+	meetingResultTicks = 100 // 5 s de resultado antes de PLAYING
+	chatMaxChars       = 200 // caracteres máximos por mensaje de chat
+	chatCooldownTicks  = 20  // 1 s entre mensajes de chat
+	chatHistoryLimit   = 30  // mensajes guardados en snapshot
+	maxLastVisitors    = 3   // visitantes máximos en el reporte
+
+	// S3-01: lugar reservado al jugador que se desconecta en partida.
+	// En el laboratorio se sube con RECONNECT_GRACE_SECONDS.
+	defaultGracePeriod = 90 * time.Second
+	// Un corte más corto que esto no cuenta (cambio de socket).
+	disconnectDebounce = time.Second
+
+	// S2-12: gotas de aceite tras contaminar.
+	oilTrailTicks     = 300 // 15 s soltando gotas
+	oilDropEveryTicks = 20  // 1 gota por segundo
+	oilDropLifeTicks  = 300 // cada gota dura 15 s
 )
 
 var taskPoints = map[string]int32{
@@ -64,16 +84,16 @@ var colors = []string{
 	"#f032e6",
 }
 
-// Join registers a player; Out receives the snapshots for that player.
+// Join registers a player; Out receives server events.
 type Join struct {
 	PlayerID string
-	Out      chan *matchv1.Snapshot
+	Out      chan *matchv1.ServerEvent
 }
 
-// Leave says that the stream with channel Out ended.
+// Leave says that the stream ended.
 type Leave struct {
 	PlayerID string
-	Out      chan *matchv1.Snapshot
+	Out      chan *matchv1.ServerEvent
 }
 
 // Name dice cómo se llama un jugador (viene de CreateRoom o JoinRoom).
@@ -83,7 +103,7 @@ type Name struct {
 }
 
 // PlayerAction es la última acción que mandó un jugador: moverse, empezar,
-// contaminar o limpiar el tanque TankSlot.
+// contaminar, limpiar, hacer tarea, reportar, votar o chatear.
 type PlayerAction struct {
 	PlayerID     string
 	DX, DY       int32
@@ -94,12 +114,28 @@ type PlayerAction struct {
 	InteractTask bool
 	StationID    string
 	Completed    bool
+
+	// S2-05: Report, Vote, Chat
+	Report        bool
+	Vote          bool
+	VoteTargetID  string
+	VoteSkip      bool
+	Chat          bool
+	ChatMessageID string
+	ChatText      string
+}
+
+// isMove: la acción solo cambia la dirección (un Move).
+func (a PlayerAction) isMove() bool {
+	return !a.Start && !a.Contaminate && !a.Clean && !a.InteractTask &&
+		!a.Report && !a.Vote && !a.Chat
 }
 
 type player struct {
-	view   *matchv1.PlayerView
-	dx, dy int32
-	out    chan *matchv1.Snapshot
+	view         *matchv1.PlayerView
+	dx, dy       int32
+	out          chan *matchv1.ServerEvent
+	pendingEnded bool
 
 	role     matchv1.Role // NO_ROLE hasta que empieza la partida
 	tankSlot int          // noTank si no le tocó tanque
@@ -112,8 +148,47 @@ type player struct {
 	// S2-04: Tasks
 	tasksCompleted int
 	assignedTasks  map[string]bool
+	completedTasks []string // S2-11: para tacharlas en la lista
 	taskStartTick  int64
 	taskStation    string
+
+	// S2-05: Chat y expulsión
+	nextChatTick int64
+	ejected      bool
+
+	// S2-12: rastro de aceite hasta el tick oilUntil.
+	oilUntil    int64
+	nextOilDrop int64
+
+	// S3-01: hasta cuándo se le guarda el lugar al desconectado. Es
+	// tiempo de reloj, no ticks, para que siga corriendo en una pausa.
+	leftAt     time.Time // cuándo se cortó su stream; cero si conectado
+	graceUntil time.Time
+}
+
+// meetingState guarda el estado de la reunión activa (S2-05).
+type meetingState struct {
+	reporterID   string
+	tankSlot     int32
+	lastVisitors []string
+	votes        map[string]voteChoice // voterID -> choice
+	votingEndsAt int64                 // tick donde vence la votación
+	resultEndsAt int64                 // tick donde termina resultado
+	votingClosed bool
+	ejectedID    string
+	wasImpostor  bool
+}
+
+type voteChoice struct {
+	targetID string
+	skip     bool
+}
+
+type chatEntry struct {
+	id       string
+	playerID string
+	text     string
+	tick     int64
 }
 
 // tankAction es contaminar o limpiar: termina cuando pasan ticksLeft
@@ -131,6 +206,14 @@ type tank struct {
 	x, y          float64
 	contamination int32 // 0 a 100
 	dead          bool
+	reported      bool
+}
+
+// oilDrop es una gota del rastro del impostor (S2-12).
+type oilDrop struct {
+	x, y      float32
+	color     string
+	expiresAt int64
 }
 
 func clampDir(v int32) int32 {

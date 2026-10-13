@@ -176,6 +176,167 @@
             margin-bottom: 28px;
         }
 
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .stat {
+            background: #1b2638;
+            border: 1px solid #354158;
+            border-radius: 12px;
+            padding: 18px;
+            text-align: center;
+        }
+
+        .stat-value {
+            display: block;
+            font-size: 3rem;
+            font-weight: bold;
+            line-height: 1.1;
+        }
+
+        .stat-label {
+            color: #aab7cb;
+        }
+
+        #event-list {
+            padding-left: 22px;
+            max-height: 260px;
+            overflow-y: auto;
+        }
+
+        #event-list li {
+            margin-bottom: 6px;
+        }
+
+        #grace-list {
+            padding-left: 22px;
+        }
+
+        #grace-list li {
+            margin-bottom: 6px;
+        }
+
+        .countdown {
+            font-variant-numeric: tabular-nums;
+            font-weight: bold;
+            color: #f5c84c;
+        }
+
+        /* S2-13: agua ahorrada */
+        .water {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .liters {
+            background: linear-gradient(160deg, #0c3a5c, #1b2638);
+            border: 1px solid #38bdf8;
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .liters-value {
+            display: block;
+            font-size: clamp(3rem, 12vw, 6rem);
+            font-weight: 800;
+            line-height: 1;
+            color: #7dd3fc;
+            font-variant-numeric: tabular-nums;
+            overflow-wrap: anywhere;
+        }
+
+        .liters-value.bump {
+            animation: liters-bump 0.6s ease-out;
+        }
+
+        @keyframes liters-bump {
+            30% {
+                transform: scale(1.08);
+                color: #e0f2fe;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .liters-value.bump {
+                animation: none;
+            }
+        }
+
+        .liters-label {
+            display: block;
+            margin-top: 10px;
+            font-size: 1.1rem;
+            color: #aab7cb;
+        }
+
+        .liters-note {
+            display: block;
+            margin-top: 4px;
+            font-size: 0.85rem;
+        }
+
+        .chart {
+            background: #1b2638;
+            border: 1px solid #354158;
+            border-radius: 12px;
+            padding: 18px;
+        }
+
+        .chart h3 {
+            margin-top: 0;
+        }
+
+        .bar-row {
+            display: grid;
+            grid-template-columns: 6.5rem 1fr 3rem;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .bar-track {
+            height: 22px;
+            background: #101827;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .bar {
+            height: 100%;
+            width: 0;
+            border-radius: 6px;
+            transition: width 0.4s ease-out;
+        }
+
+        .bar.reduce {
+            background: #38bdf8;
+        }
+
+        .bar.reuse {
+            background: #4ade80;
+        }
+
+        .bar.recycle {
+            background: #facc15;
+        }
+
+        .bar-count {
+            text-align: right;
+            font-weight: bold;
+            font-variant-numeric: tabular-nums;
+        }
+
+        #match-liters {
+            padding-left: 22px;
+        }
+
         [hidden] {
             display: none !important;
         }
@@ -196,6 +357,85 @@
         desactualizados; esto no significa que todos los servicios
         estén caídos.
     </div>
+
+    <section aria-labelledby="water-title">
+        <h2 id="water-title">Agua ahorrada</h2>
+
+        <div class="water">
+            <div class="liters">
+                <span id="liters-total" class="liters-value">–</span>
+                <span class="liters-label">
+                    litros ahorrados con las 3R
+                </span>
+                <span class="liters-note muted">
+                    desde que arrancó el panel
+                </span>
+            </div>
+
+            <div class="chart">
+                <h3>Tareas por tipo</h3>
+                <div id="task-bars">
+                    <p class="muted">Cargando datos…</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <span id="stat-ejected-ok" class="stat-value">–</span>
+                <span class="stat-label">
+                    Expulsiones acertadas (era el impostor)
+                </span>
+            </div>
+            <div class="stat">
+                <span id="stat-ejected-wrong" class="stat-value">–</span>
+                <span class="stat-label">
+                    Expulsiones fallidas (era de la tripulación)
+                </span>
+            </div>
+        </div>
+
+        <h3>Litros por partida activa</h3>
+        <p id="no-match-liters" class="muted">
+            No hay partidas activas con tareas.
+        </p>
+        <ul id="match-liters"></ul>
+    </section>
+
+    <section aria-labelledby="matches-title">
+        <h2 id="matches-title">Partidas</h2>
+
+        <div id="events-offline" class="banner" role="status" hidden>
+            Sin conexión con RabbitMQ; reconectando…
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <span id="stat-active" class="stat-value">–</span>
+                <span class="stat-label">Partidas activas</span>
+            </div>
+            <div class="stat">
+                <span id="stat-players" class="stat-value">–</span>
+                <span class="stat-label">Jugadores en partida</span>
+            </div>
+            <div class="stat">
+                <span id="stat-today" class="stat-value">–</span>
+                <span class="stat-label">Partidas hoy</span>
+            </div>
+            <div class="stat">
+                <span id="stat-grace" class="stat-value">–</span>
+                <span class="stat-label">En periodo de gracia</span>
+            </div>
+        </div>
+
+        <h3>Jugadores desconectados</h3>
+        <p id="no-grace" class="muted">Nadie está desconectado.</p>
+        <ul id="grace-list"></ul>
+
+        <h3>Eventos recientes</h3>
+        <p id="no-events" class="muted">Todavía no llegan eventos.</p>
+        <ul id="event-list"></ul>
+    </section>
 
     <section aria-labelledby="incidents-title">
         <h2 id="incidents-title">Incidentes registrados</h2>
@@ -410,11 +650,212 @@
             }
         }
 
+        function formatTime(value) {
+            const date = new Date(value);
+            return Number.isNaN(date.getTime())
+                ? "--:--:--"
+                : date.toLocaleTimeString("es");
+        }
+
+        function setNumber(id, value) {
+            document.getElementById(id).textContent =
+                Number.isFinite(value) ? String(value) : "–";
+        }
+
+        function renderStats(stats) {
+            setNumber("stat-active", stats.active_matches);
+            setNumber("stat-players", stats.players_in_match);
+            setNumber("stat-today", stats.finished_today);
+            setNumber("stat-grace", stats.players_in_grace);
+            renderGrace(Array.isArray(stats.grace) ? stats.grace : []);
+            renderWater(stats);
+
+            document.getElementById("events-offline").hidden =
+                stats.connected === true;
+
+            const events = Array.isArray(stats.recent_events)
+                ? stats.recent_events
+                : [];
+            document.getElementById("no-events").hidden =
+                events.length > 0;
+
+            const items = events.map(event => {
+                const item = document.createElement("li");
+                item.textContent =
+                    `${formatTime(event.received_at)} — ` +
+                    `${event.description}`;
+                return item;
+            });
+            document.getElementById("event-list")
+                .replaceChildren(...items);
+        }
+
+        // S2-13: contador grande de litros, barras por tipo de tarea,
+        // expulsiones y litros por partida activa.
+        const TEXT_LITERS_UNIT = " L";
+        const TEXT_ROOM_PREFIX = "Sala ";
+        const TEXT_ROOM_UNKNOWN = "Partida sin código";
+        let lastLiters = null;
+
+        // Punto de miles siempre ("1.200 L"): toLocaleString("es") no
+        // separa los números de 4 cifras.
+        const THOUSANDS_SEPARATOR = ".";
+
+        function formatLiters(value) {
+            const digits = String(Math.trunc(value)).replace(
+                /\B(?=(\d{3})+(?!\d))/g,
+                THOUSANDS_SEPARATOR,
+            );
+            return `${digits}${TEXT_LITERS_UNIT}`;
+        }
+
+        function renderLiters(total) {
+            const el = document.getElementById("liters-total");
+            if (!Number.isFinite(total)) {
+                el.textContent = "–";
+                return;
+            }
+            el.textContent = formatLiters(total);
+            if (lastLiters !== null && total > lastLiters) {
+                // Reinicia la animación aunque ya estuviera puesta.
+                el.classList.remove("bump");
+                void el.offsetWidth;
+                el.classList.add("bump");
+            }
+            lastLiters = total;
+        }
+
+        function renderTaskBars(rows) {
+            const max = Math.max(1, ...rows.map(row => row.count || 0));
+            const items = rows.map(row => {
+                const line = document.createElement("div");
+                line.className = "bar-row";
+
+                const label = document.createElement("span");
+                label.textContent = row.label;
+
+                const track = document.createElement("div");
+                track.className = "bar-track";
+                const bar = document.createElement("div");
+                bar.className = `bar ${String(row.type)}`;
+                bar.style.width = `${((row.count || 0) / max) * 100}%`;
+                track.append(bar);
+
+                const count = document.createElement("span");
+                count.className = "bar-count";
+                count.textContent = String(row.count || 0);
+
+                line.append(label, track, count);
+                return line;
+            });
+            document.getElementById("task-bars").replaceChildren(...items);
+        }
+
+        function renderMatchLiters(matches) {
+            document.getElementById("no-match-liters").hidden =
+                matches.length > 0;
+            const items = matches.map(match => {
+                const item = document.createElement("li");
+                const room = match.room_code
+                    ? `${TEXT_ROOM_PREFIX}${match.room_code}`
+                    : TEXT_ROOM_UNKNOWN;
+                item.textContent =
+                    `${room} — ${formatLiters(match.liters)}`;
+                return item;
+            });
+            document.getElementById("match-liters")
+                .replaceChildren(...items);
+        }
+
+        function renderWater(stats) {
+            renderLiters(stats.liters_saved_total);
+            renderTaskBars(
+                Array.isArray(stats.tasks_by_type)
+                    ? stats.tasks_by_type
+                    : [],
+            );
+            const ejections = stats.ejections || {};
+            setNumber("stat-ejected-ok", ejections.correct);
+            setNumber("stat-ejected-wrong", ejections.wrong);
+            renderMatchLiters(
+                Array.isArray(stats.liters_by_match)
+                    ? stats.liters_by_match
+                    : [],
+            );
+        }
+
+        // S3-04: cada desconectado con su cuenta regresiva; se actualiza
+        // cada segundo con la hora de fin que manda match.
+        let graceEnds = [];
+        const TEXT_GRACE_PREFIX = " — vuelve en ";
+        const TEXT_GRACE_SUFFIX = " o pasa a fantasma";
+
+        function formatCountdown(seconds) {
+            const s = Math.max(0, Math.floor(seconds));
+            const minutes = Math.floor(s / 60);
+            return `${minutes}:${String(s % 60).padStart(2, "0")}`;
+        }
+
+        function renderGrace(players) {
+            document.getElementById("no-grace").hidden = players.length > 0;
+            // La hora del panel puede diferir de la del servidor: se
+            // cuenta desde seconds_left, no desde grace_ends_at.
+            const receivedAt = Date.now();
+            graceEnds = players.map(player => ({
+                endsAt: receivedAt + player.seconds_left * 1000,
+            }));
+            const items = players.map((player, index) => {
+                const item = document.createElement("li");
+                const countdown = document.createElement("span");
+                countdown.className = "countdown";
+                countdown.dataset.index = String(index);
+                item.append(
+                    `${player.name}${TEXT_GRACE_PREFIX}`,
+                    countdown,
+                    TEXT_GRACE_SUFFIX,
+                );
+                return item;
+            });
+            document.getElementById("grace-list").replaceChildren(...items);
+            tickGrace();
+        }
+
+        function tickGrace() {
+            for (const el of document.querySelectorAll(".countdown")) {
+                const entry = graceEnds[Number(el.dataset.index)];
+                if (!entry) continue;
+                el.textContent =
+                    formatCountdown((entry.endsAt - Date.now()) / 1000);
+            }
+        }
+
+        async function refreshStats() {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 4000);
+
+            try {
+                const response = await fetch("/api/stats", {
+                    signal: controller.signal,
+                    cache: "no-store",
+                });
+                if (!response.ok) throw new Error("Stats response failed");
+                renderStats(await response.json());
+            } catch {
+                // El aviso general de conexión ya lo maneja refresh().
+            } finally {
+                clearTimeout(timeout);
+                // 1 s: el contador de litros sube en menos de 3 s (S2-13).
+                setTimeout(refreshStats, 1000);
+            }
+        }
+
         setInterval(() => {
             for (const view of cards.values()) updateDowntime(view);
+            tickGrace();
         }, 1000);
 
         refresh();
+        refreshStats();
     </script>
 </body>
 
