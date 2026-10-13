@@ -11,9 +11,19 @@
     <div id="screen-lobby" class="screen" hidden></div>
     <canvas id="game"></canvas>
     <div id="meeting-overlay" class="overlay" hidden></div>
+    <!-- S2-11: lista de misiones y modal del minijuego -->
     <div id="task-list" class="task-list" hidden></div>
-    <button id="task-button" class="task-button" hidden></button>
     <div id="task-overlay" class="overlay" hidden></div>
+    <!-- S2-09: embalse, aviso del tanque y botón de acción contextual -->
+    <div id="reservoir" class="reservoir" hidden>
+      <div class="reservoir-bar"><div class="reservoir-fill"></div></div>
+      <span class="reservoir-label"></span>
+    </div>
+    <div id="tank-alert" class="tank-alert" hidden></div>
+    <button id="action-button" class="action-button" type="button" hidden>
+      <span class="action-label"></span>
+      <kbd class="action-key"></kbd>
+    </button>
     <div id="pause-banner" class="pause-banner" hidden></div>
     <div id="end-overlay" class="overlay overlay-center" hidden></div>
     <script type="module" src="/src/main.ts"></script>

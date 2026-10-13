@@ -13,7 +13,6 @@ import type { MinigameView } from './minigameView';
 // 4. Se cierra con Esc, al salir de PLAYING o si myActiveTask cambia
 //    (el jugador se alejó y match canceló la tarea).
 
-const TASK_KEY = 'KeyE';
 const CLOSE_KEY = 'Escape';
 const REQUEST_TTL_MS = 1500; // si match no confirma, se olvida el pedido
 
@@ -26,7 +25,7 @@ export type TaskSessionDeps = {
     type: StationType,
     opts: { onComplete: () => void; onClose: () => void },
   ) => MinigameView;
-  showButton: (visible: boolean) => void;
+  showButton?: (visible: boolean) => void;
   onOpen: () => void; // game.ts deja de mandar move
   onClose: () => void;
   now: () => number;
@@ -53,8 +52,7 @@ export class TaskSession {
   attach(target: Window): () => void {
     const onKeyDown = (e: KeyboardEvent) => {
       if (isTyping(e.target) || e.repeat) return;
-      if (e.code === TASK_KEY) this.start();
-      else if (e.code === CLOSE_KEY) this.close();
+      if (e.code === CLOSE_KEY) this.close();
     };
     target.addEventListener('keydown', onKeyDown);
     return () => target.removeEventListener('keydown', onKeyDown);
@@ -69,13 +67,13 @@ export class TaskSession {
     this.requested = { stationId: station.id, at: this.deps.now() };
   }
 
-  // frame muestra el botón "Hacer tarea" solo junto a una estación
-  // propia pendiente y con el minijuego cerrado.
+  // frame avisa a showButton (si existe) junto a una estación propia
+  // pendiente y con el minijuego cerrado.
   frame(): void {
     const visible = !this.open && this.nearStation() !== null;
     if (visible === this.buttonShown) return;
     this.buttonShown = visible;
-    this.deps.showButton(visible);
+    this.deps.showButton?.(visible);
   }
 
   onSnapshot(snap: Snapshot): void {
@@ -109,7 +107,7 @@ export class TaskSession {
 
   destroy(): void {
     this.close();
-    this.deps.showButton(false);
+    this.deps.showButton?.(false);
   }
 
   private openGame(stationId: string): void {
