@@ -183,12 +183,15 @@ export class HoldAction {
 }
 
 // tankRose: el tanque del dueño subió lo bastante para avisarle. No dice
-// quién lo contaminó; el snapshot tampoco lo sabe.
+// quién lo contaminó; el snapshot tampoco lo sabe. Al impostor nunca le
+// avisa porque su tanque sube solo (driftImpostorTanks en match).
 export function tankRose(
   prev: TankView[],
   next: TankView[],
   ownerId: string,
+  role?: Role,
 ): boolean {
+  if (role === 'IMPOSTOR') return false;
   const before = prev.find((t) => t.ownerId === ownerId);
   const after = next.find((t) => t.ownerId === ownerId);
   if (!before || !after) return false;
