@@ -1,5 +1,5 @@
 import { type ReactNode, useEffect, useState } from 'react';
-import { STAGE_H, STAGE_W, stageScale } from './stage';
+import { STAGE_H, STAGE_W, stageScale } from './stageScale';
 
 function useScale(): number {
   const [scale, setScale] = useState(() => stageScale(innerWidth, innerHeight));

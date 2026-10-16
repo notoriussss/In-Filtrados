@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { stageScale } from './stage';
+import { stageScale } from './stageScale';
 
 describe('stageScale', () => {
   it('fits 1920 × 1080 inside the window', () => {
