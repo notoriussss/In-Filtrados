@@ -12,6 +12,7 @@ const samplePlayers: PlayerView[] = [
     y: 0,
     connected: true,
     alive: true,
+    activity: null,
   },
   {
     id: 'p2',
@@ -21,6 +22,7 @@ const samplePlayers: PlayerView[] = [
     y: 0,
     connected: true,
     alive: true,
+    activity: null,
   },
 ];
 

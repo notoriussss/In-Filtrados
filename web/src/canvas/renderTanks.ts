@@ -121,6 +121,7 @@ export function renderHoldProgress(
   x: number,
   y: number,
   progress: number,
+  rotation = 0, // radianes; para el arco que gira mientras se espera
 ): void {
   const s = worldToScreen(camera, x, y);
   ctx.lineWidth = PROGRESS_WIDTH;
@@ -129,7 +130,7 @@ export function renderHoldProgress(
   ctx.arc(s.x, s.y, PROGRESS_RADIUS, 0, Math.PI * 2);
   ctx.strokeStyle = PROGRESS_BG;
   ctx.stroke();
-  const start = -Math.PI / 2;
+  const start = -Math.PI / 2 + rotation;
   ctx.beginPath();
   ctx.arc(s.x, s.y, PROGRESS_RADIUS, start, start + progress * Math.PI * 2);
   ctx.strokeStyle = PROGRESS_FG;

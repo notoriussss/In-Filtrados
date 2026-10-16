@@ -1,11 +1,22 @@
 import type { MyTask } from '@in-filtrados/messages';
-import type { GameMap, Station, StationType, Zone } from '../map';
+import {
+  type GameMap,
+  type Station,
+  type StationType,
+  type Zone,
+  zoneRoom,
+} from '../map';
 
 // Tareas de las 3R del lado del navegador (S2-11). match decide si una
 // tarea empezó o se completó; aquí solo se arma la lista y se elige la
 // estación cercana.
 
-export const TASK_RANGE = 40; // taskRadius en match
+export const TASK_RANGE = 40; // taskRadius en match si la estación no trae radio
+
+// stationRange: alcance de la estación (su radius de map.json).
+export function stationRange(s: Station): number {
+  return s.radius ?? TASK_RANGE;
+}
 export const MIN_TASK_MS = 3000; // taskMinTicks en match: 3 s
 export const SEND_MARGIN_MS = 200; // margen para no llegar antes de 3 s
 
@@ -16,8 +27,7 @@ export type TaskRow = {
   done: boolean;
 };
 
-// zoneOf devuelve la zona más pequeña que contiene el punto, así se
-// ignora el arroyo, que cubre todo el mapa.
+// zoneOf devuelve la zona más pequeña que contiene el punto.
 export function zoneOf(
   point: { x: number; y: number },
   zones: Zone[],
@@ -47,15 +57,25 @@ export function buildTaskList(
     rows.push({
       stationId: station.id,
       type: station.type,
-      zoneName: zoneOf(station, map.zones)?.name ?? null,
+      zoneName: roomName(station, map.zones),
       done: task.done,
     });
   }
   return rows;
 }
 
+// roomName: nombre de la sala de la estación (su room o, si no trae,
+// la zona más pequeña que la contiene).
+export function roomName(station: Station, zones: Zone[]): string | null {
+  if (station.room) {
+    const z = zones.find((zone) => zoneRoom(zone) === station.room);
+    if (z) return z.name;
+  }
+  return zoneOf(station, zones)?.name ?? null;
+}
+
 // pickStation elige la estación propia y pendiente más cercana a
-// TASK_RANGE o menos; null si no hay ninguna.
+// su alcance o menos; null si no hay ninguna.
 export function pickStation(
   me: { x: number; y: number },
   myTasks: MyTask[],
@@ -68,7 +88,7 @@ export function pickStation(
     const s = stations.find((st) => st.id === task.stationId);
     if (!s) continue;
     const d = Math.hypot(s.x - me.x, s.y - me.y);
-    if (d <= TASK_RANGE && d < bestDist) {
+    if (d <= stationRange(s) && d < bestDist) {
       best = s;
       bestDist = d;
     }

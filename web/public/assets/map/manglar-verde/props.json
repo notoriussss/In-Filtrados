@@ -1,0 +1,3321 @@
+{
+  "_nota": "Escala 1:1 (1 unidad de mundo = 1 px). x,y = esquina superior izquierda del sprite en el mapa; baseY = línea de base para ordenar por profundidad con los jugadores (y-sort: dibuja primero lo de menor baseY; un jugador se ordena con su y + 6). El suelo (capas/suelo.png) ya trae pisos, paredes, decoración mural, tapetes y calcomanías.",
+  "width": 2752,
+  "height": 1824,
+  "total": 184,
+  "sprites": 53,
+  "props": [
+    {
+      "id": "bush",
+      "sprite": "bush",
+      "x": 280,
+      "y": 94,
+      "w": 48,
+      "h": 38,
+      "baseY": 128,
+      "tile": [
+        9,
+        3
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "pinetree",
+      "sprite": "pinetree",
+      "x": 2412,
+      "y": -26,
+      "w": 104,
+      "h": 158,
+      "baseY": 128,
+      "tile": [
+        76,
+        3
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "bush",
+      "sprite": "bush",
+      "x": 696,
+      "y": 126,
+      "w": 48,
+      "h": 38,
+      "baseY": 160,
+      "tile": [
+        22,
+        4
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "plant-s",
+      "sprite": "plant-s",
+      "x": 864,
+      "y": 118,
+      "w": 32,
+      "h": 46,
+      "baseY": 160,
+      "tile": [
+        27,
+        4
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rocks",
+      "sprite": "rocks",
+      "x": 1552,
+      "y": 122,
+      "w": 64,
+      "h": 42,
+      "baseY": 160,
+      "tile": [
+        49,
+        4
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "pinetree",
+      "sprite": "pinetree",
+      "x": 12,
+      "y": 38,
+      "w": 104,
+      "h": 158,
+      "baseY": 192,
+      "tile": [
+        1,
+        5
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "plant-l",
+      "sprite": "plant-l",
+      "x": 472,
+      "y": 110,
+      "w": 48,
+      "h": 86,
+      "baseY": 192,
+      "tile": [
+        15,
+        5
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "console",
+      "sprite": "console",
+      "x": 1116,
+      "y": 100,
+      "w": 136,
+      "h": 96,
+      "baseY": 192,
+      "tile": [
+        35,
+        5
+      ],
+      "footprint": [
+        4,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "terrarium",
+      "sprite": "terrarium",
+      "x": 1244,
+      "y": 108,
+      "w": 72,
+      "h": 88,
+      "baseY": 192,
+      "tile": [
+        39,
+        5
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "battery",
+      "sprite": "battery",
+      "x": 1560,
+      "y": 112,
+      "w": 48,
+      "h": 84,
+      "baseY": 192,
+      "tile": [
+        49,
+        5
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "battery",
+      "sprite": "battery",
+      "x": 1592,
+      "y": 112,
+      "w": 48,
+      "h": 84,
+      "baseY": 192,
+      "tile": [
+        50,
+        5
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "battery",
+      "sprite": "battery",
+      "x": 1624,
+      "y": 112,
+      "w": 48,
+      "h": 84,
+      "baseY": 192,
+      "tile": [
+        51,
+        5
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "valve",
+      "sprite": "valve",
+      "x": 1756,
+      "y": 92,
+      "w": 72,
+      "h": 104,
+      "baseY": 192,
+      "tile": [
+        55,
+        5
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bush",
+      "sprite": "bush",
+      "x": 2040,
+      "y": 158,
+      "w": 48,
+      "h": 38,
+      "baseY": 192,
+      "tile": [
+        64,
+        5
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "seedtable",
+      "sprite": "seedtable",
+      "x": 508,
+      "y": 154,
+      "w": 104,
+      "h": 74,
+      "baseY": 224,
+      "tile": [
+        16,
+        6
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "seedtable",
+      "sprite": "seedtable-v2",
+      "x": 668,
+      "y": 154,
+      "w": 104,
+      "h": 74,
+      "baseY": 224,
+      "tile": [
+        21,
+        6
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "fridge",
+      "sprite": "fridge",
+      "x": 1306,
+      "y": 138,
+      "w": 44,
+      "h": 90,
+      "baseY": 224,
+      "tile": [
+        41,
+        6
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rocks",
+      "sprite": "rocks",
+      "x": 2160,
+      "y": 186,
+      "w": 64,
+      "h": 42,
+      "baseY": 224,
+      "tile": [
+        68,
+        6
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "solarpanel",
+      "sprite": "solarpanel",
+      "x": 1532,
+      "y": 168,
+      "w": 104,
+      "h": 92,
+      "baseY": 256,
+      "tile": [
+        48,
+        7
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "solarpanel",
+      "sprite": "solarpanel",
+      "x": 1724,
+      "y": 168,
+      "w": 104,
+      "h": 92,
+      "baseY": 256,
+      "tile": [
+        54,
+        7
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "pinetree",
+      "sprite": "pinetree",
+      "x": 2156,
+      "y": 102,
+      "w": 104,
+      "h": 158,
+      "baseY": 256,
+      "tile": [
+        68,
+        7
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "tree",
+      "sprite": "tree",
+      "x": 2368,
+      "y": 102,
+      "w": 128,
+      "h": 158,
+      "baseY": 256,
+      "tile": [
+        75,
+        7
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "rainstation",
+      "sprite": "rainstation",
+      "x": 408,
+      "y": 174,
+      "w": 80,
+      "h": 118,
+      "baseY": 288,
+      "tile": [
+        13,
+        8
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "lamp",
+      "sprite": "lamp",
+      "x": 1921,
+      "y": 214,
+      "w": 30,
+      "h": 78,
+      "baseY": 288,
+      "tile": [
+        60,
+        8
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bush",
+      "sprite": "bush-v2",
+      "x": 2104,
+      "y": 254,
+      "w": 48,
+      "h": 38,
+      "baseY": 288,
+      "tile": [
+        66,
+        8
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "pinetree",
+      "sprite": "pinetree",
+      "x": 2316,
+      "y": 134,
+      "w": 104,
+      "h": 158,
+      "baseY": 288,
+      "tile": [
+        73,
+        8
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "pinetree",
+      "sprite": "pinetree",
+      "x": 2508,
+      "y": 134,
+      "w": 104,
+      "h": 158,
+      "baseY": 288,
+      "tile": [
+        79,
+        8
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "pinetree",
+      "sprite": "pinetree",
+      "x": 12,
+      "y": 166,
+      "w": 104,
+      "h": 158,
+      "baseY": 320,
+      "tile": [
+        1,
+        9
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "rocks",
+      "sprite": "rocks",
+      "x": 2192,
+      "y": 282,
+      "w": 64,
+      "h": 42,
+      "baseY": 320,
+      "tile": [
+        69,
+        9
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "rocks",
+      "sprite": "rocks",
+      "x": 2256,
+      "y": 282,
+      "w": 64,
+      "h": 42,
+      "baseY": 320,
+      "tile": [
+        71,
+        9
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "tree",
+      "sprite": "tree",
+      "x": 64,
+      "y": 198,
+      "w": 128,
+      "h": 158,
+      "baseY": 352,
+      "tile": [
+        3,
+        10
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "bush",
+      "sprite": "bush-v2",
+      "x": 2264,
+      "y": 318,
+      "w": 48,
+      "h": 38,
+      "baseY": 352,
+      "tile": [
+        71,
+        10
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "seedtable",
+      "sprite": "seedtable-v3",
+      "x": 412,
+      "y": 314,
+      "w": 104,
+      "h": 74,
+      "baseY": 384,
+      "tile": [
+        13,
+        11
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "seedtable",
+      "sprite": "seedtable-v2",
+      "x": 700,
+      "y": 314,
+      "w": 104,
+      "h": 74,
+      "baseY": 384,
+      "tile": [
+        22,
+        11
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "greywater",
+      "sprite": "greywater",
+      "x": 980,
+      "y": 280,
+      "w": 88,
+      "h": 108,
+      "baseY": 384,
+      "tile": [
+        31,
+        11
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "ecobench",
+      "sprite": "ecobench",
+      "x": 1212,
+      "y": 310,
+      "w": 104,
+      "h": 78,
+      "baseY": 384,
+      "tile": [
+        38,
+        11
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "solarpanel",
+      "sprite": "solarpanel",
+      "x": 1660,
+      "y": 296,
+      "w": 104,
+      "h": 92,
+      "baseY": 384,
+      "tile": [
+        52,
+        11
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "solarpanel",
+      "sprite": "solarpanel",
+      "x": 1788,
+      "y": 296,
+      "w": 104,
+      "h": 92,
+      "baseY": 384,
+      "tile": [
+        56,
+        11
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "tree",
+      "sprite": "tree",
+      "x": 2528,
+      "y": 230,
+      "w": 128,
+      "h": 158,
+      "baseY": 384,
+      "tile": [
+        80,
+        11
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "tower",
+      "sprite": "tower",
+      "x": 824,
+      "y": 316,
+      "w": 48,
+      "h": 104,
+      "baseY": 416,
+      "tile": [
+        26,
+        12
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "tower",
+      "sprite": "tower",
+      "x": 856,
+      "y": 316,
+      "w": 48,
+      "h": 104,
+      "baseY": 416,
+      "tile": [
+        27,
+        12
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "stool",
+      "sprite": "stool",
+      "x": 1250,
+      "y": 382,
+      "w": 28,
+      "h": 38,
+      "baseY": 416,
+      "tile": [
+        39,
+        12
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "plant-l",
+      "sprite": "plant-l",
+      "x": 1304,
+      "y": 334,
+      "w": 48,
+      "h": 86,
+      "baseY": 416,
+      "tile": [
+        41,
+        12
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rocks",
+      "sprite": "rocks",
+      "x": 1840,
+      "y": 378,
+      "w": 64,
+      "h": 42,
+      "baseY": 416,
+      "tile": [
+        58,
+        12
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "pinetree",
+      "sprite": "pinetree",
+      "x": 2476,
+      "y": 262,
+      "w": 104,
+      "h": 158,
+      "baseY": 416,
+      "tile": [
+        78,
+        12
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "pinetree",
+      "sprite": "pinetree",
+      "x": 44,
+      "y": 294,
+      "w": 104,
+      "h": 158,
+      "baseY": 448,
+      "tile": [
+        2,
+        13
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "lamp",
+      "sprite": "lamp",
+      "x": 2017,
+      "y": 374,
+      "w": 30,
+      "h": 78,
+      "baseY": 448,
+      "tile": [
+        63,
+        13
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "pinetree",
+      "sprite": "pinetree",
+      "x": 2476,
+      "y": 294,
+      "w": 104,
+      "h": 158,
+      "baseY": 448,
+      "tile": [
+        78,
+        13
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "pinetree",
+      "sprite": "pinetree",
+      "x": -20,
+      "y": 326,
+      "w": 104,
+      "h": 158,
+      "baseY": 480,
+      "tile": [
+        0,
+        14
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "tree",
+      "sprite": "tree-v2",
+      "x": 0,
+      "y": 326,
+      "w": 128,
+      "h": 158,
+      "baseY": 480,
+      "tile": [
+        1,
+        14
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "crate",
+      "sprite": "crate",
+      "x": 2106,
+      "y": 442,
+      "w": 44,
+      "h": 42,
+      "baseY": 480,
+      "tile": [
+        66,
+        14
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bush",
+      "sprite": "bush-v2",
+      "x": 2488,
+      "y": 446,
+      "w": 48,
+      "h": 38,
+      "baseY": 480,
+      "tile": [
+        78,
+        14
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "rocks",
+      "sprite": "rocks",
+      "x": 2448,
+      "y": 506,
+      "w": 64,
+      "h": 42,
+      "baseY": 544,
+      "tile": [
+        77,
+        16
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "plant-s",
+      "sprite": "plant-s",
+      "x": 1344,
+      "y": 534,
+      "w": 32,
+      "h": 46,
+      "baseY": 576,
+      "tile": [
+        42,
+        17
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "pinetree",
+      "sprite": "pinetree",
+      "x": 2508,
+      "y": 422,
+      "w": 104,
+      "h": 158,
+      "baseY": 576,
+      "tile": [
+        79,
+        17
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "plant-l",
+      "sprite": "plant-l",
+      "x": 952,
+      "y": 526,
+      "w": 48,
+      "h": 86,
+      "baseY": 608,
+      "tile": [
+        30,
+        18
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rocks",
+      "sprite": "rocks",
+      "x": 2512,
+      "y": 570,
+      "w": 64,
+      "h": 42,
+      "baseY": 608,
+      "tile": [
+        79,
+        18
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "battery",
+      "sprite": "battery",
+      "x": 280,
+      "y": 560,
+      "w": 48,
+      "h": 84,
+      "baseY": 640,
+      "tile": [
+        9,
+        19
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "battery",
+      "sprite": "battery",
+      "x": 312,
+      "y": 560,
+      "w": 48,
+      "h": 84,
+      "baseY": 640,
+      "tile": [
+        10,
+        19
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "waterwheel",
+      "sprite": "waterwheel",
+      "x": 404,
+      "y": 508,
+      "w": 120,
+      "h": 136,
+      "baseY": 640,
+      "tile": [
+        13,
+        18
+      ],
+      "footprint": [
+        3,
+        2
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rail",
+      "sprite": "rail",
+      "x": 924,
+      "y": 596,
+      "w": 104,
+      "h": 48,
+      "baseY": 640,
+      "tile": [
+        29,
+        19
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rail",
+      "sprite": "rail",
+      "x": 1020,
+      "y": 596,
+      "w": 104,
+      "h": 48,
+      "baseY": 640,
+      "tile": [
+        32,
+        19
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "post-lamp",
+      "sprite": "post-lamp",
+      "x": 1056,
+      "y": 536,
+      "w": 32,
+      "h": 108,
+      "baseY": 640,
+      "tile": [
+        33,
+        19
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rail",
+      "sprite": "rail",
+      "x": 1116,
+      "y": 596,
+      "w": 104,
+      "h": 48,
+      "baseY": 640,
+      "tile": [
+        35,
+        19
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bench",
+      "sprite": "bench",
+      "x": 1404,
+      "y": 598,
+      "w": 104,
+      "h": 46,
+      "baseY": 640,
+      "tile": [
+        44,
+        19
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rail",
+      "sprite": "rail",
+      "x": 1404,
+      "y": 596,
+      "w": 104,
+      "h": 48,
+      "baseY": 640,
+      "tile": [
+        44,
+        19
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rail",
+      "sprite": "rail",
+      "x": 1500,
+      "y": 596,
+      "w": 104,
+      "h": 48,
+      "baseY": 640,
+      "tile": [
+        47,
+        19
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "post-lamp",
+      "sprite": "post-lamp",
+      "x": 1504,
+      "y": 536,
+      "w": 32,
+      "h": 108,
+      "baseY": 640,
+      "tile": [
+        47,
+        19
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rail",
+      "sprite": "rail",
+      "x": 1596,
+      "y": 596,
+      "w": 104,
+      "h": 48,
+      "baseY": 640,
+      "tile": [
+        50,
+        19
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bush",
+      "sprite": "bush-v2",
+      "x": 2488,
+      "y": 606,
+      "w": 48,
+      "h": 38,
+      "baseY": 640,
+      "tile": [
+        78,
+        19
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "pinetree",
+      "sprite": "pinetree",
+      "x": 2508,
+      "y": 486,
+      "w": 104,
+      "h": 158,
+      "baseY": 640,
+      "tile": [
+        79,
+        19
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "tree",
+      "sprite": "tree-v2",
+      "x": -32,
+      "y": 518,
+      "w": 128,
+      "h": 158,
+      "baseY": 672,
+      "tile": [
+        0,
+        20
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "leak",
+      "sprite": "leak",
+      "x": 276,
+      "y": 660,
+      "w": 120,
+      "h": 80,
+      "baseY": 736,
+      "tile": [
+        9,
+        22
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "pump",
+      "sprite": "pump",
+      "x": 472,
+      "y": 668,
+      "w": 112,
+      "h": 72,
+      "baseY": 736,
+      "tile": [
+        15,
+        22
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "tree",
+      "sprite": "tree-v2",
+      "x": 2496,
+      "y": 582,
+      "w": 128,
+      "h": 158,
+      "baseY": 736,
+      "tile": [
+        79,
+        22
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "pinetree",
+      "sprite": "pinetree",
+      "x": 2540,
+      "y": 582,
+      "w": 104,
+      "h": 158,
+      "baseY": 736,
+      "tile": [
+        80,
+        22
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "tree",
+      "sprite": "tree-v2",
+      "x": -32,
+      "y": 614,
+      "w": 128,
+      "h": 158,
+      "baseY": 768,
+      "tile": [
+        0,
+        23
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "bush",
+      "sprite": "bush",
+      "x": 120,
+      "y": 734,
+      "w": 48,
+      "h": 38,
+      "baseY": 768,
+      "tile": [
+        4,
+        23
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "tree",
+      "sprite": "tree-v2",
+      "x": -32,
+      "y": 646,
+      "w": 128,
+      "h": 158,
+      "baseY": 800,
+      "tile": [
+        0,
+        24
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "tree",
+      "sprite": "tree-v2",
+      "x": 0,
+      "y": 646,
+      "w": 128,
+      "h": 158,
+      "baseY": 800,
+      "tile": [
+        1,
+        24
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "pinetree",
+      "sprite": "pinetree",
+      "x": 2572,
+      "y": 646,
+      "w": 104,
+      "h": 158,
+      "baseY": 800,
+      "tile": [
+        81,
+        24
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "telescope",
+      "sprite": "telescope",
+      "x": 1210,
+      "y": 758,
+      "w": 44,
+      "h": 78,
+      "baseY": 832,
+      "tile": [
+        38,
+        25
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "plant-l",
+      "sprite": "plant-l",
+      "x": 1400,
+      "y": 750,
+      "w": 48,
+      "h": 86,
+      "baseY": 832,
+      "tile": [
+        44,
+        25
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "pinetree",
+      "sprite": "pinetree",
+      "x": 2540,
+      "y": 678,
+      "w": 104,
+      "h": 158,
+      "baseY": 832,
+      "tile": [
+        80,
+        25
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "chair",
+      "sprite": "chair",
+      "x": 1279,
+      "y": 822,
+      "w": 34,
+      "h": 46,
+      "baseY": 864,
+      "tile": [
+        40,
+        26
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "chair",
+      "sprite": "chair",
+      "x": 1311,
+      "y": 822,
+      "w": 34,
+      "h": 46,
+      "baseY": 864,
+      "tile": [
+        41,
+        26
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "chair",
+      "sprite": "chair-v2",
+      "x": 1247,
+      "y": 854,
+      "w": 34,
+      "h": 46,
+      "baseY": 896,
+      "tile": [
+        39,
+        27
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "chair",
+      "sprite": "chair-v3",
+      "x": 1343,
+      "y": 854,
+      "w": 34,
+      "h": 46,
+      "baseY": 896,
+      "tile": [
+        42,
+        27
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "post-lamp",
+      "sprite": "post-lamp",
+      "x": 896,
+      "y": 824,
+      "w": 32,
+      "h": 108,
+      "baseY": 928,
+      "tile": [
+        28,
+        28
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "chair",
+      "sprite": "chair-v2",
+      "x": 1247,
+      "y": 886,
+      "w": 34,
+      "h": 46,
+      "baseY": 928,
+      "tile": [
+        39,
+        28
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "table-r",
+      "sprite": "table-r",
+      "x": 1272,
+      "y": 868,
+      "w": 80,
+      "h": 64,
+      "baseY": 928,
+      "tile": [
+        40,
+        27
+      ],
+      "footprint": [
+        2,
+        2
+      ],
+      "exterior": false
+    },
+    {
+      "id": "chair",
+      "sprite": "chair-v3",
+      "x": 1343,
+      "y": 886,
+      "w": 34,
+      "h": 46,
+      "baseY": 928,
+      "tile": [
+        42,
+        28
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "post-lamp",
+      "sprite": "post-lamp",
+      "x": 1728,
+      "y": 824,
+      "w": 32,
+      "h": 108,
+      "baseY": 928,
+      "tile": [
+        54,
+        28
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "chair",
+      "sprite": "chair-v4",
+      "x": 1279,
+      "y": 918,
+      "w": 34,
+      "h": 46,
+      "baseY": 960,
+      "tile": [
+        40,
+        29
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "chair",
+      "sprite": "chair-v4",
+      "x": 1311,
+      "y": 918,
+      "w": 34,
+      "h": 46,
+      "baseY": 960,
+      "tile": [
+        41,
+        29
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "crate",
+      "sprite": "crate",
+      "x": 314,
+      "y": 954,
+      "w": 44,
+      "h": 42,
+      "baseY": 992,
+      "tile": [
+        10,
+        30
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bin",
+      "sprite": "bin",
+      "x": 416,
+      "y": 954,
+      "w": 32,
+      "h": 42,
+      "baseY": 992,
+      "tile": [
+        13,
+        30
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "tree",
+      "sprite": "tree-v2",
+      "x": 2560,
+      "y": 838,
+      "w": 128,
+      "h": 158,
+      "baseY": 992,
+      "tile": [
+        81,
+        30
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "workbench",
+      "sprite": "workbench",
+      "x": 276,
+      "y": 936,
+      "w": 120,
+      "h": 92,
+      "baseY": 1024,
+      "tile": [
+        9,
+        31
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "workbench",
+      "sprite": "workbench",
+      "x": 404,
+      "y": 936,
+      "w": 120,
+      "h": 92,
+      "baseY": 1024,
+      "tile": [
+        13,
+        31
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "post-lamp",
+      "sprite": "post-lamp",
+      "x": 1216,
+      "y": 920,
+      "w": 32,
+      "h": 108,
+      "baseY": 1024,
+      "tile": [
+        38,
+        31
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "post-lamp",
+      "sprite": "post-lamp",
+      "x": 1408,
+      "y": 920,
+      "w": 32,
+      "h": 108,
+      "baseY": 1024,
+      "tile": [
+        44,
+        31
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "post-lamp",
+      "sprite": "post-lamp",
+      "x": 1728,
+      "y": 952,
+      "w": 32,
+      "h": 108,
+      "baseY": 1056,
+      "tile": [
+        54,
+        32
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rocks",
+      "sprite": "rocks",
+      "x": 112,
+      "y": 1050,
+      "w": 64,
+      "h": 42,
+      "baseY": 1088,
+      "tile": [
+        4,
+        33
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "post-lamp",
+      "sprite": "post-lamp",
+      "x": 896,
+      "y": 984,
+      "w": 32,
+      "h": 108,
+      "baseY": 1088,
+      "tile": [
+        28,
+        33
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "tree",
+      "sprite": "tree",
+      "x": 2560,
+      "y": 934,
+      "w": 128,
+      "h": 158,
+      "baseY": 1088,
+      "tile": [
+        81,
+        33
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "leak",
+      "sprite": "leak",
+      "x": 276,
+      "y": 1044,
+      "w": 120,
+      "h": 80,
+      "baseY": 1120,
+      "tile": [
+        9,
+        34
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "greywater",
+      "sprite": "greywater",
+      "x": 436,
+      "y": 1016,
+      "w": 88,
+      "h": 108,
+      "baseY": 1120,
+      "tile": [
+        14,
+        34
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "woodpile",
+      "sprite": "woodpile",
+      "x": 604,
+      "y": 1064,
+      "w": 72,
+      "h": 60,
+      "baseY": 1120,
+      "tile": [
+        19,
+        34
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rocks",
+      "sprite": "rocks",
+      "x": 2448,
+      "y": 1082,
+      "w": 64,
+      "h": 42,
+      "baseY": 1120,
+      "tile": [
+        77,
+        34
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "bush",
+      "sprite": "bush-v2",
+      "x": 120,
+      "y": 1118,
+      "w": 48,
+      "h": 38,
+      "baseY": 1152,
+      "tile": [
+        4,
+        35
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "pump",
+      "sprite": "pump-v2",
+      "x": 2008,
+      "y": 1084,
+      "w": 112,
+      "h": 72,
+      "baseY": 1152,
+      "tile": [
+        63,
+        35
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rainstation",
+      "sprite": "rainstation",
+      "x": 2104,
+      "y": 1038,
+      "w": 80,
+      "h": 118,
+      "baseY": 1152,
+      "tile": [
+        66,
+        35
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "valve",
+      "sprite": "valve",
+      "x": 2204,
+      "y": 1052,
+      "w": 72,
+      "h": 104,
+      "baseY": 1152,
+      "tile": [
+        69,
+        35
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bush",
+      "sprite": "bush",
+      "x": 88,
+      "y": 1150,
+      "w": 48,
+      "h": 38,
+      "baseY": 1184,
+      "tile": [
+        3,
+        36
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "plant-s",
+      "sprite": "plant-s",
+      "x": 1408,
+      "y": 1142,
+      "w": 32,
+      "h": 46,
+      "baseY": 1184,
+      "tile": [
+        44,
+        36
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "plant-l",
+      "sprite": "plant-l",
+      "x": 1656,
+      "y": 1102,
+      "w": 48,
+      "h": 86,
+      "baseY": 1184,
+      "tile": [
+        52,
+        36
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "pinetree",
+      "sprite": "pinetree",
+      "x": -20,
+      "y": 1062,
+      "w": 104,
+      "h": 158,
+      "baseY": 1216,
+      "tile": [
+        0,
+        37
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "tree",
+      "sprite": "tree",
+      "x": 0,
+      "y": 1062,
+      "w": 128,
+      "h": 158,
+      "baseY": 1216,
+      "tile": [
+        1,
+        37
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "post-lamp",
+      "sprite": "post-lamp",
+      "x": 1056,
+      "y": 1112,
+      "w": 32,
+      "h": 108,
+      "baseY": 1216,
+      "tile": [
+        33,
+        37
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bench",
+      "sprite": "bench",
+      "x": 1372,
+      "y": 1174,
+      "w": 104,
+      "h": 46,
+      "baseY": 1216,
+      "tile": [
+        43,
+        37
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "post-lamp",
+      "sprite": "post-lamp",
+      "x": 1504,
+      "y": 1112,
+      "w": 32,
+      "h": 108,
+      "baseY": 1216,
+      "tile": [
+        47,
+        37
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "barrel",
+      "sprite": "barrel",
+      "x": 670,
+      "y": 1204,
+      "w": 36,
+      "h": 48,
+      "baseY": 1248,
+      "tile": [
+        21,
+        38
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "pinetree",
+      "sprite": "pinetree",
+      "x": 2572,
+      "y": 1094,
+      "w": 104,
+      "h": 158,
+      "baseY": 1248,
+      "tile": [
+        81,
+        38
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "pinetree",
+      "sprite": "pinetree",
+      "x": -20,
+      "y": 1126,
+      "w": 104,
+      "h": 158,
+      "baseY": 1280,
+      "tile": [
+        0,
+        39
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "tree",
+      "sprite": "tree-v2",
+      "x": 2528,
+      "y": 1126,
+      "w": 128,
+      "h": 158,
+      "baseY": 1280,
+      "tile": [
+        80,
+        39
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "pinetree",
+      "sprite": "pinetree",
+      "x": 2572,
+      "y": 1126,
+      "w": 104,
+      "h": 158,
+      "baseY": 1280,
+      "tile": [
+        81,
+        39
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "bush",
+      "sprite": "bush-v2",
+      "x": 216,
+      "y": 1310,
+      "w": 48,
+      "h": 38,
+      "baseY": 1344,
+      "tile": [
+        7,
+        41
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "pinetree",
+      "sprite": "pinetree",
+      "x": 2540,
+      "y": 1190,
+      "w": 104,
+      "h": 158,
+      "baseY": 1344,
+      "tile": [
+        80,
+        41
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "tree",
+      "sprite": "tree-v2",
+      "x": 2560,
+      "y": 1190,
+      "w": 128,
+      "h": 158,
+      "baseY": 1344,
+      "tile": [
+        81,
+        41
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "tree",
+      "sprite": "tree",
+      "x": -32,
+      "y": 1222,
+      "w": 128,
+      "h": 158,
+      "baseY": 1376,
+      "tile": [
+        0,
+        42
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "pinetree",
+      "sprite": "pinetree",
+      "x": 76,
+      "y": 1222,
+      "w": 104,
+      "h": 158,
+      "baseY": 1376,
+      "tile": [
+        3,
+        42
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "rocks",
+      "sprite": "rocks",
+      "x": 624,
+      "y": 1338,
+      "w": 64,
+      "h": 42,
+      "baseY": 1376,
+      "tile": [
+        20,
+        42
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rocks",
+      "sprite": "rocks",
+      "x": 784,
+      "y": 1338,
+      "w": 64,
+      "h": 42,
+      "baseY": 1376,
+      "tile": [
+        25,
+        42
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bush",
+      "sprite": "bush",
+      "x": 2552,
+      "y": 1342,
+      "w": 48,
+      "h": 38,
+      "baseY": 1376,
+      "tile": [
+        80,
+        42
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "tree",
+      "sprite": "tree",
+      "x": 2560,
+      "y": 1222,
+      "w": 128,
+      "h": 158,
+      "baseY": 1376,
+      "tile": [
+        81,
+        42
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "pinetree",
+      "sprite": "pinetree",
+      "x": 76,
+      "y": 1254,
+      "w": 104,
+      "h": 158,
+      "baseY": 1408,
+      "tile": [
+        3,
+        43
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "rocks",
+      "sprite": "rocks",
+      "x": 752,
+      "y": 1370,
+      "w": 64,
+      "h": 42,
+      "baseY": 1408,
+      "tile": [
+        24,
+        43
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "recyclebins",
+      "sprite": "recyclebins",
+      "x": 1788,
+      "y": 1348,
+      "w": 104,
+      "h": 64,
+      "baseY": 1408,
+      "tile": [
+        56,
+        43
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "reedbed",
+      "sprite": "reedbed",
+      "x": 412,
+      "y": 1380,
+      "w": 72,
+      "h": 64,
+      "baseY": 1440,
+      "tile": [
+        13,
+        44
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "reedbed",
+      "sprite": "reedbed",
+      "x": 700,
+      "y": 1380,
+      "w": 72,
+      "h": 64,
+      "baseY": 1440,
+      "tile": [
+        22,
+        44
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "wormbin",
+      "sprite": "wormbin",
+      "x": 988,
+      "y": 1384,
+      "w": 72,
+      "h": 60,
+      "baseY": 1440,
+      "tile": [
+        31,
+        44
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "wormbin",
+      "sprite": "wormbin",
+      "x": 1212,
+      "y": 1384,
+      "w": 72,
+      "h": 60,
+      "baseY": 1440,
+      "tile": [
+        38,
+        44
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "compost",
+      "sprite": "compost",
+      "x": 1298,
+      "y": 1380,
+      "w": 60,
+      "h": 64,
+      "baseY": 1440,
+      "tile": [
+        41,
+        44
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "beehive",
+      "sprite": "beehive",
+      "x": 2008,
+      "y": 1380,
+      "w": 48,
+      "h": 64,
+      "baseY": 1440,
+      "tile": [
+        63,
+        44
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "beehive",
+      "sprite": "beehive",
+      "x": 2040,
+      "y": 1380,
+      "w": 48,
+      "h": 64,
+      "baseY": 1440,
+      "tile": [
+        64,
+        44
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "beehive",
+      "sprite": "beehive",
+      "x": 2232,
+      "y": 1380,
+      "w": 48,
+      "h": 64,
+      "baseY": 1440,
+      "tile": [
+        70,
+        44
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "beehive",
+      "sprite": "beehive",
+      "x": 2264,
+      "y": 1380,
+      "w": 48,
+      "h": 64,
+      "baseY": 1440,
+      "tile": [
+        71,
+        44
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "stump",
+      "sprite": "stump",
+      "x": 2334,
+      "y": 1406,
+      "w": 36,
+      "h": 38,
+      "baseY": 1440,
+      "tile": [
+        73,
+        44
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "filterstation",
+      "sprite": "filterstation",
+      "x": 1720,
+      "y": 1350,
+      "w": 80,
+      "h": 126,
+      "baseY": 1472,
+      "tile": [
+        54,
+        45
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "filterstation",
+      "sprite": "filterstation",
+      "x": 568,
+      "y": 1382,
+      "w": 80,
+      "h": 126,
+      "baseY": 1504,
+      "tile": [
+        18,
+        46
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "sorttable",
+      "sprite": "sorttable",
+      "x": 1532,
+      "y": 1430,
+      "w": 104,
+      "h": 78,
+      "baseY": 1504,
+      "tile": [
+        48,
+        46
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "flowerbed",
+      "sprite": "flowerbed",
+      "x": 2108,
+      "y": 1460,
+      "w": 104,
+      "h": 48,
+      "baseY": 1504,
+      "tile": [
+        66,
+        46
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "reedbed",
+      "sprite": "reedbed",
+      "x": 412,
+      "y": 1476,
+      "w": 72,
+      "h": 64,
+      "baseY": 1536,
+      "tile": [
+        13,
+        47
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "compost",
+      "sprite": "compost",
+      "x": 1234,
+      "y": 1476,
+      "w": 60,
+      "h": 64,
+      "baseY": 1536,
+      "tile": [
+        39,
+        47
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bush",
+      "sprite": "bush-v2",
+      "x": 2552,
+      "y": 1502,
+      "w": 48,
+      "h": 38,
+      "baseY": 1536,
+      "tile": [
+        80,
+        47
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "valve",
+      "sprite": "valve",
+      "x": 2172,
+      "y": 1468,
+      "w": 72,
+      "h": 104,
+      "baseY": 1568,
+      "tile": [
+        68,
+        48
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "beehive",
+      "sprite": "beehive",
+      "x": 2328,
+      "y": 1508,
+      "w": 48,
+      "h": 64,
+      "baseY": 1568,
+      "tile": [
+        73,
+        48
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "reedbed",
+      "sprite": "reedbed",
+      "x": 444,
+      "y": 1540,
+      "w": 72,
+      "h": 64,
+      "baseY": 1600,
+      "tile": [
+        14,
+        49
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "stump",
+      "sprite": "stump",
+      "x": 638,
+      "y": 1566,
+      "w": 36,
+      "h": 38,
+      "baseY": 1600,
+      "tile": [
+        20,
+        49
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "beehive",
+      "sprite": "beehive",
+      "x": 2040,
+      "y": 1540,
+      "w": 48,
+      "h": 64,
+      "baseY": 1600,
+      "tile": [
+        64,
+        49
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "beehive",
+      "sprite": "beehive",
+      "x": 2264,
+      "y": 1540,
+      "w": 48,
+      "h": 64,
+      "baseY": 1600,
+      "tile": [
+        71,
+        49
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "pinetree",
+      "sprite": "pinetree",
+      "x": 44,
+      "y": 1478,
+      "w": 104,
+      "h": 158,
+      "baseY": 1632,
+      "tile": [
+        2,
+        50
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "stump",
+      "sprite": "stump",
+      "x": 702,
+      "y": 1598,
+      "w": 36,
+      "h": 38,
+      "baseY": 1632,
+      "tile": [
+        22,
+        50
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "woodpile",
+      "sprite": "woodpile",
+      "x": 1052,
+      "y": 1576,
+      "w": 72,
+      "h": 60,
+      "baseY": 1632,
+      "tile": [
+        33,
+        50
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "sacks",
+      "sprite": "sacks",
+      "x": 1176,
+      "y": 1594,
+      "w": 48,
+      "h": 42,
+      "baseY": 1632,
+      "tile": [
+        37,
+        50
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "barrel",
+      "sprite": "barrel-v2",
+      "x": 1502,
+      "y": 1588,
+      "w": 36,
+      "h": 48,
+      "baseY": 1632,
+      "tile": [
+        47,
+        50
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "crate",
+      "sprite": "crate",
+      "x": 1530,
+      "y": 1594,
+      "w": 44,
+      "h": 42,
+      "baseY": 1632,
+      "tile": [
+        48,
+        50
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bin",
+      "sprite": "bin-v2",
+      "x": 1664,
+      "y": 1594,
+      "w": 32,
+      "h": 42,
+      "baseY": 1632,
+      "tile": [
+        52,
+        50
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bush",
+      "sprite": "bush-v2",
+      "x": 1976,
+      "y": 1598,
+      "w": 48,
+      "h": 38,
+      "baseY": 1632,
+      "tile": [
+        62,
+        50
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "reedbed",
+      "sprite": "reedbed",
+      "x": 60,
+      "y": 1636,
+      "w": 72,
+      "h": 64,
+      "baseY": 1696,
+      "tile": [
+        2,
+        52
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "reedbed",
+      "sprite": "reedbed",
+      "x": 220,
+      "y": 1636,
+      "w": 72,
+      "h": 64,
+      "baseY": 1696,
+      "tile": [
+        7,
+        52
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "reedbed",
+      "sprite": "reedbed",
+      "x": 380,
+      "y": 1636,
+      "w": 72,
+      "h": 64,
+      "baseY": 1696,
+      "tile": [
+        12,
+        52
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "reedbed",
+      "sprite": "reedbed",
+      "x": 700,
+      "y": 1636,
+      "w": 72,
+      "h": 64,
+      "baseY": 1696,
+      "tile": [
+        22,
+        52
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "reedbed",
+      "sprite": "reedbed",
+      "x": 860,
+      "y": 1636,
+      "w": 72,
+      "h": 64,
+      "baseY": 1696,
+      "tile": [
+        27,
+        52
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "reedbed",
+      "sprite": "reedbed",
+      "x": 1020,
+      "y": 1636,
+      "w": 72,
+      "h": 64,
+      "baseY": 1696,
+      "tile": [
+        32,
+        52
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "reedbed",
+      "sprite": "reedbed",
+      "x": 1180,
+      "y": 1636,
+      "w": 72,
+      "h": 64,
+      "baseY": 1696,
+      "tile": [
+        37,
+        52
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "reedbed",
+      "sprite": "reedbed",
+      "x": 1340,
+      "y": 1636,
+      "w": 72,
+      "h": 64,
+      "baseY": 1696,
+      "tile": [
+        42,
+        52
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "reedbed",
+      "sprite": "reedbed",
+      "x": 1660,
+      "y": 1636,
+      "w": 72,
+      "h": 64,
+      "baseY": 1696,
+      "tile": [
+        52,
+        52
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "reedbed",
+      "sprite": "reedbed",
+      "x": 1820,
+      "y": 1636,
+      "w": 72,
+      "h": 64,
+      "baseY": 1696,
+      "tile": [
+        57,
+        52
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "reedbed",
+      "sprite": "reedbed",
+      "x": 1980,
+      "y": 1636,
+      "w": 72,
+      "h": 64,
+      "baseY": 1696,
+      "tile": [
+        62,
+        52
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "reedbed",
+      "sprite": "reedbed",
+      "x": 2140,
+      "y": 1636,
+      "w": 72,
+      "h": 64,
+      "baseY": 1696,
+      "tile": [
+        67,
+        52
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "reedbed",
+      "sprite": "reedbed",
+      "x": 2300,
+      "y": 1636,
+      "w": 72,
+      "h": 64,
+      "baseY": 1696,
+      "tile": [
+        72,
+        52
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "reedbed",
+      "sprite": "reedbed",
+      "x": 2620,
+      "y": 1636,
+      "w": 72,
+      "h": 64,
+      "baseY": 1696,
+      "tile": [
+        82,
+        52
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    }
+  ]
+}

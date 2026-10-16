@@ -10,15 +10,12 @@ import {
 } from './tasks';
 
 describe('zoneOf', () => {
-  it('picks the smallest zone, not the stream around the map', () => {
-    expect(zoneOf({ x: 220, y: 960 }, gameMap.zones)?.id).toBe('pumps');
-    expect(zoneOf({ x: 1290, y: 470 }, gameMap.zones)?.id).toBe(
-      'treatment',
-    );
+  it('finds the zone that contains the point', () => {
+    expect(zoneOf({ x: 600, y: 1500 }, gameMap.zones)?.id).toBe('humedal');
   });
 
-  it('falls back to the stream outside every room', () => {
-    expect(zoneOf({ x: 5, y: 5 }, gameMap.zones)?.id).toBe('stream');
+  it('is null outside every zone', () => {
+    expect(zoneOf({ x: 5, y: 5 }, gameMap.zones)).toBeNull();
   });
 });
 
@@ -36,13 +33,13 @@ describe('buildTaskList', () => {
       {
         stationId: 'leak-1',
         type: 'reduce',
-        zoneName: 'Cuarto de bombas',
+        zoneName: 'Casa de bombeo solar',
         done: true,
       },
       {
         stationId: 'rain-1',
         type: 'reuse',
-        zoneName: 'Techos con barriles',
+        zoneName: 'Patio de cisternas',
         done: false,
       },
     ]);
@@ -57,14 +54,16 @@ describe('pickStation', () => {
   const stations = gameMap.stations;
 
   it('finds an own pending station in range', () => {
-    const s = pickStation({ x: 240, y: 960 }, tasks, stations);
+    const s = pickStation({ x: 336, y: 830 }, tasks, stations);
     expect(s?.id).toBe('leak-1');
   });
 
   it('ignores stations too far, done or not mine', () => {
-    expect(pickStation({ x: 300, y: 960 }, tasks, stations)).toBeNull();
-    expect(pickStation({ x: 400, y: 800 }, tasks, stations)).toBeNull();
-    expect(pickStation({ x: 310, y: 470 }, tasks, stations)).toBeNull();
+    // A 60 de leak-1 (radio 56), junto a valve-1 (hecha) y junto a
+    // rain-1 (no es mía).
+    expect(pickStation({ x: 336, y: 844 }, tasks, stations)).toBeNull();
+    expect(pickStation({ x: 2192, y: 1600 }, tasks, stations)).toBeNull();
+    expect(pickStation({ x: 2128, y: 1200 }, tasks, stations)).toBeNull();
   });
 });
 

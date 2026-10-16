@@ -31,6 +31,8 @@ function snap(
     waitingFor: [],
     myTasks,
     myActiveTask,
+    emergency: null,
+    mySabotage: null,
   };
 }
 
@@ -48,7 +50,7 @@ function setup() {
   const session = new TaskSession({
     stations: gameMap.stations,
     send: (m) => state.sent.push(m),
-    me: () => ({ x: 230, y: 960 }), // junto a leak-1
+    me: () => ({ x: 336, y: 800 }), // junto a leak-1
     snapshot: () => state.current,
     mount: (type, opts) => {
       state.mounted.push({ type, complete: opts.onComplete });

@@ -25,6 +25,7 @@ const map: GameMap = {
     { slot: 0, x: 100, y: 100 },
     { slot: 1, x: 400, y: 100 },
   ],
+  fixPoints: [],
 };
 
 const player = (
@@ -40,6 +41,7 @@ const player = (
   y,
   connected: true,
   alive,
+  activity: null,
 });
 
 const tank = (

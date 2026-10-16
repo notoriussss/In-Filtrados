@@ -13,7 +13,16 @@ const player = (
   name: string,
   connected: boolean,
   alive: boolean,
-) => ({ id, name, color: '#e6194b', x: 0, y: 0, connected, alive });
+) => ({
+  id,
+  name,
+  color: '#e6194b',
+  x: 0,
+  y: 0,
+  connected,
+  alive,
+  activity: null,
+});
 
 const players = [
   player('a', 'Ana', true, true),
@@ -49,6 +58,8 @@ function snap(meeting: Partial<Meeting>, tick = 100): Snapshot {
     waitingFor: [],
     myTasks: [],
     myActiveTask: null,
+    emergency: null,
+    mySabotage: null,
   };
 }
 

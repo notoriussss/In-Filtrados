@@ -19,6 +19,8 @@ function meeting(chatIds: string[], phase: Snapshot['phase'] = 'MEETING') {
     waitingFor: [],
     myTasks: [],
     myActiveTask: null,
+    emergency: null,
+    mySabotage: null,
   } as Snapshot;
 }
 

@@ -14,6 +14,7 @@ const at = (x: number, y = 0, id = 'a'): PlayerView => ({
   y,
   connected: true,
   alive: true,
+  activity: null,
 });
 
 // feed pushes ticks 0..n-1 arriving exactly every 50 ms from t=1000,

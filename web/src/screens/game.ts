@@ -6,9 +6,25 @@ import type {
 } from '@in-filtrados/messages';
 import { gameMap } from '../map';
 import { type Camera, clampCamera, createCamera } from '../canvas/camera';
-import { renderMap, type StationMarks } from '../canvas/renderMap';
+import {
+  renderFixArrows,
+  renderFixPoints,
+  renderMap,
+  type StationMarks,
+} from '../canvas/renderMap';
 import { renderPlayers } from '../canvas/renderPlayers';
 import { renderOilDrops } from '../canvas/renderOilDrops';
+import { renderActivities } from '../canvas/activityFx';
+import { PlayerAnimator } from '../canvas/playerAnim';
+import { preloadSprites } from '../canvas/sprites';
+import {
+  approach,
+  canSee,
+  renderDarkness,
+  visiblePlayer,
+  visionRadius,
+} from '../canvas/vision';
+import { emergencyBanner, sabotageButtons } from '../emergency';
 import {
   renderHoldProgress,
   renderTanks,
@@ -69,6 +85,12 @@ export function mountGame(
 
   const interpolator = new Interpolator();
   const meId = currentSession.playerId;
+  // Sprites de Jimena y su animación de caminar.
+  preloadSprites();
+  const animator = new PlayerAnimator();
+  // S3-05: radio de visión dibujado (se acerca al real poco a poco).
+  let shownRadius: number | null = null;
+  let lastFrameAt = performance.now();
   let oilDrops: OilDrop[] = []; // S2-12: rastro del impostor
 
   // S2-10: panel de la reunión y pantalla final, encima del canvas.
@@ -158,7 +180,9 @@ export function mountGame(
       contaminateReadyAt = now + GAME_RULES.CONTAMINATE_COOLDOWN_MS;
     }
   };
-  const hud = mountHud(triggerAction);
+  const hud = mountHud(triggerAction, (kind) => {
+    send({ type: 'sabotage', kind });
+  });
   const onActionKey = (e: KeyboardEvent) => {
     if (e.code !== 'KeyE' || e.repeat || isTyping(e.target)) return;
     if (tasks.isOpen()) return;
@@ -318,15 +342,51 @@ export function mountGame(
       camera = clampCamera({ ...camera, x: me.x, y: me.y }, gameMap);
     }
 
-    ctx.fillStyle = '#1b2a33';
+    const dt = now - lastFrameAt;
+    lastFrameAt = now;
+    const snap = lastSnapshot;
+    const emergency =
+      snap && snap.phase === 'PLAYING' ? snap.emergency : null;
+    // S3-05: visión limitada; los fantasmas ven todo.
+    const radius = visionRadius(snap, me);
+    shownRadius = approach(shownRadius, radius, dt);
+    const visible = (p: PlayerView) =>
+      visiblePlayer(me, p, shownRadius);
+
+    ctx.fillStyle = '#0b1610';
     ctx.fillRect(0, 0, camera.viewWidth, camera.viewHeight);
-    renderMap(ctx, gameMap, camera, stationMarks(lastSnapshot, now));
+    renderMap(ctx, gameMap, camera, stationMarks(snap, now), now);
+    renderFixPoints(ctx, gameMap, camera, emergency, now);
     const tick = interpolator.tickAt(now);
-    if (tick !== null) renderOilDrops(ctx, oilDrops, camera, tick);
-    if (lastSnapshot) {
-      renderTanks(ctx, lastSnapshot.tanks, players, gameMap, camera);
+    if (tick !== null) {
+      const seen = me
+        ? oilDrops.filter((d) => canSee(me, d.x, d.y, shownRadius))
+        : oilDrops;
+      renderOilDrops(ctx, seen, camera, tick);
     }
-    renderPlayers(ctx, players, camera, meId);
+    if (snap) {
+      renderTanks(ctx, snap.tanks, players, gameMap, camera);
+    }
+    renderPlayers(ctx, players, camera, meId, {
+      animator,
+      now,
+      visible,
+    });
+    renderActivities(ctx, players, camera, now, visible);
+    renderDarkness(ctx, camera, me, radius, shownRadius);
+    renderFixArrows(
+      ctx,
+      gameMap,
+      camera,
+      emergency,
+      me,
+      shownRadius ?? Math.min(camera.viewWidth, camera.viewHeight) / 2,
+    );
+    const serverTick = snap?.tick ?? 0;
+    hud.setEmergency(emergencyBanner(snap, gameMap, serverTick));
+    hud.setSabotage(
+      matchDown || snap?.paused ? null : sabotageButtons(snap, serverTick),
+    );
     tasks.frame();
     updateAction(me, now);
     if (status.state === 'reconnecting') {
@@ -366,6 +426,7 @@ export function mountGame(
             contaminateReadyAt,
             reportedTanks,
             snap.myTasks,
+            snap.emergency,
           )
         : null;
     hud.setAction(currentAction);
@@ -385,7 +446,17 @@ export function mountGame(
       return;
     }
     if (me) {
-      renderHoldProgress(ctx, camera, me.x, me.y, hold.progress(now));
+      // La tubería no tiene fin propio: un arco que gira mientras se
+      // espera al otro extremo.
+      const waiting = hold.duration === Infinity;
+      renderHoldProgress(
+        ctx,
+        camera,
+        me.x,
+        me.y,
+        waiting ? 0.25 : hold.progress(now),
+        waiting ? now / 300 : 0,
+      );
     }
   }
 

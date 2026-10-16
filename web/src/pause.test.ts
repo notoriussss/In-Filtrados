@@ -11,6 +11,7 @@ function snap(paused: boolean, waitingFor: string[]): Snapshot {
     y: 0,
     connected: !waitingFor.includes(id),
     alive: true,
+    activity: null,
   });
   return {
     type: 'snapshot',
@@ -28,6 +29,8 @@ function snap(paused: boolean, waitingFor: string[]): Snapshot {
     waitingFor,
     myTasks: [],
     myActiveTask: null,
+    emergency: null,
+    mySabotage: null,
   };
 }
 

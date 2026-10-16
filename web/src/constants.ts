@@ -77,6 +77,9 @@ export const ACTION_TEXT = {
   CLEAN: 'Limpiar',
   REPORT: 'Reportar',
   CONTAMINATE: 'Contaminar',
+  // S3-05: arreglar una emergencia.
+  FIX_STEAM: 'Cerrar válvula',
+  FIX_PIPE: 'Sostener tubería',
   contaminateWait: (seconds: number) => `Contaminar (${seconds} s)`,
   KEY_HINT: 'E',
 } as const;
@@ -103,6 +106,36 @@ export const GAME_RULES = {
   // contaminación y no debe avisar.
   TANK_ALERT_MIN_RISE: 2,
   TANK_ALERT_MS: 3000,
+  // S3-05: emergencias y visión limitada.
+  FIX_RANGE: 40,
+  STEAM_FIX_MS: 2000 + 150,
+  SABOTAGE_COOLDOWN_TICKS: 800,
+  TICKS_PER_SECOND: 20,
+  VISION_RADIUS: 300,
+  STEAM_VISION_FACTOR: 0.5,
+  VISION_EDGE: 70, // borde difuminado del círculo
+  VISION_SPEED: 300, // unidades por segundo al cerrar o abrir
+} as const;
+
+// S3-05: emergencias (iguales si son sabotaje o mala suerte) y el
+// menú de sabotaje del impostor.
+export const EMERGENCY_TEXT = {
+  PIPE_TITLE: '¡Se rompió la tubería principal!',
+  pipeHint: (held: number, total: number) =>
+    `Dos personas deben sostener los dos extremos a la vez (${held}/${total})`,
+  pipeTime: (seconds: number) => `${seconds} s antes de que reviente`,
+  STEAM_TITLE: '¡Vapor en la planta de tratamiento!',
+  STEAM_HINT: 'La visión se redujo: cierren la válvula de vapor',
+} as const;
+
+export const SABOTAGE_TEXT = {
+  TITLE: 'Sabotear',
+  PIPE: 'Romper tubería',
+  STEAM: 'Vapor en la planta',
+  pipesLeft: (n: number) => `quedan ${n}`,
+  NO_PIPES: 'agotado',
+  wait: (seconds: number) => `${seconds} s`,
+  ACTIVE: 'emergencia en curso',
 } as const;
 
 // Textos de la lista de misiones y los minijuegos de las 3R (S2-11).

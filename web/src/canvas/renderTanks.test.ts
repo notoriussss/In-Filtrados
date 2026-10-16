@@ -19,6 +19,7 @@ const map: GameMap = {
     { slot: 1, x: 300, y: 100 },
     { slot: 2, x: 500, y: 100 },
   ],
+  fixPoints: [],
 };
 
 function createMockCtx(): CanvasRenderingContext2D {
@@ -68,6 +69,7 @@ describe('renderTanks', () => {
         y: 0,
         connected: true,
         alive: true,
+        activity: null,
       },
     ];
     const ctx = createMockCtx();
