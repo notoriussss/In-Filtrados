@@ -1,0 +1,3717 @@
+{
+  "_nota": "Escala 1:1 (1 unidad de mundo = 1 px). x,y = esquina superior izquierda del sprite en el mapa; baseY = línea de base para ordenar por profundidad con los jugadores (y-sort: dibuja primero lo de menor baseY; un jugador se ordena con su y + 6). El suelo (capas/suelo.png) ya trae pisos, paredes, decoración mural, tapetes y calcomanías.",
+  "width": 3008,
+  "height": 2048,
+  "total": 206,
+  "sprites": 66,
+  "props": [
+    {
+      "id": "rail",
+      "sprite": "rail",
+      "x": 124,
+      "y": 20,
+      "w": 104,
+      "h": 48,
+      "baseY": 64,
+      "tile": [
+        4,
+        1
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "rail",
+      "sprite": "rail",
+      "x": 220,
+      "y": 20,
+      "w": 104,
+      "h": 48,
+      "baseY": 64,
+      "tile": [
+        7,
+        1
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "rail",
+      "sprite": "rail",
+      "x": 316,
+      "y": 20,
+      "w": 104,
+      "h": 48,
+      "baseY": 64,
+      "tile": [
+        10,
+        1
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "rail",
+      "sprite": "rail",
+      "x": 412,
+      "y": 20,
+      "w": 104,
+      "h": 48,
+      "baseY": 64,
+      "tile": [
+        13,
+        1
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "rail",
+      "sprite": "rail",
+      "x": 508,
+      "y": 20,
+      "w": 104,
+      "h": 48,
+      "baseY": 64,
+      "tile": [
+        16,
+        1
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "rail",
+      "sprite": "rail",
+      "x": 604,
+      "y": 20,
+      "w": 104,
+      "h": 48,
+      "baseY": 64,
+      "tile": [
+        19,
+        1
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "rail",
+      "sprite": "rail",
+      "x": 700,
+      "y": 20,
+      "w": 104,
+      "h": 48,
+      "baseY": 64,
+      "tile": [
+        22,
+        1
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "rail",
+      "sprite": "rail",
+      "x": 796,
+      "y": 20,
+      "w": 104,
+      "h": 48,
+      "baseY": 64,
+      "tile": [
+        25,
+        1
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "rail",
+      "sprite": "rail",
+      "x": 892,
+      "y": 20,
+      "w": 104,
+      "h": 48,
+      "baseY": 64,
+      "tile": [
+        28,
+        1
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "rail",
+      "sprite": "rail",
+      "x": 988,
+      "y": 20,
+      "w": 104,
+      "h": 48,
+      "baseY": 64,
+      "tile": [
+        31,
+        1
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "rail",
+      "sprite": "rail",
+      "x": 1084,
+      "y": 20,
+      "w": 104,
+      "h": 48,
+      "baseY": 64,
+      "tile": [
+        34,
+        1
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "rail",
+      "sprite": "rail",
+      "x": 1180,
+      "y": 20,
+      "w": 104,
+      "h": 48,
+      "baseY": 64,
+      "tile": [
+        37,
+        1
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "sluice",
+      "sprite": "sluice",
+      "x": 1148,
+      "y": -28,
+      "w": 168,
+      "h": 128,
+      "baseY": 96,
+      "tile": [
+        36,
+        1
+      ],
+      "footprint": [
+        5,
+        2
+      ],
+      "exterior": true
+    },
+    {
+      "id": "bush",
+      "sprite": "bush",
+      "x": 280,
+      "y": 94,
+      "w": 48,
+      "h": 38,
+      "baseY": 128,
+      "tile": [
+        9,
+        3
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "bush",
+      "sprite": "bush",
+      "x": 824,
+      "y": 94,
+      "w": 48,
+      "h": 38,
+      "baseY": 128,
+      "tile": [
+        26,
+        3
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "bush",
+      "sprite": "bush",
+      "x": 1880,
+      "y": 94,
+      "w": 48,
+      "h": 38,
+      "baseY": 128,
+      "tile": [
+        59,
+        3
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "rocks",
+      "sprite": "rocks",
+      "x": 2352,
+      "y": 90,
+      "w": 64,
+      "h": 42,
+      "baseY": 128,
+      "tile": [
+        74,
+        3
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "tree",
+      "sprite": "tree",
+      "x": 2912,
+      "y": -26,
+      "w": 128,
+      "h": 158,
+      "baseY": 128,
+      "tile": [
+        92,
+        3
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "bush",
+      "sprite": "bush",
+      "x": 1112,
+      "y": 126,
+      "w": 48,
+      "h": 38,
+      "baseY": 160,
+      "tile": [
+        35,
+        4
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "bush",
+      "sprite": "bush",
+      "x": 2200,
+      "y": 126,
+      "w": 48,
+      "h": 38,
+      "baseY": 160,
+      "tile": [
+        69,
+        4
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "cooler",
+      "sprite": "cooler",
+      "x": 1344,
+      "y": 126,
+      "w": 32,
+      "h": 70,
+      "baseY": 192,
+      "tile": [
+        42,
+        5
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "vending",
+      "sprite": "vending",
+      "x": 1368,
+      "y": 102,
+      "w": 48,
+      "h": 94,
+      "baseY": 192,
+      "tile": [
+        43,
+        5
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "counter",
+      "sprite": "counter",
+      "x": 1468,
+      "y": 116,
+      "w": 104,
+      "h": 80,
+      "baseY": 192,
+      "tile": [
+        46,
+        5
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "counter",
+      "sprite": "counter-v2",
+      "x": 1564,
+      "y": 116,
+      "w": 104,
+      "h": 80,
+      "baseY": 192,
+      "tile": [
+        49,
+        5
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "fridge",
+      "sprite": "fridge",
+      "x": 1658,
+      "y": 106,
+      "w": 44,
+      "h": 90,
+      "baseY": 192,
+      "tile": [
+        52,
+        5
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "coffee",
+      "sprite": "coffee",
+      "x": 1688,
+      "y": 134,
+      "w": 48,
+      "h": 62,
+      "baseY": 192,
+      "tile": [
+        53,
+        5
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bush",
+      "sprite": "bush-v2",
+      "x": 1912,
+      "y": 158,
+      "w": 48,
+      "h": 38,
+      "baseY": 192,
+      "tile": [
+        60,
+        5
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "bush",
+      "sprite": "bush",
+      "x": 2008,
+      "y": 158,
+      "w": 48,
+      "h": 38,
+      "baseY": 192,
+      "tile": [
+        63,
+        5
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "bush",
+      "sprite": "bush",
+      "x": 2040,
+      "y": 158,
+      "w": 48,
+      "h": 38,
+      "baseY": 192,
+      "tile": [
+        64,
+        5
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "bush",
+      "sprite": "bush",
+      "x": 88,
+      "y": 190,
+      "w": 48,
+      "h": 38,
+      "baseY": 224,
+      "tile": [
+        3,
+        6
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "pump",
+      "sprite": "pump",
+      "x": 344,
+      "y": 156,
+      "w": 112,
+      "h": 72,
+      "baseY": 224,
+      "tile": [
+        11,
+        6
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "pump",
+      "sprite": "pump-v2",
+      "x": 472,
+      "y": 156,
+      "w": 112,
+      "h": 72,
+      "baseY": 224,
+      "tile": [
+        15,
+        6
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "pump",
+      "sprite": "pump",
+      "x": 568,
+      "y": 156,
+      "w": 112,
+      "h": 72,
+      "baseY": 224,
+      "tile": [
+        18,
+        6
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "electrical",
+      "sprite": "electrical",
+      "x": 2518,
+      "y": 132,
+      "w": 52,
+      "h": 96,
+      "baseY": 224,
+      "tile": [
+        79,
+        6
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "electrical",
+      "sprite": "electrical",
+      "x": 2582,
+      "y": 132,
+      "w": 52,
+      "h": 96,
+      "baseY": 224,
+      "tile": [
+        81,
+        6
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rocks",
+      "sprite": "rocks",
+      "x": 2928,
+      "y": 186,
+      "w": 64,
+      "h": 42,
+      "baseY": 224,
+      "tile": [
+        92,
+        6
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "bush",
+      "sprite": "bush-v2",
+      "x": 120,
+      "y": 222,
+      "w": 48,
+      "h": 38,
+      "baseY": 256,
+      "tile": [
+        4,
+        7
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "bush",
+      "sprite": "bush",
+      "x": 88,
+      "y": 254,
+      "w": 48,
+      "h": 38,
+      "baseY": 288,
+      "tile": [
+        3,
+        8
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "electrical",
+      "sprite": "electrical",
+      "x": 310,
+      "y": 196,
+      "w": 52,
+      "h": 96,
+      "baseY": 288,
+      "tile": [
+        10,
+        8
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bush",
+      "sprite": "bush-v2",
+      "x": 120,
+      "y": 286,
+      "w": 48,
+      "h": 38,
+      "baseY": 320,
+      "tile": [
+        4,
+        9
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "plant-l",
+      "sprite": "plant-l",
+      "x": 1752,
+      "y": 238,
+      "w": 48,
+      "h": 86,
+      "baseY": 320,
+      "tile": [
+        55,
+        9
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "plant-s",
+      "sprite": "plant-s",
+      "x": 2048,
+      "y": 278,
+      "w": 32,
+      "h": 46,
+      "baseY": 320,
+      "tile": [
+        64,
+        9
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "barrel",
+      "sprite": "barrel",
+      "x": 2686,
+      "y": 276,
+      "w": 36,
+      "h": 48,
+      "baseY": 320,
+      "tile": [
+        84,
+        9
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "barrel",
+      "sprite": "barrel-v2",
+      "x": 2718,
+      "y": 276,
+      "w": 36,
+      "h": 48,
+      "baseY": 320,
+      "tile": [
+        85,
+        9
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "barrel",
+      "sprite": "barrel",
+      "x": 2750,
+      "y": 276,
+      "w": 36,
+      "h": 48,
+      "baseY": 320,
+      "tile": [
+        86,
+        9
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "crate",
+      "sprite": "crate",
+      "x": 2810,
+      "y": 282,
+      "w": 44,
+      "h": 42,
+      "baseY": 320,
+      "tile": [
+        88,
+        9
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "barrel",
+      "sprite": "barrel-v2",
+      "x": 2686,
+      "y": 308,
+      "w": 36,
+      "h": 48,
+      "baseY": 352,
+      "tile": [
+        84,
+        10
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "barrel",
+      "sprite": "barrel",
+      "x": 2718,
+      "y": 308,
+      "w": 36,
+      "h": 48,
+      "baseY": 352,
+      "tile": [
+        85,
+        10
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "barrel",
+      "sprite": "barrel-v2",
+      "x": 2750,
+      "y": 308,
+      "w": 36,
+      "h": 48,
+      "baseY": 352,
+      "tile": [
+        86,
+        10
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "crate",
+      "sprite": "crate",
+      "x": 2810,
+      "y": 314,
+      "w": 44,
+      "h": 42,
+      "baseY": 352,
+      "tile": [
+        88,
+        10
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "leak",
+      "sprite": "leak",
+      "x": 276,
+      "y": 308,
+      "w": 120,
+      "h": 80,
+      "baseY": 384,
+      "tile": [
+        9,
+        11
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "chair",
+      "sprite": "chair",
+      "x": 1471,
+      "y": 342,
+      "w": 34,
+      "h": 46,
+      "baseY": 384,
+      "tile": [
+        46,
+        11
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "chair",
+      "sprite": "chair",
+      "x": 1503,
+      "y": 342,
+      "w": 34,
+      "h": 46,
+      "baseY": 384,
+      "tile": [
+        47,
+        11
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "chair",
+      "sprite": "chair",
+      "x": 1535,
+      "y": 342,
+      "w": 34,
+      "h": 46,
+      "baseY": 384,
+      "tile": [
+        48,
+        11
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "chair",
+      "sprite": "chair",
+      "x": 1567,
+      "y": 342,
+      "w": 34,
+      "h": 46,
+      "baseY": 384,
+      "tile": [
+        49,
+        11
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "table",
+      "sprite": "table",
+      "x": 1468,
+      "y": 368,
+      "w": 136,
+      "h": 52,
+      "baseY": 416,
+      "tile": [
+        46,
+        12
+      ],
+      "footprint": [
+        4,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "plant-l",
+      "sprite": "plant-l",
+      "x": 1816,
+      "y": 334,
+      "w": 48,
+      "h": 86,
+      "baseY": 416,
+      "tile": [
+        57,
+        12
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "valve",
+      "sprite": "valve",
+      "x": 540,
+      "y": 348,
+      "w": 72,
+      "h": 104,
+      "baseY": 448,
+      "tile": [
+        17,
+        13
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "chair",
+      "sprite": "chair-v2",
+      "x": 1471,
+      "y": 406,
+      "w": 34,
+      "h": 46,
+      "baseY": 448,
+      "tile": [
+        46,
+        13
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "chair",
+      "sprite": "chair-v2",
+      "x": 1503,
+      "y": 406,
+      "w": 34,
+      "h": 46,
+      "baseY": 448,
+      "tile": [
+        47,
+        13
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "chair",
+      "sprite": "chair-v2",
+      "x": 1535,
+      "y": 406,
+      "w": 34,
+      "h": 46,
+      "baseY": 448,
+      "tile": [
+        48,
+        13
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "chair",
+      "sprite": "chair-v2",
+      "x": 1567,
+      "y": 406,
+      "w": 34,
+      "h": 46,
+      "baseY": 448,
+      "tile": [
+        49,
+        13
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "greywater",
+      "sprite": "greywater",
+      "x": 1748,
+      "y": 344,
+      "w": 88,
+      "h": 108,
+      "baseY": 448,
+      "tile": [
+        55,
+        13
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "valve",
+      "sprite": "valve-v2",
+      "x": 2652,
+      "y": 348,
+      "w": 72,
+      "h": 104,
+      "baseY": 448,
+      "tile": [
+        83,
+        13
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rocks",
+      "sprite": "rocks",
+      "x": 48,
+      "y": 442,
+      "w": 64,
+      "h": 42,
+      "baseY": 480,
+      "tile": [
+        2,
+        14
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "bush",
+      "sprite": "bush",
+      "x": 120,
+      "y": 446,
+      "w": 48,
+      "h": 38,
+      "baseY": 480,
+      "tile": [
+        4,
+        14
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "plant-l",
+      "sprite": "plant-l",
+      "x": 1208,
+      "y": 398,
+      "w": 48,
+      "h": 86,
+      "baseY": 480,
+      "tile": [
+        38,
+        14
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "barrel",
+      "sprite": "barrel-v3",
+      "x": 638,
+      "y": 468,
+      "w": 36,
+      "h": 48,
+      "baseY": 512,
+      "tile": [
+        20,
+        15
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "barrel",
+      "sprite": "barrel-v4",
+      "x": 670,
+      "y": 468,
+      "w": 36,
+      "h": 48,
+      "baseY": 512,
+      "tile": [
+        21,
+        15
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bush",
+      "sprite": "bush-v2",
+      "x": 1080,
+      "y": 478,
+      "w": 48,
+      "h": 38,
+      "baseY": 512,
+      "tile": [
+        34,
+        15
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "chair",
+      "sprite": "chair-v3",
+      "x": 1311,
+      "y": 470,
+      "w": 34,
+      "h": 46,
+      "baseY": 512,
+      "tile": [
+        41,
+        15
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "chair",
+      "sprite": "chair-v3",
+      "x": 1343,
+      "y": 470,
+      "w": 34,
+      "h": 46,
+      "baseY": 512,
+      "tile": [
+        42,
+        15
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "chair",
+      "sprite": "chair-v3",
+      "x": 1375,
+      "y": 470,
+      "w": 34,
+      "h": 46,
+      "baseY": 512,
+      "tile": [
+        43,
+        15
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "chair",
+      "sprite": "chair-v4",
+      "x": 1663,
+      "y": 470,
+      "w": 34,
+      "h": 46,
+      "baseY": 512,
+      "tile": [
+        52,
+        15
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "chair",
+      "sprite": "chair-v4",
+      "x": 1695,
+      "y": 470,
+      "w": 34,
+      "h": 46,
+      "baseY": 512,
+      "tile": [
+        53,
+        15
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "chair",
+      "sprite": "chair-v4",
+      "x": 1727,
+      "y": 470,
+      "w": 34,
+      "h": 46,
+      "baseY": 512,
+      "tile": [
+        54,
+        15
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bush",
+      "sprite": "bush",
+      "x": 2008,
+      "y": 478,
+      "w": 48,
+      "h": 38,
+      "baseY": 512,
+      "tile": [
+        63,
+        15
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "rack",
+      "sprite": "rack",
+      "x": 2522,
+      "y": 418,
+      "w": 44,
+      "h": 98,
+      "baseY": 512,
+      "tile": [
+        79,
+        15
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rack",
+      "sprite": "rack",
+      "x": 2554,
+      "y": 418,
+      "w": 44,
+      "h": 98,
+      "baseY": 512,
+      "tile": [
+        80,
+        15
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "pump",
+      "sprite": "pump-v2",
+      "x": 2744,
+      "y": 444,
+      "w": 112,
+      "h": 72,
+      "baseY": 512,
+      "tile": [
+        86,
+        15
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "generator",
+      "sprite": "generator",
+      "x": 276,
+      "y": 428,
+      "w": 120,
+      "h": 120,
+      "baseY": 544,
+      "tile": [
+        9,
+        15
+      ],
+      "footprint": [
+        3,
+        2
+      ],
+      "exterior": false
+    },
+    {
+      "id": "toolbox",
+      "sprite": "toolbox",
+      "x": 568,
+      "y": 502,
+      "w": 48,
+      "h": 46,
+      "baseY": 544,
+      "tile": [
+        18,
+        16
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "table",
+      "sprite": "table-v2",
+      "x": 1308,
+      "y": 496,
+      "w": 104,
+      "h": 52,
+      "baseY": 544,
+      "tile": [
+        41,
+        16
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "table",
+      "sprite": "table-v2",
+      "x": 1660,
+      "y": 496,
+      "w": 104,
+      "h": 52,
+      "baseY": 544,
+      "tile": [
+        52,
+        16
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "chair",
+      "sprite": "chair-v5",
+      "x": 1311,
+      "y": 534,
+      "w": 34,
+      "h": 46,
+      "baseY": 576,
+      "tile": [
+        41,
+        17
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "chair",
+      "sprite": "chair-v5",
+      "x": 1343,
+      "y": 534,
+      "w": 34,
+      "h": 46,
+      "baseY": 576,
+      "tile": [
+        42,
+        17
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "chair",
+      "sprite": "chair-v5",
+      "x": 1375,
+      "y": 534,
+      "w": 34,
+      "h": 46,
+      "baseY": 576,
+      "tile": [
+        43,
+        17
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "chair",
+      "sprite": "chair-v6",
+      "x": 1663,
+      "y": 534,
+      "w": 34,
+      "h": 46,
+      "baseY": 576,
+      "tile": [
+        52,
+        17
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "chair",
+      "sprite": "chair-v6",
+      "x": 1695,
+      "y": 534,
+      "w": 34,
+      "h": 46,
+      "baseY": 576,
+      "tile": [
+        53,
+        17
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "chair",
+      "sprite": "chair-v6",
+      "x": 1727,
+      "y": 534,
+      "w": 34,
+      "h": 46,
+      "baseY": 576,
+      "tile": [
+        54,
+        17
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rocks",
+      "sprite": "rocks",
+      "x": 2000,
+      "y": 538,
+      "w": 64,
+      "h": 42,
+      "baseY": 576,
+      "tile": [
+        63,
+        17
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "bush",
+      "sprite": "bush",
+      "x": 2008,
+      "y": 606,
+      "w": 48,
+      "h": 38,
+      "baseY": 640,
+      "tile": [
+        63,
+        19
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "barrel",
+      "sprite": "barrel-v5",
+      "x": 2686,
+      "y": 660,
+      "w": 36,
+      "h": 48,
+      "baseY": 704,
+      "tile": [
+        84,
+        21
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "pinetree",
+      "sprite": "pinetree",
+      "x": 44,
+      "y": 582,
+      "w": 104,
+      "h": 158,
+      "baseY": 736,
+      "tile": [
+        2,
+        22
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "bush",
+      "sprite": "bush-v2",
+      "x": 248,
+      "y": 702,
+      "w": 48,
+      "h": 38,
+      "baseY": 736,
+      "tile": [
+        8,
+        22
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "bin",
+      "sprite": "bin",
+      "x": 1408,
+      "y": 730,
+      "w": 32,
+      "h": 42,
+      "baseY": 768,
+      "tile": [
+        44,
+        23
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "cooler",
+      "sprite": "cooler",
+      "x": 1536,
+      "y": 702,
+      "w": 32,
+      "h": 70,
+      "baseY": 768,
+      "tile": [
+        48,
+        23
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bin",
+      "sprite": "bin-v2",
+      "x": 1984,
+      "y": 730,
+      "w": 32,
+      "h": 42,
+      "baseY": 768,
+      "tile": [
+        62,
+        23
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "plant-s",
+      "sprite": "plant-s",
+      "x": 2048,
+      "y": 726,
+      "w": 32,
+      "h": 46,
+      "baseY": 768,
+      "tile": [
+        64,
+        23
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bin",
+      "sprite": "bin-v3",
+      "x": 2272,
+      "y": 730,
+      "w": 32,
+      "h": 42,
+      "baseY": 768,
+      "tile": [
+        71,
+        23
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "transformer",
+      "sprite": "transformer",
+      "x": 470,
+      "y": 706,
+      "w": 84,
+      "h": 98,
+      "baseY": 800,
+      "tile": [
+        15,
+        24
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "generator",
+      "sprite": "generator",
+      "x": 372,
+      "y": 716,
+      "w": 120,
+      "h": 120,
+      "baseY": 832,
+      "tile": [
+        12,
+        24
+      ],
+      "footprint": [
+        3,
+        2
+      ],
+      "exterior": false
+    },
+    {
+      "id": "generator",
+      "sprite": "generator-v2",
+      "x": 564,
+      "y": 716,
+      "w": 120,
+      "h": 120,
+      "baseY": 832,
+      "tile": [
+        18,
+        24
+      ],
+      "footprint": [
+        3,
+        2
+      ],
+      "exterior": false
+    },
+    {
+      "id": "ladder",
+      "sprite": "ladder",
+      "x": 666,
+      "y": 760,
+      "w": 44,
+      "h": 108,
+      "baseY": 864,
+      "tile": [
+        21,
+        26
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "valve",
+      "sprite": "valve",
+      "x": 316,
+      "y": 828,
+      "w": 72,
+      "h": 104,
+      "baseY": 928,
+      "tile": [
+        10,
+        28
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "tree",
+      "sprite": "tree",
+      "x": 32,
+      "y": 806,
+      "w": 128,
+      "h": 158,
+      "baseY": 960,
+      "tile": [
+        2,
+        29
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "fridge",
+      "sprite": "fridge-v2",
+      "x": 1274,
+      "y": 874,
+      "w": 44,
+      "h": 90,
+      "baseY": 960,
+      "tile": [
+        40,
+        29
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "chair",
+      "sprite": "chair-v7",
+      "x": 1855,
+      "y": 982,
+      "w": 34,
+      "h": 46,
+      "baseY": 1024,
+      "tile": [
+        58,
+        31
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "chair",
+      "sprite": "chair-v7",
+      "x": 1919,
+      "y": 982,
+      "w": 34,
+      "h": 46,
+      "baseY": 1024,
+      "tile": [
+        60,
+        31
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "labtable",
+      "sprite": "labtable",
+      "x": 1020,
+      "y": 982,
+      "w": 136,
+      "h": 78,
+      "baseY": 1056,
+      "tile": [
+        32,
+        32
+      ],
+      "footprint": [
+        4,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "desk-l",
+      "sprite": "desk-l",
+      "x": 1852,
+      "y": 986,
+      "w": 104,
+      "h": 74,
+      "baseY": 1056,
+      "tile": [
+        58,
+        32
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rocks",
+      "sprite": "rocks",
+      "x": 112,
+      "y": 1050,
+      "w": 64,
+      "h": 42,
+      "baseY": 1088,
+      "tile": [
+        4,
+        33
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "chair",
+      "sprite": "chair-v8",
+      "x": 1055,
+      "y": 1046,
+      "w": 34,
+      "h": 46,
+      "baseY": 1088,
+      "tile": [
+        33,
+        33
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "chair",
+      "sprite": "chair-v8",
+      "x": 1119,
+      "y": 1046,
+      "w": 34,
+      "h": 46,
+      "baseY": 1088,
+      "tile": [
+        35,
+        33
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "holotable",
+      "sprite": "holotable",
+      "x": 1748,
+      "y": 984,
+      "w": 120,
+      "h": 108,
+      "baseY": 1088,
+      "tile": [
+        55,
+        32
+      ],
+      "footprint": [
+        3,
+        2
+      ],
+      "exterior": false
+    },
+    {
+      "id": "tree",
+      "sprite": "tree",
+      "x": 32,
+      "y": 966,
+      "w": 128,
+      "h": 158,
+      "baseY": 1120,
+      "tile": [
+        2,
+        34
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "leak",
+      "sprite": "leak",
+      "x": 372,
+      "y": 1044,
+      "w": 120,
+      "h": 80,
+      "baseY": 1120,
+      "tile": [
+        12,
+        34
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bush",
+      "sprite": "bush-v2",
+      "x": 120,
+      "y": 1118,
+      "w": 48,
+      "h": 38,
+      "baseY": 1152,
+      "tile": [
+        4,
+        35
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "pump",
+      "sprite": "pump-v2",
+      "x": 568,
+      "y": 1084,
+      "w": 112,
+      "h": 72,
+      "baseY": 1152,
+      "tile": [
+        18,
+        35
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "greywater",
+      "sprite": "greywater",
+      "x": 1268,
+      "y": 1048,
+      "w": 88,
+      "h": 108,
+      "baseY": 1152,
+      "tile": [
+        40,
+        35
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "console",
+      "sprite": "console",
+      "x": 1628,
+      "y": 1060,
+      "w": 136,
+      "h": 96,
+      "baseY": 1152,
+      "tile": [
+        51,
+        35
+      ],
+      "footprint": [
+        4,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "console",
+      "sprite": "console",
+      "x": 1884,
+      "y": 1060,
+      "w": 136,
+      "h": 96,
+      "baseY": 1152,
+      "tile": [
+        59,
+        35
+      ],
+      "footprint": [
+        4,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "labtable",
+      "sprite": "labtable",
+      "x": 1020,
+      "y": 1110,
+      "w": 136,
+      "h": 78,
+      "baseY": 1184,
+      "tile": [
+        32,
+        36
+      ],
+      "footprint": [
+        4,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bush",
+      "sprite": "bush",
+      "x": 120,
+      "y": 1182,
+      "w": 48,
+      "h": 38,
+      "baseY": 1216,
+      "tile": [
+        4,
+        37
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "chair",
+      "sprite": "chair-v8",
+      "x": 1055,
+      "y": 1174,
+      "w": 34,
+      "h": 46,
+      "baseY": 1216,
+      "tile": [
+        33,
+        37
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "chair",
+      "sprite": "chair-v8",
+      "x": 1119,
+      "y": 1174,
+      "w": 34,
+      "h": 46,
+      "baseY": 1216,
+      "tile": [
+        35,
+        37
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bin",
+      "sprite": "bin-v3",
+      "x": 1024,
+      "y": 1210,
+      "w": 32,
+      "h": 42,
+      "baseY": 1248,
+      "tile": [
+        32,
+        38
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "plant-l",
+      "sprite": "plant-l",
+      "x": 1304,
+      "y": 1166,
+      "w": 48,
+      "h": 86,
+      "baseY": 1248,
+      "tile": [
+        41,
+        38
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "barrel",
+      "sprite": "barrel-v4",
+      "x": 606,
+      "y": 1236,
+      "w": 36,
+      "h": 48,
+      "baseY": 1280,
+      "tile": [
+        19,
+        39
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "plant-l",
+      "sprite": "plant-l",
+      "x": 1592,
+      "y": 1198,
+      "w": 48,
+      "h": 86,
+      "baseY": 1280,
+      "tile": [
+        50,
+        39
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "plant-l",
+      "sprite": "plant-l",
+      "x": 1976,
+      "y": 1198,
+      "w": 48,
+      "h": 86,
+      "baseY": 1280,
+      "tile": [
+        62,
+        39
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "electrical",
+      "sprite": "electrical",
+      "x": 438,
+      "y": 1220,
+      "w": 52,
+      "h": 96,
+      "baseY": 1312,
+      "tile": [
+        14,
+        40
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "electrical",
+      "sprite": "electrical",
+      "x": 470,
+      "y": 1220,
+      "w": 52,
+      "h": 96,
+      "baseY": 1312,
+      "tile": [
+        15,
+        40
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "electrical",
+      "sprite": "electrical",
+      "x": 502,
+      "y": 1220,
+      "w": 52,
+      "h": 96,
+      "baseY": 1312,
+      "tile": [
+        16,
+        40
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rack",
+      "sprite": "rack",
+      "x": 1626,
+      "y": 1218,
+      "w": 44,
+      "h": 98,
+      "baseY": 1312,
+      "tile": [
+        51,
+        40
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rack",
+      "sprite": "rack",
+      "x": 1658,
+      "y": 1218,
+      "w": 44,
+      "h": 98,
+      "baseY": 1312,
+      "tile": [
+        52,
+        40
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rack",
+      "sprite": "rack",
+      "x": 1690,
+      "y": 1218,
+      "w": 44,
+      "h": 98,
+      "baseY": 1312,
+      "tile": [
+        53,
+        40
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rack",
+      "sprite": "rack",
+      "x": 1882,
+      "y": 1218,
+      "w": 44,
+      "h": 98,
+      "baseY": 1312,
+      "tile": [
+        59,
+        40
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rack",
+      "sprite": "rack",
+      "x": 1914,
+      "y": 1218,
+      "w": 44,
+      "h": 98,
+      "baseY": 1312,
+      "tile": [
+        60,
+        40
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rack",
+      "sprite": "rack",
+      "x": 1946,
+      "y": 1218,
+      "w": 44,
+      "h": 98,
+      "baseY": 1312,
+      "tile": [
+        61,
+        40
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bush",
+      "sprite": "bush-v2",
+      "x": 216,
+      "y": 1310,
+      "w": 48,
+      "h": 38,
+      "baseY": 1344,
+      "tile": [
+        7,
+        41
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "plant-l",
+      "sprite": "plant-l",
+      "x": 1304,
+      "y": 1326,
+      "w": 48,
+      "h": 86,
+      "baseY": 1408,
+      "tile": [
+        41,
+        43
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "valve",
+      "sprite": "valve-v3",
+      "x": 2524,
+      "y": 1308,
+      "w": 72,
+      "h": 104,
+      "baseY": 1408,
+      "tile": [
+        79,
+        43
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "pump",
+      "sprite": "pump",
+      "x": 2616,
+      "y": 1340,
+      "w": 112,
+      "h": 72,
+      "baseY": 1408,
+      "tile": [
+        82,
+        43
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "barrel",
+      "sprite": "barrel-v3",
+      "x": 2782,
+      "y": 1364,
+      "w": 36,
+      "h": 48,
+      "baseY": 1408,
+      "tile": [
+        87,
+        43
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "barrel",
+      "sprite": "barrel-v4",
+      "x": 2814,
+      "y": 1364,
+      "w": 36,
+      "h": 48,
+      "baseY": 1408,
+      "tile": [
+        88,
+        43
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "crate",
+      "sprite": "crate",
+      "x": 474,
+      "y": 1402,
+      "w": 44,
+      "h": 42,
+      "baseY": 1440,
+      "tile": [
+        15,
+        44
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "filterstation",
+      "sprite": "filterstation",
+      "x": 1272,
+      "y": 1318,
+      "w": 80,
+      "h": 126,
+      "baseY": 1440,
+      "tile": [
+        40,
+        44
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bin",
+      "sprite": "bin-v2",
+      "x": 1792,
+      "y": 1402,
+      "w": 32,
+      "h": 42,
+      "baseY": 1440,
+      "tile": [
+        56,
+        44
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rack",
+      "sprite": "rack",
+      "x": 1018,
+      "y": 1378,
+      "w": 44,
+      "h": 98,
+      "baseY": 1472,
+      "tile": [
+        32,
+        45
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rack",
+      "sprite": "rack",
+      "x": 1050,
+      "y": 1378,
+      "w": 44,
+      "h": 98,
+      "baseY": 1472,
+      "tile": [
+        33,
+        45
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "recyclebins",
+      "sprite": "recyclebins",
+      "x": 1628,
+      "y": 1412,
+      "w": 104,
+      "h": 64,
+      "baseY": 1472,
+      "tile": [
+        51,
+        45
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "crate",
+      "sprite": "crate",
+      "x": 2522,
+      "y": 1434,
+      "w": 44,
+      "h": 42,
+      "baseY": 1472,
+      "tile": [
+        79,
+        45
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "electrical",
+      "sprite": "electrical",
+      "x": 2742,
+      "y": 1380,
+      "w": 52,
+      "h": 96,
+      "baseY": 1472,
+      "tile": [
+        86,
+        45
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rainstation",
+      "sprite": "rainstation",
+      "x": 312,
+      "y": 1390,
+      "w": 80,
+      "h": 118,
+      "baseY": 1504,
+      "tile": [
+        10,
+        46
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "basin",
+      "sprite": "basin",
+      "x": 1116,
+      "y": 1404,
+      "w": 136,
+      "h": 104,
+      "baseY": 1504,
+      "tile": [
+        35,
+        44
+      ],
+      "footprint": [
+        4,
+        3
+      ],
+      "exterior": false
+    },
+    {
+      "id": "conveyor",
+      "sprite": "conveyor",
+      "x": 1724,
+      "y": 1438,
+      "w": 136,
+      "h": 70,
+      "baseY": 1504,
+      "tile": [
+        54,
+        46
+      ],
+      "footprint": [
+        4,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "plant-l",
+      "sprite": "plant-l",
+      "x": 2296,
+      "y": 1422,
+      "w": 48,
+      "h": 86,
+      "baseY": 1504,
+      "tile": [
+        72,
+        46
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "plant-l",
+      "sprite": "plant-l",
+      "x": 2360,
+      "y": 1422,
+      "w": 48,
+      "h": 86,
+      "baseY": 1504,
+      "tile": [
+        74,
+        46
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bush",
+      "sprite": "bush-v2",
+      "x": 2936,
+      "y": 1470,
+      "w": 48,
+      "h": 38,
+      "baseY": 1504,
+      "tile": [
+        92,
+        46
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "cistern",
+      "sprite": "cistern",
+      "x": 412,
+      "y": 1418,
+      "w": 136,
+      "h": 154,
+      "baseY": 1568,
+      "tile": [
+        13,
+        46
+      ],
+      "footprint": [
+        4,
+        3
+      ],
+      "exterior": false
+    },
+    {
+      "id": "baler",
+      "sprite": "baler",
+      "x": 1876,
+      "y": 1474,
+      "w": 88,
+      "h": 98,
+      "baseY": 1568,
+      "tile": [
+        59,
+        48
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "pinetree",
+      "sprite": "pinetree",
+      "x": 44,
+      "y": 1478,
+      "w": 104,
+      "h": 158,
+      "baseY": 1632,
+      "tile": [
+        2,
+        50
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "filterstation",
+      "sprite": "filterstation",
+      "x": 1816,
+      "y": 1510,
+      "w": 80,
+      "h": 126,
+      "baseY": 1632,
+      "tile": [
+        57,
+        50
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bed",
+      "sprite": "bed",
+      "x": 2460,
+      "y": 1564,
+      "w": 104,
+      "h": 72,
+      "baseY": 1632,
+      "tile": [
+        77,
+        50
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bed",
+      "sprite": "bed-v2",
+      "x": 2588,
+      "y": 1564,
+      "w": 104,
+      "h": 72,
+      "baseY": 1632,
+      "tile": [
+        81,
+        50
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "valve",
+      "sprite": "valve-v3",
+      "x": 540,
+      "y": 1564,
+      "w": 72,
+      "h": 104,
+      "baseY": 1664,
+      "tile": [
+        17,
+        51
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "tower",
+      "sprite": "tower",
+      "x": 2712,
+      "y": 1564,
+      "w": 48,
+      "h": 104,
+      "baseY": 1664,
+      "tile": [
+        85,
+        51
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "tower",
+      "sprite": "tower",
+      "x": 2744,
+      "y": 1564,
+      "w": 48,
+      "h": 104,
+      "baseY": 1664,
+      "tile": [
+        86,
+        51
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "crate",
+      "sprite": "crate",
+      "x": 314,
+      "y": 1658,
+      "w": 44,
+      "h": 42,
+      "baseY": 1696,
+      "tile": [
+        10,
+        52
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "barrel",
+      "sprite": "barrel-v3",
+      "x": 606,
+      "y": 1652,
+      "w": 36,
+      "h": 48,
+      "baseY": 1696,
+      "tile": [
+        19,
+        52
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "barrel",
+      "sprite": "barrel-v3",
+      "x": 638,
+      "y": 1652,
+      "w": 36,
+      "h": 48,
+      "baseY": 1696,
+      "tile": [
+        20,
+        52
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "basin",
+      "sprite": "basin",
+      "x": 1116,
+      "y": 1596,
+      "w": 136,
+      "h": 104,
+      "baseY": 1696,
+      "tile": [
+        35,
+        50
+      ],
+      "footprint": [
+        4,
+        3
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bush",
+      "sprite": "bush",
+      "x": 120,
+      "y": 1694,
+      "w": 48,
+      "h": 38,
+      "baseY": 1728,
+      "tile": [
+        4,
+        53
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "plant-l",
+      "sprite": "plant-l",
+      "x": 984,
+      "y": 1646,
+      "w": 48,
+      "h": 86,
+      "baseY": 1728,
+      "tile": [
+        31,
+        53
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bin",
+      "sprite": "bin",
+      "x": 1312,
+      "y": 1690,
+      "w": 32,
+      "h": 42,
+      "baseY": 1728,
+      "tile": [
+        41,
+        53
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "tower",
+      "sprite": "tower",
+      "x": 2776,
+      "y": 1628,
+      "w": 48,
+      "h": 104,
+      "baseY": 1728,
+      "tile": [
+        87,
+        53
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "tree",
+      "sprite": "tree",
+      "x": 32,
+      "y": 1606,
+      "w": 128,
+      "h": 158,
+      "baseY": 1760,
+      "tile": [
+        2,
+        54
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "bush",
+      "sprite": "bush-v2",
+      "x": 120,
+      "y": 1726,
+      "w": 48,
+      "h": 38,
+      "baseY": 1760,
+      "tile": [
+        4,
+        54
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "bin",
+      "sprite": "bin",
+      "x": 1632,
+      "y": 1722,
+      "w": 32,
+      "h": 42,
+      "baseY": 1760,
+      "tile": [
+        51,
+        54
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bin",
+      "sprite": "bin-v2",
+      "x": 1664,
+      "y": 1722,
+      "w": 32,
+      "h": 42,
+      "baseY": 1760,
+      "tile": [
+        52,
+        54
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bin",
+      "sprite": "bin-v4",
+      "x": 1696,
+      "y": 1722,
+      "w": 32,
+      "h": 42,
+      "baseY": 1760,
+      "tile": [
+        53,
+        54
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "crate",
+      "sprite": "crate",
+      "x": 1882,
+      "y": 1722,
+      "w": 44,
+      "h": 42,
+      "baseY": 1760,
+      "tile": [
+        59,
+        54
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "crate",
+      "sprite": "crate",
+      "x": 1914,
+      "y": 1722,
+      "w": 44,
+      "h": 42,
+      "baseY": 1760,
+      "tile": [
+        60,
+        54
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bed",
+      "sprite": "bed-v2",
+      "x": 2172,
+      "y": 1692,
+      "w": 104,
+      "h": 72,
+      "baseY": 1760,
+      "tile": [
+        68,
+        54
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bed",
+      "sprite": "bed",
+      "x": 2300,
+      "y": 1692,
+      "w": 104,
+      "h": 72,
+      "baseY": 1760,
+      "tile": [
+        72,
+        54
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bed",
+      "sprite": "bed-v2",
+      "x": 2428,
+      "y": 1692,
+      "w": 104,
+      "h": 72,
+      "baseY": 1760,
+      "tile": [
+        76,
+        54
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bed",
+      "sprite": "bed",
+      "x": 2556,
+      "y": 1692,
+      "w": 104,
+      "h": 72,
+      "baseY": 1760,
+      "tile": [
+        80,
+        54
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bush",
+      "sprite": "bush",
+      "x": 184,
+      "y": 1758,
+      "w": 48,
+      "h": 38,
+      "baseY": 1792,
+      "tile": [
+        6,
+        55
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "plant-l",
+      "sprite": "plant-l",
+      "x": 760,
+      "y": 1710,
+      "w": 48,
+      "h": 86,
+      "baseY": 1792,
+      "tile": [
+        24,
+        55
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "plant-l",
+      "sprite": "plant-l",
+      "x": 824,
+      "y": 1710,
+      "w": 48,
+      "h": 86,
+      "baseY": 1792,
+      "tile": [
+        26,
+        55
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "plant-l",
+      "sprite": "plant-l",
+      "x": 1432,
+      "y": 1710,
+      "w": 48,
+      "h": 86,
+      "baseY": 1792,
+      "tile": [
+        45,
+        55
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "plant-l",
+      "sprite": "plant-l",
+      "x": 1496,
+      "y": 1710,
+      "w": 48,
+      "h": 86,
+      "baseY": 1792,
+      "tile": [
+        47,
+        55
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "plant-l",
+      "sprite": "plant-l",
+      "x": 2776,
+      "y": 1742,
+      "w": 48,
+      "h": 86,
+      "baseY": 1824,
+      "tile": [
+        87,
+        56
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bed",
+      "sprite": "bed",
+      "x": 2300,
+      "y": 1788,
+      "w": 104,
+      "h": 72,
+      "baseY": 1856,
+      "tile": [
+        72,
+        57
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rainstation",
+      "sprite": "rainstation",
+      "x": 2552,
+      "y": 1742,
+      "w": 80,
+      "h": 118,
+      "baseY": 1856,
+      "tile": [
+        80,
+        57
+      ],
+      "footprint": [
+        2,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "compost",
+      "sprite": "compost",
+      "x": 2674,
+      "y": 1796,
+      "w": 60,
+      "h": 64,
+      "baseY": 1856,
+      "tile": [
+        84,
+        57
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "bush",
+      "sprite": "bush-v2",
+      "x": 280,
+      "y": 1854,
+      "w": 48,
+      "h": 38,
+      "baseY": 1888,
+      "tile": [
+        9,
+        58
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "bush",
+      "sprite": "bush-v2",
+      "x": 984,
+      "y": 1854,
+      "w": 48,
+      "h": 38,
+      "baseY": 1888,
+      "tile": [
+        31,
+        58
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "bush",
+      "sprite": "bush-v2",
+      "x": 1144,
+      "y": 1854,
+      "w": 48,
+      "h": 38,
+      "baseY": 1888,
+      "tile": [
+        36,
+        58
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "plant-l",
+      "sprite": "plant-l",
+      "x": 2424,
+      "y": 1806,
+      "w": 48,
+      "h": 86,
+      "baseY": 1888,
+      "tile": [
+        76,
+        58
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "sign",
+      "sprite": "sign",
+      "x": 1084,
+      "y": 1796,
+      "w": 200,
+      "h": 128,
+      "baseY": 1920,
+      "tile": [
+        34,
+        59
+      ],
+      "footprint": [
+        6,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "bush",
+      "sprite": "bush",
+      "x": 1528,
+      "y": 1886,
+      "w": 48,
+      "h": 38,
+      "baseY": 1920,
+      "tile": [
+        48,
+        59
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "bush",
+      "sprite": "bush",
+      "x": 2904,
+      "y": 1886,
+      "w": 48,
+      "h": 38,
+      "baseY": 1920,
+      "tile": [
+        91,
+        59
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "rocks",
+      "sprite": "rocks",
+      "x": 368,
+      "y": 1914,
+      "w": 64,
+      "h": 42,
+      "baseY": 1952,
+      "tile": [
+        12,
+        60
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    },
+    {
+      "id": "rocks",
+      "sprite": "rocks",
+      "x": 1712,
+      "y": 1914,
+      "w": 64,
+      "h": 42,
+      "baseY": 1952,
+      "tile": [
+        54,
+        60
+      ],
+      "footprint": [
+        1,
+        1
+      ],
+      "exterior": true
+    }
+  ]
+}

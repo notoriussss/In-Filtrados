@@ -1,0 +1,94 @@
+{
+  "image": "atlas-tanques.png",
+  "nota": "level = % de agua limpia del tanque (0 vacío/sucio … 100 lleno). Cada slot de map.json trae draw:{x,y} = esquina donde se dibuja el sprite.",
+  "frames": [
+    {
+      "id": "tanque-0",
+      "x": 2,
+      "y": 2,
+      "w": 104,
+      "h": 134,
+      "level": 0
+    },
+    {
+      "id": "tanque-10",
+      "x": 108,
+      "y": 2,
+      "w": 104,
+      "h": 134,
+      "level": 10
+    },
+    {
+      "id": "tanque-20",
+      "x": 214,
+      "y": 2,
+      "w": 104,
+      "h": 134,
+      "level": 20
+    },
+    {
+      "id": "tanque-30",
+      "x": 320,
+      "y": 2,
+      "w": 104,
+      "h": 134,
+      "level": 30
+    },
+    {
+      "id": "tanque-40",
+      "x": 426,
+      "y": 2,
+      "w": 104,
+      "h": 134,
+      "level": 40
+    },
+    {
+      "id": "tanque-50",
+      "x": 532,
+      "y": 2,
+      "w": 104,
+      "h": 134,
+      "level": 50
+    },
+    {
+      "id": "tanque-60",
+      "x": 638,
+      "y": 2,
+      "w": 104,
+      "h": 134,
+      "level": 60
+    },
+    {
+      "id": "tanque-70",
+      "x": 744,
+      "y": 2,
+      "w": 104,
+      "h": 134,
+      "level": 70
+    },
+    {
+      "id": "tanque-80",
+      "x": 850,
+      "y": 2,
+      "w": 104,
+      "h": 134,
+      "level": 80
+    },
+    {
+      "id": "tanque-90",
+      "x": 2,
+      "y": 138,
+      "w": 104,
+      "h": 134,
+      "level": 90
+    },
+    {
+      "id": "tanque-100",
+      "x": 108,
+      "y": 138,
+      "w": 104,
+      "h": 134,
+      "level": 100
+    }
+  ]
+}

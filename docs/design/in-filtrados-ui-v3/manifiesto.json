@@ -1,0 +1,39 @@
+{
+ "proyecto": "In-Filtrados",
+ "version": "v3",
+ "secciones": {
+  "mapas": {
+   "ecologico-manglar-verde": "Estación Manglar Verde (capas, props, tanques, map.json, mapa.tmj)",
+   "planta-cuenca-clara": "Planta Cuenca Clara compacta (misma estructura)"
+  },
+  "personajes": {
+   "hojas": "spritesheets 40×56 por celda (cuerpo, accesorios, jugadores)",
+   "retratos": "bustos de los 8 jugadores",
+   "catalogo": "accesorios × colores, caras × vistas",
+   "recetas": "jugadores-ejemplo.json",
+   "codigo": "in-filtrados-personajes.js",
+   "editor": "editor-personajes.html"
+  },
+  "hud": {
+   "piezas": "PNG transparentes por skin y mapa",
+   "cuadros-de-camara": "mapa con jugadores sin HUD y minimapas",
+   "referencia": "composición final (PNG y HTML)"
+  },
+  "ui": {
+   "componentes": "botones, paneles, chips, medidores, campos… (PNG + manifest.json)",
+   "iconos": "27 iconos 12×12 en 9 paletas, x1/x4 + atlas",
+   "logo": "logo con y sin lemas 3R (1x/2x)",
+   "fondos": "fondo del menú y vistas de mapa (día/noche)",
+   "fuentes": "woff2 + fonts.css + licencias OFL",
+   "css": "CSS de componentes y tokens (A/B) + tokens.json",
+   "js": "runtime de iconos/personajes para las maquetas"
+  },
+  "pantallas": "17 pantallas × 2 estilos (HTML + PNG de cada variante)"
+ },
+ "conteo": {
+  "png_total": 1454,
+  "componentes_ui_por_estilo": 78,
+  "piezas_hud": 34,
+  "iconos_x1": 243
+ }
+}

@@ -1,0 +1,113 @@
+/* Fuentes de In-Filtrados (SIL OFL 1.1). Pixelify Sans: texto A · Press Start 2P / Silkscreen / VT323: B */
+/* pixelify-sans-latin-400-normal */
+@font-face {
+  font-family: 'Pixelify Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('./files/pixelify-sans-latin-400-normal.woff2') format('woff2');
+}
+/* pixelify-sans-latin-ext-400-normal */
+@font-face {
+  font-family: 'Pixelify Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('./files/pixelify-sans-latin-ext-400-normal.woff2') format('woff2');
+}
+/* pixelify-sans-latin-600-normal */
+@font-face {
+  font-family: 'Pixelify Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url('./files/pixelify-sans-latin-600-normal.woff2') format('woff2');
+}
+/* pixelify-sans-latin-ext-600-normal */
+@font-face {
+  font-family: 'Pixelify Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url('./files/pixelify-sans-latin-ext-600-normal.woff2') format('woff2');
+}
+/* pixelify-sans-latin-700-normal */
+@font-face {
+  font-family: 'Pixelify Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url('./files/pixelify-sans-latin-700-normal.woff2') format('woff2');
+}
+/* pixelify-sans-latin-ext-700-normal */
+@font-face {
+  font-family: 'Pixelify Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url('./files/pixelify-sans-latin-ext-700-normal.woff2') format('woff2');
+}
+/* silkscreen-latin-400-normal */
+@font-face {
+  font-family: 'Silkscreen';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('./files/silkscreen-latin-400-normal.woff2') format('woff2');
+}
+/* silkscreen-latin-ext-400-normal */
+@font-face {
+  font-family: 'Silkscreen';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('./files/silkscreen-latin-ext-400-normal.woff2') format('woff2');
+}
+/* silkscreen-latin-700-normal */
+@font-face {
+  font-family: 'Silkscreen';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url('./files/silkscreen-latin-700-normal.woff2') format('woff2');
+}
+/* silkscreen-latin-ext-700-normal */
+@font-face {
+  font-family: 'Silkscreen';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url('./files/silkscreen-latin-ext-700-normal.woff2') format('woff2');
+}
+/* vt323-latin-400-normal */
+@font-face {
+  font-family: 'VT323';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('./files/vt323-latin-400-normal.woff2') format('woff2');
+}
+/* vt323-latin-ext-400-normal */
+@font-face {
+  font-family: 'VT323';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('./files/vt323-latin-ext-400-normal.woff2') format('woff2');
+}
+/* press-start-2p-latin-400-normal */
+@font-face {
+  font-family: 'Press Start 2P';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('./files/press-start-2p-latin-400-normal.woff2') format('woff2');
+}
+/* press-start-2p-latin-ext-400-normal */
+@font-face {
+  font-family: 'Press Start 2P';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('./files/press-start-2p-latin-ext-400-normal.woff2') format('woff2');
+}

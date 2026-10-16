@@ -1,0 +1,63 @@
+{
+  "cell": {
+    "w": 102,
+    "h": 108
+  },
+  "columns": [
+    {
+      "id": "menta",
+      "name": "Menta",
+      "hex": "#9be8c1"
+    },
+    {
+      "id": "turquesa",
+      "name": "Turquesa",
+      "hex": "#6fdde0"
+    },
+    {
+      "id": "azul",
+      "name": "Azul",
+      "hex": "#7fb0f2"
+    },
+    {
+      "id": "pino",
+      "name": "Pino",
+      "hex": "#4fae82"
+    },
+    {
+      "id": "lima",
+      "name": "Lima",
+      "hex": "#cfeb6a"
+    },
+    {
+      "id": "ambar",
+      "name": "Ámbar",
+      "hex": "#f4c869"
+    },
+    {
+      "id": "coral",
+      "name": "Coral",
+      "hex": "#f59c92"
+    },
+    {
+      "id": "lila",
+      "name": "Lila",
+      "hex": "#c3a5f0"
+    }
+  ],
+  "rows": [
+    "ninguno",
+    "brote",
+    "audifonos",
+    "gorra",
+    "lentes",
+    "paja",
+    "bufanda",
+    "flor",
+    "visor",
+    "casco",
+    "pescador",
+    "impermeable",
+    "mochila"
+  ]
+}

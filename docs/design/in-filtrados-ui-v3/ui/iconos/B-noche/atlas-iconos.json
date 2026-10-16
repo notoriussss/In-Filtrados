@@ -1,0 +1,1503 @@
+{
+ "celda": 12,
+ "columnas": [
+  "water",
+  "leaf",
+  "amber",
+  "coral",
+  "light",
+  "ink",
+  "dark",
+  "wood",
+  "predeterminada"
+ ],
+ "filas": [
+  "gota",
+  "grifo",
+  "cubeta",
+  "filtro",
+  "play",
+  "parcela",
+  "engranaje",
+  "puerta",
+  "check",
+  "equis",
+  "aviso",
+  "reloj",
+  "chat",
+  "ojo",
+  "izq",
+  "der",
+  "corona",
+  "mundo",
+  "bomba",
+  "copiar",
+  "usuario",
+  "altavoz",
+  "pantalla",
+  "teclado",
+  "mapa",
+  "libro",
+  "trofeo"
+ ],
+ "frames": {
+  "gota/water": [
+   0,
+   0,
+   12,
+   12
+  ],
+  "gota/leaf": [
+   12,
+   0,
+   12,
+   12
+  ],
+  "gota/amber": [
+   24,
+   0,
+   12,
+   12
+  ],
+  "gota/coral": [
+   36,
+   0,
+   12,
+   12
+  ],
+  "gota/light": [
+   48,
+   0,
+   12,
+   12
+  ],
+  "gota/ink": [
+   60,
+   0,
+   12,
+   12
+  ],
+  "gota/dark": [
+   72,
+   0,
+   12,
+   12
+  ],
+  "gota/wood": [
+   84,
+   0,
+   12,
+   12
+  ],
+  "gota/predeterminada": [
+   96,
+   0,
+   12,
+   12
+  ],
+  "grifo/water": [
+   0,
+   12,
+   12,
+   12
+  ],
+  "grifo/leaf": [
+   12,
+   12,
+   12,
+   12
+  ],
+  "grifo/amber": [
+   24,
+   12,
+   12,
+   12
+  ],
+  "grifo/coral": [
+   36,
+   12,
+   12,
+   12
+  ],
+  "grifo/light": [
+   48,
+   12,
+   12,
+   12
+  ],
+  "grifo/ink": [
+   60,
+   12,
+   12,
+   12
+  ],
+  "grifo/dark": [
+   72,
+   12,
+   12,
+   12
+  ],
+  "grifo/wood": [
+   84,
+   12,
+   12,
+   12
+  ],
+  "grifo/predeterminada": [
+   96,
+   12,
+   12,
+   12
+  ],
+  "cubeta/water": [
+   0,
+   24,
+   12,
+   12
+  ],
+  "cubeta/leaf": [
+   12,
+   24,
+   12,
+   12
+  ],
+  "cubeta/amber": [
+   24,
+   24,
+   12,
+   12
+  ],
+  "cubeta/coral": [
+   36,
+   24,
+   12,
+   12
+  ],
+  "cubeta/light": [
+   48,
+   24,
+   12,
+   12
+  ],
+  "cubeta/ink": [
+   60,
+   24,
+   12,
+   12
+  ],
+  "cubeta/dark": [
+   72,
+   24,
+   12,
+   12
+  ],
+  "cubeta/wood": [
+   84,
+   24,
+   12,
+   12
+  ],
+  "cubeta/predeterminada": [
+   96,
+   24,
+   12,
+   12
+  ],
+  "filtro/water": [
+   0,
+   36,
+   12,
+   12
+  ],
+  "filtro/leaf": [
+   12,
+   36,
+   12,
+   12
+  ],
+  "filtro/amber": [
+   24,
+   36,
+   12,
+   12
+  ],
+  "filtro/coral": [
+   36,
+   36,
+   12,
+   12
+  ],
+  "filtro/light": [
+   48,
+   36,
+   12,
+   12
+  ],
+  "filtro/ink": [
+   60,
+   36,
+   12,
+   12
+  ],
+  "filtro/dark": [
+   72,
+   36,
+   12,
+   12
+  ],
+  "filtro/wood": [
+   84,
+   36,
+   12,
+   12
+  ],
+  "filtro/predeterminada": [
+   96,
+   36,
+   12,
+   12
+  ],
+  "play/water": [
+   0,
+   48,
+   12,
+   12
+  ],
+  "play/leaf": [
+   12,
+   48,
+   12,
+   12
+  ],
+  "play/amber": [
+   24,
+   48,
+   12,
+   12
+  ],
+  "play/coral": [
+   36,
+   48,
+   12,
+   12
+  ],
+  "play/light": [
+   48,
+   48,
+   12,
+   12
+  ],
+  "play/ink": [
+   60,
+   48,
+   12,
+   12
+  ],
+  "play/dark": [
+   72,
+   48,
+   12,
+   12
+  ],
+  "play/wood": [
+   84,
+   48,
+   12,
+   12
+  ],
+  "play/predeterminada": [
+   96,
+   48,
+   12,
+   12
+  ],
+  "parcela/water": [
+   0,
+   60,
+   12,
+   12
+  ],
+  "parcela/leaf": [
+   12,
+   60,
+   12,
+   12
+  ],
+  "parcela/amber": [
+   24,
+   60,
+   12,
+   12
+  ],
+  "parcela/coral": [
+   36,
+   60,
+   12,
+   12
+  ],
+  "parcela/light": [
+   48,
+   60,
+   12,
+   12
+  ],
+  "parcela/ink": [
+   60,
+   60,
+   12,
+   12
+  ],
+  "parcela/dark": [
+   72,
+   60,
+   12,
+   12
+  ],
+  "parcela/wood": [
+   84,
+   60,
+   12,
+   12
+  ],
+  "parcela/predeterminada": [
+   96,
+   60,
+   12,
+   12
+  ],
+  "engranaje/water": [
+   0,
+   72,
+   12,
+   12
+  ],
+  "engranaje/leaf": [
+   12,
+   72,
+   12,
+   12
+  ],
+  "engranaje/amber": [
+   24,
+   72,
+   12,
+   12
+  ],
+  "engranaje/coral": [
+   36,
+   72,
+   12,
+   12
+  ],
+  "engranaje/light": [
+   48,
+   72,
+   12,
+   12
+  ],
+  "engranaje/ink": [
+   60,
+   72,
+   12,
+   12
+  ],
+  "engranaje/dark": [
+   72,
+   72,
+   12,
+   12
+  ],
+  "engranaje/wood": [
+   84,
+   72,
+   12,
+   12
+  ],
+  "engranaje/predeterminada": [
+   96,
+   72,
+   12,
+   12
+  ],
+  "puerta/water": [
+   0,
+   84,
+   12,
+   12
+  ],
+  "puerta/leaf": [
+   12,
+   84,
+   12,
+   12
+  ],
+  "puerta/amber": [
+   24,
+   84,
+   12,
+   12
+  ],
+  "puerta/coral": [
+   36,
+   84,
+   12,
+   12
+  ],
+  "puerta/light": [
+   48,
+   84,
+   12,
+   12
+  ],
+  "puerta/ink": [
+   60,
+   84,
+   12,
+   12
+  ],
+  "puerta/dark": [
+   72,
+   84,
+   12,
+   12
+  ],
+  "puerta/wood": [
+   84,
+   84,
+   12,
+   12
+  ],
+  "puerta/predeterminada": [
+   96,
+   84,
+   12,
+   12
+  ],
+  "check/water": [
+   0,
+   96,
+   12,
+   12
+  ],
+  "check/leaf": [
+   12,
+   96,
+   12,
+   12
+  ],
+  "check/amber": [
+   24,
+   96,
+   12,
+   12
+  ],
+  "check/coral": [
+   36,
+   96,
+   12,
+   12
+  ],
+  "check/light": [
+   48,
+   96,
+   12,
+   12
+  ],
+  "check/ink": [
+   60,
+   96,
+   12,
+   12
+  ],
+  "check/dark": [
+   72,
+   96,
+   12,
+   12
+  ],
+  "check/wood": [
+   84,
+   96,
+   12,
+   12
+  ],
+  "check/predeterminada": [
+   96,
+   96,
+   12,
+   12
+  ],
+  "equis/water": [
+   0,
+   108,
+   12,
+   12
+  ],
+  "equis/leaf": [
+   12,
+   108,
+   12,
+   12
+  ],
+  "equis/amber": [
+   24,
+   108,
+   12,
+   12
+  ],
+  "equis/coral": [
+   36,
+   108,
+   12,
+   12
+  ],
+  "equis/light": [
+   48,
+   108,
+   12,
+   12
+  ],
+  "equis/ink": [
+   60,
+   108,
+   12,
+   12
+  ],
+  "equis/dark": [
+   72,
+   108,
+   12,
+   12
+  ],
+  "equis/wood": [
+   84,
+   108,
+   12,
+   12
+  ],
+  "equis/predeterminada": [
+   96,
+   108,
+   12,
+   12
+  ],
+  "aviso/water": [
+   0,
+   120,
+   12,
+   12
+  ],
+  "aviso/leaf": [
+   12,
+   120,
+   12,
+   12
+  ],
+  "aviso/amber": [
+   24,
+   120,
+   12,
+   12
+  ],
+  "aviso/coral": [
+   36,
+   120,
+   12,
+   12
+  ],
+  "aviso/light": [
+   48,
+   120,
+   12,
+   12
+  ],
+  "aviso/ink": [
+   60,
+   120,
+   12,
+   12
+  ],
+  "aviso/dark": [
+   72,
+   120,
+   12,
+   12
+  ],
+  "aviso/wood": [
+   84,
+   120,
+   12,
+   12
+  ],
+  "aviso/predeterminada": [
+   96,
+   120,
+   12,
+   12
+  ],
+  "reloj/water": [
+   0,
+   132,
+   12,
+   12
+  ],
+  "reloj/leaf": [
+   12,
+   132,
+   12,
+   12
+  ],
+  "reloj/amber": [
+   24,
+   132,
+   12,
+   12
+  ],
+  "reloj/coral": [
+   36,
+   132,
+   12,
+   12
+  ],
+  "reloj/light": [
+   48,
+   132,
+   12,
+   12
+  ],
+  "reloj/ink": [
+   60,
+   132,
+   12,
+   12
+  ],
+  "reloj/dark": [
+   72,
+   132,
+   12,
+   12
+  ],
+  "reloj/wood": [
+   84,
+   132,
+   12,
+   12
+  ],
+  "reloj/predeterminada": [
+   96,
+   132,
+   12,
+   12
+  ],
+  "chat/water": [
+   0,
+   144,
+   12,
+   12
+  ],
+  "chat/leaf": [
+   12,
+   144,
+   12,
+   12
+  ],
+  "chat/amber": [
+   24,
+   144,
+   12,
+   12
+  ],
+  "chat/coral": [
+   36,
+   144,
+   12,
+   12
+  ],
+  "chat/light": [
+   48,
+   144,
+   12,
+   12
+  ],
+  "chat/ink": [
+   60,
+   144,
+   12,
+   12
+  ],
+  "chat/dark": [
+   72,
+   144,
+   12,
+   12
+  ],
+  "chat/wood": [
+   84,
+   144,
+   12,
+   12
+  ],
+  "chat/predeterminada": [
+   96,
+   144,
+   12,
+   12
+  ],
+  "ojo/water": [
+   0,
+   156,
+   12,
+   12
+  ],
+  "ojo/leaf": [
+   12,
+   156,
+   12,
+   12
+  ],
+  "ojo/amber": [
+   24,
+   156,
+   12,
+   12
+  ],
+  "ojo/coral": [
+   36,
+   156,
+   12,
+   12
+  ],
+  "ojo/light": [
+   48,
+   156,
+   12,
+   12
+  ],
+  "ojo/ink": [
+   60,
+   156,
+   12,
+   12
+  ],
+  "ojo/dark": [
+   72,
+   156,
+   12,
+   12
+  ],
+  "ojo/wood": [
+   84,
+   156,
+   12,
+   12
+  ],
+  "ojo/predeterminada": [
+   96,
+   156,
+   12,
+   12
+  ],
+  "izq/water": [
+   0,
+   168,
+   12,
+   12
+  ],
+  "izq/leaf": [
+   12,
+   168,
+   12,
+   12
+  ],
+  "izq/amber": [
+   24,
+   168,
+   12,
+   12
+  ],
+  "izq/coral": [
+   36,
+   168,
+   12,
+   12
+  ],
+  "izq/light": [
+   48,
+   168,
+   12,
+   12
+  ],
+  "izq/ink": [
+   60,
+   168,
+   12,
+   12
+  ],
+  "izq/dark": [
+   72,
+   168,
+   12,
+   12
+  ],
+  "izq/wood": [
+   84,
+   168,
+   12,
+   12
+  ],
+  "izq/predeterminada": [
+   96,
+   168,
+   12,
+   12
+  ],
+  "der/water": [
+   0,
+   180,
+   12,
+   12
+  ],
+  "der/leaf": [
+   12,
+   180,
+   12,
+   12
+  ],
+  "der/amber": [
+   24,
+   180,
+   12,
+   12
+  ],
+  "der/coral": [
+   36,
+   180,
+   12,
+   12
+  ],
+  "der/light": [
+   48,
+   180,
+   12,
+   12
+  ],
+  "der/ink": [
+   60,
+   180,
+   12,
+   12
+  ],
+  "der/dark": [
+   72,
+   180,
+   12,
+   12
+  ],
+  "der/wood": [
+   84,
+   180,
+   12,
+   12
+  ],
+  "der/predeterminada": [
+   96,
+   180,
+   12,
+   12
+  ],
+  "corona/water": [
+   0,
+   192,
+   12,
+   12
+  ],
+  "corona/leaf": [
+   12,
+   192,
+   12,
+   12
+  ],
+  "corona/amber": [
+   24,
+   192,
+   12,
+   12
+  ],
+  "corona/coral": [
+   36,
+   192,
+   12,
+   12
+  ],
+  "corona/light": [
+   48,
+   192,
+   12,
+   12
+  ],
+  "corona/ink": [
+   60,
+   192,
+   12,
+   12
+  ],
+  "corona/dark": [
+   72,
+   192,
+   12,
+   12
+  ],
+  "corona/wood": [
+   84,
+   192,
+   12,
+   12
+  ],
+  "corona/predeterminada": [
+   96,
+   192,
+   12,
+   12
+  ],
+  "mundo/water": [
+   0,
+   204,
+   12,
+   12
+  ],
+  "mundo/leaf": [
+   12,
+   204,
+   12,
+   12
+  ],
+  "mundo/amber": [
+   24,
+   204,
+   12,
+   12
+  ],
+  "mundo/coral": [
+   36,
+   204,
+   12,
+   12
+  ],
+  "mundo/light": [
+   48,
+   204,
+   12,
+   12
+  ],
+  "mundo/ink": [
+   60,
+   204,
+   12,
+   12
+  ],
+  "mundo/dark": [
+   72,
+   204,
+   12,
+   12
+  ],
+  "mundo/wood": [
+   84,
+   204,
+   12,
+   12
+  ],
+  "mundo/predeterminada": [
+   96,
+   204,
+   12,
+   12
+  ],
+  "bomba/water": [
+   0,
+   216,
+   12,
+   12
+  ],
+  "bomba/leaf": [
+   12,
+   216,
+   12,
+   12
+  ],
+  "bomba/amber": [
+   24,
+   216,
+   12,
+   12
+  ],
+  "bomba/coral": [
+   36,
+   216,
+   12,
+   12
+  ],
+  "bomba/light": [
+   48,
+   216,
+   12,
+   12
+  ],
+  "bomba/ink": [
+   60,
+   216,
+   12,
+   12
+  ],
+  "bomba/dark": [
+   72,
+   216,
+   12,
+   12
+  ],
+  "bomba/wood": [
+   84,
+   216,
+   12,
+   12
+  ],
+  "bomba/predeterminada": [
+   96,
+   216,
+   12,
+   12
+  ],
+  "copiar/water": [
+   0,
+   228,
+   12,
+   12
+  ],
+  "copiar/leaf": [
+   12,
+   228,
+   12,
+   12
+  ],
+  "copiar/amber": [
+   24,
+   228,
+   12,
+   12
+  ],
+  "copiar/coral": [
+   36,
+   228,
+   12,
+   12
+  ],
+  "copiar/light": [
+   48,
+   228,
+   12,
+   12
+  ],
+  "copiar/ink": [
+   60,
+   228,
+   12,
+   12
+  ],
+  "copiar/dark": [
+   72,
+   228,
+   12,
+   12
+  ],
+  "copiar/wood": [
+   84,
+   228,
+   12,
+   12
+  ],
+  "copiar/predeterminada": [
+   96,
+   228,
+   12,
+   12
+  ],
+  "usuario/water": [
+   0,
+   240,
+   12,
+   12
+  ],
+  "usuario/leaf": [
+   12,
+   240,
+   12,
+   12
+  ],
+  "usuario/amber": [
+   24,
+   240,
+   12,
+   12
+  ],
+  "usuario/coral": [
+   36,
+   240,
+   12,
+   12
+  ],
+  "usuario/light": [
+   48,
+   240,
+   12,
+   12
+  ],
+  "usuario/ink": [
+   60,
+   240,
+   12,
+   12
+  ],
+  "usuario/dark": [
+   72,
+   240,
+   12,
+   12
+  ],
+  "usuario/wood": [
+   84,
+   240,
+   12,
+   12
+  ],
+  "usuario/predeterminada": [
+   96,
+   240,
+   12,
+   12
+  ],
+  "altavoz/water": [
+   0,
+   252,
+   12,
+   12
+  ],
+  "altavoz/leaf": [
+   12,
+   252,
+   12,
+   12
+  ],
+  "altavoz/amber": [
+   24,
+   252,
+   12,
+   12
+  ],
+  "altavoz/coral": [
+   36,
+   252,
+   12,
+   12
+  ],
+  "altavoz/light": [
+   48,
+   252,
+   12,
+   12
+  ],
+  "altavoz/ink": [
+   60,
+   252,
+   12,
+   12
+  ],
+  "altavoz/dark": [
+   72,
+   252,
+   12,
+   12
+  ],
+  "altavoz/wood": [
+   84,
+   252,
+   12,
+   12
+  ],
+  "altavoz/predeterminada": [
+   96,
+   252,
+   12,
+   12
+  ],
+  "pantalla/water": [
+   0,
+   264,
+   12,
+   12
+  ],
+  "pantalla/leaf": [
+   12,
+   264,
+   12,
+   12
+  ],
+  "pantalla/amber": [
+   24,
+   264,
+   12,
+   12
+  ],
+  "pantalla/coral": [
+   36,
+   264,
+   12,
+   12
+  ],
+  "pantalla/light": [
+   48,
+   264,
+   12,
+   12
+  ],
+  "pantalla/ink": [
+   60,
+   264,
+   12,
+   12
+  ],
+  "pantalla/dark": [
+   72,
+   264,
+   12,
+   12
+  ],
+  "pantalla/wood": [
+   84,
+   264,
+   12,
+   12
+  ],
+  "pantalla/predeterminada": [
+   96,
+   264,
+   12,
+   12
+  ],
+  "teclado/water": [
+   0,
+   276,
+   12,
+   12
+  ],
+  "teclado/leaf": [
+   12,
+   276,
+   12,
+   12
+  ],
+  "teclado/amber": [
+   24,
+   276,
+   12,
+   12
+  ],
+  "teclado/coral": [
+   36,
+   276,
+   12,
+   12
+  ],
+  "teclado/light": [
+   48,
+   276,
+   12,
+   12
+  ],
+  "teclado/ink": [
+   60,
+   276,
+   12,
+   12
+  ],
+  "teclado/dark": [
+   72,
+   276,
+   12,
+   12
+  ],
+  "teclado/wood": [
+   84,
+   276,
+   12,
+   12
+  ],
+  "teclado/predeterminada": [
+   96,
+   276,
+   12,
+   12
+  ],
+  "mapa/water": [
+   0,
+   288,
+   12,
+   12
+  ],
+  "mapa/leaf": [
+   12,
+   288,
+   12,
+   12
+  ],
+  "mapa/amber": [
+   24,
+   288,
+   12,
+   12
+  ],
+  "mapa/coral": [
+   36,
+   288,
+   12,
+   12
+  ],
+  "mapa/light": [
+   48,
+   288,
+   12,
+   12
+  ],
+  "mapa/ink": [
+   60,
+   288,
+   12,
+   12
+  ],
+  "mapa/dark": [
+   72,
+   288,
+   12,
+   12
+  ],
+  "mapa/wood": [
+   84,
+   288,
+   12,
+   12
+  ],
+  "mapa/predeterminada": [
+   96,
+   288,
+   12,
+   12
+  ],
+  "libro/water": [
+   0,
+   300,
+   12,
+   12
+  ],
+  "libro/leaf": [
+   12,
+   300,
+   12,
+   12
+  ],
+  "libro/amber": [
+   24,
+   300,
+   12,
+   12
+  ],
+  "libro/coral": [
+   36,
+   300,
+   12,
+   12
+  ],
+  "libro/light": [
+   48,
+   300,
+   12,
+   12
+  ],
+  "libro/ink": [
+   60,
+   300,
+   12,
+   12
+  ],
+  "libro/dark": [
+   72,
+   300,
+   12,
+   12
+  ],
+  "libro/wood": [
+   84,
+   300,
+   12,
+   12
+  ],
+  "libro/predeterminada": [
+   96,
+   300,
+   12,
+   12
+  ],
+  "trofeo/water": [
+   0,
+   312,
+   12,
+   12
+  ],
+  "trofeo/leaf": [
+   12,
+   312,
+   12,
+   12
+  ],
+  "trofeo/amber": [
+   24,
+   312,
+   12,
+   12
+  ],
+  "trofeo/coral": [
+   36,
+   312,
+   12,
+   12
+  ],
+  "trofeo/light": [
+   48,
+   312,
+   12,
+   12
+  ],
+  "trofeo/ink": [
+   60,
+   312,
+   12,
+   12
+  ],
+  "trofeo/dark": [
+   72,
+   312,
+   12,
+   12
+  ],
+  "trofeo/wood": [
+   84,
+   312,
+   12,
+   12
+  ],
+  "trofeo/predeterminada": [
+   96,
+   312,
+   12,
+   12
+  ]
+ }
+}

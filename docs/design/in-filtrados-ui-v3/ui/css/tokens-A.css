@@ -1,0 +1,32 @@
+/* Tokens · A-dia */
+:root {
+  --ink: #10303a;
+  --ink-2: #2c5560;
+  --ink-3: #46737d;
+  --enamel: #e6f5f0;
+  --enamel-2: #cfe8e2;
+  --enamel-3: #a9d0ca;
+  --enamel-hi: #ffffff;
+  --wood: #8d5d3d;
+  --wood-hi: #bd8a5f;
+  --wood-lo: #5e3d2a;
+  --wood-dk: #2f1d10;
+  --teal: #1d7a86;
+  --teal-hi: #4dc0cc;
+  --teal-lo: #0d4651;
+  --teal-dk: #072c34;
+  --leaf: #3d9a55;
+  --leaf-dk: #1f5a35;
+  --water: #3f9fd6;
+  --water-hi: #9be0f2;
+  --water-dk: #1c5f94;
+  --amber: #f2b33d;
+  --amber-dk: #8a5a10;
+  --coral: #e2574c;
+  --coral-dk: #8a2a28;
+  --oil: #3a3046;
+  --focus: #ffd45e;
+  --night: #0d3a45;
+  --glass: #0c2230;
+  --u: 3px;
+}

@@ -1,0 +1,23 @@
+/* Tokens · B-noche */
+:root {
+  --bg: #06142a;
+  --bg2: #0a1f3a;
+  --pan: #0d2a46;
+  --pan2: #14416a;
+  --pan3: #1a5384;
+  --line: #4a9bd0;
+  --line-d: #1c4d75;
+  --ink: #04101f;
+  --aqua: #7ee6d8;
+  --water: #3fb2ff;
+  --leaf: #5fe08a;
+  --amber: #ffd24a;
+  --coral: #ff6b6b;
+  --lilac: #b79cff;
+  --txt: #e8f8ff;
+  --mut: #9cc3d6;
+  --focus: #ffffff;
+  --head: 'Silkscreen', 'Press Start 2P', ui-monospace, monospace;
+  --logo: 'Press Start 2P', ui-monospace, monospace;
+  --body: 'VT323', ui-monospace, monospace;
+}
