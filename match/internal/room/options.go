@@ -78,3 +78,14 @@ func WithClock(now func() time.Time) Option {
 func WithEventLog(eventLog EventLog) Option {
 	return func(r *Room) { r.eventLog = eventLog }
 }
+
+// WithRandomEmergencies lanza emergencias al azar en la partida (S3-05).
+// El servidor las activa; las pruebas de otras reglas las dejan apagadas.
+func WithRandomEmergencies(enabled bool) Option {
+	return func(r *Room) { r.randomEmergencies = enabled }
+}
+
+// WithEmergencyRand fija el azar de las emergencias; los tests lo usan.
+func WithEmergencyRand(intn func(n int) int) Option {
+	return func(r *Room) { r.emergencyRand = intn }
+}

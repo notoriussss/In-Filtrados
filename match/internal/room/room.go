@@ -63,6 +63,14 @@ type Room struct {
 
 	// connectedCount es actualizado atomicamente por la goroutine de la sala.
 	connectedCount atomic.Int32
+
+	// S3-05: emergencias, sabotajes y su espera compartida.
+	emergency         *emergencyState
+	sabotageReadyAt   int64
+	pipesUsed         int
+	nextRandomAt      int64
+	randomEmergencies bool
+	emergencyRand     func(n int) int
 }
 
 func NewRoom(code string, matchID string, m *Map, opts ...Option) *Room {
@@ -214,6 +222,10 @@ func (r *Room) handleAction(a PlayerAction) {
 		if r.phase == matchv1.Phase_PLAYING {
 			r.startClean(p, a.TankSlot)
 		}
+	case a.Sabotage:
+		r.handleSabotage(p, a.SabotageKind)
+	case a.Fix:
+		r.handleFix(p, a.FixPointID)
 	case a.InteractTask:
 		if r.phase == matchv1.Phase_PLAYING {
 			if !a.Completed {
@@ -389,6 +401,8 @@ func (r *Room) updateGrace() {
 			r.Code,
 			id,
 		)
+		// Sus tareas ya no cuentan para llenar el embalse.
+		r.updateReservoir()
 		if r.meeting != nil && !r.meeting.votingClosed && r.allAliveVoted() {
 			r.closeVoting()
 		}
@@ -460,6 +474,10 @@ func (r *Room) startMatch(playerID string) {
 	r.meeting = nil
 	r.chat = nil
 	r.oilDrops = nil
+	r.emergency = nil
+	r.sabotageReadyAt = 0
+	r.pipesUsed = 0
+	r.nextRandomAt = 0
 	r.participants = r.snapshotParticipants()
 
 	ctx, cancel := context.WithTimeout(context.Background(), depsTimeout)
@@ -769,6 +787,7 @@ func (r *Room) step() {
 	if r.phase == matchv1.Phase_PLAYING {
 		r.stepTanks()
 		r.cancelFarTasks()
+		r.stepEmergency()
 	}
 	if r.phase == matchv1.Phase_MEETING {
 		r.stepMeeting()
@@ -807,12 +826,16 @@ type sharedState struct {
 	chat    []*matchv1.ChatMessage
 	paused  bool
 	waiting []string
+	// S3-05: emergencia activa (sabotaje o aleatoria, se ven igual).
+	emergency *matchv1.Emergency
 }
 
 func (r *Room) sharedView() sharedState {
 	views := make([]*matchv1.PlayerView, 0, len(r.players))
 	for _, p := range r.players {
-		views = append(views, proto.Clone(p.view).(*matchv1.PlayerView))
+		v := proto.Clone(p.view).(*matchv1.PlayerView)
+		v.Activity = r.activityOf(p)
+		views = append(views, v)
 	}
 	sort.Slice(views, func(i, j int) bool {
 		if views[i].Id == r.creatorID {
@@ -831,6 +854,8 @@ func (r *Room) sharedView() sharedState {
 		chat:    r.chatViews(),
 		paused:  r.paused(),
 		waiting: r.waitingFor(),
+
+		emergency: r.emergencyView(),
 	}
 }
 
@@ -857,6 +882,8 @@ func (r *Room) sendTo(p *player, s sharedState) {
 		WaitingFor:   s.waiting,
 		MyTasks:      myTasks(p),
 		MyActiveTask: p.taskStation,
+		Emergency:    s.emergency,
+		MySabotage:   r.sabotageView(p),
 	}
 	ev := &matchv1.ServerEvent{
 		Event: &matchv1.ServerEvent_Snapshot{

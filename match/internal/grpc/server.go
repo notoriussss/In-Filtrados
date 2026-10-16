@@ -109,7 +109,11 @@ func (s *Server) CreateRoom(
 
 // roomOptions arma las opciones de la sala con las dependencias del server.
 func (s *Server) roomOptions(creatorID string) []room.Option {
-	opts := []room.Option{room.WithCreator(creatorID)}
+	opts := []room.Option{
+		room.WithCreator(creatorID),
+		// S3-05: además de los sabotajes, emergencias al azar.
+		room.WithRandomEmergencies(true),
+	}
 	if s.registry != nil {
 		opts = append(opts, room.WithOnCleanup(func(code string) {
 			s.registry.Remove(code)
@@ -311,6 +315,18 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 					action.VoteSkip = choice.Skip
 				}
 				r.Act(action)
+			case msg.GetSabotage() != nil:
+				r.Act(room.PlayerAction{
+					PlayerID:     playerID,
+					Sabotage:     true,
+					SabotageKind: msg.GetSabotage().GetKind(),
+				})
+			case msg.GetFix() != nil:
+				r.Act(room.PlayerAction{
+					PlayerID:   playerID,
+					Fix:        true,
+					FixPointID: msg.GetFix().GetPointId(),
+				})
 			case msg.GetChat() != nil:
 				c := msg.GetChat()
 				r.Act(room.PlayerAction{

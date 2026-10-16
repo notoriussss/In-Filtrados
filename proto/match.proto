@@ -33,6 +33,9 @@ message ClientAction {
     Report      report      = 6;
     Vote        vote        = 7;
     Chat        chat        = 8;
+    // S3-05: sabotajes del impostor y arreglos de emergencias.
+    Sabotage    sabotage    = 9;
+    Fix         fix         = 10;
   }
 }
 message Join {
@@ -77,6 +80,17 @@ message Chat {
   string text          = 2;
 }
 
+// Sabotage: solo el impostor; kind es "pipe" (tubería rota) o "steam"
+// (vapor en la planta). Se ve idéntico a una emergencia aleatoria (S3-05).
+message Sabotage {
+  string kind = 1;
+}
+// Fix: arreglar la emergencia activa en un punto de reparación de
+// shared/map.json (fixPoints). Hay que quedarse quieto junto al punto.
+message Fix {
+  string point_id = 1;
+}
+
 message ServerEvent {
   oneof event {
     Snapshot snapshot = 1;
@@ -118,6 +132,22 @@ message Snapshot {
   // Igual que my_role, nunca viajan las de otro jugador.
   repeated MyTask my_tasks       = 13;
   string          my_active_task = 14;
+  // S3-05: emergencia activa, sea sabotaje o evento aleatorio (se ven
+  // igual). Vacío si no hay ninguna.
+  Emergency      emergency   = 15;
+  // S3-05: solo en el snapshot del impostor (vacío para el resto).
+  SabotageStatus my_sabotage = 16;
+}
+// Emergency: tubería rota o vapor en la planta (S3-05).
+message Emergency {
+  string          kind         = 1; // "pipe" o "steam"
+  int64           ends_at_tick = 2; // pipe: si llega, tanques +20; steam: 0
+  repeated string held_points  = 3; // puntos con alguien arreglando ahora
+}
+// SabotageStatus: cuándo puede volver a sabotear el impostor (S3-05).
+message SabotageStatus {
+  int64 ready_at_tick = 1; // espera compartida de 40 s
+  int32 pipes_left    = 2; // la tubería se rompe máximo 2 veces
 }
 // OilDrop: gota del rastro del impostor tras contaminar (S2-12).
 message OilDrop {
@@ -170,6 +200,10 @@ message PlayerView {
   float  y         = 5;
   bool   connected = 6;
   bool   alive     = 7;
+  // Lo que está haciendo ahora, para animarlo en el mapa: "" (nada),
+  // "reduce", "reuse" o "recycle" (tarea), "tank" (limpiar o
+  // contaminar: se ven igual) o "fix" (arreglar una emergencia).
+  string activity  = 8;
 }
 message Error {
   string code    = 1;

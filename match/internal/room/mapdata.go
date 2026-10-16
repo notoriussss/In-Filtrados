@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"sync"
 )
 
 // spawnGap is the distance between two spawn points; more than the diameter
@@ -12,6 +13,8 @@ const (
 	spawnGap  = 40
 	spawnCols = 5
 	spawnRows = 2
+	// maxSpawnRing limita la búsqueda de lugares libres alrededor del spawn.
+	maxSpawnRing = 4
 )
 
 type Point struct {
@@ -32,6 +35,25 @@ type Station struct {
 	Type string  `json:"type"`
 	X    float64 `json:"x"`
 	Y    float64 `json:"y"`
+	// Radius is how close the player must be; 0 means taskRadius.
+	Radius float64 `json:"radius"`
+}
+
+// radius is the interaction range of the station.
+func (s *Station) radius() float64 {
+	if s.Radius > 0 {
+		return s.Radius
+	}
+	return taskRadius
+}
+
+// FixPoint is where an emergency is fixed (S3-05): the two ends of the
+// main pipe or the steam valve of the treatment plant.
+type FixPoint struct {
+	ID   string  `json:"id"`
+	Kind string  `json:"kind"`
+	X    float64 `json:"x"`
+	Y    float64 `json:"y"`
 }
 
 // TankSpot is where a garden tank stands (docs/tasks.md 0.3).
@@ -49,6 +71,11 @@ type Map struct {
 	Walls    []Rect     `json:"walls"`
 	Stations []Station  `json:"stations"`
 	Tanks    []TankSpot `json:"tanks"`
+	// S3-05: puntos donde se arreglan las emergencias.
+	FixPoints []FixPoint `json:"fixPoints"`
+
+	spawnOnce sync.Once
+	spawns    []Point
 }
 
 // LoadMap reads and checks the map. The service must not start without it.
@@ -82,13 +109,41 @@ func (m *Map) validate() error {
 	return nil
 }
 
-// SpawnPoint places players on a 5 x 2 grid centered on spawn, spawnGap
-// apart. Slots past the 10 players of a room wrap around.
+// SpawnPoint places players on free points of a grid centered on spawn,
+// spawnGap apart, nearest first (the mesa del mirador and its chairs
+// block some of them). Slots past the 10 players of a room wrap around.
 func (m *Map) SpawnPoint(slot int) (x, y float64) {
-	slot %= spawnCols * spawnRows
-	col := float64(slot % spawnCols)
-	row := float64(slot / spawnCols)
-	x = m.Spawn.X + (col-float64(spawnCols-1)/2)*spawnGap
-	y = m.Spawn.Y + (row-float64(spawnRows-1)/2)*spawnGap
-	return x, y
+	m.spawnOnce.Do(m.buildSpawns)
+	p := m.spawns[slot%len(m.spawns)]
+	return p.X, p.Y
+}
+
+// buildSpawns busca los spawnCols × spawnRows puntos libres más cercanos
+// al spawn, en anillos de la cuadrícula de spawnGap.
+func (m *Map) buildSpawns() {
+	want := spawnCols * spawnRows
+	for ring := 0; ring <= maxSpawnRing && len(m.spawns) < want; ring++ {
+		for dy := -ring; dy <= ring; dy++ {
+			for dx := -ring; dx <= ring; dx++ {
+				if max(abs(dx), abs(dy)) != ring || len(m.spawns) == want {
+					continue
+				}
+				x := m.Spawn.X + float64(dx)*spawnGap
+				y := m.Spawn.Y + float64(dy)*spawnGap
+				if !m.blocked(x, y) {
+					m.spawns = append(m.spawns, Point{X: x, Y: y})
+				}
+			}
+		}
+	}
+	if len(m.spawns) == 0 {
+		m.spawns = []Point{m.Spawn}
+	}
+}
+
+func abs(v int) int {
+	if v < 0 {
+		return -v
+	}
+	return v
 }

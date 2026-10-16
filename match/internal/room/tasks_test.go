@@ -183,8 +183,10 @@ func TestCrewTaskSuccess(t *testing.T) {
 	if p.tasksCompleted != 1 {
 		t.Errorf("tasksCompleted debe ser 1, obtuvo %d", p.tasksCompleted)
 	}
-	if r.reservoir != 3 { // reduce suma 3
-		t.Errorf("embalse debe ser 3, obtuvo %d", r.reservoir)
+	// El embalse es el avance de la tripulación: leak-1 (reduce, 3) de
+	// leak-1 + rain-1 (3 + 4) es 3/7, o sea 42 %.
+	if r.reservoir != 42 {
+		t.Errorf("embalse debe ser 42, obtuvo %d", r.reservoir)
 	}
 
 	// Publish corre en goroutine: esperamos con timeout

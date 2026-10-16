@@ -3,8 +3,10 @@ import type {
   InteractMessage,
 } from '@in-filtrados/messages';
 import {
+  EMERGENCY_KINDS,
   MAX_CHAT_LENGTH,
   MAX_CLIENT_MSG_ID_LENGTH,
+  MAX_FIX_POINT_ID_LENGTH,
   MAX_PLAYER_ID_LENGTH,
   MAX_STATION_ID_LENGTH,
   MAX_TANK_SLOT,
@@ -45,6 +47,15 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       return parseVote(msg);
     case 'chat':
       return parseChat(msg);
+    case 'sabotage':
+      // S3-05: match revisa que sea el impostor y las esperas.
+      if (!EMERGENCY_KINDS.includes(msg.kind)) return null;
+      return { type: 'sabotage', kind: msg.kind };
+    case 'fix':
+      if (!isShortString(msg.pointId, MAX_FIX_POINT_ID_LENGTH)) {
+        return null;
+      }
+      return { type: 'fix', pointId: msg.pointId };
     default:
       return null;
   }
@@ -76,6 +87,10 @@ export function toGrpcAction(msg: ClientMessage): object | null {
       return {
         chat: { clientMsgId: msg.clientMsgId, text: msg.text },
       };
+    case 'sabotage':
+      return { sabotage: { kind: msg.kind } };
+    case 'fix':
+      return { fix: { pointId: msg.pointId } };
     default:
       return null;
   }

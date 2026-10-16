@@ -12,7 +12,11 @@ export type ClientMessage =
   | { type: 'contaminate'; tankSlot: number } // solo el impostor
   | { type: 'report'; tankSlot: number } // un tanque muerto
   | { type: 'vote'; targetPlayerId: string | null } // null = saltar
-  | { type: 'chat'; clientMsgId: string; text: string }; // solo en MEETING
+  | { type: 'chat'; clientMsgId: string; text: string } // solo en MEETING
+  // S3-05: sabotear (solo el impostor) y arreglar una emergencia en un
+  // punto de reparación de shared/map.json (fixPoints).
+  | { type: 'sabotage'; kind: EmergencyKind }
+  | { type: 'fix'; pointId: string };
 
 // interact: hacer una tarea en una estación o limpiar un tanque.
 // completed se manda al terminar el minijuego (S2-04).
@@ -47,7 +51,29 @@ export type Snapshot = {
   // tarea el servidor dio por iniciada; null si ninguna.
   myTasks: MyTask[];
   myActiveTask: string | null;
+  // S3-05: emergencia activa (sabotaje o aleatoria: se ven igual) y,
+  // solo en el snapshot del impostor, cuándo puede volver a sabotear.
+  emergency: Emergency | null;
+  mySabotage: SabotageStatus | null;
 };
+
+// S3-05: tubería rota o vapor en la planta.
+export type EmergencyKind = 'pipe' | 'steam';
+
+export type Emergency = {
+  kind: EmergencyKind;
+  endsAtTick: number; // pipe: si llega, todos los tanques +20; steam: 0
+  heldPoints: string[]; // puntos con alguien arreglando ahora
+};
+
+export type SabotageStatus = {
+  readyAtTick: number; // espera compartida de 40 s
+  pipesLeft: number; // la tubería se rompe máximo 2 veces por partida
+};
+
+// Lo que hace un jugador ahora, para animarlo en el mapa. Limpiar y
+// contaminar se ven igual ('tank').
+export type Activity = 'reduce' | 'reuse' | 'recycle' | 'tank' | 'fix';
 
 // MyTask: una estación asignada al jugador y si ya la hizo (S2-11).
 export type MyTask = {
@@ -77,6 +103,7 @@ export type PlayerView = {
   y: number;
   connected: boolean;
   alive: boolean;
+  activity: Activity | null; // S3-05: null si no hace nada
 };
 
 export type TankView = {

@@ -75,3 +75,25 @@ test('unknown types and invalid JSON are rejected', () => {
   assert.equal(parse({ type: 'teleport' }), null);
   assert.equal(parseClientMessage('{ no es json'), null);
 });
+
+test('S3-05: sabotage only with a known kind', () => {
+  assert.deepEqual(toGrpcAction(parse({ type: 'sabotage', kind: 'pipe' })!), {
+    sabotage: { kind: 'pipe' },
+  });
+  assert.deepEqual(
+    toGrpcAction(parse({ type: 'sabotage', kind: 'steam' })!),
+    { sabotage: { kind: 'steam' } },
+  );
+  assert.equal(parse({ type: 'sabotage', kind: 'flood' }), null);
+  assert.equal(parse({ type: 'sabotage' }), null);
+});
+
+test('S3-05: fix needs a point id', () => {
+  assert.deepEqual(
+    toGrpcAction(parse({ type: 'fix', pointId: 'pipe-west' })!),
+    { fix: { pointId: 'pipe-west' } },
+  );
+  assert.equal(parse({ type: 'fix' }), null);
+  assert.equal(parse({ type: 'fix', pointId: '' }), null);
+  assert.equal(parse({ type: 'fix', pointId: 'x'.repeat(65) }), null);
+});

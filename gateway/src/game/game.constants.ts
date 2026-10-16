@@ -37,6 +37,9 @@ export const MAX_STATION_ID_LENGTH = 64;
 export const MAX_PLAYER_ID_LENGTH = 64;
 export const MAX_CLIENT_MSG_ID_LENGTH = 64; // un UUID tiene 36
 export const MAX_CHAT_LENGTH = 200; // caracteres, igual que match
+// S3-05: sabotajes y puntos de reparación.
+export const EMERGENCY_KINDS: readonly unknown[] = ['pipe', 'steam'];
+export const MAX_FIX_POINT_ID_LENGTH = 64;
 
 // S3-02: espera entre intentos de reabrir Play si match no responde.
 export const PLAY_RETRY_DELAYS_MS: readonly number[] = [

@@ -1,9 +1,14 @@
 import type {
+  Activity,
   ChatMessage,
+  Emergency,
+  EmergencyKind,
   ErrorCode,
   Meeting,
   MyTask,
   OilDrop,
+  PlayerView,
+  SabotageStatus,
   ServerMessage,
   Snapshot,
   TankView,
@@ -15,14 +20,38 @@ type GrpcMeeting = Omit<Meeting, 'ejectedId'> & {
   ejectedId?: string | null;
 };
 
+type GrpcPlayerView = Omit<PlayerView, 'activity'> & {
+  activity?: string;
+};
+
+type GrpcEmergency = Omit<Emergency, 'kind'> & { kind: string };
+
 type GrpcSnapshot = Omit<
   Snapshot,
-  'type' | 'meeting' | 'myTasks' | 'myActiveTask'
+  | 'type'
+  | 'players'
+  | 'meeting'
+  | 'myTasks'
+  | 'myActiveTask'
+  | 'emergency'
+  | 'mySabotage'
 > & {
+  players?: GrpcPlayerView[];
   meeting: GrpcMeeting | null;
   myTasks?: MyTask[];
   myActiveTask?: string;
+  emergency?: GrpcEmergency | null;
+  mySabotage?: SabotageStatus | null;
 };
+
+const ACTIVITIES: readonly string[] = [
+  'reduce',
+  'reuse',
+  'recycle',
+  'tank',
+  'fix',
+];
+const EMERGENCY_KINDS: readonly string[] = ['pipe', 'steam'];
 
 type GrpcMatchEnded = { winner: string; impostorIds: string[] };
 
@@ -61,7 +90,7 @@ function toSnapshot(s: GrpcSnapshot): Snapshot {
     type: 'snapshot',
     tick: s.tick,
     phase: s.phase,
-    players: s.players ?? [],
+    players: (s.players ?? []).map(toPlayer),
     tanks: (s.tanks ?? []).map(toTank),
     reservoir: s.reservoir ?? 0,
     myRole: s.myRole ?? 'NO_ROLE',
@@ -79,6 +108,39 @@ function toSnapshot(s: GrpcSnapshot): Snapshot {
       s.myActiveTask && s.myActiveTask.length > 0
         ? s.myActiveTask
         : null,
+    emergency: toEmergency(s.emergency),
+    mySabotage: s.mySabotage
+      ? {
+          readyAtTick: s.mySabotage.readyAtTick,
+          pipesLeft: s.mySabotage.pipesLeft,
+        }
+      : null,
+  };
+}
+
+function toPlayer(p: GrpcPlayerView): PlayerView {
+  return {
+    id: p.id,
+    name: p.name,
+    color: p.color,
+    x: p.x,
+    y: p.y,
+    connected: Boolean(p.connected),
+    alive: Boolean(p.alive),
+    activity:
+      p.activity && ACTIVITIES.includes(p.activity)
+        ? (p.activity as Activity)
+        : null,
+  };
+}
+
+// S3-05: emergencia activa; null si no hay o si el tipo no se conoce.
+function toEmergency(e?: GrpcEmergency | null): Emergency | null {
+  if (!e || !EMERGENCY_KINDS.includes(e.kind)) return null;
+  return {
+    kind: e.kind as EmergencyKind,
+    endsAtTick: e.endsAtTick,
+    heldPoints: [...(e.heldPoints ?? [])],
   };
 }
 

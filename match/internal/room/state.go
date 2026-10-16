@@ -21,7 +21,7 @@ const (
 	noTank           = -1 // jugadores que llegaron después del último tanque
 
 	// S2-03: tanques (los tiempos van en ticks de 50 ms).
-	tankRange           = 40  // unidades para contaminar, limpiar o visitar
+	tankRange           = 56  // unidades para contaminar, limpiar o visitar
 	maxContamination    = 100 // a 100 el tanque muere
 	contaminateTicks    = 60  // 3 s quieto
 	contaminateAmount   = 35
@@ -46,7 +46,7 @@ const (
 	litersPerPoint = 100
 
 	// S2-05: reunión, chat y votación
-	reportRange        = 60  // unidades para reportar tanque muerto
+	reportRange        = 80  // unidades para reportar tanque muerto
 	meetingVotingTicks = 900 // 45 s para discutir y votar
 	meetingResultTicks = 100 // 5 s de resultado antes de PLAYING
 	chatMaxChars       = 200 // caracteres máximos por mensaje de chat
@@ -64,6 +64,24 @@ const (
 	oilTrailTicks     = 300 // 15 s soltando gotas
 	oilDropEveryTicks = 20  // 1 gota por segundo
 	oilDropLifeTicks  = 300 // cada gota dura 15 s
+
+	// S3-05: emergencias (sabotajes y eventos aleatorios).
+	emergencyPipe            = "pipe"
+	emergencySteam           = "steam"
+	emergencyGraceTicks      = 600  // ninguna en los primeros 30 s
+	sabotageCooldownTicks    = 800  // 40 s de espera compartida
+	maxPipeSabotages         = 2    // la tubería, máximo 2 por partida
+	pipeDeadlineTicks        = 600  // 30 s para arreglar la tubería
+	pipeDamage               = 20   // si revienta, cada tanque +20
+	steamFixTicks            = 40   // 2 s quieto junto a la válvula
+	fixRange                 = 48   // unidades para arreglar
+	randomEmergencyMinTicks  = 1200 // aleatorias cada 60 a 120 s
+	randomEmergencyMaxTicks  = 2400
+	randomPauseAfterSabotage = 1200 // tras un sabotaje, 60 s sin azar
+
+	// Lo que hace cada jugador, para animarlo (PlayerView.activity).
+	activityTank = "tank"
+	activityFix  = "fix"
 )
 
 var taskPoints = map[string]int32{
@@ -123,12 +141,18 @@ type PlayerAction struct {
 	Chat          bool
 	ChatMessageID string
 	ChatText      string
+
+	// S3-05: sabotear (solo el impostor) y arreglar una emergencia.
+	Sabotage     bool
+	SabotageKind string
+	Fix          bool
+	FixPointID   string
 }
 
 // isMove: la acción solo cambia la dirección (un Move).
 func (a PlayerAction) isMove() bool {
 	return !a.Start && !a.Contaminate && !a.Clean && !a.InteractTask &&
-		!a.Report && !a.Vote && !a.Chat
+		!a.Report && !a.Vote && !a.Chat && !a.Sabotage && !a.Fix
 }
 
 type player struct {
@@ -164,6 +188,10 @@ type player struct {
 	// tiempo de reloj, no ticks, para que siga corriendo en una pausa.
 	leftAt     time.Time // cuándo se cortó su stream; cero si conectado
 	graceUntil time.Time
+
+	// S3-05: punto de reparación que sostiene y desde hace cuántos ticks.
+	fixPoint string
+	fixTicks int
 }
 
 // meetingState guarda el estado de la reunión activa (S2-05).

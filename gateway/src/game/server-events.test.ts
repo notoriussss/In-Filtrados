@@ -71,6 +71,8 @@ test('snapshot keeps only the fields of the contract', () => {
     waitingFor: [],
     myTasks: [],
     myActiveTask: null,
+    emergency: null,
+    mySabotage: null,
   });
 });
 
@@ -124,6 +126,8 @@ test('snapshot with meeting result maps ejectedId', () => {
     waitingFor: [],
     myTasks: [],
     myActiveTask: null,
+    emergency: null,
+    mySabotage: null,
   });
 });
 
@@ -228,4 +232,103 @@ test('matchEnded with an unknown winner is dropped', () => {
     matchEnded: { winner: '', impostorIds: [] },
   };
   assert.equal(toServerMessage(ev), null);
+});
+
+test('S3-05: activity, emergency and mySabotage are mapped', () => {
+  const ev = {
+    event: 'snapshot',
+    snapshot: {
+      tick: 50,
+      phase: 'PLAYING',
+      players: [
+        {
+          id: 'p1',
+          name: 'Ana',
+          color: '#e6194b',
+          x: 1,
+          y: 2,
+          connected: true,
+          alive: true,
+          activity: 'recycle',
+          extra: 'x',
+        },
+        {
+          id: 'p2',
+          name: 'Beto',
+          color: '#3cb44b',
+          x: 3,
+          y: 4,
+          connected: true,
+          alive: true,
+          activity: '',
+        },
+        {
+          id: 'p3',
+          name: 'Cata',
+          color: '#ffe119',
+          x: 5,
+          y: 6,
+          connected: false,
+          alive: false,
+          activity: 'hack',
+        },
+      ],
+      tanks: [],
+      reservoir: 0,
+      myRole: 'IMPOSTOR',
+      myTaskProgress: { completed: 0, total: 4 },
+      meeting: null,
+      emergency: {
+        kind: 'pipe',
+        endsAtTick: 650,
+        heldPoints: ['pipe-west'],
+        extra: 'x',
+      },
+      mySabotage: { readyAtTick: 840, pipesLeft: 1, extra: 'x' },
+    },
+  } as unknown as GrpcServerEvent;
+
+  const msg = toServerMessage(ev);
+  assert.ok(msg && msg.type === 'snapshot');
+  assert.deepEqual(
+    msg.players.map((p) => p.activity),
+    ['recycle', null, null],
+  );
+  assert.deepEqual(msg.players[0], {
+    id: 'p1',
+    name: 'Ana',
+    color: '#e6194b',
+    x: 1,
+    y: 2,
+    connected: true,
+    alive: true,
+    activity: 'recycle',
+  });
+  assert.deepEqual(msg.emergency, {
+    kind: 'pipe',
+    endsAtTick: 650,
+    heldPoints: ['pipe-west'],
+  });
+  assert.deepEqual(msg.mySabotage, { readyAtTick: 840, pipesLeft: 1 });
+});
+
+test('S3-05: an unknown emergency kind is dropped', () => {
+  const ev = {
+    event: 'snapshot',
+    snapshot: {
+      tick: 1,
+      phase: 'PLAYING',
+      players: [],
+      tanks: [],
+      reservoir: 0,
+      myRole: 'CREW',
+      meeting: null,
+      emergency: { kind: 'flood', endsAtTick: 0, heldPoints: [] },
+      mySabotage: null,
+    },
+  } as unknown as GrpcServerEvent;
+  const msg = toServerMessage(ev);
+  assert.ok(msg && msg.type === 'snapshot');
+  assert.equal(msg.emergency, null);
+  assert.equal(msg.mySabotage, null);
 });

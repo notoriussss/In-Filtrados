@@ -298,6 +298,8 @@ type ClientAction struct {
 	//	*ClientAction_Report
 	//	*ClientAction_Vote
 	//	*ClientAction_Chat
+	//	*ClientAction_Sabotage
+	//	*ClientAction_Fix
 	Action        isClientAction_Action `protobuf_oneof:"action"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -412,6 +414,24 @@ func (x *ClientAction) GetChat() *Chat {
 	return nil
 }
 
+func (x *ClientAction) GetSabotage() *Sabotage {
+	if x != nil {
+		if x, ok := x.Action.(*ClientAction_Sabotage); ok {
+			return x.Sabotage
+		}
+	}
+	return nil
+}
+
+func (x *ClientAction) GetFix() *Fix {
+	if x != nil {
+		if x, ok := x.Action.(*ClientAction_Fix); ok {
+			return x.Fix
+		}
+	}
+	return nil
+}
+
 type isClientAction_Action interface {
 	isClientAction_Action()
 }
@@ -449,6 +469,15 @@ type ClientAction_Chat struct {
 	Chat *Chat `protobuf:"bytes,8,opt,name=chat,proto3,oneof"`
 }
 
+type ClientAction_Sabotage struct {
+	// S3-05: sabotajes del impostor y arreglos de emergencias.
+	Sabotage *Sabotage `protobuf:"bytes,9,opt,name=sabotage,proto3,oneof"`
+}
+
+type ClientAction_Fix struct {
+	Fix *Fix `protobuf:"bytes,10,opt,name=fix,proto3,oneof"`
+}
+
 func (*ClientAction_Join) isClientAction_Action() {}
 
 func (*ClientAction_Move) isClientAction_Action() {}
@@ -464,6 +493,10 @@ func (*ClientAction_Report) isClientAction_Action() {}
 func (*ClientAction_Vote) isClientAction_Action() {}
 
 func (*ClientAction_Chat) isClientAction_Action() {}
+
+func (*ClientAction_Sabotage) isClientAction_Action() {}
+
+func (*ClientAction_Fix) isClientAction_Action() {}
 
 type Join struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -932,6 +965,98 @@ func (x *Chat) GetText() string {
 	return ""
 }
 
+// Sabotage: solo el impostor; kind es "pipe" (tubería rota) o "steam"
+// (vapor en la planta). Se ve idéntico a una emergencia aleatoria (S3-05).
+type Sabotage struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Kind          string                 `protobuf:"bytes,1,opt,name=kind,proto3" json:"kind,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Sabotage) Reset() {
+	*x = Sabotage{}
+	mi := &file_match_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Sabotage) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Sabotage) ProtoMessage() {}
+
+func (x *Sabotage) ProtoReflect() protoreflect.Message {
+	mi := &file_match_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Sabotage.ProtoReflect.Descriptor instead.
+func (*Sabotage) Descriptor() ([]byte, []int) {
+	return file_match_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *Sabotage) GetKind() string {
+	if x != nil {
+		return x.Kind
+	}
+	return ""
+}
+
+// Fix: arreglar la emergencia activa en un punto de reparación de
+// shared/map.json (fixPoints). Hay que quedarse quieto junto al punto.
+type Fix struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	PointId       string                 `protobuf:"bytes,1,opt,name=point_id,json=pointId,proto3" json:"point_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Fix) Reset() {
+	*x = Fix{}
+	mi := &file_match_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Fix) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Fix) ProtoMessage() {}
+
+func (x *Fix) ProtoReflect() protoreflect.Message {
+	mi := &file_match_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Fix.ProtoReflect.Descriptor instead.
+func (*Fix) Descriptor() ([]byte, []int) {
+	return file_match_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *Fix) GetPointId() string {
+	if x != nil {
+		return x.PointId
+	}
+	return ""
+}
+
 type ServerEvent struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Types that are valid to be assigned to Event:
@@ -946,7 +1071,7 @@ type ServerEvent struct {
 
 func (x *ServerEvent) Reset() {
 	*x = ServerEvent{}
-	mi := &file_match_proto_msgTypes[12]
+	mi := &file_match_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -958,7 +1083,7 @@ func (x *ServerEvent) String() string {
 func (*ServerEvent) ProtoMessage() {}
 
 func (x *ServerEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[12]
+	mi := &file_match_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -971,7 +1096,7 @@ func (x *ServerEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ServerEvent.ProtoReflect.Descriptor instead.
 func (*ServerEvent) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{12}
+	return file_match_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *ServerEvent) GetEvent() isServerEvent_Event {
@@ -1052,15 +1177,20 @@ type Snapshot struct {
 	// S2-11: las tareas del destinatario (pendientes y hechas) y la
 	// estación cuya tarea el servidor dio por iniciada ("" si ninguna).
 	// Igual que my_role, nunca viajan las de otro jugador.
-	MyTasks       []*MyTask `protobuf:"bytes,13,rep,name=my_tasks,json=myTasks,proto3" json:"my_tasks,omitempty"`
-	MyActiveTask  string    `protobuf:"bytes,14,opt,name=my_active_task,json=myActiveTask,proto3" json:"my_active_task,omitempty"`
+	MyTasks      []*MyTask `protobuf:"bytes,13,rep,name=my_tasks,json=myTasks,proto3" json:"my_tasks,omitempty"`
+	MyActiveTask string    `protobuf:"bytes,14,opt,name=my_active_task,json=myActiveTask,proto3" json:"my_active_task,omitempty"`
+	// S3-05: emergencia activa, sea sabotaje o evento aleatorio (se ven
+	// igual). Vacío si no hay ninguna.
+	Emergency *Emergency `protobuf:"bytes,15,opt,name=emergency,proto3" json:"emergency,omitempty"`
+	// S3-05: solo en el snapshot del impostor (vacío para el resto).
+	MySabotage    *SabotageStatus `protobuf:"bytes,16,opt,name=my_sabotage,json=mySabotage,proto3" json:"my_sabotage,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Snapshot) Reset() {
 	*x = Snapshot{}
-	mi := &file_match_proto_msgTypes[13]
+	mi := &file_match_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1072,7 +1202,7 @@ func (x *Snapshot) String() string {
 func (*Snapshot) ProtoMessage() {}
 
 func (x *Snapshot) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[13]
+	mi := &file_match_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1085,7 +1215,7 @@ func (x *Snapshot) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Snapshot.ProtoReflect.Descriptor instead.
 func (*Snapshot) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{13}
+	return file_match_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *Snapshot) GetTick() int64 {
@@ -1186,6 +1316,134 @@ func (x *Snapshot) GetMyActiveTask() string {
 	return ""
 }
 
+func (x *Snapshot) GetEmergency() *Emergency {
+	if x != nil {
+		return x.Emergency
+	}
+	return nil
+}
+
+func (x *Snapshot) GetMySabotage() *SabotageStatus {
+	if x != nil {
+		return x.MySabotage
+	}
+	return nil
+}
+
+// Emergency: tubería rota o vapor en la planta (S3-05).
+type Emergency struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Kind          string                 `protobuf:"bytes,1,opt,name=kind,proto3" json:"kind,omitempty"`                                  // "pipe" o "steam"
+	EndsAtTick    int64                  `protobuf:"varint,2,opt,name=ends_at_tick,json=endsAtTick,proto3" json:"ends_at_tick,omitempty"` // pipe: si llega, tanques +20; steam: 0
+	HeldPoints    []string               `protobuf:"bytes,3,rep,name=held_points,json=heldPoints,proto3" json:"held_points,omitempty"`    // puntos con alguien arreglando ahora
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Emergency) Reset() {
+	*x = Emergency{}
+	mi := &file_match_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Emergency) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Emergency) ProtoMessage() {}
+
+func (x *Emergency) ProtoReflect() protoreflect.Message {
+	mi := &file_match_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Emergency.ProtoReflect.Descriptor instead.
+func (*Emergency) Descriptor() ([]byte, []int) {
+	return file_match_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *Emergency) GetKind() string {
+	if x != nil {
+		return x.Kind
+	}
+	return ""
+}
+
+func (x *Emergency) GetEndsAtTick() int64 {
+	if x != nil {
+		return x.EndsAtTick
+	}
+	return 0
+}
+
+func (x *Emergency) GetHeldPoints() []string {
+	if x != nil {
+		return x.HeldPoints
+	}
+	return nil
+}
+
+// SabotageStatus: cuándo puede volver a sabotear el impostor (S3-05).
+type SabotageStatus struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ReadyAtTick   int64                  `protobuf:"varint,1,opt,name=ready_at_tick,json=readyAtTick,proto3" json:"ready_at_tick,omitempty"` // espera compartida de 40 s
+	PipesLeft     int32                  `protobuf:"varint,2,opt,name=pipes_left,json=pipesLeft,proto3" json:"pipes_left,omitempty"`         // la tubería se rompe máximo 2 veces
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SabotageStatus) Reset() {
+	*x = SabotageStatus{}
+	mi := &file_match_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SabotageStatus) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SabotageStatus) ProtoMessage() {}
+
+func (x *SabotageStatus) ProtoReflect() protoreflect.Message {
+	mi := &file_match_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SabotageStatus.ProtoReflect.Descriptor instead.
+func (*SabotageStatus) Descriptor() ([]byte, []int) {
+	return file_match_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *SabotageStatus) GetReadyAtTick() int64 {
+	if x != nil {
+		return x.ReadyAtTick
+	}
+	return 0
+}
+
+func (x *SabotageStatus) GetPipesLeft() int32 {
+	if x != nil {
+		return x.PipesLeft
+	}
+	return 0
+}
+
 // OilDrop: gota del rastro del impostor tras contaminar (S2-12).
 type OilDrop struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -1199,7 +1457,7 @@ type OilDrop struct {
 
 func (x *OilDrop) Reset() {
 	*x = OilDrop{}
-	mi := &file_match_proto_msgTypes[14]
+	mi := &file_match_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1211,7 +1469,7 @@ func (x *OilDrop) String() string {
 func (*OilDrop) ProtoMessage() {}
 
 func (x *OilDrop) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[14]
+	mi := &file_match_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1224,7 +1482,7 @@ func (x *OilDrop) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OilDrop.ProtoReflect.Descriptor instead.
 func (*OilDrop) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{14}
+	return file_match_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *OilDrop) GetX() float32 {
@@ -1267,7 +1525,7 @@ type TankView struct {
 
 func (x *TankView) Reset() {
 	*x = TankView{}
-	mi := &file_match_proto_msgTypes[15]
+	mi := &file_match_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1279,7 +1537,7 @@ func (x *TankView) String() string {
 func (*TankView) ProtoMessage() {}
 
 func (x *TankView) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[15]
+	mi := &file_match_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1292,7 +1550,7 @@ func (x *TankView) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TankView.ProtoReflect.Descriptor instead.
 func (*TankView) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{15}
+	return file_match_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *TankView) GetSlot() int32 {
@@ -1334,7 +1592,7 @@ type MyTask struct {
 
 func (x *MyTask) Reset() {
 	*x = MyTask{}
-	mi := &file_match_proto_msgTypes[16]
+	mi := &file_match_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1346,7 +1604,7 @@ func (x *MyTask) String() string {
 func (*MyTask) ProtoMessage() {}
 
 func (x *MyTask) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[16]
+	mi := &file_match_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1359,7 +1617,7 @@ func (x *MyTask) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MyTask.ProtoReflect.Descriptor instead.
 func (*MyTask) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{16}
+	return file_match_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *MyTask) GetStationId() string {
@@ -1386,7 +1644,7 @@ type TaskProgress struct {
 
 func (x *TaskProgress) Reset() {
 	*x = TaskProgress{}
-	mi := &file_match_proto_msgTypes[17]
+	mi := &file_match_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1398,7 +1656,7 @@ func (x *TaskProgress) String() string {
 func (*TaskProgress) ProtoMessage() {}
 
 func (x *TaskProgress) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[17]
+	mi := &file_match_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1411,7 +1669,7 @@ func (x *TaskProgress) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TaskProgress.ProtoReflect.Descriptor instead.
 func (*TaskProgress) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{17}
+	return file_match_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *TaskProgress) GetCompleted() int32 {
@@ -1444,7 +1702,7 @@ type Meeting struct {
 
 func (x *Meeting) Reset() {
 	*x = Meeting{}
-	mi := &file_match_proto_msgTypes[18]
+	mi := &file_match_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1456,7 +1714,7 @@ func (x *Meeting) String() string {
 func (*Meeting) ProtoMessage() {}
 
 func (x *Meeting) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[18]
+	mi := &file_match_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1469,7 +1727,7 @@ func (x *Meeting) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Meeting.ProtoReflect.Descriptor instead.
 func (*Meeting) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{18}
+	return file_match_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *Meeting) GetReporterId() string {
@@ -1540,7 +1798,7 @@ type ChatMessage struct {
 
 func (x *ChatMessage) Reset() {
 	*x = ChatMessage{}
-	mi := &file_match_proto_msgTypes[19]
+	mi := &file_match_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1552,7 +1810,7 @@ func (x *ChatMessage) String() string {
 func (*ChatMessage) ProtoMessage() {}
 
 func (x *ChatMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[19]
+	mi := &file_match_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1565,7 +1823,7 @@ func (x *ChatMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChatMessage.ProtoReflect.Descriptor instead.
 func (*ChatMessage) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{19}
+	return file_match_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *ChatMessage) GetId() string {
@@ -1607,7 +1865,7 @@ type MatchEnded struct {
 
 func (x *MatchEnded) Reset() {
 	*x = MatchEnded{}
-	mi := &file_match_proto_msgTypes[20]
+	mi := &file_match_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1619,7 +1877,7 @@ func (x *MatchEnded) String() string {
 func (*MatchEnded) ProtoMessage() {}
 
 func (x *MatchEnded) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[20]
+	mi := &file_match_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1632,7 +1890,7 @@ func (x *MatchEnded) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MatchEnded.ProtoReflect.Descriptor instead.
 func (*MatchEnded) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{20}
+	return file_match_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *MatchEnded) GetWinner() string {
@@ -1650,21 +1908,25 @@ func (x *MatchEnded) GetImpostorIds() []string {
 }
 
 type PlayerView struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	Color         string                 `protobuf:"bytes,3,opt,name=color,proto3" json:"color,omitempty"`
-	X             float32                `protobuf:"fixed32,4,opt,name=x,proto3" json:"x,omitempty"`
-	Y             float32                `protobuf:"fixed32,5,opt,name=y,proto3" json:"y,omitempty"`
-	Connected     bool                   `protobuf:"varint,6,opt,name=connected,proto3" json:"connected,omitempty"`
-	Alive         bool                   `protobuf:"varint,7,opt,name=alive,proto3" json:"alive,omitempty"`
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	Id        string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name      string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Color     string                 `protobuf:"bytes,3,opt,name=color,proto3" json:"color,omitempty"`
+	X         float32                `protobuf:"fixed32,4,opt,name=x,proto3" json:"x,omitempty"`
+	Y         float32                `protobuf:"fixed32,5,opt,name=y,proto3" json:"y,omitempty"`
+	Connected bool                   `protobuf:"varint,6,opt,name=connected,proto3" json:"connected,omitempty"`
+	Alive     bool                   `protobuf:"varint,7,opt,name=alive,proto3" json:"alive,omitempty"`
+	// Lo que está haciendo ahora, para animarlo en el mapa: "" (nada),
+	// "reduce", "reuse" o "recycle" (tarea), "tank" (limpiar o
+	// contaminar: se ven igual) o "fix" (arreglar una emergencia).
+	Activity      string `protobuf:"bytes,8,opt,name=activity,proto3" json:"activity,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *PlayerView) Reset() {
 	*x = PlayerView{}
-	mi := &file_match_proto_msgTypes[21]
+	mi := &file_match_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1676,7 +1938,7 @@ func (x *PlayerView) String() string {
 func (*PlayerView) ProtoMessage() {}
 
 func (x *PlayerView) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[21]
+	mi := &file_match_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1689,7 +1951,7 @@ func (x *PlayerView) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlayerView.ProtoReflect.Descriptor instead.
 func (*PlayerView) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{21}
+	return file_match_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *PlayerView) GetId() string {
@@ -1741,6 +2003,13 @@ func (x *PlayerView) GetAlive() bool {
 	return false
 }
 
+func (x *PlayerView) GetActivity() string {
+	if x != nil {
+		return x.Activity
+	}
+	return ""
+}
+
 type Error struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
@@ -1751,7 +2020,7 @@ type Error struct {
 
 func (x *Error) Reset() {
 	*x = Error{}
-	mi := &file_match_proto_msgTypes[22]
+	mi := &file_match_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1763,7 +2032,7 @@ func (x *Error) String() string {
 func (*Error) ProtoMessage() {}
 
 func (x *Error) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[22]
+	mi := &file_match_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1776,7 +2045,7 @@ func (x *Error) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Error.ProtoReflect.Descriptor instead.
 func (*Error) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{22}
+	return file_match_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *Error) GetCode() string {
@@ -1807,7 +2076,7 @@ const file_match_proto_rawDesc = "" +
 	"\fdisplay_name\x18\x03 \x01(\tR\vdisplayName\">\n" +
 	"\x04Room\x12\x1b\n" +
 	"\troom_code\x18\x01 \x01(\tR\broomCode\x12\x19\n" +
-	"\bmatch_id\x18\x02 \x01(\tR\amatchId\"\xf2\x02\n" +
+	"\bmatch_id\x18\x02 \x01(\tR\amatchId\"\xc7\x03\n" +
 	"\fClientAction\x12$\n" +
 	"\x04join\x18\x01 \x01(\v2\x0e.match.v1.JoinH\x00R\x04join\x12$\n" +
 	"\x04move\x18\x02 \x01(\v2\x0e.match.v1.MoveH\x00R\x04move\x12'\n" +
@@ -1816,7 +2085,10 @@ const file_match_proto_rawDesc = "" +
 	"\vcontaminate\x18\x05 \x01(\v2\x15.match.v1.ContaminateH\x00R\vcontaminate\x12*\n" +
 	"\x06report\x18\x06 \x01(\v2\x10.match.v1.ReportH\x00R\x06report\x12$\n" +
 	"\x04vote\x18\a \x01(\v2\x0e.match.v1.VoteH\x00R\x04vote\x12$\n" +
-	"\x04chat\x18\b \x01(\v2\x0e.match.v1.ChatH\x00R\x04chatB\b\n" +
+	"\x04chat\x18\b \x01(\v2\x0e.match.v1.ChatH\x00R\x04chat\x120\n" +
+	"\bsabotage\x18\t \x01(\v2\x12.match.v1.SabotageH\x00R\bsabotage\x12!\n" +
+	"\x03fix\x18\n" +
+	" \x01(\v2\r.match.v1.FixH\x00R\x03fixB\b\n" +
 	"\x06action\"[\n" +
 	"\x04Join\x12\x19\n" +
 	"\bmatch_id\x18\x01 \x01(\tR\amatchId\x12\x1b\n" +
@@ -1842,13 +2114,17 @@ const file_match_proto_rawDesc = "" +
 	"\x06choice\">\n" +
 	"\x04Chat\x12\"\n" +
 	"\rclient_msg_id\x18\x01 \x01(\tR\vclientMsgId\x12\x12\n" +
-	"\x04text\x18\x02 \x01(\tR\x04text\"\xaa\x01\n" +
+	"\x04text\x18\x02 \x01(\tR\x04text\"\x1e\n" +
+	"\bSabotage\x12\x12\n" +
+	"\x04kind\x18\x01 \x01(\tR\x04kind\" \n" +
+	"\x03Fix\x12\x19\n" +
+	"\bpoint_id\x18\x01 \x01(\tR\apointId\"\xaa\x01\n" +
 	"\vServerEvent\x120\n" +
 	"\bsnapshot\x18\x01 \x01(\v2\x12.match.v1.SnapshotH\x00R\bsnapshot\x12'\n" +
 	"\x05error\x18\x02 \x01(\v2\x0f.match.v1.ErrorH\x00R\x05error\x127\n" +
 	"\vmatch_ended\x18\x03 \x01(\v2\x14.match.v1.MatchEndedH\x00R\n" +
 	"matchEndedB\a\n" +
-	"\x05event\"\xbc\x04\n" +
+	"\x05event\"\xaa\x05\n" +
 	"\bSnapshot\x12\x12\n" +
 	"\x04tick\x18\x01 \x01(\x03R\x04tick\x12%\n" +
 	"\x05phase\x18\x02 \x01(\x0e2\x0f.match.v1.PhaseR\x05phase\x12.\n" +
@@ -1865,7 +2141,20 @@ const file_match_proto_rawDesc = "" +
 	"\vwaiting_for\x18\f \x03(\tR\n" +
 	"waitingFor\x12+\n" +
 	"\bmy_tasks\x18\r \x03(\v2\x10.match.v1.MyTaskR\amyTasks\x12$\n" +
-	"\x0emy_active_task\x18\x0e \x01(\tR\fmyActiveTask\"c\n" +
+	"\x0emy_active_task\x18\x0e \x01(\tR\fmyActiveTask\x121\n" +
+	"\temergency\x18\x0f \x01(\v2\x13.match.v1.EmergencyR\temergency\x129\n" +
+	"\vmy_sabotage\x18\x10 \x01(\v2\x18.match.v1.SabotageStatusR\n" +
+	"mySabotage\"b\n" +
+	"\tEmergency\x12\x12\n" +
+	"\x04kind\x18\x01 \x01(\tR\x04kind\x12 \n" +
+	"\fends_at_tick\x18\x02 \x01(\x03R\n" +
+	"endsAtTick\x12\x1f\n" +
+	"\vheld_points\x18\x03 \x03(\tR\n" +
+	"heldPoints\"S\n" +
+	"\x0eSabotageStatus\x12\"\n" +
+	"\rready_at_tick\x18\x01 \x01(\x03R\vreadyAtTick\x12\x1d\n" +
+	"\n" +
+	"pipes_left\x18\x02 \x01(\x05R\tpipesLeft\"c\n" +
 	"\aOilDrop\x12\f\n" +
 	"\x01x\x18\x01 \x01(\x02R\x01x\x12\f\n" +
 	"\x01y\x18\x02 \x01(\x02R\x01y\x12\x14\n" +
@@ -1904,7 +2193,7 @@ const file_match_proto_rawDesc = "" +
 	"\n" +
 	"MatchEnded\x12\x16\n" +
 	"\x06winner\x18\x01 \x01(\tR\x06winner\x12!\n" +
-	"\fimpostor_ids\x18\x02 \x03(\tR\vimpostorIds\"\x96\x01\n" +
+	"\fimpostor_ids\x18\x02 \x03(\tR\vimpostorIds\"\xb2\x01\n" +
 	"\n" +
 	"PlayerView\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
@@ -1913,7 +2202,8 @@ const file_match_proto_rawDesc = "" +
 	"\x01x\x18\x04 \x01(\x02R\x01x\x12\f\n" +
 	"\x01y\x18\x05 \x01(\x02R\x01y\x12\x1c\n" +
 	"\tconnected\x18\x06 \x01(\bR\tconnected\x12\x14\n" +
-	"\x05alive\x18\a \x01(\bR\x05alive\"5\n" +
+	"\x05alive\x18\a \x01(\bR\x05alive\x12\x1a\n" +
+	"\bactivity\x18\b \x01(\tR\bactivity\"5\n" +
 	"\x05Error\x12\x12\n" +
 	"\x04code\x18\x01 \x01(\tR\x04code\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage*7\n" +
@@ -1945,7 +2235,7 @@ func file_match_proto_rawDescGZIP() []byte {
 }
 
 var file_match_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_match_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
+var file_match_proto_msgTypes = make([]protoimpl.MessageInfo, 27)
 var file_match_proto_goTypes = []any{
 	(Phase)(0),                // 0: match.v1.Phase
 	(Role)(0),                 // 1: match.v1.Role
@@ -1961,17 +2251,21 @@ var file_match_proto_goTypes = []any{
 	(*Report)(nil),            // 11: match.v1.Report
 	(*Vote)(nil),              // 12: match.v1.Vote
 	(*Chat)(nil),              // 13: match.v1.Chat
-	(*ServerEvent)(nil),       // 14: match.v1.ServerEvent
-	(*Snapshot)(nil),          // 15: match.v1.Snapshot
-	(*OilDrop)(nil),           // 16: match.v1.OilDrop
-	(*TankView)(nil),          // 17: match.v1.TankView
-	(*MyTask)(nil),            // 18: match.v1.MyTask
-	(*TaskProgress)(nil),      // 19: match.v1.TaskProgress
-	(*Meeting)(nil),           // 20: match.v1.Meeting
-	(*ChatMessage)(nil),       // 21: match.v1.ChatMessage
-	(*MatchEnded)(nil),        // 22: match.v1.MatchEnded
-	(*PlayerView)(nil),        // 23: match.v1.PlayerView
-	(*Error)(nil),             // 24: match.v1.Error
+	(*Sabotage)(nil),          // 14: match.v1.Sabotage
+	(*Fix)(nil),               // 15: match.v1.Fix
+	(*ServerEvent)(nil),       // 16: match.v1.ServerEvent
+	(*Snapshot)(nil),          // 17: match.v1.Snapshot
+	(*Emergency)(nil),         // 18: match.v1.Emergency
+	(*SabotageStatus)(nil),    // 19: match.v1.SabotageStatus
+	(*OilDrop)(nil),           // 20: match.v1.OilDrop
+	(*TankView)(nil),          // 21: match.v1.TankView
+	(*MyTask)(nil),            // 22: match.v1.MyTask
+	(*TaskProgress)(nil),      // 23: match.v1.TaskProgress
+	(*Meeting)(nil),           // 24: match.v1.Meeting
+	(*ChatMessage)(nil),       // 25: match.v1.ChatMessage
+	(*MatchEnded)(nil),        // 26: match.v1.MatchEnded
+	(*PlayerView)(nil),        // 27: match.v1.PlayerView
+	(*Error)(nil),             // 28: match.v1.Error
 }
 var file_match_proto_depIdxs = []int32{
 	6,  // 0: match.v1.ClientAction.join:type_name -> match.v1.Join
@@ -1982,29 +2276,33 @@ var file_match_proto_depIdxs = []int32{
 	11, // 5: match.v1.ClientAction.report:type_name -> match.v1.Report
 	12, // 6: match.v1.ClientAction.vote:type_name -> match.v1.Vote
 	13, // 7: match.v1.ClientAction.chat:type_name -> match.v1.Chat
-	15, // 8: match.v1.ServerEvent.snapshot:type_name -> match.v1.Snapshot
-	24, // 9: match.v1.ServerEvent.error:type_name -> match.v1.Error
-	22, // 10: match.v1.ServerEvent.match_ended:type_name -> match.v1.MatchEnded
-	0,  // 11: match.v1.Snapshot.phase:type_name -> match.v1.Phase
-	23, // 12: match.v1.Snapshot.players:type_name -> match.v1.PlayerView
-	17, // 13: match.v1.Snapshot.tanks:type_name -> match.v1.TankView
-	1,  // 14: match.v1.Snapshot.my_role:type_name -> match.v1.Role
-	19, // 15: match.v1.Snapshot.my_task_progress:type_name -> match.v1.TaskProgress
-	20, // 16: match.v1.Snapshot.meeting:type_name -> match.v1.Meeting
-	21, // 17: match.v1.Snapshot.chat:type_name -> match.v1.ChatMessage
-	16, // 18: match.v1.Snapshot.oil_drops:type_name -> match.v1.OilDrop
-	18, // 19: match.v1.Snapshot.my_tasks:type_name -> match.v1.MyTask
-	2,  // 20: match.v1.Match.CreateRoom:input_type -> match.v1.CreateRoomRequest
-	3,  // 21: match.v1.Match.JoinRoom:input_type -> match.v1.JoinRoomRequest
-	5,  // 22: match.v1.Match.Play:input_type -> match.v1.ClientAction
-	4,  // 23: match.v1.Match.CreateRoom:output_type -> match.v1.Room
-	4,  // 24: match.v1.Match.JoinRoom:output_type -> match.v1.Room
-	14, // 25: match.v1.Match.Play:output_type -> match.v1.ServerEvent
-	23, // [23:26] is the sub-list for method output_type
-	20, // [20:23] is the sub-list for method input_type
-	20, // [20:20] is the sub-list for extension type_name
-	20, // [20:20] is the sub-list for extension extendee
-	0,  // [0:20] is the sub-list for field type_name
+	14, // 8: match.v1.ClientAction.sabotage:type_name -> match.v1.Sabotage
+	15, // 9: match.v1.ClientAction.fix:type_name -> match.v1.Fix
+	17, // 10: match.v1.ServerEvent.snapshot:type_name -> match.v1.Snapshot
+	28, // 11: match.v1.ServerEvent.error:type_name -> match.v1.Error
+	26, // 12: match.v1.ServerEvent.match_ended:type_name -> match.v1.MatchEnded
+	0,  // 13: match.v1.Snapshot.phase:type_name -> match.v1.Phase
+	27, // 14: match.v1.Snapshot.players:type_name -> match.v1.PlayerView
+	21, // 15: match.v1.Snapshot.tanks:type_name -> match.v1.TankView
+	1,  // 16: match.v1.Snapshot.my_role:type_name -> match.v1.Role
+	23, // 17: match.v1.Snapshot.my_task_progress:type_name -> match.v1.TaskProgress
+	24, // 18: match.v1.Snapshot.meeting:type_name -> match.v1.Meeting
+	25, // 19: match.v1.Snapshot.chat:type_name -> match.v1.ChatMessage
+	20, // 20: match.v1.Snapshot.oil_drops:type_name -> match.v1.OilDrop
+	22, // 21: match.v1.Snapshot.my_tasks:type_name -> match.v1.MyTask
+	18, // 22: match.v1.Snapshot.emergency:type_name -> match.v1.Emergency
+	19, // 23: match.v1.Snapshot.my_sabotage:type_name -> match.v1.SabotageStatus
+	2,  // 24: match.v1.Match.CreateRoom:input_type -> match.v1.CreateRoomRequest
+	3,  // 25: match.v1.Match.JoinRoom:input_type -> match.v1.JoinRoomRequest
+	5,  // 26: match.v1.Match.Play:input_type -> match.v1.ClientAction
+	4,  // 27: match.v1.Match.CreateRoom:output_type -> match.v1.Room
+	4,  // 28: match.v1.Match.JoinRoom:output_type -> match.v1.Room
+	16, // 29: match.v1.Match.Play:output_type -> match.v1.ServerEvent
+	27, // [27:30] is the sub-list for method output_type
+	24, // [24:27] is the sub-list for method input_type
+	24, // [24:24] is the sub-list for extension type_name
+	24, // [24:24] is the sub-list for extension extendee
+	0,  // [0:24] is the sub-list for field type_name
 }
 
 func init() { file_match_proto_init() }
@@ -2021,6 +2319,8 @@ func file_match_proto_init() {
 		(*ClientAction_Report)(nil),
 		(*ClientAction_Vote)(nil),
 		(*ClientAction_Chat)(nil),
+		(*ClientAction_Sabotage)(nil),
+		(*ClientAction_Fix)(nil),
 	}
 	file_match_proto_msgTypes[7].OneofWrappers = []any{
 		(*Interact_StationId)(nil),
@@ -2030,7 +2330,7 @@ func file_match_proto_init() {
 		(*Vote_TargetPlayerId)(nil),
 		(*Vote_Skip)(nil),
 	}
-	file_match_proto_msgTypes[12].OneofWrappers = []any{
+	file_match_proto_msgTypes[14].OneofWrappers = []any{
 		(*ServerEvent_Snapshot)(nil),
 		(*ServerEvent_Error)(nil),
 		(*ServerEvent_MatchEnded)(nil),
@@ -2041,7 +2341,7 @@ func file_match_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_match_proto_rawDesc), len(file_match_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   23,
+			NumMessages:   27,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

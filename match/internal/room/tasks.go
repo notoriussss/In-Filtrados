@@ -116,7 +116,7 @@ func (r *Room) completeTask(playerID string, p *player, stationID string) {
 
 	points := taskPoints[s.Type]
 	if points > 0 {
-		r.reservoir = min(r.reservoir+points, reservoirMax)
+		r.updateReservoir()
 
 		if r.publisher != nil {
 			pub := r.publisher
@@ -148,6 +148,41 @@ func (r *Room) completeTask(playerID string, p *player, stationID string) {
 			}()
 		}
 	}
+}
+
+// updateReservoir llena el embalse según el avance de la tripulación:
+// los puntos de las tareas hechas (reduce 3, reuse 4, recycle 5) sobre
+// los de todas sus tareas. Así se llena justo cuando la tripulación
+// termina todo, con 4 jugadores o con 10. No cuentan las tareas de
+// quien se fue de la partida (desconectado y fantasma) y nunca baja.
+func (r *Room) updateReservoir() {
+	var done, total int32
+	for _, p := range r.players {
+		if p.role != matchv1.Role_CREW ||
+			(!p.view.Connected && !p.view.Alive) {
+			continue
+		}
+		for id := range p.assignedTasks {
+			total += r.stationPoints(id)
+		}
+		for _, id := range p.completedTasks {
+			pts := r.stationPoints(id)
+			done += pts
+			total += pts
+		}
+	}
+	if total == 0 {
+		return
+	}
+	level := min(reservoirMax*done/total, reservoirMax)
+	r.reservoir = max(r.reservoir, level)
+}
+
+func (r *Room) stationPoints(id string) int32 {
+	if s := r.stationAt(id); s != nil {
+		return taskPoints[s.Type]
+	}
+	return 0
 }
 
 // cancelFarTasks cancela la tarea en curso de quien se alejó de su
@@ -197,5 +232,6 @@ func (r *Room) stationAt(id string) *Station {
 func nearStation(p *player, s *Station) bool {
 	dx := float64(p.view.X) - s.X
 	dy := float64(p.view.Y) - s.Y
-	return dx*dx+dy*dy <= taskRadius*taskRadius
+	r := s.radius()
+	return dx*dx+dy*dy <= r*r
 }

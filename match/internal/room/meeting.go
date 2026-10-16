@@ -28,6 +28,7 @@ func (r *Room) handleReport(playerID string, tankSlot int32) {
 	}
 
 	t.reported = true
+	r.cancelPipeForMeeting()
 	r.phase = matchv1.Phase_MEETING
 	r.chat = nil
 	r.teleportToPlaza()

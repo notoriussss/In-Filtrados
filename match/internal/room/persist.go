@@ -39,6 +39,17 @@ type savedRoom struct {
 	OilDrops     []savedOilDrop    `json:"oil_drops"`
 	EventHistory []LogEntry        `json:"event_history"`
 	SeenChat     []string          `json:"seen_chat"`
+	// S3-05: opcionales para que sirvan las instantáneas viejas.
+	Emergency       *savedEmergency `json:"emergency,omitempty"`
+	SabotageReadyAt int64           `json:"sabotage_ready_at,omitempty"`
+	PipesUsed       int             `json:"pipes_used,omitempty"`
+	NextRandomAt    int64           `json:"next_random_at,omitempty"`
+}
+
+type savedEmergency struct {
+	Kind     string `json:"kind"`
+	EndsAt   int64  `json:"ends_at"`
+	Sabotage bool   `json:"sabotage"`
 }
 
 type savedPlayer struct {
@@ -147,6 +158,17 @@ func (r *Room) toSaved() savedRoom {
 		Names:        r.names,
 		Participants: r.participants,
 		EventHistory: r.eventHistory,
+
+		SabotageReadyAt: r.sabotageReadyAt,
+		PipesUsed:       r.pipesUsed,
+		NextRandomAt:    r.nextRandomAt,
+	}
+	if e := r.emergency; e != nil {
+		s.Emergency = &savedEmergency{
+			Kind:     e.kind,
+			EndsAt:   e.endsAt,
+			Sabotage: e.sabotage,
+		}
 	}
 	for id := range r.seenChat {
 		s.SeenChat = append(s.SeenChat, id)
@@ -243,6 +265,16 @@ func Restore(state []byte, m *Map, opts ...Option) (*Room, error) {
 	r.reservoir = s.Reservoir
 	r.participants = s.Participants
 	r.eventHistory = s.EventHistory
+	r.sabotageReadyAt = s.SabotageReadyAt
+	r.pipesUsed = s.PipesUsed
+	r.nextRandomAt = s.NextRandomAt
+	if se := s.Emergency; se != nil && isEmergencyKind(se.Kind) {
+		r.emergency = &emergencyState{
+			kind:     se.Kind,
+			endsAt:   se.EndsAt,
+			sabotage: se.Sabotage,
+		}
+	}
 	if s.Names != nil {
 		r.names = s.Names
 	}
