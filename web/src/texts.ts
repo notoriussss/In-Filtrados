@@ -298,3 +298,17 @@ export const SETTINGS_TEXT = {
   RESET: 'Restablecer',
   APPLY: 'Aplicar',
 } as const;
+
+// Textos de los componentes de screens/pending (sin soporte del servidor).
+export const PENDING_TEXT = {
+  CHAT_EMPTY: 'Nadie ha escrito todavía.',
+  CHAT_PLACEHOLDER: 'Escribe un mensaje…',
+  CHAT_SEND: 'Enviar',
+  CHAT_SENDING: 'enviando…',
+  COLOR: 'Color',
+  ACCESSORY: 'Accesorio',
+  ROOMS_EMPTY: 'No hay salas públicas abiertas ahora.',
+  ROOM_JOIN: 'Unirse',
+  ROOM_FULL: 'Llena',
+  roomPlayers: (n: number, max: number) => `${n}/${max} jugadores`,
+} as const;
