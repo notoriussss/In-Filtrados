@@ -62,6 +62,15 @@ El mapa vive en **`shared/map.json`** (carpeta nueva en la raíz). Lo usan `matc
 - `stations`: dónde se hacen las tareas (`reduce`, `reuse`, `recycle`). Se usan desde la semana 2.
 - `tanks`: los tanques de riego de cada jugador, por número de lugar (`slot`, de 0 a 9 para hasta 10 jugadores). Se usan desde la semana 2.
 
+**Mapa v3: Estación Manglar Verde (S3-05).** Desde el paquete de diseño `docs/design/in-filtrados-ui-v3`, el mapa mide **2752 × 1824 unidades** (losas de 32) y suma campos sin romper los anteriores:
+
+- `id`, `name`, `tile`, `playerRadius`: datos generales del mapa.
+- `stations[].name`, `room` y `radius`: nombre visible, sala y alcance propio de cada estación (si falta `radius`, se usa el de `match`).
+- `tanks[].draw`: esquina del sprite del tanque; `x, y` siguen siendo el punto de interacción.
+- `fixPoints`: `{ id, kind: 'pipe' | 'steam', room, x, y }`, los puntos donde se arreglan los sabotajes (2 extremos de tubería y 1 válvula de vapor).
+- `zones[].kind/theme`, `doors` y `markers`: solo para dibujar y nombrar salas; `match` no los usa.
+- Las imágenes del mapa (suelo, props, tanques, luz nocturna y minimapa) viven en `web/public/assets/map/manglar-verde/`; `walls` sigue siendo la única fuente de colisiones.
+
 ### 0.4 Reglas de movimiento
 
 - Ticker a **20 Hz** (cada 50 ms).
@@ -124,6 +133,22 @@ myActiveTask: string | null;       // S2-11: tarea iniciada por el servidor
 - `myRole`, `myTasks` y `myActiveTask` viajan **solo en el snapshot de su dueño**: `match` arma un snapshot por jugador y el gateway nunca recibe el rol ni las tareas de otro.
 - `votesCast` dice quién ya votó, nunca por quién.
 - `impostorIds` es una lista porque con 7 o más jugadores hay 2 impostores.
+
+**Contrato S3-05 (sabotajes).** También se suma sin romper lo anterior:
+
+```ts
+// Navegador → gateway
+  | { type: 'sabotage'; kind: 'pipe' | 'steam' } // solo el impostor
+  | { type: 'fix'; pointId: string }               // un fixPoint del mapa
+
+// Campos nuevos del snapshot
+emergency: { kind, endsAtTick, heldPoints[] } | null; // igual si fue sabotaje o aleatoria
+mySabotage: { readyAtTick, pipesLeft } | null;        // solo en el snapshot del impostor
+players[].activity: 'reduce' | 'reuse' | 'recycle' | 'tank' | 'fix' | null; // para animar
+```
+
+- `emergency` no dice si la provocó el impostor: una emergencia aleatoria se ve idéntica.
+- `activity` solo se manda para jugadores vivos; con ella cada cliente anima lo que hacen los demás.
 
 ### 0.6 REST del gateway
 
@@ -902,6 +927,12 @@ Sin esta tarea tampoco se puede verificar S2-13 jugando (completar 3 tareas y ve
 4. **Visión limitada (D):** dibujar el canvas con una máscara oscura y un círculo de visión de 300 unidades alrededor del jugador; los demás jugadores fuera del círculo no se dibujan.
 
 **Criterio de verificación:** cada sabotaje se puede activar, se ve igual que un evento aleatorio y se puede arreglar. Tras un sabotaje, el siguiente no se puede activar antes de 40 segundos.
+
+**Cómo quedó implementado:**
+- `match/internal/room/sabotage.go`: la tubería se arregla cuando dos jugadores vivos sostienen a la vez sus dos `fixPoints` (moverse suelta el punto); el vapor, con 2 s quietos en la válvula. La tubería se rompe como máximo 2 veces por partida y una reunión la cancela.
+- Emergencias aleatorias cada 60 a 120 s (no antes de 60 s tras un sabotaje), con el mismo aspecto que un sabotaje.
+- Visión: radio de **220 unidades** en lugar de 300, porque la cámara del mapa v3 muestra 960 × 540 unidades y con 300 casi no se notaba. El vapor la reduce a la mitad.
+- `web`: botones de sabotaje del impostor (teclas 1 y 2), aviso de emergencia, flechas hacia los puntos de arreglo y animaciones de cada actividad.
 
 ---
 

@@ -35,7 +35,7 @@ class FakeSocket implements SocketLike {
   send(data: string): void {
     this.sent.push(JSON.parse(data));
   }
-  close(): void { }
+  close(): void {}
 
   open(): void {
     this.readyState = 1;
@@ -68,7 +68,7 @@ function setup() {
       return s;
     },
     setTimer: (fn, ms) => timers.push({ fn, ms }),
-    clearTimer: () => { },
+    clearTimer: () => {},
     onUnauthorized: () => unauthorized++,
   });
   gs.onStatus((s) => statuses.push(s));
@@ -86,9 +86,7 @@ const snapshot = (tick: number) => ({
 describe('reconnectDelay', () => {
   it('waits 0.5, 1, 2, 4, 8 and then 10 s forever', () => {
     const delays = [1, 2, 3, 4, 5, 6, 7, 50].map(reconnectDelay);
-    expect(delays).toEqual([
-      500, 1000, 2000, 4000, 8000, 10000, 10000, 10000,
-    ]);
+    expect(delays).toEqual([500, 1000, 2000, 4000, 8000, 10000, 10000, 10000]);
   });
 });
 

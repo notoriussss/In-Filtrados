@@ -28,10 +28,7 @@ export interface SocketLike {
   send(data: string): void;
   close(code?: number): void;
   addEventListener(type: 'open', fn: () => void): void;
-  addEventListener(
-    type: 'message',
-    fn: (e: { data: unknown }) => void,
-  ): void;
+  addEventListener(type: 'message', fn: (e: { data: unknown }) => void): void;
   addEventListener(type: 'close', fn: (e: { code: number }) => void): void;
 }
 
@@ -91,9 +88,7 @@ export class GameSocket {
   }
 
   private open(): void {
-    const ws = this.createSocket(
-      this.opts.url ?? socketUrl(this.opts.token),
-    );
+    const ws = this.createSocket(this.opts.url ?? socketUrl(this.opts.token));
     this.ws = ws;
 
     ws.addEventListener('open', () => {
@@ -158,8 +153,7 @@ export class GameSocket {
   private cancelRetry(): void {
     if (this.timer === null) return;
     const clearTimer =
-      this.opts.clearTimer ??
-      ((timer) => window.clearTimeout(timer as number));
+      this.opts.clearTimer ?? ((timer) => window.clearTimeout(timer as number));
     clearTimer(this.timer);
     this.timer = null;
   }

@@ -1,5 +1,6 @@
-// Types for shared/map.json (docs/tasks.md, section 0.3). The JSON itself is imported
-// from shared/, never copied into web/, so match and web always read the same map.
+// Types for shared/map.json (docs/tasks.md, section 0.3). The JSON itself
+// is imported from shared/, never copied into web/, so match and web
+// always read the same map.
 import mapData from '../../shared/map.json';
 
 export type Rect = { x: number; y: number; w: number; h: number };
@@ -16,7 +17,13 @@ export type Station = {
   room?: string; // id de la sala (zona) donde está
   radius?: number; // alcance para interactuar; si falta, 40
 };
-export type Tank = { slot: number; x: number; y: number };
+export type Tank = {
+  slot: number;
+  x: number;
+  y: number;
+  // Esquina donde se dibuja el sprite del tanque (atlas de 104 × 134).
+  draw?: { x: number; y: number };
+};
 // S3-05: donde se arreglan las emergencias (tubería y vapor).
 export type FixPoint = {
   id: string;

@@ -23,8 +23,7 @@ export const CONNECTION_MESSAGES = {
   // S3-02: la sala espera a alguien o match no responde.
   pausedFor: (names: string) => `Partida en pausa: esperando a ${names}`,
   PAUSED: 'Partida en pausa',
-  MATCH_DOWN:
-    'Partida en pausa: reconectando con el servidor de la partida…',
+  MATCH_DOWN: 'Partida en pausa: reconectando con el servidor de la partida…',
 } as const;
 
 // Textos de la reunión, la votación y el fin de partida (S2-10).
@@ -93,9 +92,9 @@ export const HUD_TEXT = {
 // El servidor sigue decidiendo; la web solo las usa para el botón y el
 // círculo de progreso.
 export const GAME_RULES = {
-  TANK_RANGE: 40,
+  TANK_RANGE: 56,
   TASK_RANGE: 40,
-  REPORT_RANGE: 60,
+  REPORT_RANGE: 80,
   CONTAMINATE_MS: 3000,
   CLEAN_MS: 2000,
   // match exige 60 ticks desde que recibe el inicio; con latencia
@@ -107,23 +106,23 @@ export const GAME_RULES = {
   TANK_ALERT_MIN_RISE: 2,
   TANK_ALERT_MS: 3000,
   // S3-05: emergencias y visión limitada.
-  FIX_RANGE: 40,
+  FIX_RANGE: 48,
   STEAM_FIX_MS: 2000 + 150,
   SABOTAGE_COOLDOWN_TICKS: 800,
   TICKS_PER_SECOND: 20,
-  VISION_RADIUS: 300,
+  VISION_RADIUS: 220, // la cámara muestra 960 × 540 unidades
   STEAM_VISION_FACTOR: 0.5,
-  VISION_EDGE: 70, // borde difuminado del círculo
-  VISION_SPEED: 300, // unidades por segundo al cerrar o abrir
+  VISION_EDGE: 50, // borde difuminado del círculo
+  VISION_SPEED: 220, // unidades por segundo al cerrar o abrir
 } as const;
 
 // S3-05: emergencias (iguales si son sabotaje o mala suerte) y el
 // menú de sabotaje del impostor.
 export const EMERGENCY_TEXT = {
-  PIPE_TITLE: '¡Se rompió la tubería principal!',
+  PIPE_TITLE: '¡Se rompió la tubería!',
   pipeHint: (held: number, total: number) =>
-    `Dos personas deben sostener los dos extremos a la vez (${held}/${total})`,
-  pipeTime: (seconds: number) => `${seconds} s antes de que reviente`,
+    `Sostengan los dos extremos a la vez (${held}/${total})`,
+  pipeTime: (seconds: number) => `${seconds} s`,
   STEAM_TITLE: '¡Vapor en la planta de tratamiento!',
   STEAM_HINT: 'La visión se redujo: cierren la válvula de vapor',
 } as const;
@@ -135,13 +134,12 @@ export const SABOTAGE_TEXT = {
   pipesLeft: (n: number) => `quedan ${n}`,
   NO_PIPES: 'agotado',
   wait: (seconds: number) => `${seconds} s`,
-  ACTIVE: 'emergencia en curso',
+  ACTIVE: 'en curso',
 } as const;
 
 // Textos de la lista de misiones y los minijuegos de las 3R (S2-11).
 export const TASK_TEXT = {
-  LIST_TITLE: (done: number, total: number) =>
-    `Misiones (${done}/${total})`,
+  LIST_TITLE: (done: number, total: number) => `Misiones (${done}/${total})`,
   ALL_DONE: '¡Completaste tus misiones!',
   TYPE_NAMES: {
     reduce: 'Reducir',

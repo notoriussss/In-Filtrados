@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { PlayerView } from '@in-filtrados/messages';
-import {
-  INTERPOLATION_DELAY_MS,
-  Interpolator,
-  TICK_MS,
-} from './interpolation';
+import { INTERPOLATION_DELAY_MS, Interpolator, TICK_MS } from './interpolation';
 
 const at = (x: number, y = 0, id = 'a'): PlayerView => ({
   id,

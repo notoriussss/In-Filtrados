@@ -25,11 +25,7 @@ export class Interpolator {
     const sample = now - tick * TICK_MS;
     const latest = this.buffer.at(-1);
     const restarted = latest !== undefined && tick <= latest.tick;
-    if (
-      this.offset === null ||
-      restarted ||
-      sample - this.offset > RESYNC_MS
-    ) {
+    if (this.offset === null || restarted || sample - this.offset > RESYNC_MS) {
       this.offset = sample;
       this.buffer = [];
     }

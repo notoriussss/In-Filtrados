@@ -31,7 +31,7 @@ const BASE_URL = '/api';
 
 async function apiFetch<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<T> {
   const response = await fetch(`${BASE_URL}${endpoint}`, {
     ...options,
@@ -59,7 +59,7 @@ async function apiFetch<T>(
 export const api = {
   async register(
     username: string,
-    password: string
+    password: string,
   ): Promise<RegisterResponse> {
     return apiFetch<RegisterResponse>('/auth/register', {
       method: 'POST',

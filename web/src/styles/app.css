@@ -1,0 +1,176 @@
+/* Estilos propios del juego sobre el kit B-noche (ui-kit.css). Lo que
+   sale de las maquetas está marcado; el resto es del juego. */
+
+#root { position: fixed; inset: 0; background: var(--ink); }
+.px-icon, .px-sprite { image-rendering: pixelated; display: block; flex: none; }
+.btn .px-icon, .chip .px-icon, .pill .px-icon { display: inline-block; }
+button:disabled { cursor: default; opacity: .55; transform: none !important; }
+.btn:disabled:hover { background: var(--pan2); }
+.btn.pri:disabled:hover { background: var(--leaf); }
+
+/* capa del juego */
+.game-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; }
+.hud-layer { position: fixed; left: 0; top: 0; transform-origin: 0 0; pointer-events: none; }
+.hud-layer .panel, .hud-layer button, .hud-layer input, .hud-layer .interactive { pointer-events: auto; }
+.overlay-stage { position: fixed; inset: 0; z-index: 20; background: rgba(3, 10, 24, .35); }
+.overlay-stage.solid { background: var(--ink); }
+/* La pausa deja ver el juego detrás. */
+.stage.scr-pause { background: transparent; }
+.hud .alert .t { white-space: nowrap; }
+@keyframes hud-flash { 50% { background: #7d2230; } }
+.hud .alert.steam { background: #233247; animation: none;
+  box-shadow: -6px 0 0 0 #9cc3d6, 6px 0 0 0 #9cc3d6, 0 -6px 0 0 #9cc3d6, 0 6px 0 0 #9cc3d6; }
+.hud .alert.calm { background: var(--pan); animation: none;
+  box-shadow: -6px 0 0 0 var(--line), 6px 0 0 0 var(--line), 0 -6px 0 0 var(--line), 0 6px 0 0 var(--line); }
+.hud .slotk:disabled { opacity: .45; }
+.hud .slotk .cd { position: absolute; right: 6px; top: 6px; font-family: var(--body); font-size: 22px; color: var(--amber); }
+.hud .slotk.danger { box-shadow: -4px 0 0 0 #b34545, 4px 0 0 0 #b34545, 0 -4px 0 0 #b34545, 0 4px 0 0 #b34545; }
+.hud .slotk.danger:hover:not(:disabled) { background: #451818; }
+.hud .mini .map-box { position: relative; width: 332px; height: 220px; background: var(--ink); overflow: hidden; }
+.hud .mini .map-box img { width: 100%; height: 100%; image-rendering: pixelated; }
+.hud .mini .dot { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; box-shadow: 0 0 0 3px var(--ink); }
+.hud .mini .dot.me { background: #fff; }
+.hud .mini .dot.task { background: var(--amber); width: 9px; height: 9px; margin: -4px 0 0 -4px; }
+.hud .mini .dot.fix { background: var(--coral); animation: blink 0.6s steps(1) infinite; }
+.hud .me-card .portrait { width: 88px; height: 125px; image-rendering: pixelated; margin: -10px 0 -10px; }
+
+/* minijuego */
+.minigame { position: fixed; left: 50%; top: 50%; width: 660px; padding: 22px 26px; transform: translate(-50%, -50%); }
+.minigame canvas { display: block; margin: 0 auto; touch-action: none; cursor: pointer;
+  box-shadow: -4px 0 0 0 var(--line-d), 4px 0 0 0 var(--line-d), 0 -4px 0 0 var(--line-d), 0 4px 0 0 var(--line-d); }
+.minigame .gauge { margin-top: 18px; }
+
+/* conexión en partida */
+.conn-panel { left: 50%; top: 170px; width: 830px; margin-left: -415px !important; padding: 26px 34px !important; }
+.conn-panel p { margin: 0 0 14px; }
+
+/* menús: formularios y listas */
+.form-error { min-height: 40px; }
+.stat-grid { display: grid; grid-template-columns: 1fr auto; gap: 6px 16px; font-size: 30px; }
+.stat-grid b { font-family: var(--head); font-weight: 400; font-size: 24px; color: var(--amber); text-align: right; }
+.tabs.access { margin-bottom: 20px; }
+.tab { border: 0; }
+
+/* ===== pantallas (de las maquetas B-noche) ===== */
+/* 01-carga */
+.scr-boot .logo.c {left:360px;top:110px;width:1200px;text-align:center}
+.scr-boot .logo.c .sub {justify-content:center;display:flex}
+.scr-boot .walkers {position:absolute;left:0;right:0;top:0;height:1080px;pointer-events:none}
+.scr-boot .walkers canvas {position:absolute}
+.scr-boot .dock {position:absolute;left:0;right:0;top:930px;height:86px}
+.scr-boot .dock {background:repeating-linear-gradient(90deg,var(--pan2) 0 150px,var(--line) 150px 154px);border-top:4px solid var(--aqua);box-shadow:0 6px 0 var(--line),0 18px 0 rgba(0,0,0,.35)}
+/* 03-acceso */
+.scr-access .stand .plank {width:340px}
+.scr-access .stand canvas {position:absolute;left:50%;transform:translateX(-50%)}
+.scr-access .stand .plank {bottom:26px;height:20px}
+.scr-access .stand canvas {bottom:21px}
+.scr-access .prev {height:410px}
+/* 06-lobby */
+.scr-lobby .stand {height:250px}
+.scr-lobby .stand .plank {width:300px}
+.scr-lobby .stand canvas {position:absolute;left:50%;transform:translateX(-50%)}
+.scr-lobby .stand .plank {bottom:6px;height:20px}
+.scr-lobby .stand canvas {bottom:7px}
+.scr-lobby .slot {height:80px;grid-template-columns:84px 1fr auto;margin-bottom:8px}
+.scr-lobby .slot .av {height:72px;width:72px}
+.scr-lobby .swatches {grid-template-columns:repeat(8,1fr);gap:8px}
+.scr-lobby .sw .px-icon {width:24px!important;height:24px!important}
+.scr-lobby .acg {display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.scr-lobby .acg .ac {aspect-ratio:auto;height:78px}
+.scr-lobby .fcg {display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.scr-lobby .fcg .ac {aspect-ratio:auto;height:50px}
+.scr-lobby .msg {display:grid;grid-template-columns:44px 1fr;gap:10px;margin-bottom:10px;font-size:.86em}
+.scr-lobby .msg b {display:block}
+.scr-lobby .prev {height:250px}
+.scr-lobby .taken {opacity:.35}
+.scr-lobby .sw.me {outline:3px solid #fff;outline-offset:2px}
+/* 07-ayuda */
+.scr-help .r3 {display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.scr-help .r3 .card {min-height:300px}
+.scr-help .bl {display:flex;gap:12px;align-items:flex-start;margin-top:10px;font-size:.9em}
+.scr-help .bl i {flex:none;width:14px;height:14px;margin-top:10px;background:var(--teal,#7ee6d8)}
+.scr-help .roles {display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.scr-help .roles .card {min-width:0;display:flex;gap:22px;align-items:center;min-height:250px}
+.scr-help .ctl {display:flex;gap:30px;justify-content:space-between;flex-wrap:nowrap}
+.scr-help .ctl>div {display:flex;align-items:center;gap:12px;white-space:nowrap}
+/* 09-rol */
+.scr-role .chr {position:absolute;left:800px;top:350px}
+.scr-role .mates {position:absolute;left:0;right:0;top:830px;display:flex;justify-content:center;gap:34px;align-items:flex-end}
+.scr-role .mates canvas {opacity:.95}
+/* 11-conexion */
+.scr-conn .mo {padding:26px 34px!important}
+.scr-conn .mo p {margin:0 0 16px}
+/* 12-resultado */
+.scr-result .tr {grid-template-columns:84px 1fr 150px 90px 175px;gap:12px;min-height:54px;padding-block:2px;margin-bottom:6px}
+.scr-result .tr.head {min-height:0}
+.scr-result .tr .av {display:grid;place-items:center;height:48px;overflow:hidden}
+.scr-result .imp {margin-bottom:22px}
+.scr-result .imp .row {justify-content:space-between;margin-bottom:8px}
+/* 13-expulsion */
+.scr-eject .float {position:absolute;left:760px;top:160px;transform:rotate(-14deg)}
+/* 14-reunion */
+.scr-meeting .pcs {display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.scr-meeting .pc {height:226px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;padding-top:12px}
+.scr-meeting .pc .pic {height:112px;display:grid;place-items:center}
+.scr-meeting .pc .pn {font-size:28px}
+.scr-meeting .pc.ghostc {opacity:.7}
+.scr-meeting .pc .mark {position:absolute;right:8px;top:8px;font-size:.62em;white-space:nowrap}
+.scr-meeting .tally {position:absolute;right:12px;top:10px;min-width:48px;padding:2px 10px;text-align:center;font-size:30px;background:var(--amber,#e8b13a);color:#241a08}
+.scr-meeting .msg {display:grid;grid-template-columns:44px 1fr;gap:10px;margin-bottom:10px;font-size:.86em}
+.scr-meeting .msg b {display:block}
+.scr-meeting .msg.sys {grid-template-columns:1fr;opacity:.85;font-style:italic}
+.scr-meeting .strip {display:flex;gap:14px;align-items:center}
+.scr-meeting .strip .well {padding:6px 14px}
+.scr-meeting .phase {display:flex;gap:10px}
+
+/* ===== HUD (maqueta 16-hud-eco) ===== */
+.hud .tasks {left: 60px; top: 36px; width: 470px; padding: 18px 22px 16px; }
+.hud .task {display: grid; grid-template-columns: 44px 1fr auto; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 4px dashed var(--line-d); }
+.hud .task:last-of-type {border-bottom: 0; }
+.hud .task .px-icon {width: 40px !important; height: 40px !important; }
+.hud .task b {display: block; font-family: var(--head); font-weight: 400; font-size: 20px; line-height: 1.3; }
+.hud .task span.d {font-size: 26px; color: var(--mut); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+.hud .task > div { min-width: 0; }
+.hud .task.done b, .hud .task.done span.d {text-decoration: line-through; text-decoration-thickness: 4px; opacity: .7; }
+.hud .team {display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; margin-top: 12px; font-size: 28px; }
+.hud .alert {left: 50%; margin-left: -370px !important; top: 36px; width: 740px; height: 100px; padding: 0 26px; display: flex; align-items: center; gap: 22px; background: #5a1822; animation: hud-flash 1s steps(1) infinite;
+  box-shadow: -6px 0 0 0 var(--coral), 6px 0 0 0 var(--coral), 0 -6px 0 0 var(--coral), 0 6px 0 0 var(--coral); }
+
+.hud .alert .px-icon {width: 52px !important; height: 52px !important; flex: none; }
+.hud .alert .tx {flex: 1; }
+.hud .alert b {display: block; font-family: var(--head); font-weight: 400; font-size: 24px; line-height: 1.3; color: #fff; }
+.hud .alert .tx span {font-size: 28px; color: #ffc9c9; }
+.hud .alert .t {font-family: var(--logo); font-size: 34px; color: var(--amber); }
+.hud .res {right: 66px; top: 36px; width: 440px; padding: 18px 22px 18px; }
+.hud .res .m {display: grid; grid-template-columns: 112px 1fr 70px; gap: 12px; align-items: center; font-size: 30px; margin-top: 12px; }
+.hud .res .m span:last-child {text-align: right; }
+.hud .me-card {left: 60px; bottom: 36px; width: 560px; padding: 14px 20px; }
+.hud .hot {left: 50%; margin-left: -330px !important; bottom: 36px; width: 660px; padding: 14px 20px; display: flex; gap: 20px; justify-content: center; }
+.hud .slotk {position: relative; width: 140px; height: 124px; display: grid; justify-items: center; align-content: center; gap: 6px; background: var(--bg2); border: 0; cursor: pointer; padding: 6px 0 0;
+  box-shadow: -4px 0 0 0 var(--line-d), 4px 0 0 0 var(--line-d), 0 -4px 0 0 var(--line-d), 0 4px 0 0 var(--line-d); margin: 4px; }
+.hud .slotk:hover, .hud .slotk.on {background: var(--pan3); box-shadow: -4px 0 0 0 var(--aqua), 4px 0 0 0 var(--aqua), 0 -4px 0 0 var(--aqua), 0 4px 0 0 var(--aqua); }
+.hud .slotk .px-icon {width: 44px !important; height: 44px !important; }
+.hud .slotk span {font-family: var(--head); font-size: 20px; line-height: 1; }
+.hud .slotk .key {position: absolute; left: -4px; top: -4px; min-width: 34px; height: 34px; font-size: 13px; padding: 0 6px; box-shadow: 0 4px 0 #6c8da1; }
+.hud .mini {right: 66px; bottom: 36px; width: 360px; padding: 12px 14px; }
+.hud .mini canvas {width: 332px !important; height: 186px !important; }
+.hud .mini .lab {font-family: var(--head); font-size: 18px; color: var(--mut); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+.justify-start { justify-self: start; }
+.screen-title { color: #f4fffb; font-size: 44px; text-shadow: 3px 3px 0 rgba(4, 28, 38, .8); }
+.scr-lobby .sw { display: block; }
+.scr-lobby .sw .px-icon { position: absolute; inset: 0; margin: auto; }
+.scr-lobby .stand canvas { position: absolute; left: 50%; transform: translateX(-50%); bottom: 7px; }
+.scr-access .stand canvas { position: absolute; left: 50%; transform: translateX(-50%); bottom: 21px; }
+.hud .hud-ttl { font-size: 24px; padding-bottom: 10px; margin-bottom: 6px; }
+.hud .hud-name { font-family: var(--head); font-weight: 400; font-size: 24px; }
+.hud .card-meter { display: grid; grid-template-columns: 100px 1fr 120px; gap: 12px; align-items: center; font-size: 30px; margin-top: 8px; }
+.scr-meeting .pc { position: relative; border: 0; color: inherit; font: inherit; cursor: pointer; }
+.scr-meeting .pc:disabled { cursor: default; opacity: 1; }
+.scr-meeting .pc.ghostc:disabled { opacity: .7; }
+.scr-meeting .pc:not(:disabled):hover { background: var(--pan3); }
+.scr-meeting .chat-log { height: 500px; padding: 14px; overflow-y: auto; }
+.scr-meeting .msg.pending { opacity: .6; }
+.scr-meeting .ml { margin-left: 12px; }
+.scr-meeting .mark { display: inline-flex; align-items: center; gap: 4px; }
+.rt { text-align: right; }
+.scr-result .tr { grid-template-columns: 84px 1fr 180px 10px 200px; }

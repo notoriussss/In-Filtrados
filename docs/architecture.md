@@ -27,7 +27,7 @@ Fecha: 3 de octubre de 2026.
 ## 2. Componentes
 
 ```
- Navegador (web: TypeScript + canvas, servido por nginx)
+ Navegador (web: React + canvas en TypeScript, servido por nginx)
         │  WebSocket
         ▼
  Gateway (NestJS / TypeScript)
@@ -91,6 +91,8 @@ Se eligió NestJS sobre FastAPI para el gateway porque:
 2. Así cada lenguaje tiene una responsabilidad de servidor clara, y Python no carga con el gateway y el monitor a la vez.
 
 Si alguien del equipo domina más Python que NestJS, se puede cambiar el gateway a FastAPI y la arquitectura queda igual.
+
+**Dentro de web: React para las pantallas, canvas para el mundo.** Los menús, el HUD, la reunión y el resultado son interfaz de documento (formularios, listas, botones, texto que cambia con el snapshot). Hacerlos a mano con `document.createElement` acumulaba estado repetido y código difícil de mantener, así que se escriben como componentes React en TSX. El mundo (mapa, personajes, tanques, efectos y visión) sigue en un solo `<canvas>` que dibuja `GameSession` a 60 fps; React nunca re-renderiza por cada cuadro. El puente es un store (`web/src/game/session.ts`) que expone el último snapshot con `subscribe`/`getState` y React lo lee con `useSyncExternalStore`. Las pantallas siguen las maquetas de `docs/design/in-filtrados-ui-v3` (dirección B-noche): se maquetan en un escenario de 1920 × 1080 y se escalan a la ventana. No hay router ni librería de estado: la navegación es un `switch` en `App.tsx`.
 
 ### D8. Python como monitor
 El monitor es un microservicio con trabajo propio:
@@ -305,13 +307,16 @@ in-filtrados/
 ├── messages/                   tipos TypeScript de los mensajes WebSocket
 │   └── src/index.ts            (los usan web y gateway)
 │
-├── web/                        juego en el navegador (TypeScript + canvas, Vite)
+├── web/                        juego en el navegador (React + canvas, Vite)
 │   ├── src/
-│   │   ├── main.ts
-│   │   ├── canvas/             dibujo del mapa, personajes y efectos
+│   │   ├── main.tsx, App.tsx   arranque y navegación entre pantallas
+│   │   ├── game/               GameSession, acciones, minijuegos y render/
+│   │   │   └── render/         dibujo del mapa, personajes, efectos y visión
 │   │   ├── net/                WebSocket con reconexión automática
-│   │   └── screens/             login, sala de espera, partida, reunión
-│   ├── public/                 sprites y sonidos
+│   │   ├── screens/            pantallas React (acceso, menú, sala, partida)
+│   │   ├── ui/                 kit B-noche: panel, botón, chip, íconos, gota
+│   │   └── styles/             CSS del kit y de las pantallas
+│   ├── public/assets/          mapa, sprites, íconos y fondos
 │   ├── nginx.conf
 │   └── Dockerfile              compila con Vite y sirve con nginx
 │

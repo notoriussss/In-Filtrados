@@ -1,4 +1,5 @@
 import { loadEnv, type Plugin } from 'vite';
+import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vitest/config';
 
 const HEALTH_BODY = JSON.stringify({ status: 'ok', service: 'web', checks: {} });
@@ -33,7 +34,7 @@ export default defineConfig(({ mode }) => {
     '/ws': { target: gateway, ws: true, changeOrigin: true },
   };
   return {
-    plugins: [healthPlugin()],
+    plugins: [react(), healthPlugin()],
     server: {
       port: 8080,
       strictPort: true,
