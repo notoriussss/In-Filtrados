@@ -104,6 +104,8 @@ impl Players for PlayersService {
             coins: profile.coins,
             matches_played: profile.matches_played,
             wins: profile.wins,
+            times_impostor: profile.times_impostor,
+            wins_as_impostor: profile.wins_as_impostor,
         }))
     }
 }
@@ -484,6 +486,8 @@ mod tests {
         assert_eq!(profile.coins, 0);
         assert_eq!(profile.matches_played, 0);
         assert_eq!(profile.wins, 0);
+        assert_eq!(profile.times_impostor, 0);
+        assert_eq!(profile.wins_as_impostor, 0);
     }
 
     #[tokio::test]

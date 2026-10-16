@@ -17,6 +17,9 @@ export interface MeResponse {
   coins: number;
   matchesPlayed: number;
   wins: number;
+  // S2-07: estadísticas como impostor.
+  timesImpostor: number;
+  winsAsImpostor: number;
 }
 
 export interface RoomResponse {

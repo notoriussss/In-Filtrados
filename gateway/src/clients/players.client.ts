@@ -20,6 +20,9 @@ export type ProfileReply = {
   coins: number;
   matchesPlayed: number;
   wins: number;
+  // S2-07: estadísticas como impostor.
+  timesImpostor: number;
+  winsAsImpostor: number;
 };
 
 @Injectable()

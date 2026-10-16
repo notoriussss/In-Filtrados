@@ -42,4 +42,7 @@ message Profile {
   int32  coins          = 3;
   int32  matches_played = 4;
   int32  wins           = 5;
+  // S2-07: estadísticas como impostor.
+  int32  times_impostor   = 6;
+  int32  wins_as_impostor = 7;
 }

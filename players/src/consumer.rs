@@ -35,6 +35,9 @@ const RECONNECT_DELAY: Duration = Duration::from_secs(2);
 /// Monedas extra para cada jugador del equipo ganador.
 pub const WIN_BONUS: i32 = 20;
 
+/// Rol del impostor en `match.finished` (sección 0.7).
+pub const ROLE_IMPOSTOR: &str = "impostor";
+
 /// Evento `match.finished` (sección 0.7).
 #[derive(Debug, Deserialize)]
 pub struct MatchFinished {
@@ -118,6 +121,8 @@ pub async fn save_results(
 
         let won = player.role == event.winner;
         let coins = coins_for(player.harvest, won);
+        // S2-07: cuántas veces fue impostor y cuántas ganó así.
+        let impostor = player.role == ROLE_IMPOSTOR;
 
         let inserted = sqlx::query(
             "INSERT INTO results
@@ -141,11 +146,15 @@ pub async fn save_results(
                 "UPDATE players
                  SET coins = coins + $1,
                      matches_played = matches_played + 1,
-                     wins = wins + $2
-                 WHERE id = $3",
+                     wins = wins + $2,
+                     times_impostor = times_impostor + $3,
+                     wins_as_impostor = wins_as_impostor + $4
+                 WHERE id = $5",
             )
             .bind(coins)
             .bind(i32::from(won))
+            .bind(i32::from(impostor))
+            .bind(i32::from(impostor && won))
             .bind(player.player_id)
             .execute(&mut *tx)
             .await?;
@@ -298,7 +307,27 @@ mod tests {
         .expect("select stats")
     }
 
+    /// (times_impostor, wins_as_impostor) del jugador (S2-07).
+    async fn impostor_stats(pool: &PgPool, id: Uuid) -> (i32, i32) {
+        sqlx::query_as(
+            "SELECT times_impostor, wins_as_impostor
+             FROM players WHERE id = $1",
+        )
+        .bind(id)
+        .fetch_one(pool)
+        .await
+        .expect("select impostor stats")
+    }
+
     fn event_json(match_id: Uuid, players: &[(Uuid, &str, i32)]) -> String {
+        event_json_won_by(match_id, "crew", players)
+    }
+
+    fn event_json_won_by(
+        match_id: Uuid,
+        winner: &str,
+        players: &[(Uuid, &str, i32)],
+    ) -> String {
         let players: Vec<String> = players
             .iter()
             .map(|(id, role, harvest)| {
@@ -310,7 +339,7 @@ mod tests {
             .collect();
         format!(
             r#"{{"event_id":"{}","match_id":"{match_id}",
-                "finished_at":"2026-10-10T00:00:00Z","winner":"crew",
+                "finished_at":"2026-10-10T00:00:00Z","winner":"{winner}",
                 "players":[{}]}}"#,
             Uuid::new_v4(),
             players.join(",")
@@ -352,6 +381,75 @@ mod tests {
 
         assert_eq!(stats(&pool, crew).await, (7 + WIN_BONUS, 1, 1));
         assert_eq!(stats(&pool, impostor).await, (3, 1, 0));
+    }
+
+    #[tokio::test]
+    async fn impostor_win_counts_once_in_the_profile() {
+        let Some(pool) = test_pool().await else {
+            return;
+        };
+        let impostor = new_player(&pool).await;
+        let crew = new_player(&pool).await;
+        let body = event_json_won_by(
+            Uuid::new_v4(),
+            "impostor",
+            &[(impostor, "impostor", 5), (crew, "crew", 15)],
+        );
+
+        for _ in 0..2 {
+            let outcome = handle_message(&pool, body.as_bytes()).await;
+            assert_eq!(outcome, Outcome::Ack);
+        }
+
+        assert_eq!(stats(&pool, impostor).await, (5 + WIN_BONUS, 1, 1));
+        assert_eq!(impostor_stats(&pool, impostor).await, (1, 1));
+        assert_eq!(stats(&pool, crew).await, (15, 1, 0));
+        assert_eq!(impostor_stats(&pool, crew).await, (0, 0));
+    }
+
+    #[tokio::test]
+    async fn impostor_loss_counts_the_role_but_not_the_win() {
+        let Some(pool) = test_pool().await else {
+            return;
+        };
+        let impostor = new_player(&pool).await;
+        let body = event_json(Uuid::new_v4(), &[(impostor, "impostor", 0)]);
+
+        let outcome = handle_message(&pool, body.as_bytes()).await;
+
+        assert_eq!(outcome, Outcome::Ack);
+        assert_eq!(stats(&pool, impostor).await, (0, 1, 0));
+        assert_eq!(impostor_stats(&pool, impostor).await, (1, 0));
+    }
+
+    /// Integración con `match`: este es el JSON tal como lo publica
+    /// `events.NewMatchFinished` en Go (sección 0.7), con `ejected` y
+    /// `finished_at` que `players` no usa pero tolera.
+    #[tokio::test]
+    async fn accepts_the_payload_published_by_match() {
+        let Some(pool) = test_pool().await else {
+            return;
+        };
+        let impostor = new_player(&pool).await;
+        let crew = new_player(&pool).await;
+        let match_id = Uuid::new_v4();
+        let body = format!(
+            r#"{{"event_id":"{}","match_id":"{match_id}",
+            "finished_at":"2026-10-16T04:23:29.236117Z","winner":"impostor",
+            "players":[
+              {{"player_id":"{impostor}","role":"impostor","ejected":false,
+                "harvest":10}},
+              {{"player_id":"{crew}","role":"crew","ejected":true,
+                "harvest":25}}]}}"#,
+            Uuid::new_v4()
+        );
+
+        let outcome = handle_message(&pool, body.as_bytes()).await;
+
+        assert_eq!(outcome, Outcome::Ack);
+        assert_eq!(stats(&pool, impostor).await, (10 + WIN_BONUS, 1, 1));
+        assert_eq!(impostor_stats(&pool, impostor).await, (1, 1));
+        assert_eq!(stats(&pool, crew).await, (25, 1, 0));
     }
 
     #[tokio::test]

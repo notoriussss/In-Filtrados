@@ -131,7 +131,7 @@ myActiveTask: string | null;       // S2-11: tarea iniciada por el servidor
 |---|---|---|
 | `POST /api/auth/register` | `{ username, password }` | `201 { playerId, username }` |
 | `POST /api/auth/login` | `{ username, password }` | `200 { token, playerId, username }` |
-| `GET /api/me` | — (header `Authorization: Bearer <token>`) | `200 { playerId, username, coins, matchesPlayed, wins }` |
+| `GET /api/me` | — (header `Authorization: Bearer <token>`) | `200 { playerId, username, coins, matchesPlayed, wins, timesImpostor, winsAsImpostor }` (las dos últimas desde S2-07) |
 | `POST /api/rooms` | — | `201 { roomCode, matchId }` |
 | `POST /api/rooms/:roomCode/join` | — | `200 { roomCode, matchId }` |
 
