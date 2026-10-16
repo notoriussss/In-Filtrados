@@ -17,6 +17,7 @@ export function Menu(props: {
   onCreated: (matchId: string, roomCode: string, isCreator: boolean) => void;
   onJoin: () => void;
   onHelp: () => void;
+  onSettings: () => void;
   onLogout: () => void;
   onUnauthorized: () => void;
 }) {
@@ -78,6 +79,9 @@ export function Menu(props: {
         </Button>
         <Button variant="sec" icon="book" onClick={props.onHelp}>
           {MENU_TEXT.HELP}
+        </Button>
+        <Button variant="sec" icon="gear" onClick={props.onSettings}>
+          {MENU_TEXT.SETTINGS}
         </Button>
         <Button variant="sec" icon="door" onClick={props.onLogout}>
           {MENU_TEXT.LOGOUT}

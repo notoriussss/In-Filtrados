@@ -174,3 +174,26 @@ button:disabled { cursor: default; opacity: .55; transform: none !important; }
 .scr-meeting .mark { display: inline-flex; align-items: center; gap: 4px; }
 .rt { text-align: right; }
 .scr-result .tr { grid-template-columns: 84px 1fr 180px 10px 200px; }
+
+/* 08-ajustes */
+.scr-settings .pane {min-height:600px;padding:12px 28px}
+.scr-settings .ctl2 {display:flex;align-items:center;gap:20px}
+.scr-settings .sr {padding-block:10px}
+.scr-settings .settings-foot {position:absolute;left:40px;right:40px;bottom:28px;display:flex;justify-content:space-between;align-items:center}
+.seg button {padding:8px 20px 6px;font-size:30px;color:var(--mut);min-width:62px;text-align:center;background:transparent;border:0;cursor:pointer}
+.seg button.on {background:var(--pan3);color:var(--aqua)}
+button.tog {border:0;padding:0;cursor:pointer}
+
+/* Ajustes de accesibilidad (settings.ts los pone en <html>) */
+html[data-contrast='high'] {
+  --mut: #d6eefa; --line: #9fd8ff; --line-d: #6fb4e0;
+  --bg2: #031120; --pan: #061a30; --ink: #000;
+}
+html[data-contrast='high'] .btn,
+html[data-contrast='high'] .chip,
+html[data-contrast='high'] .pill { color: #fff; }
+html[data-motion='reduced'] *,
+html[data-motion='reduced'] *::before,
+html[data-motion='reduced'] *::after {
+  animation: none !important; transition: none !important;
+}

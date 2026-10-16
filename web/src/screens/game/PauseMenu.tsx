@@ -9,6 +9,7 @@ import { PAUSE_TEXT } from '../../texts';
 export function PauseMenu(props: {
   onResume: () => void;
   onHelp: () => void;
+  onSettings: () => void;
   onLeave: () => void;
 }) {
   const code = session.loadSession()?.roomCode ?? '';
@@ -47,6 +48,14 @@ export function PauseMenu(props: {
             </Button>
             <Button variant="sec" block icon="book" onClick={props.onHelp}>
               {PAUSE_TEXT.HELP}
+            </Button>
+            <Button
+              variant="sec"
+              block
+              icon="gear"
+              onClick={props.onSettings}
+            >
+              {PAUSE_TEXT.SETTINGS}
             </Button>
             <Button variant="dan" block icon="door" onClick={props.onLeave}>
               {PAUSE_TEXT.LEAVE}

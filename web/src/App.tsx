@@ -9,6 +9,7 @@ import { Access } from './screens/Access';
 import { Menu } from './screens/Menu';
 import { Join } from './screens/Join';
 import { Help } from './screens/Help';
+import { Settings } from './screens/Settings';
 import { Lobby } from './screens/Lobby';
 import { Game } from './screens/Game';
 
@@ -21,6 +22,7 @@ type Route =
   | { name: 'menu'; error?: string }
   | { name: 'join' }
   | { name: 'help' }
+  | { name: 'settings' }
   | { name: 'lobby' }
   | { name: 'game'; reveal: boolean };
 
@@ -118,6 +120,7 @@ export function App() {
           onCreated={enterRoom}
           onJoin={() => setRoute({ name: 'join' })}
           onHelp={() => setRoute({ name: 'help' })}
+          onSettings={() => setRoute({ name: 'settings' })}
           onLogout={logout}
           onUnauthorized={logout}
         />
@@ -128,6 +131,8 @@ export function App() {
       );
     case 'help':
       return <Help onClose={() => setRoute({ name: 'menu' })} />;
+    case 'settings':
+      return <Settings onClose={() => setRoute({ name: 'menu' })} />;
     case 'lobby':
       return game ? (
         <Lobby

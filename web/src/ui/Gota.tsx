@@ -1,3 +1,4 @@
+import { motionIsReduced } from '../settings';
 import { useEffect, useRef } from 'react';
 import { loadImage } from '../game/render/assets';
 
@@ -91,7 +92,7 @@ export function Gota(props: GotaProps) {
         if (a) ctx.drawImage(a, sx, sy, crop.w, crop.h, 0, 0, crop.w, crop.h);
       };
       draw();
-      if (props.animate) {
+      if (props.animate && !motionIsReduced()) {
         timer = setInterval(
           () => {
             frame++;

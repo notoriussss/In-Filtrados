@@ -13,6 +13,7 @@ import { PauseMenu } from './game/PauseMenu';
 import { ConnectionPanel } from './game/ConnectionPanel';
 import { Minigame } from './game/Minigame';
 import { Help } from './Help';
+import { Settings } from './Settings';
 
 // Game: el canvas del mundo (lo dibuja GameSession) y, encima, la
 // interfaz de React: HUD, minijuego, reunión, expulsión, resultado,
@@ -29,6 +30,7 @@ export function Game(props: {
   const [revealing, setRevealing] = useState(props.reveal);
   const [paused, setPaused] = useState(false);
   const [help, setHelp] = useState(false);
+  const [settings, setSettings] = useState(false);
   const [before, setBefore] = useState<MeResponse | null>(null);
   const snap = state.snapshot;
   const phase = snap?.phase;
@@ -49,12 +51,15 @@ export function Game(props: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
 
-  useEffect(() => game.setPaused(paused || help), [game, paused, help]);
+  useEffect(
+    () => game.setPaused(paused || help || settings),
+    [game, paused, help, settings],
+  );
 
   // Esc abre o cierra la pausa (si no hay minijuego, que Esc cierra).
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.code !== 'Escape' || help) return;
+      if (e.code !== 'Escape' || help || settings) return;
       if (game.getState().minigame) return;
       if (game.getState().snapshot?.phase !== 'PLAYING') return;
       setPaused((p) => !p);
@@ -62,7 +67,7 @@ export function Game(props: {
     // En captura: corre antes que el Esc del minijuego.
     addEventListener('keydown', onKey, true);
     return () => removeEventListener('keydown', onKey, true);
-  }, [game, help]);
+  }, [game, help, settings]);
 
   const meeting = phase === 'MEETING' && snap?.meeting ? snap.meeting : null;
   return (
@@ -107,16 +112,22 @@ export function Game(props: {
           onDone={() => setRevealing(false)}
         />
       )}
-      {paused && !help && phase === 'PLAYING' && (
+      {paused && !help && !settings && phase === 'PLAYING' && (
         <PauseMenu
           onResume={() => setPaused(false)}
           onHelp={() => setHelp(true)}
+          onSettings={() => setSettings(true)}
           onLeave={props.onLeave}
         />
       )}
       {help && (
         <div className="overlay-stage solid">
           <Help overlay onClose={() => setHelp(false)} />
+        </div>
+      )}
+      {settings && (
+        <div className="overlay-stage solid">
+          <Settings overlay onClose={() => setSettings(false)} />
         </div>
       )}
     </>
