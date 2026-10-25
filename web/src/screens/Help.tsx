@@ -63,9 +63,9 @@ export function Help(props: { onClose: () => void; overlay?: boolean }) {
         className="panel"
         style={{
           left: 60,
-          top: 40,
+          top: 28,
           width: 1800,
-          height: 1000,
+          height: 1024,
           padding: '26px 36px',
         }}
       >
@@ -97,7 +97,7 @@ export function Help(props: { onClose: () => void; overlay?: boolean }) {
             </div>
           ))}
         </div>
-        <div className="lab" style={{ marginTop: 22 }}>
+        <div className="lab" style={{ marginTop: 16 }}>
           {HELP_TEXT.ROLES}
         </div>
         <div className="roles">
@@ -122,7 +122,13 @@ export function Help(props: { onClose: () => void; overlay?: boolean }) {
             </div>
           </div>
         </div>
-        <div className="lab" style={{ marginTop: 22 }}>
+        <div className="well row" style={{ marginTop: 16, gap: 14 }}>
+          <Icon name="map" palette="amber" size={32} />
+          <p>
+            <b>{HELP_TEXT.MEETING_POINT}.</b> {HELP_TEXT.MEETING_POINT_TEXT}
+          </p>
+        </div>
+        <div className="lab" style={{ marginTop: 16 }}>
           {HELP_TEXT.CONTROLS}
         </div>
         <div className="well">

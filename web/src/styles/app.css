@@ -31,6 +31,9 @@ button:disabled { cursor: default; opacity: .55; transform: none !important; }
 .hud .mini .dot { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; box-shadow: 0 0 0 3px var(--ink); }
 .hud .mini .dot.me { background: #fff; }
 .hud .mini .dot.task { background: var(--amber); width: 9px; height: 9px; margin: -4px 0 0 -4px; }
+.hud .mini .dot.meet { background: transparent; border: 3px solid var(--amber); width: 16px; height: 16px; margin: -8px 0 0 -8px; box-shadow: 0 0 0 3px var(--ink); border-radius: 50%; }
+.hud .mini .mm-key { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--amber); }
+.hud .mini .mm-key i { width: 10px; height: 10px; border: 2px solid var(--amber); border-radius: 50%; }
 .hud .mini .dot.fix { background: var(--coral); animation: blink 0.6s steps(1) infinite; }
 .hud .me-card .portrait { width: 88px; height: 125px; image-rendering: pixelated; margin: -10px 0 -10px; }
 
@@ -111,9 +114,10 @@ button:disabled { cursor: default; opacity: .55; transform: none !important; }
 /* 13-expulsion */
 .scr-eject .float {position:absolute;left:760px;top:160px;transform:rotate(-14deg)}
 /* 14-reunion */
-.scr-meeting .pcs {display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
-.scr-meeting .pc {height:226px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:8px;padding-top:12px}
-.scr-meeting .pc .pic {height:112px;display:grid;place-items:center}
+.scr-meeting .col-panel {display:flex;flex-direction:column}
+.scr-meeting .pcs {display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:16px;flex:1;min-height:0;margin-top:14px}
+.scr-meeting .pc {display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:12px 8px;min-height:0}
+.scr-meeting .pc .pic {display:grid;place-items:center}
 .scr-meeting .pc .pn {font-size:28px}
 .scr-meeting .pc.ghostc {opacity:.7}
 .scr-meeting .pc .mark {position:absolute;right:8px;top:8px;font-size:.62em;white-space:nowrap}
@@ -170,7 +174,7 @@ button:disabled { cursor: default; opacity: .55; transform: none !important; }
 .scr-meeting .pc:disabled { cursor: default; opacity: 1; }
 .scr-meeting .pc.ghostc:disabled { opacity: .7; }
 .scr-meeting .pc:not(:disabled):hover { background: var(--pan3); }
-.scr-meeting .chat-log { height: 500px; padding: 14px; overflow-y: auto; }
+.scr-meeting .chat-log { flex: 1; min-height: 0; margin-top: 14px; padding: 14px; overflow-y: auto; }
 .scr-meeting .msg.pending { opacity: .6; }
 .scr-meeting .ml { margin-left: 12px; }
 .scr-meeting .mark { display: inline-flex; align-items: center; gap: 4px; }

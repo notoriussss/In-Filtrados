@@ -11,7 +11,7 @@ import {
   TASK_ICONS,
 } from '../../ui/Icon';
 import { Chip, Gauge } from '../../ui/kit';
-import { gameMap } from '../../map';
+import { gameMap, meetingMarker } from '../../map';
 import { roomName } from '../../game/tasks/tasks';
 import { emergencyBanner, sabotageButtons } from '../../game/emergency';
 import type { Action } from '../../game/actions';
@@ -295,10 +295,17 @@ function Minimap(props: { snap: Snapshot; meId: string; now: number }) {
     top: `${(y / gameMap.height) * 100}%`,
   });
   const pending = snap.myTasks.filter((t) => !t.done);
+  const meeting = meetingMarker(gameMap);
   return (
     <section className="panel glass mini" aria-label={HUD_TEXT.MAP}>
       <div className="lab">
         <span>{HUD_TEXT.MAP.toUpperCase()}</span>
+        {meeting && (
+          <span className="mm-key">
+            <i />
+            {HUD_TEXT.MEETING_POINT.toUpperCase()}
+          </span>
+        )}
       </div>
       <div className="map-box">
         <img src="/assets/map/manglar-verde/minimap.png" alt="" />
@@ -318,6 +325,13 @@ function Minimap(props: { snap: Snapshot; meId: string; now: number }) {
             .map((f) => (
               <span key={f.id} className="dot fix" style={pos(f.x, f.y)} />
             ))}
+        {meeting && (
+          <span
+            className="dot meet"
+            title={meeting.name}
+            style={pos(meeting.x, meeting.y)}
+          />
+        )}
         {me && <span className="dot me" style={pos(me.x, me.y)} />}
       </div>
     </section>

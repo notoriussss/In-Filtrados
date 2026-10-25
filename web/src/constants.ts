@@ -31,8 +31,6 @@ export const MEETING_TEXT = {
   TITLE: 'Reunión de emergencia',
   REPORTED_BY: (name: string) => `${name} reportó un tanque muerto`,
   TANK_OF: (name: string) => `Tanque de ${name}`,
-  LAST_VISITORS: 'Últimos en pasar por el tanque',
-  NO_VISITORS: 'Nadie pasó cerca',
   VOTING_ENDS_IN: (seconds: number) => `Votación: ${seconds} s`,
   RESULT_ENDS_IN: (seconds: number) => `Volvemos al huerto en ${seconds} s`,
   PLAYERS: 'Jugadores',

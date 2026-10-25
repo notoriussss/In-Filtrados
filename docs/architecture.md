@@ -182,7 +182,7 @@ match/
 |---|---|
 | `matches` | id, sala, inicio, fin, ganador (tripulantes o impostor) |
 | `participants` | quién jugó cada partida, su rol y si fue expulsado |
-| `event_log` | eventos importantes (contaminó, reportó, votó). Sirve para mostrar en la reunión los últimos 3 que pasaron por un tanque |
+| `event_log` | eventos importantes (contaminó, reportó, votó). Registro de auditoría; la reunión ya no muestra quiénes pasaron por un tanque (`meeting.lastVisitors` se sigue enviando pero la web no lo usa) |
 
 **Eventos que publica en RabbitMQ:** `match.started`, `match.finished` (con id de partida, jugadores, cosecha y resultado), `sabotage` y `ejection`.
 

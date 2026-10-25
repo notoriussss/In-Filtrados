@@ -140,6 +140,10 @@ export const HELP_TEXT = {
   IMPOSTOR_TEXT:
     'Contamina los tanques sin que te vean ' + 'y sabotea la estación.',
   IMPOSTOR_WIN: 'Gana: tanques arruinados o fin del tiempo',
+  MEETING_POINT: 'Reuniones',
+  MEETING_POINT_TEXT:
+    'Al reportar un tanque todos aparecen en la Mesa de reuniones ' +
+    '(mirador del centro); en el mapa es «Reunión».',
   CONTROLS: 'Controles',
   MOVE: 'Mover',
   USE: 'Usar',
@@ -155,6 +159,8 @@ export const ROLE_TEXT = {
   CREW_SUB: 'Completa tus tareas 3R y descubre quién ensucia el agua.',
   IMPOSTOR_SUB: 'Ensucia los tanques sin que te descubran.',
   MATES: 'En la estación',
+  MEETING_NOTE:
+    'En una reunión todos van a la Mesa de reuniones, en el centro del mapa.',
   startsIn: (s: number) => `La partida empieza en ${s}`,
 } as const;
 
@@ -172,6 +178,7 @@ export const HUD_TEXT = {
   MY_TANK: 'Tanque',
   NO_TANK: 'sin tanque',
   MAP: 'Mapa',
+  MEETING_POINT: 'Reunión',
   USE: 'Usar',
   CLEAN: 'Limpiar',
   REPORT: 'Reportar',
@@ -217,6 +224,7 @@ export const MEETING_UI_TEXT = {
   reported: (who: string, owner: string) =>
     `${who} reportó el tanque de ${owner}`,
   VOTING: 'Votación',
+  GATHERED: 'Todos están en la Mesa de reuniones',
   RESULT: 'Resultado',
   ALIVE: 'Vivo',
   GHOST: 'Fantasma',
@@ -233,10 +241,6 @@ export const MEETING_UI_TEXT = {
   GHOST_PLACEHOLDER: 'Los fantasmas no pueden escribir',
   SEND: 'Enviar',
   SENDING: 'enviando…',
-  LAST_AT_TANK: 'Últimos en el tanque',
-  LAST_NOTE: 'Registro de cercanía al reporte',
-  NOBODY: 'Nadie pasó cerca',
-  HINT: 'Pista, no prueba: los tripulantes también limpian tanques.',
   you: (name: string) => `${name} (tú)`,
 } as const;
 

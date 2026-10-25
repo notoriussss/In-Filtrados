@@ -44,7 +44,7 @@ function snap(meeting: Partial<Meeting>, tick = 100): Snapshot {
     meeting: {
       reporterId: 'a',
       tankSlot: 3,
-      lastVisitors: ['b', 'c'],
+      lastVisitors: [],
       votesCast: [],
       endsAtTick: 1000,
       votingClosed: false,
@@ -76,11 +76,10 @@ describe('meetingView', () => {
     expect(meetingView({ ...snap({}), phase: 'PLAYING' }, 'a')).toBeNull();
   });
 
-  it('says who reported, whose tank and the last visitors', () => {
+  it('says who reported, and whose tank', () => {
     const v = meetingView(snap({}), 'a')!;
     expect(v.reporterText).toBe('Ana reportó un tanque muerto');
     expect(v.tankText).toBe('Tanque de Dani');
-    expect(v.lastVisitors).toEqual(['Beto', 'Caro']);
     expect(v.countdownText).toBe('Votación: 45 s');
   });
 

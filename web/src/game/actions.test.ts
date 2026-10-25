@@ -22,6 +22,7 @@ const map: GameMap = {
     { slot: 1, x: 400, y: 100 },
   ],
   fixPoints: [],
+  markers: [],
 };
 
 const player = (

@@ -108,7 +108,7 @@ La jugada clásica es **sabotear y contaminar a la vez**: mientras todos corren 
 ### Pistas para descubrir al impostor
 1. **Cercanía visible:** contaminar toma tiempo y se ve. Pero los tripulantes también visitan tanques ajenos para limpiarlos, así que estar cerca no prueba nada por sí solo.
 2. **Gotas de aceite:** después de contaminar, el impostor deja gotas de aceite del color de su personaje durante unos 15 segundos.
-3. **Tanque arruinado y reporte:** quien encuentra un tanque contaminado al 100 % lo reporta y se abre la reunión. En ella se muestran los **últimos 3 jugadores** que pasaron por ese tanque, sin decir quién lo contaminó.
+3. **Tanque arruinado y reporte:** quien encuentra un tanque contaminado al 100 % lo reporta y se abre la reunión. La reunión **no** muestra quiénes pasaron por el tanque (se quitó para que nadie se acuse por ese dato); todos aparecen en la Mesa de reuniones, en el mirador del centro.
 4. **Alerta al dueño** (opcional): "¡tu tanque está siendo contaminado!", sin decir por quién.
 
 ### Cómo se gana
