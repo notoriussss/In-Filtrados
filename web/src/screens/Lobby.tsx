@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react';
 import type { PlayerView } from '@in-filtrados/messages';
 import { Stage } from '../ui/Stage';
-import { Gota, SERVER_COLORS, colorName } from '../ui/Gota';
+import {
+  Gota,
+  SERVER_COLORS,
+  colorName,
+  ACCESSORIES,
+  accessoryName,
+  GOTA_ROSTER,
+} from '../ui/Gota';
 import { Icon } from '../ui/Icon';
 import { Button, Chip, Pill, TitleBar } from '../ui/kit';
 import { api, type MeResponse } from '../api';
@@ -51,6 +58,10 @@ export function Lobby(props: {
   const isHost = Boolean(data?.isCreator);
   const connected = players.filter((p) => p.connected).length;
   const myColor = meView?.color ?? SERVER_COLORS[1];
+  const myAccessory =
+    meView?.accessory ||
+    GOTA_ROSTER[myColor.toLowerCase()]?.accessory ||
+    ACCESSORIES[0].id;
   const code = data?.roomCode ?? '----';
   const impostors = players.length >= TWO_IMPOSTORS_FROM ? 2 : 1;
   const compact = players.length > 8;
@@ -118,7 +129,12 @@ export function Lobby(props: {
         </TitleBar>
         <div className="prev stand">
           <div className="plank" />
-          <Gota color={myColor} scale={5} animate />
+          <Gota
+            color={myColor}
+            accessory={myAccessory}
+            scale={5}
+            animate
+          />
         </div>
         <div className="lab">
           {LOBBY_TEXT.COLOR}{' '}
@@ -167,6 +183,39 @@ export function Lobby(props: {
               );
             })}
           </div>
+        )}
+        {FEATURES.accessoryPicker && (
+          <>
+            <div className="lab" style={{ marginTop: 14 }}>
+              {LOBBY_TEXT.ACCESSORY}{' '}
+              <span className="muted">· {accessoryName(myAccessory)}</span>
+            </div>
+            <ChoiceGrid
+              kind="accessory"
+              label={LOBBY_TEXT.ACCESSORY}
+              value={myAccessory}
+              choices={ACCESSORIES.map((a) => ({
+                id: a.id,
+                label: a.name,
+                preview: (
+                  <Gota
+                    color={myColor}
+                    accessory={a.id}
+                    scale={1.4}
+                    portrait
+                  />
+                ),
+              }))}
+              onPick={(id) => {
+                if (id !== myAccessory) {
+                  props.game.send({
+                    type: 'pickAccessory',
+                    accessory: id,
+                  });
+                }
+              }}
+            />
+          </>
         )}
         <div className="lab" style={{ marginTop: 22 }}>
           {LOBBY_TEXT.PROFILE}
@@ -311,7 +360,12 @@ function PlayerSlot(props: {
   return (
     <div className={`slot ${props.isMe ? 'me' : ''}`} style={style}>
       <span className="av">
-        <Gota color={p.color} scale={props.compact ? 1.6 : 2} portrait />
+        <Gota
+          color={p.color}
+          accessory={p.accessory}
+          scale={props.compact ? 1.6 : 2}
+          portrait
+        />
       </span>
       <span className="nm">
         <span className="fit" title={p.name}>

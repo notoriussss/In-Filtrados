@@ -228,6 +228,8 @@ func (r *Room) handleAction(a PlayerAction) {
 		r.handleFix(p, a.FixPointID)
 	case a.PickColor:
 		r.pickColor(p, a.Color)
+	case a.PickAccessory:
+		r.pickAccessory(p, a.Accessory)
 	case a.InteractTask:
 		if r.phase == matchv1.Phase_PLAYING {
 			if !a.Completed {
@@ -258,16 +260,18 @@ func (r *Room) addPlayer(j Join) {
 	if r.order < len(r.m.Tanks) {
 		tankSlot = r.order
 	}
+	color := colors[r.order%len(colors)]
 	r.players[j.PlayerID] = &player{
 		tankSlot: tankSlot,
 		view: &matchv1.PlayerView{
 			Id:        j.PlayerID,
 			Name:      name,
-			Color:     colors[r.order%len(colors)],
+			Color:     color,
 			X:         float32(x),
 			Y:         float32(y),
 			Connected: true,
 			Alive:     true,
+			Accessory: defaultAccessoryForColor(color),
 		},
 		out: j.Out,
 	}

@@ -20,8 +20,9 @@ type GrpcMeeting = Omit<Meeting, 'ejectedId'> & {
   ejectedId?: string | null;
 };
 
-type GrpcPlayerView = Omit<PlayerView, 'activity'> & {
+type GrpcPlayerView = Omit<PlayerView, 'activity' | 'accessory'> & {
   activity?: string;
+  accessory?: string;
 };
 
 type GrpcEmergency = Omit<Emergency, 'kind'> & { kind: string };
@@ -131,6 +132,7 @@ function toPlayer(p: GrpcPlayerView): PlayerView {
       p.activity && ACTIVITIES.includes(p.activity)
         ? (p.activity as Activity)
         : null,
+    accessory: p.accessory ?? '',
   };
 }
 

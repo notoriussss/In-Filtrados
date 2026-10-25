@@ -303,6 +303,7 @@ test('S3-05: activity, emergency and mySabotage are mapped', () => {
     connected: true,
     alive: true,
     activity: 'recycle',
+    accessory: '',
   });
   assert.deepEqual(msg.emergency, {
     kind: 'pipe',

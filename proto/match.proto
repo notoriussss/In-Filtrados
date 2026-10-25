@@ -37,7 +37,9 @@ message ClientAction {
     Sabotage    sabotage    = 9;
     Fix         fix         = 10;
     // Elegir color en la sala de espera.
-    PickColor   pick_color  = 11;
+    PickColor     pick_color     = 11;
+    // Elegir accesorio en la sala de espera.
+    PickAccessory pick_accessory = 12;
   }
 }
 message Join {
@@ -96,6 +98,10 @@ message Fix {
 // ningún otro jugador conectado lo tiene; si no, lo ignora.
 message PickColor {
   string color = 1;
+}
+// PickAccessory: solo en LOBBY. match lo acepta si es un accesorio válido.
+message PickAccessory {
+  string accessory = 1;
 }
 
 message ServerEvent {
@@ -211,6 +217,8 @@ message PlayerView {
   // "reduce", "reuse" o "recycle" (tarea), "tank" (limpiar o
   // contaminar: se ven igual) o "fix" (arreglar una emergencia).
   string activity  = 8;
+  // Accesorio/sombrero del jugador (vacío si no tiene o por defecto).
+  string accessory = 9;
 }
 message Error {
   string code    = 1;

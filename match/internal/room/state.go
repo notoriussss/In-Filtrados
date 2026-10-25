@@ -151,13 +151,17 @@ type PlayerAction struct {
 	// Elegir color en la sala de espera.
 	PickColor bool
 	Color     string
+
+	// Elegir accesorio en la sala de espera.
+	PickAccessory bool
+	Accessory     string
 }
 
 // isMove: la acción solo cambia la dirección (un Move).
 func (a PlayerAction) isMove() bool {
 	return !a.Start && !a.Contaminate && !a.Clean && !a.InteractTask &&
 		!a.Report && !a.Vote && !a.Chat && !a.Sabotage && !a.Fix &&
-		!a.PickColor
+		!a.PickColor && !a.PickAccessory
 }
 
 type player struct {

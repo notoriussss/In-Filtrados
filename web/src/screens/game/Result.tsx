@@ -130,7 +130,12 @@ export function Result(props: {
             return (
               <div className={`tr ${p.id === meId ? 'on' : ''}`} key={p.id}>
                 <span className="av">
-                  <Gota color={p.color} scale={1.2} portrait />
+                  <Gota
+                    color={p.color}
+                    accessory={p.accessory}
+                    scale={1.2}
+                    portrait
+                  />
                 </span>
                 <b>
                   {p.name}

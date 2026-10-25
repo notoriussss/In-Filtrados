@@ -24,7 +24,11 @@ export function Ejection(props: { snap: Snapshot }) {
         {ejected ? (
           <>
             <div className="float bob">
-              <Gota color={ejected.color} scale={9} />
+              <Gota
+                color={ejected.color}
+                accessory={ejected.accessory}
+                scale={9}
+              />
             </div>
             <div
               className="big1 sm"

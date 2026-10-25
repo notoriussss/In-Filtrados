@@ -18,7 +18,9 @@ export type ClientMessage =
   | { type: 'sabotage'; kind: EmergencyKind }
   | { type: 'fix'; pointId: string }
   // Elegir color en LOBBY; match lo acepta si nadie conectado lo tiene.
-  | { type: 'pickColor'; color: string };
+  | { type: 'pickColor'; color: string }
+  // Elegir accesorio en LOBBY.
+  | { type: 'pickAccessory'; accessory: string };
 
 // interact: hacer una tarea en una estación o limpiar un tanque.
 // completed se manda al terminar el minijuego (S2-04).
@@ -106,6 +108,7 @@ export type PlayerView = {
   connected: boolean;
   alive: boolean;
   activity: Activity | null; // S3-05: null si no hace nada
+  accessory?: string; // id del accesorio o sombrero
 };
 
 export type TankView = {

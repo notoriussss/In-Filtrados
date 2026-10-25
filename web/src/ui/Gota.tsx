@@ -35,6 +35,26 @@ export function colorName(color: string): string {
   return GOTA_ROSTER[color.toLowerCase()]?.name ?? '';
 }
 
+export const ACCESSORIES: { id: string; name: string }[] = [
+  { id: 'cap', name: 'Gorra' },
+  { id: 'sprout', name: 'Brote' },
+  { id: 'headphones', name: 'Audífonos' },
+  { id: 'glasses', name: 'Lentes' },
+  { id: 'straw-hat', name: 'Sombrero de paja' },
+  { id: 'diving-mask', name: 'Máscara buceo' },
+  { id: 'scarf', name: 'Bufanda' },
+  { id: 'backpack', name: 'Mochila' },
+  { id: 'helmet', name: 'Casco' },
+  { id: 'flower', name: 'Flor' },
+  { id: 'fisher-hat', name: 'Pescador' },
+  { id: 'raincoat', name: 'Impermeable' },
+];
+
+export function accessoryName(id: string): string {
+  const found = ACCESSORIES.find((a) => a.id === id.toLowerCase());
+  return found?.name ?? id;
+}
+
 const sheets = new Map<string, Promise<HTMLImageElement>>();
 
 function sheet(url: string): Promise<HTMLImageElement> {
@@ -48,6 +68,7 @@ function sheet(url: string): Promise<HTMLImageElement> {
 
 export type GotaProps = {
   color: string;
+  accessory?: string;
   scale?: number; // píxeles por píxel del sprite
   view?: (typeof VIEWS)[number];
   walk?: boolean;
@@ -61,9 +82,15 @@ export type GotaProps = {
 export function Gota(props: GotaProps) {
   const ref = useRef<HTMLCanvasElement>(null);
   const scale = props.scale ?? 3;
-  const crop = props.portrait ? PORTRAIT : { x: 0, y: 0, w: CELL_W, h: CELL_H };
+  const crop = props.portrait
+    ? PORTRAIT
+    : { x: 0, y: 0, w: CELL_W, h: CELL_H };
   const color = props.color.toLowerCase();
-  const accessory = GOTA_ROSTER[color]?.accessory;
+  const rawAccessory =
+    props.accessory !== undefined && props.accessory !== ''
+      ? props.accessory
+      : GOTA_ROSTER[color]?.accessory;
+  const accessory = rawAccessory?.toLowerCase();
 
   useEffect(() => {
     const canvas = ref.current;
@@ -71,9 +98,10 @@ export function Gota(props: GotaProps) {
     let alive = true;
     let timer: ReturnType<typeof setInterval> | undefined;
     const body = sheet(`${BASE}/bodies/${color.slice(1)}.png`);
-    const acc = accessory
-      ? sheet(`${BASE}/accessories/${accessory}.png`)
-      : Promise.resolve(null);
+    const acc =
+      accessory && accessory !== 'none'
+        ? sheet(`${BASE}/accessories/${accessory}.png`)
+        : Promise.resolve(null);
     Promise.all([body, acc]).then(([b, a]) => {
       if (!alive) return;
       const ctx = canvas.getContext('2d');

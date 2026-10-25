@@ -111,3 +111,17 @@ test('pickColor needs a short color', () => {
     null,
   );
 });
+
+test('pickAccessory needs a short accessory string', () => {
+  assert.deepEqual(
+    toGrpcAction(parse({ type: 'pickAccessory', accessory: 'straw-hat' })!),
+    { pickAccessory: { accessory: 'straw-hat' } },
+  );
+  assert.equal(parse({ type: 'pickAccessory' }), null);
+  assert.equal(parse({ type: 'pickAccessory', accessory: '' }), null);
+  assert.equal(parse({ type: 'pickAccessory', accessory: 123 }), null);
+  assert.equal(
+    parse({ type: 'pickAccessory', accessory: 'x'.repeat(33) }),
+    null,
+  );
+});

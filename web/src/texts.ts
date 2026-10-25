@@ -90,6 +90,7 @@ export const LOBBY_TEXT = {
   COPIED: 'Copiado',
   YOUR_GOTA: 'Tu gota',
   COLOR: 'Color',
+  ACCESSORY: 'Accesorio',
   PROFILE: 'Tu perfil',
   COINS: 'Monedas',
   MATCHES: 'Partidas',

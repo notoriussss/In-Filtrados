@@ -232,6 +232,7 @@ function PlayerCard(props: {
       <div className="pic">
         <Gota
           color={p.color}
+          accessory={p.accessory}
           scale={props.scale}
           portrait={!ghost}
           ghost={ghost}
@@ -258,7 +259,16 @@ function ChatLine(props: {
   const p = props.players.find((x) => x.id === props.playerId);
   return (
     <div className={`msg ${props.pending ? 'pending' : ''}`}>
-      <span>{p && <Gota color={p.color} scale={1} portrait />}</span>
+      <span>
+        {p && (
+          <Gota
+            color={p.color}
+            accessory={p.accessory}
+            scale={1}
+            portrait
+          />
+        )}
+      </span>
       <span>
         <b>{p?.name ?? nameOf(props.players, props.playerId)}</b>
         {props.text}
