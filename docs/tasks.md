@@ -67,6 +67,7 @@ El mapa vive en **`shared/map.json`** (carpeta nueva en la raíz). Lo usan `matc
 - `id`, `name`, `tile`, `playerRadius`: datos generales del mapa.
 - `stations[].name`, `room` y `radius`: nombre visible, sala y alcance propio de cada estación (si falta `radius`, se usa el de `match`).
 - `tanks[].draw`: esquina del sprite del tanque; `x, y` siguen siendo el punto de interacción.
+- Un tanque por sala (10 salas, 10 tanques) y cada uno lleva su pared de 72×44 en `(x-36, y-24)` dentro de `walls`; si lo mueves, mueve también esa pared y la base de concreto de `ground.png`.
 - `fixPoints`: `{ id, kind: 'pipe' | 'steam', room, x, y }`, los puntos donde se arreglan los sabotajes (2 extremos de tubería y 1 válvula de vapor).
 - `zones[].kind/theme`, `doors` y `markers`: solo para dibujar y nombrar salas; `match` no los usa.
 - Las imágenes del mapa (suelo, props, tanques, luz nocturna y minimapa) viven en `web/public/assets/map/manglar-verde/`; `walls` sigue siendo la única fuente de colisiones.

@@ -10,7 +10,7 @@ Dos propuestas nuevas, pensadas para que la partida sea más llevadera (referenc
 Recorrido más corto: el mapa eco es ~33 % más angosto y ~41 % más bajo que la v2; la planta compacta, ~27 % y ~33 %.
 
 ## 1. Estación Manglar Verde (ecológico)
-Bioestación sobre una laguna. El **malecón** de madera rodea la laguna y es el pasillo principal; en el centro hay un **mirador** (isla con la mesa de reuniones) conectado por dos puentes, que funcionan como cuellos de botella. Alrededor, diez salas con forma irregular: Vivero, Laboratorio de biodiversidad, Estación solar, Patio de cisternas (10 tanques), Casa de bombeo solar (rueda hidráulica), Ecotaller, Humedal, Compostaje y lombricultura, Ecopunto y Apiario.
+Bioestación sobre una laguna. El **malecón** de madera rodea la laguna y es el pasillo principal; en el centro hay un **mirador** (isla con la mesa de reuniones) conectado por dos puentes, que funcionan como cuellos de botella. Alrededor, diez salas con forma irregular: Vivero, Laboratorio de biodiversidad, Estación solar, Patio de cisternas, Casa de bombeo solar (rueda hidráulica), Ecotaller, Humedal, Compostaje y lombricultura, Ecopunto y Apiario.
 Suspenso: dos **túneles de raíces** (oscuros, 2 tiles de ancho) como atajos — Ecotaller ⇄ Humedal y Estación solar ⇄ Cisternas — más los puentes del mirador, los bordes de la laguna y los patios con maleza entre salas.
 
 | Tipo | Estaciones |
@@ -19,7 +19,7 @@ Suspenso: dos **túneles de raíces** (oscuros, 2 tiles de ancho) como atajos �
 | Reutilizar | `rain-1` Cisternas · `rain-2` Vivero · `greywater-1` Ecotaller (lavadero) · `greywater-2` Laboratorio |
 | Reciclar | `filter-1` Humedal · `filter-2` y `sorter-1` Ecopunto · `compost-1` Compostaje |
 
-Marcadores: `reunion` (mesa del mirador), `monitor` (consola del laboratorio). Spawn: mirador. Tanques: 2 columnas × 5 en el Patio de cisternas.
+Marcadores: `reunion` (mesa del mirador), `monitor` (consola del laboratorio). Spawn: mirador. Tanques: uno por sala (10 salas, 10 tanques) para que no se sepa quién los daña de un vistazo; el orden de los lugares (`slot`) reparte a los primeros jugadores lejos entre sí. En `ground.png` solo queda la base de concreto de los tanques que existen.
 
 ## 2. Planta Cuenca Clara compacta
 Misma identidad que la v2 pero con silueta orgánica (esquinas cortadas, patios interiores con pasto, bordes redondeados) y un plano de anillos y pasillos en vez de una cuadrícula: cafetería central octogonal, pasillos de 3 tiles en lazo, laboratorio, sala de control, cloración, casa de máquinas, bombas, cisterna, filtros, reciclaje, sala de tanques (2 columnas × 5) e invernadero.

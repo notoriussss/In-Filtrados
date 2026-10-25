@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { gameMap, type Rect, zoneRoom } from './map';
+import { gameMap, meetingMarker, type Rect, zoneRoom } from './map';
 
 const inside = (r: Rect, x: number, y: number) =>
   x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h;
@@ -39,6 +39,10 @@ describe('shared/map.json', () => {
     ).toBe(true);
   });
 
+  it('has the meeting point where everyone gathers', () => {
+    expect(meetingMarker(gameMap)).toMatchObject({ x: 1328, y: 912 });
+  });
+
   it('has 4 stations of each R, each one in a room of the map', () => {
     const count = (type: string) =>
       gameMap.stations.filter((s) => s.type === type).length;
@@ -47,6 +51,16 @@ describe('shared/map.json', () => {
     ]);
     const rooms = new Set(gameMap.zones.map(zoneRoom));
     for (const s of gameMap.stations) expect(rooms.has(s.room!)).toBe(true);
+  });
+
+  it('puts every tank in a different room', () => {
+    const roomOf = (x: number, y: number) =>
+      gameMap.zones
+        .filter((z) => x >= z.x && x < z.x + z.w && y >= z.y && y < z.y + z.h)
+        .map(zoneRoom)[0];
+    const rooms = gameMap.tanks.map((t) => roomOf(t.x, t.y));
+    expect(rooms.every(Boolean)).toBe(true);
+    expect(new Set(rooms).size).toBe(gameMap.tanks.length);
   });
 
   it('has 10 tank slots and the 3 sabotage fix points', () => {
