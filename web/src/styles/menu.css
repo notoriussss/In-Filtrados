@@ -24,27 +24,37 @@
 /* bloque central unificado (logo + menú) */
 .menu-center {
   position: absolute;
-  left: 50%;
+  left: 0;
+  right: 0;
   top: 48%;
-  transform: translate(-50%, -50%);
+  transform: translateY(-50%);
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 28px;
-  width: 900px;
+  pointer-events: none;
+}
+.menu-center > * {
+  pointer-events: auto;
 }
 
 /* logo */
 .menu-logo {
   position: relative;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
 }
 .menu-logo h1 {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   font-family: var(--logo);
   font-weight: 400;
-  font-size: 104px;
-  line-height: 1.2;
+  font-size: 96px;
+  line-height: 1.1;
   white-space: nowrap;
   color: var(--txt);
   text-shadow:
@@ -83,12 +93,14 @@
 
 .menu-sub {
   margin-top: 14px;
+  padding-left: 6px;
   font-family: var(--head);
   font-size: 26px;
   letter-spacing: 6px;
   text-transform: uppercase;
   color: var(--mut);
   text-shadow: 3px 3px 0 var(--ink);
+  text-align: center;
 }
 .menu-sub b { color: var(--aqua); font-weight: 400; margin: 0 14px; }
 
