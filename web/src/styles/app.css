@@ -145,7 +145,7 @@ button:disabled { cursor: default; opacity: .55; transform: none !important; }
 .hud .res {right: 66px; top: 36px; width: 440px; padding: 18px 22px 18px; }
 .hud .res .m {display: grid; grid-template-columns: 112px 1fr 70px; gap: 12px; align-items: center; font-size: 30px; margin-top: 12px; }
 .hud .res .m span:last-child {text-align: right; }
-.hud .me-card {left: 60px; bottom: 36px; width: 560px; padding: 14px 20px; }
+.hud .me-card {left: 60px; bottom: 36px; width: 540px; padding: 14px 20px; }
 .hud .hot {left: 50%; margin-left: -330px !important; bottom: 36px; width: 660px; padding: 14px 20px; display: flex; gap: 20px; justify-content: center; }
 .hud .slotk {position: relative; width: 140px; height: 124px; display: grid; justify-items: center; align-content: center; gap: 6px; background: var(--bg2); border: 0; cursor: pointer; padding: 6px 0 0;
   box-shadow: -4px 0 0 0 var(--line-d), 4px 0 0 0 var(--line-d), 0 -4px 0 0 var(--line-d), 0 4px 0 0 var(--line-d); margin: 4px; }
@@ -197,6 +197,53 @@ html[data-motion='reduced'] *,
 html[data-motion='reduced'] *::before,
 html[data-motion='reduced'] *::after {
   animation: none !important; transition: none !important;
+}
+
+/* Textos largos: ninguna caja deja salir lo que lleva dentro. Los chips del
+   kit no parten línea (white-space: nowrap), así que los mensajes largos
+   del formulario sí lo permiten y los nombres se acortan con "…". */
+.chip .px-icon, .tg .px-icon { flex: none; }
+.field .chip, .form-error .chip {
+  white-space: normal; max-width: 100%; line-height: 1.15; align-items: flex-start;
+}
+.field .chip .px-icon, .form-error .chip .px-icon { margin-top: 4px; }
+.chip .fit {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* El título de la sala de espera no se parte; el chip con tu usuario cede. */
+.scr-lobby .title-bar .h2.grow { flex: 1 0 auto; }
+.title-bar .name-chip { flex: 0 1 auto; min-width: 0; max-width: 60%; }
+.hud .me-card .who-box { flex: 1; min-width: 0; }
+.hud .me-card .who {
+  display: flex; flex-wrap: wrap; align-items: center;
+  justify-content: space-between; gap: 4px 12px;
+}
+.hud .me-card .who .chip { flex: none; }
+.hud .hud-name {
+  flex: 1 1 auto; min-width: 0; max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.scr-lobby .slot .nm { min-width: 0; }
+.scr-lobby .slot .nm > * { flex: none; }
+.scr-lobby .slot .nm > .fit {
+  flex: 0 1 auto; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.scr-meeting .pc .pn {
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* El aviso de quién reportó el tanque lleva dos nombres: el título conserva
+   su ancho y el aviso, que puede partir línea, usa el resto. */
+.scr-meeting .title-bar .h2.grow { flex: 0 0 auto; }
+.scr-meeting .title-bar .chip {
+  flex: 0 1 auto; min-width: 0; margin-left: auto; max-width: 62%;
+  white-space: normal; line-height: 1.15; overflow-wrap: anywhere;
+}
+/* Las teclas de las barras de ayuda heredaban la sombra de texto de la barra
+   (pensada para letras claras sobre el fondo) y se veían dobles. */
+.kbd, .key { text-shadow: none; }
+.scr-result .tr b {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
 /* screens/pending (apagados por features.ts) */

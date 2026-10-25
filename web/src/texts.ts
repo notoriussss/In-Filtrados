@@ -29,8 +29,19 @@ export const ACCESS_TEXT = {
   REGISTER_TAB: 'Crear cuenta',
   USERNAME: 'Usuario',
   PASSWORD: 'Contraseña',
-  USERNAME_RULE: '3 a 20 letras, números o _',
+  USERNAME_RULE: '3 a 20 caracteres, sin espacios: letras, números y _',
   PASSWORD_RULE: 'Mínimo 8 caracteres',
+  // Lo que se le dice al jugador mientras escribe (accountRules.ts).
+  USERNAME_BAD_CHARS: 'Solo letras sin acento, números y _ (sin espacios)',
+  usernameTooShort: (min: number) => `Muy corto: mínimo ${min} caracteres`,
+  usernameTooLong: (max: number, used: number) =>
+    `Muy largo: máximo ${max} caracteres (llevas ${used})`,
+  passwordMissing: (missing: number) =>
+    missing === 1
+      ? 'Falta 1 carácter para llegar al mínimo de 8'
+      : `Faltan ${missing} caracteres para llegar al mínimo de 8`,
+  USERNAME_OK: 'Usuario válido',
+  PASSWORD_OK: 'Contraseña válida',
   YOUR_GOTA: 'Tu gota',
   COLOR_NOTE: 'Tu color se asigna al entrar a una sala.',
   LOGIN: 'Entrar',
@@ -65,8 +76,7 @@ export const JOIN_TEXT = {
   PASTE: 'Pegar',
   VALID: 'Código válido',
   RULE:
-    'El código tiene 4 letras y números. ' +
-    'Pídeselo a quien creó la sala.',
+    'El código tiene 4 letras y números. ' + 'Pídeselo a quien creó la sala.',
   BACK: 'Volver',
   JOIN: 'Unirme',
   NOT_FOUND: 'No existe una sala con ese código',

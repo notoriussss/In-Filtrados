@@ -108,7 +108,11 @@ export function Lobby(props: {
         }}
       >
         <TitleBar icon="user" title={LOBBY_TEXT.YOUR_GOTA} size={34}>
-          <Chip tone="ok">{data?.username}</Chip>
+          <Chip tone="ok" className="name-chip">
+            <span className="fit" title={data?.username}>
+              {data?.username}
+            </span>
+          </Chip>
         </TitleBar>
         <div className="prev stand">
           <div className="plank" />
@@ -282,8 +286,10 @@ function PlayerSlot(props: {
         <Gota color={p.color} scale={props.compact ? 1.6 : 2} portrait />
       </span>
       <span className="nm">
-        {p.name}
-        {props.isMe && ` ${LOBBY_TEXT.YOU}`}
+        <span className="fit" title={p.name}>
+          {p.name}
+        </span>
+        {props.isMe && <span>{LOBBY_TEXT.YOU}</span>}
         {props.isHost && <Icon name="crown" palette="amber" size={24} />}
         <small className="muted" style={{ fontSize: '.7em' }}>
           {colorName(p.color)}

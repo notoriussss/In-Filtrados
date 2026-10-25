@@ -244,9 +244,11 @@ function PlayerCard(props: { snap: Snapshot; me?: PlayerView }) {
             src={`/assets/characters/jimena/${file}`}
           />
         )}
-        <div style={{ flex: 1 }}>
-          <div className="row" style={{ justifyContent: 'space-between' }}>
-            <b className="hud-name">{me.name.toUpperCase()}</b>
+        <div className="who-box">
+          <div className="who">
+            <b className="hud-name" title={me.name}>
+              {me.name.toUpperCase()}
+            </b>
             <Chip tone={role.tone} icon="drop">
               {role.text.toUpperCase()}
             </Chip>
