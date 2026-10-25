@@ -93,23 +93,6 @@ export function Menu(props: {
     <Stage className="scr-menu" background={BACKGROUNDS.hero}>
       <div className="menu-vignette" />
 
-      <header className="menu-logo">
-        <h1>
-          <span className="a">{APP_TEXT.TITLE_A}</span>
-          <span className="b">{APP_TEXT.TITLE_B}</span>
-        </h1>
-        <div className="menu-rule">
-          <i />
-        </div>
-        <p className="menu-sub">
-          {APP_TEXT.REDUCE}
-          <b>·</b>
-          {APP_TEXT.REUSE}
-          <b>·</b>
-          {APP_TEXT.RECYCLE}
-        </p>
-      </header>
-
       {/* gotas a los lados, detrás del menú */}
       {[
         { c: 0, left: 330, top: 700 },
@@ -132,31 +115,51 @@ export function Menu(props: {
         </div>
       ))}
 
-      <nav
-        className="menu-strips"
-        aria-label={MENU_TEXT.MENU_ARIA}
-        onKeyDown={onMenuKey}
-      >
-        {strips.map((s, i) => (
-          <button
-            key={s.label}
-            type="button"
-            className="menu-item"
-            autoFocus={i === 0}
-            disabled={s.disabled}
-            onClick={s.onClick}
-          >
-            <Icon name="right" palette="light" size={28} />
-            {s.label}
-            <Icon name="left" palette="light" size={28} />
-          </button>
-        ))}
-        {error && (
-          <Chip tone="bad" big icon="cross" className="menu-error">
-            {error}
-          </Chip>
-        )}
-      </nav>
+      {/* bloque central: logo y menú juntos en el centro de la pantalla */}
+      <div className="menu-center">
+        <header className="menu-logo">
+          <h1>
+            <span className="a">{APP_TEXT.TITLE_A}</span>
+            <span className="b">{APP_TEXT.TITLE_B}</span>
+          </h1>
+          <div className="menu-rule">
+            <i />
+          </div>
+          <p className="menu-sub">
+            {APP_TEXT.REDUCE}
+            <b>·</b>
+            {APP_TEXT.REUSE}
+            <b>·</b>
+            {APP_TEXT.RECYCLE}
+          </p>
+        </header>
+
+        <nav
+          className="menu-strips"
+          aria-label={MENU_TEXT.MENU_ARIA}
+          onKeyDown={onMenuKey}
+        >
+          {strips.map((s, i) => (
+            <button
+              key={s.label}
+              type="button"
+              className="menu-item"
+              autoFocus={i === 0}
+              disabled={s.disabled}
+              onClick={s.onClick}
+            >
+              <Icon name="right" palette="light" size={28} />
+              {s.label}
+              <Icon name="left" palette="light" size={28} />
+            </button>
+          ))}
+          {error && (
+            <Chip tone="bad" big icon="cross" className="menu-error">
+              {error}
+            </Chip>
+          )}
+        </nav>
+      </div>
 
       <div className="menu-player">
         <Icon name="user" palette="light" size={36} />
