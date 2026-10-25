@@ -40,7 +40,8 @@ export class MinigameView {
 
   // frame dibuja un cuadro; now son los ms del requestAnimationFrame.
   frame(ctx: CanvasRenderingContext2D, now: number): void {
-    const dt = this.last === null ? 16 : Math.min(now - this.last, MAX_FRAME_MS);
+    const dt =
+      this.last === null ? 16 : Math.min(now - this.last, MAX_FRAME_MS);
     this.last = now;
     ctx.setTransform(BOARD_SCALE, 0, 0, BOARD_SCALE, 0, 0);
     ctx.imageSmoothingEnabled = false;
