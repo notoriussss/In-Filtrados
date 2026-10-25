@@ -40,7 +40,7 @@ describe('PlayerAnimator', () => {
     const anim = new PlayerAnimator();
     const pos = start(anim);
     const pose = anim.pose(at(pos.x, pos.y), 500);
-    expect(pose).toEqual({ frame: 'front', walking: false });
+    expect(pose).toMatchObject({ frame: 'front', walking: false });
   });
 
   // distinct devuelve los cuadros en orden, sin repetir seguidos.

@@ -35,7 +35,7 @@ button:disabled { cursor: default; opacity: .55; transform: none !important; }
 .hud .me-card .portrait { width: 88px; height: 125px; image-rendering: pixelated; margin: -10px 0 -10px; }
 
 /* minijuego */
-.minigame { position: fixed; left: 50%; top: 50%; width: 660px; padding: 22px 26px; transform: translate(-50%, -50%); }
+.minigame { position: fixed; left: 50%; top: 50%; width: 800px; padding: 22px 26px; transform: translate(-50%, -50%); }
 .minigame canvas { display: block; margin: 0 auto; touch-action: none; cursor: pointer;
   box-shadow: -4px 0 0 0 var(--line-d), 4px 0 0 0 var(--line-d), 0 -4px 0 0 var(--line-d), 0 4px 0 0 var(--line-d); }
 .minigame .gauge { margin-top: 18px; }
