@@ -1,6 +1,6 @@
 import type { PlayerView } from '@in-filtrados/messages';
 import type { PlayerAnimator } from './playerAnim';
-import { SPRITE_H, SPRITE_W, spriteImage } from './sprites';
+import { SPRITE_H, SPRITE_W, spriteImageOrFront } from './sprites';
 
 // Jugadores con los sprites de Jimena, en unidades del mundo. Cada
 // sprite (88 × 125) se dibuja de 40 de ancho, como las celdas de 40 × 56
@@ -42,8 +42,7 @@ export function drawPlayer(
   else if (ghost) alpha = GHOST_ALPHA;
   let lift = 0;
   if (ghost) lift = GHOST_FLOAT + Math.sin(now / 400) * GHOST_FLOAT;
-  else if (p.activity) lift = Math.abs(Math.sin(now / 120)) * WORK_BOB;
-  const feetY = p.y + FEET;
+  else if (p.activity) lift = Math.abs(Math.sin(now / 120)) * WORK_BOB;  const feetY = p.y + FEET;
 
   ctx.globalAlpha = alpha;
   if (!ghost) {
@@ -52,7 +51,7 @@ export function drawPlayer(
     ctx.ellipse(p.x, feetY - 1, 13, 4, 0, 0, Math.PI * 2);
     ctx.fill();
   }
-  const img = spriteImage(p.color, ghost ? 'front' : pose.frame);
+  const img = spriteImageOrFront(p.color, ghost ? 'front' : pose.frame);
   const top = feetY - PLAYER_H - lift;
   if (img) {
     ctx.drawImage(img, p.x - PLAYER_W / 2, top, PLAYER_W, PLAYER_H);

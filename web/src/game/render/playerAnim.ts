@@ -5,8 +5,12 @@ import type { SpriteFrame } from './sprites';
 // navegador deduce si cada jugador camina y hacia dónde mira a partir de
 // cuánto se movió entre cuadros. No decide nada del juego.
 
-// Un paso cada STEP_MS mientras camina (dos cuadros por lado).
-export const STEP_MS = 140;
+// De lado el ciclo tiene cuatro cuadros (brazo atrás, al costado,
+// adelante, al costado); cada uno dura STEP_MS.
+export const STEP_MS = 75;
+// De frente y de espalda también son cuatro (pierna izquierda, quieto,
+// pierna derecha, quieto).
+export const VERTICAL_STEP_MS = 100;
 // Por debajo de esto (unidades por segundo) se considera quieto; la
 // interpolación deja restos pequeños al frenar.
 const MOVING_SPEED = 40;
@@ -14,11 +18,13 @@ const MOVING_SPEED = 40;
 // frente (evita parpadeos entre snapshots).
 const STOP_GRACE_MS = 120;
 
+type Heading = 'up' | 'down' | 'left' | 'right';
+
 type State = {
   x: number;
   y: number;
   at: number;
-  facing: 'left' | 'right';
+  heading: Heading;
   movingUntil: number;
   walkStart: number;
 };
@@ -27,6 +33,43 @@ export type PlayerPose = {
   frame: SpriteFrame;
   walking: boolean;
 };
+
+const UP_CYCLE: SpriteFrame[] = [
+  'back-walking1',
+  'back',
+  'back-walking2',
+  'back',
+];
+const DOWN_CYCLE: SpriteFrame[] = [
+  'front-walking1',
+  'front',
+  'front-walking2',
+  'front',
+];
+const LEFT_CYCLE: SpriteFrame[] = [
+  'left-walking1',
+  'left-passing1',
+  'left-walking2',
+  'left-passing2',
+];
+const RIGHT_CYCLE: SpriteFrame[] = [
+  'right-walking1',
+  'right-passing1',
+  'right-walking2',
+  'right-passing2',
+];
+const CYCLES: Record<Heading, SpriteFrame[]> = {
+  up: UP_CYCLE,
+  down: DOWN_CYCLE,
+  left: LEFT_CYCLE,
+  right: RIGHT_CYCLE,
+};
+
+// headingOf: el eje que más se movió manda; en diagonal exacta, de lado.
+function headingOf(dx: number, dy: number): Heading {
+  if (Math.abs(dy) > Math.abs(dx)) return dy < 0 ? 'up' : 'down';
+  return dx < 0 ? 'left' : 'right';
+}
 
 export class PlayerAnimator {
   private states = new Map<string, State>();
@@ -40,7 +83,7 @@ export class PlayerAnimator {
         x: p.x,
         y: p.y,
         at: now,
-        facing: 'right',
+        heading: 'right',
         movingUntil: 0,
         walkStart: now,
       };
@@ -54,9 +97,7 @@ export class PlayerAnimator {
       if (speed > MOVING_SPEED) {
         if (s.movingUntil < now) s.walkStart = now;
         s.movingUntil = now + STOP_GRACE_MS;
-        // Solo el movimiento horizontal cambia el lado; al subir o
-        // bajar mira hacia donde iba.
-        if (Math.abs(dx) > 0.01) s.facing = dx < 0 ? 'left' : 'right';
+        s.heading = headingOf(dx, dy);
       }
       s.x = p.x;
       s.y = p.y;
@@ -64,11 +105,11 @@ export class PlayerAnimator {
     }
     const walking = now <= s.movingUntil;
     if (!walking) return { frame: 'front', walking: false };
-    const step = Math.floor((now - s.walkStart) / STEP_MS) % 2;
-    return {
-      frame: `${s.facing}-walking${step + 1}` as SpriteFrame,
-      walking: true,
-    };
+    const vertical = s.heading === 'up' || s.heading === 'down';
+    const stepMs = vertical ? VERTICAL_STEP_MS : STEP_MS;
+    const cycle = CYCLES[s.heading];
+    const i = Math.floor((now - s.walkStart) / stepMs) % cycle.length;
+    return { frame: cycle[i], walking: true };
   }
 
   // forget borra a quien ya no está en el snapshot.
