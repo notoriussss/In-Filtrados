@@ -3,18 +3,36 @@ import type { StationType } from '../../map';
 // Lógica de los minijuegos de las 3R (S2-11), sin canvas para poder
 // probarla. Todo está en coordenadas del tablero (BOARD); la vista
 // escala el tablero a la pantalla. Cada uno dura de 3 a 6 segundos.
+//
+// Cada minijuego avisa de lo que pasa con eventos (events) para que la
+// vista pueda reaccionar: el personaje se mueve, las piezas salpican, las
+// luces se encienden. La lógica no sabe nada de eso; solo los deja en la
+// cola y la vista los recoge con drainEvents().
 
 export const BOARD = { w: 360, h: 260 };
+// Línea del piso: todo lo que se apoya (tanque, cubetas, personaje) está
+// sobre ella.
+export const FLOOR_Y = 228;
 
 type Point = { x: number; y: number };
 
+export type MinigameEvent =
+  | { type: 'grab'; x: number; y: number; index?: number }
+  | { type: 'release' }
+  | { type: 'drop-in'; x: number; y: number; index: number }
+  | { type: 'drop-out'; x: number; y: number; index: number }
+  | { type: 'pop'; x: number; y: number; index: number }
+  | { type: 'miss'; x: number; y: number };
+
 export interface Minigame {
   readonly done: boolean;
+  readonly events: MinigameEvent[];
   progress(): number; // 0 a 1
   pointerDown(p: Point): void;
   pointerMove(p: Point): void;
   pointerUp(): void;
   step(dtMs: number): void;
+  drainEvents(): MinigameEvent[];
 }
 
 export function createMinigame(type: StationType): Minigame {
@@ -23,15 +41,23 @@ export function createMinigame(type: StationType): Minigame {
   return new ParticlesGame();
 }
 
+abstract class BaseGame {
+  readonly events: MinigameEvent[] = [];
+
+  drainEvents(): MinigameEvent[] {
+    return this.events.splice(0, this.events.length);
+  }
+}
+
 // Reducir: mantener presionada la válvula la gira y llena la barra.
 // Soltar pausa, no reinicia.
 export const VALVE_FILL_MS = 3500;
-export const VALVE_RADIUS = 52;
+export const VALVE_RADIUS = 40;
 const VALVE_GRAB_MARGIN = 16;
 const VALVE_TURN_PER_MS = 0.006; // radianes
 
-export class ValveGame implements Minigame {
-  readonly center: Point = { x: 120, y: BOARD.h / 2 };
+export class ValveGame extends BaseGame implements Minigame {
+  readonly center: Point = { x: 178, y: 184 };
   fill = 0;
   angle = 0;
   holding = false;
@@ -46,13 +72,17 @@ export class ValveGame implements Minigame {
 
   pointerDown(p: Point): void {
     const d = Math.hypot(p.x - this.center.x, p.y - this.center.y);
-    if (d <= VALVE_RADIUS + VALVE_GRAB_MARGIN) this.holding = true;
+    if (d > VALVE_RADIUS + VALVE_GRAB_MARGIN || this.holding) return;
+    this.holding = true;
+    this.events.push({ type: 'grab', x: p.x, y: p.y });
   }
 
   pointerMove(): void {}
 
   pointerUp(): void {
+    if (!this.holding) return;
     this.holding = false;
+    this.events.push({ type: 'release' });
   }
 
   step(dtMs: number): void {
@@ -64,10 +94,10 @@ export class ValveGame implements Minigame {
 
 // Reutilizar: arrastrar 3 cubetas de agua gris al tanque.
 export const BUCKET_COUNT = 3;
-export const BUCKET_SIZE = 46;
-export const REUSE_TANK = { x: 236, y: 70, w: 100, h: 160 };
-const BUCKET_X = 34;
-const BUCKET_FIRST_Y = 36;
+export const BUCKET_SIZE = 48;
+export const REUSE_TANK = { x: 236, y: 68, w: 100, h: FLOOR_Y - 68 };
+const BUCKET_X = 22;
+const BUCKET_FIRST_Y = FLOOR_Y - BUCKET_SIZE - 2 * 74;
 const BUCKET_GAP_Y = 74;
 
 export type Bucket = {
@@ -78,13 +108,14 @@ export type Bucket = {
   inTank: boolean;
 };
 
-export class BucketsGame implements Minigame {
+export class BucketsGame extends BaseGame implements Minigame {
   readonly buckets: Bucket[] = [];
   dragging: number | null = null;
   private grabDx = 0;
   private grabDy = 0;
 
   constructor() {
+    super();
     for (let i = 0; i < BUCKET_COUNT; i++) {
       const y = BUCKET_FIRST_Y + i * BUCKET_GAP_Y;
       this.buckets.push({
@@ -122,6 +153,7 @@ export class BucketsGame implements Minigame {
     this.dragging = i;
     this.grabDx = p.x - this.buckets[i].x;
     this.grabDy = p.y - this.buckets[i].y;
+    this.events.push({ type: 'grab', x: p.x, y: p.y, index: i });
   }
 
   pointerMove(p: Point): void {
@@ -135,15 +167,18 @@ export class BucketsGame implements Minigame {
   // no, vuelve a su lugar.
   pointerUp(): void {
     if (this.dragging === null) return;
-    const b = this.buckets[this.dragging];
+    const index = this.dragging;
+    const b = this.buckets[index];
     this.dragging = null;
     const cx = b.x + BUCKET_SIZE / 2;
     const cy = b.y + BUCKET_SIZE / 2;
     const t = REUSE_TANK;
     if (cx >= t.x && cx <= t.x + t.w && cy >= t.y && cy <= t.y + t.h) {
       b.inTank = true;
+      this.events.push({ type: 'drop-in', x: b.x, y: b.y, index });
       return;
     }
+    this.events.push({ type: 'drop-out', x: b.x, y: b.y, index });
     b.x = b.homeX;
     b.y = b.homeY;
   }
@@ -158,12 +193,13 @@ const PARTICLE_HIT_RADIUS = 24; // más grande que el dibujo: más fácil
 const FLOAT_AMPLITUDE = 18;
 const FLOAT_SPEED = 0.0016; // radianes por ms
 
-// Puntos de partida repartidos por el agua para que no se encimen.
+// Puntos de partida repartidos por el agua del acuario para que no se
+// encimen.
 const PARTICLE_BASES: Point[] = [
-  { x: 80, y: 110 },
-  { x: 160, y: 190 },
-  { x: 230, y: 100 },
-  { x: 290, y: 180 },
+  { x: 156, y: 116 },
+  { x: 214, y: 176 },
+  { x: 268, y: 104 },
+  { x: 312, y: 166 },
 ];
 
 export type Particle = {
@@ -173,11 +209,12 @@ export type Particle = {
   removed: boolean;
 };
 
-export class ParticlesGame implements Minigame {
+export class ParticlesGame extends BaseGame implements Minigame {
   readonly particles: Particle[];
   elapsed = 0;
 
   constructor() {
+    super();
     this.particles = PARTICLE_BASES.slice(0, PARTICLE_COUNT).map((b, i) => ({
       baseX: b.x,
       baseY: b.y,
@@ -207,15 +244,17 @@ export class ParticlesGame implements Minigame {
   }
 
   pointerDown(click: Point): void {
-    for (const p of this.particles) {
+    for (const [index, p] of this.particles.entries()) {
       if (p.removed) continue;
       const pos = this.positionOf(p);
       const d = Math.hypot(click.x - pos.x, click.y - pos.y);
       if (d <= PARTICLE_HIT_RADIUS) {
         p.removed = true;
+        this.events.push({ type: 'pop', x: pos.x, y: pos.y, index });
         return;
       }
     }
+    this.events.push({ type: 'miss', x: click.x, y: click.y });
   }
 
   pointerMove(): void {}

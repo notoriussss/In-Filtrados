@@ -79,6 +79,7 @@ export function Game(props: {
           <Minigame
             key={state.minigame.stationId}
             type={state.minigame.type}
+            color={snap?.players.find((p) => p.id === game.meId)?.color}
             onComplete={state.minigame.onComplete}
             onClose={state.minigame.onClose}
           />

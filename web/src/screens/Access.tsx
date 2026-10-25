@@ -1,14 +1,63 @@
-import { type FormEvent, useEffect, useState } from 'react';
+import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { Stage } from '../ui/Stage';
 import { Gota, SERVER_COLORS } from '../ui/Gota';
-import { Button, Chip, HintBar, TitleBar } from '../ui/kit';
+import type { IconName } from '../ui/Icon';
+import { Button, Chip, type ChipTone, HintBar, TitleBar } from '../ui/kit';
 import { api } from '../api';
 import { session } from '../session';
+import {
+  USERNAME_MAX_LEN,
+  USERNAME_MIN_LEN,
+  charCount,
+  passwordMissing,
+  usernameProblem,
+} from '../accountRules';
 import { ERROR_MESSAGES } from '../constants';
 import { ACCESS_TEXT } from '../texts';
 import { BACKGROUNDS } from './backgrounds';
 
 type Mode = 'login' | 'register';
+
+// Lo que dice la etiqueta de cada campo: la regla mientras no hay nada que
+// reprochar y, al crear cuenta, qué le falta a lo que se escribió.
+type Feedback = { tone: ChipTone; text: string; icon?: IconName };
+
+function usernameFeedback(raw: string, registering: boolean): Feedback {
+  const rule: Feedback = { tone: 'info', text: ACCESS_TEXT.USERNAME_RULE };
+  const user = raw.trim();
+  if (!registering || !user) return rule;
+  const bad = (text: string): Feedback => ({
+    tone: 'bad',
+    text,
+    icon: 'cross',
+  });
+  switch (usernameProblem(user)) {
+    case 'BAD_CHARS':
+      return bad(ACCESS_TEXT.USERNAME_BAD_CHARS);
+    case 'TOO_SHORT':
+      return bad(ACCESS_TEXT.usernameTooShort(USERNAME_MIN_LEN));
+    case 'TOO_LONG':
+      return bad(
+        ACCESS_TEXT.usernameTooLong(USERNAME_MAX_LEN, charCount(user)),
+      );
+    default:
+      return { tone: 'ok', text: ACCESS_TEXT.USERNAME_OK, icon: 'check' };
+  }
+}
+
+function passwordFeedback(password: string, registering: boolean): Feedback {
+  const rule: Feedback = { tone: 'info', text: ACCESS_TEXT.PASSWORD_RULE };
+  if (!registering || !password) return rule;
+  const missing = passwordMissing(password);
+  if (missing > 0) {
+    return {
+      tone: 'bad',
+      text: ACCESS_TEXT.passwordMissing(missing),
+      icon: 'cross',
+    };
+  }
+  return { tone: 'ok', text: ACCESS_TEXT.PASSWORD_OK, icon: 'check' };
+}
 
 // Access (maqueta 03-acceso): entrar o crear cuenta. La gota de la
 // derecha va cambiando de color: el color real lo asigna la sala.
@@ -20,6 +69,11 @@ export function Access(props: { onDone: () => void }) {
   const [info, setInfo] = useState('');
   const [busy, setBusy] = useState(false);
   const [color, setColor] = useState(0);
+  const usernameInput = useRef<HTMLInputElement>(null);
+  const passwordInput = useRef<HTMLInputElement>(null);
+  const registering = mode === 'register';
+  const userNote = usernameFeedback(username, registering);
+  const passNote = passwordFeedback(password, registering);
 
   useEffect(() => {
     const t = setInterval(
@@ -33,6 +87,13 @@ export function Access(props: { onDone: () => void }) {
     e.preventDefault();
     setError('');
     setInfo('');
+    // Al crear cuenta no se molesta al servidor con lo que ya sabemos que
+    // no sirve: el cursor vuelve al campo, cuya etiqueta roja dice qué falta.
+    if (registering && (userNote.tone === 'bad' || passNote.tone === 'bad')) {
+      const field = userNote.tone === 'bad' ? usernameInput : passwordInput;
+      field.current?.focus();
+      return;
+    }
     setBusy(true);
     try {
       if (mode === 'register') {
@@ -95,14 +156,22 @@ export function Access(props: { onDone: () => void }) {
               </label>
               <input
                 id="username"
+                ref={usernameInput}
                 value={username}
                 autoComplete="username"
                 autoFocus
                 required
+                aria-invalid={userNote.tone === 'bad'}
+                aria-describedby="username-note"
                 onChange={(e) => setUsername(e.target.value)}
               />
-              <Chip tone="info" icon="check" className="justify-start">
-                {ACCESS_TEXT.USERNAME_RULE}
+              <Chip
+                id="username-note"
+                tone={userNote.tone}
+                icon={userNote.icon}
+                className="justify-start"
+              >
+                {userNote.text}
               </Chip>
             </div>
             <div className="field">
@@ -111,26 +180,34 @@ export function Access(props: { onDone: () => void }) {
               </label>
               <input
                 id="password"
+                ref={passwordInput}
                 type="password"
                 value={password}
                 autoComplete={
                   mode === 'login' ? 'current-password' : 'new-password'
                 }
                 required
+                aria-invalid={passNote.tone === 'bad'}
+                aria-describedby="password-note"
                 onChange={(e) => setPassword(e.target.value)}
               />
-              <Chip tone="info" icon="check" className="justify-start">
-                {ACCESS_TEXT.PASSWORD_RULE}
+              <Chip
+                id="password-note"
+                tone={passNote.tone}
+                icon={passNote.icon}
+                className="justify-start"
+              >
+                {passNote.text}
               </Chip>
             </div>
             <div className="form-error">
               {error && (
-                <Chip tone="bad" big icon="cross">
+                <Chip tone="bad" big icon="cross" role="alert">
                   {error}
                 </Chip>
               )}
               {info && (
-                <Chip tone="ok" big icon="check">
+                <Chip tone="ok" big icon="check" role="status">
                   {info}
                 </Chip>
               )}

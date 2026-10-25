@@ -4,14 +4,16 @@ import { TASK_ICONS, Icon } from '../../ui/Icon';
 import { Button, Gauge, Kbd } from '../../ui/kit';
 import { BOARD } from '../../game/tasks/minigames';
 import { createMinigame } from '../../game/tasks/minigames';
-import { BOARD_SCALE, drawMinigame } from '../../game/tasks/minigameDraw';
+import { BOARD_SCALE, MinigameView } from '../../game/tasks/minigameDraw';
 import { TASK_TEXT } from '../../constants';
 
 // Minigame (S2-11): el minijuego de las 3R en un panel del kit. La
 // lógica está en game/tasks/minigames.ts y el dibujo en minigameDraw.ts;
-// aquí solo se conectan el canvas, los clics y el progreso.
+// aquí solo se conectan el canvas, los clics y el progreso. color es el
+// del jugador: su personaje aparece en el tablero haciendo la tarea.
 export function Minigame(props: {
   type: StationType;
+  color?: string;
   onComplete: () => void;
   onClose: () => void;
 }) {
@@ -23,6 +25,7 @@ export function Minigame(props: {
     const ctx = cv?.getContext('2d');
     if (!cv || !ctx) return;
     const game = createMinigame(props.type);
+    const view = new MinigameView(game, props.color);
     const toBoard = (e: PointerEvent) => {
       const r = cv.getBoundingClientRect();
       return {
@@ -42,14 +45,19 @@ export function Minigame(props: {
     cv.addEventListener('pointerup', up);
     cv.addEventListener('pointercancel', up);
     let done = false;
+    let shown = 0;
     let last = performance.now();
     let frame = 0;
     const loop = (now: number) => {
       game.step(Math.min(now - last, 100));
       last = now;
-      drawMinigame(ctx, game, now);
-      setProgress(game.progress());
-      if (game.done && !done) {
+      view.frame(ctx, now);
+      if (game.progress() !== shown) {
+        shown = game.progress();
+        setProgress(shown);
+      }
+      // Se avisa cuando ya se vio la celebración, no al instante.
+      if (view.settled(now) && !done) {
         done = true;
         props.onComplete();
       }

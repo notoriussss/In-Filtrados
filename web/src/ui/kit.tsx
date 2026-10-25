@@ -105,10 +105,14 @@ export function Chip(props: {
   icon?: IconName;
   children: ReactNode;
   className?: string;
+  id?: string;
+  role?: 'status' | 'alert';
 }) {
   const tone = props.tone ?? '';
   return (
     <span
+      id={props.id}
+      role={props.role}
       className={[
         'chip',
         tone,
