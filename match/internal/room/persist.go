@@ -85,7 +85,6 @@ type savedTank struct {
 type savedMeeting struct {
 	ReporterID   string               `json:"reporter_id"`
 	TankSlot     int32                `json:"tank_slot"`
-	LastVisitors []string             `json:"last_visitors"`
 	Votes        map[string]savedVote `json:"votes"`
 	VotingEndsAt int64                `json:"voting_ends_at"`
 	ResultEndsAt int64                `json:"result_ends_at"`
@@ -216,7 +215,6 @@ func (r *Room) toSaved() savedRoom {
 		s.Meeting = &savedMeeting{
 			ReporterID:   m.reporterID,
 			TankSlot:     m.tankSlot,
-			LastVisitors: m.lastVisitors,
 			Votes:        votes,
 			VotingEndsAt: m.votingEndsAt,
 			ResultEndsAt: m.resultEndsAt,
@@ -342,7 +340,6 @@ func Restore(state []byte, m *Map, opts ...Option) (*Room, error) {
 		r.meeting = &meetingState{
 			reporterID:   sm.ReporterID,
 			tankSlot:     sm.TankSlot,
-			lastVisitors: sm.LastVisitors,
 			votes:        votes,
 			votingEndsAt: sm.VotingEndsAt,
 			resultEndsAt: sm.ResultEndsAt,

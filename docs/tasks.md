@@ -122,7 +122,7 @@ tanks: { slot, ownerId, contamination /* 0 a 100 */, dead }[];
 reservoir: number;                 // 0 a 100
 myRole: 'NO_ROLE' | 'CREW' | 'IMPOSTOR'; // solo el del destinatario
 myTaskProgress: { completed, total };
-meeting: { reporterId, tankSlot, lastVisitors[], votesCast[], endsAtTick, votingClosed, ejectedId, wasImpostor } | null;
+meeting: { reporterId, tankSlot, votesCast[], endsAtTick, votingClosed, ejectedId, wasImpostor } | null;
 chat: { id, playerId, text, tick }[]; // últimos 30
 oilDrops: { x, y, color, expiresAtTick }[]; // S2-12: rastro del impostor
 paused: boolean;                   // S3-02: alguien está en su periodo de gracia
@@ -681,7 +681,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 **Pasos:**
 1. Nuevas acciones en `ClientAction` y `ClientMessage`: `Start`, `Interact { station_id }` (hacer tarea o limpiar tanque), `Contaminate { tank_slot }`, `Report { tank_slot }`, `Vote { target_player_id | skip }` y `Chat { client_msg_id, text }`.
-2. Nuevos campos en `Snapshot`: `tanks[] { slot, owner_id, contamination (0 a 100), dead }`, `reservoir` (0 a 100), `my_role` (solo el del destinatario), `my_task_progress`, `meeting { reporter_id, tank_slot, last_visitors[], votes_cast, ends_at_tick }` y `chat[]` (últimos 30 mensajes).
+2. Nuevos campos en `Snapshot`: `tanks[] { slot, owner_id, contamination (0 a 100), dead }`, `reservoir` (0 a 100), `my_role` (solo el del destinatario), `my_task_progress`, `meeting { reporter_id, tank_slot, votes_cast, ends_at_tick }` y `chat[]` (últimos 30 mensajes).
 3. Nuevo evento `MatchEnded { winner, impostor_id }`.
 4. Ver el rol del impostor **solo en su propio snapshot**: el gateway jamás debe recibir el rol de otros.
 
@@ -732,13 +732,13 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 **Pasos:**
 1. `Report { tank_slot }`: solo sobre un tanque `dead`, a 60 unidades o menos, y por un jugador vivo. Pasa a fase `MEETING` y teletransporta a todos a la plaza.
-2. `meeting.last_visitors`: los últimos 3 jugadores **distintos** que pasaron a 40 unidades o menos de ese tanque, según `event_log`.
+2. ~~`meeting.last_visitors`~~ (quitado: la reunión ya no dice quiénes pasaron por el tanque; el campo 3 de `Meeting` quedó `reserved` en `proto/match.proto`).
 3. La reunión dura 50 segundos: 45 para discutir por chat y votar (se cierra antes si todos los vivos ya votaron), y 5 de pantalla de resultado.
 4. **Chat (C):** `Chat` solo en `MEETING` y de jugadores vivos, máximo 200 caracteres, máximo 1 mensaje por segundo por jugador. Se guarda en el estado de la sala y va en los snapshots.
 5. Resultado: el más votado es expulsado (`ejected = true`, `alive = false`). Empate o mayoría de `skip`: nadie sale. Publicar `player.ejected`.
 6. Tras la reunión, 5 segundos de pantalla de resultado ("Morado era el impostor" o "Morado no era el impostor") y vuelta a `PLAYING`.
 
-**Criterio de verificación:** tests de tabla para el conteo: mayoría simple, empate, todos `skip` y un fantasma que intenta votar (se ignora). En el juego, con 4 personas: reportar un tanque muerto muestra la reunión con los 3 últimos visitantes correctos, el chat funciona y la expulsión se aplica.
+**Criterio de verificación:** tests de tabla para el conteo: mayoría simple, empate, todos `skip` y un fantasma que intenta votar (se ignora). En el juego, con 4 personas: reportar un tanque muerto muestra la reunión con quién reportó y de quién es el tanque, el chat funciona y la expulsión se aplica.
 
 ---
 
@@ -807,7 +807,7 @@ para el mismo usuario responde 429.
 #### S2-10 — Pantalla de reunión y votación (`web/`)
 
 **Pasos:**
-1. Al entrar en `MEETING`: superponer un panel con el tanque reportado, quién reportó, los 3 últimos visitantes, la lista de jugadores con su color, el chat y una cuenta regresiva.
+1. Al entrar en `MEETING`: superponer un panel con el tanque reportado, quién reportó, la lista de jugadores con su color, el chat y una cuenta regresiva.
 2. Votar: tocar un jugador o "Saltar". Mostrar quién ya votó (no a quién).
 3. Los fantasmas ven el chat pero no pueden escribir ni votar.
 4. Pantalla de resultado de 5 segundos y, en `ENDED`, pantalla final con ganador, impostor, monedas ganadas y botón "Volver a la sala".

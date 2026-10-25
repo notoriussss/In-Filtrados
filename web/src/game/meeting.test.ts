@@ -44,7 +44,6 @@ function snap(meeting: Partial<Meeting>, tick = 100): Snapshot {
     meeting: {
       reporterId: 'a',
       tankSlot: 3,
-      lastVisitors: [],
       votesCast: [],
       endsAtTick: 1000,
       votingClosed: false,

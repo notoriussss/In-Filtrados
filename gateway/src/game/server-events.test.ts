@@ -24,7 +24,6 @@ test('snapshot keeps only the fields of the contract', () => {
       meeting: {
         reporterId: 'p2',
         tankSlot: 1,
-        lastVisitors: ['p1'],
         votesCast: [],
         endsAtTick: 900,
         votingClosed: false,
@@ -56,7 +55,6 @@ test('snapshot keeps only the fields of the contract', () => {
     meeting: {
       reporterId: 'p2',
       tankSlot: 1,
-      lastVisitors: ['p1'],
       votesCast: [],
       endsAtTick: 900,
       votingClosed: false,
@@ -90,7 +88,6 @@ test('snapshot with meeting result maps ejectedId', () => {
       meeting: {
         reporterId: 'p1',
         tankSlot: 0,
-        lastVisitors: ['p1', 'p2'],
         votesCast: ['p1', 'p2'],
         endsAtTick: 1000,
         votingClosed: true,
@@ -113,7 +110,6 @@ test('snapshot with meeting result maps ejectedId', () => {
     meeting: {
       reporterId: 'p1',
       tankSlot: 0,
-      lastVisitors: ['p1', 'p2'],
       votesCast: ['p1', 'p2'],
       endsAtTick: 1000,
       votingClosed: true,

@@ -33,11 +33,9 @@ func (r *Room) handleReport(playerID string, tankSlot int32) {
 	r.chat = nil
 	r.teleportToPlaza()
 
-	visitors := r.lastVisitors(tankSlot)
 	r.meeting = &meetingState{
 		reporterID:   playerID,
 		tankSlot:     tankSlot,
-		lastVisitors: visitors,
 		votes:        make(map[string]voteChoice),
 		votingEndsAt: r.tick + meetingVotingTicks,
 	}
@@ -64,24 +62,6 @@ func (r *Room) teleportToPlaza() {
 	}
 }
 
-// lastVisitors devuelve hasta 3 jugadores distintos que pasaron
-// a 40 unidades o menos del tanque, según eventHistory.
-func (r *Room) lastVisitors(slot int32) []string {
-	seen := make(map[string]bool)
-	var visitors []string
-	for i := len(r.eventHistory) - 1; i >= 0; i-- {
-		e := r.eventHistory[i]
-		if e.TankSlot == slot && !seen[e.PlayerID] {
-			seen[e.PlayerID] = true
-			visitors = append(visitors, e.PlayerID)
-			if len(visitors) == maxLastVisitors {
-				break
-			}
-		}
-	}
-	return visitors
-}
-
 func (r *Room) meetingView() *matchv1.Meeting {
 	if r.meeting == nil {
 		return nil
@@ -105,7 +85,6 @@ func (r *Room) meetingView() *matchv1.Meeting {
 	return &matchv1.Meeting{
 		ReporterId:   r.meeting.reporterID,
 		TankSlot:     r.meeting.tankSlot,
-		LastVisitors: r.meeting.lastVisitors,
 		VotesCast:    votesCast,
 		EndsAtTick:   endsAt,
 		VotingClosed: votingClosed,

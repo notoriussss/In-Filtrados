@@ -105,7 +105,7 @@ Conectar navegador → gateway → `match` → de vuelta, para que un punto se m
 
 | Carpeta | Tareas |
 |---|---|
-| `match/` | Asignar impostor; tanques de riego con contaminación de 0 a 100 %; 3 tareas de las 3R (cerrar fuga, recoger agua gris, filtrar en la planta); contaminar toma 3 s; reportar tanque arruinado; reunión con los últimos 3 que pasaron (`event_log`); votación y expulsión; condiciones de victoria |
+| `match/` | Asignar impostor; tanques de riego con contaminación de 0 a 100 %; 3 tareas de las 3R (cerrar fuga, recoger agua gris, filtrar en la planta); contaminar toma 3 s; reportar tanque arruinado; reunión (sin revelar quién pasó por el tanque); votación y expulsión; condiciones de victoria |
 | `players/` | Monedas según la cosecha y el resultado; estadísticas básicas (partidas y victorias) |
 | `gateway/` | Mensajes de tareas, contaminación, reunión y voto; chat de la reunión; límite de velocidad por jugador |
 | `web/` | Minijuegos simples de las 3 tareas; barra de contaminación de cada tanque; pantalla de reunión con chat y votación; gotas de aceite |

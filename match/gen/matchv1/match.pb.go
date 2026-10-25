@@ -1815,8 +1815,7 @@ type Meeting struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ReporterId    string                 `protobuf:"bytes,1,opt,name=reporter_id,json=reporterId,proto3" json:"reporter_id,omitempty"`
 	TankSlot      int32                  `protobuf:"varint,2,opt,name=tank_slot,json=tankSlot,proto3" json:"tank_slot,omitempty"`
-	LastVisitors  []string               `protobuf:"bytes,3,rep,name=last_visitors,json=lastVisitors,proto3" json:"last_visitors,omitempty"` // últimos 3 jugadores distintos
-	VotesCast     []string               `protobuf:"bytes,4,rep,name=votes_cast,json=votesCast,proto3" json:"votes_cast,omitempty"`          // quién ya votó, nunca por quién
+	VotesCast     []string               `protobuf:"bytes,4,rep,name=votes_cast,json=votesCast,proto3" json:"votes_cast,omitempty"` // quién ya votó, nunca por quién
 	EndsAtTick    int64                  `protobuf:"varint,5,opt,name=ends_at_tick,json=endsAtTick,proto3" json:"ends_at_tick,omitempty"`
 	VotingClosed  bool                   `protobuf:"varint,6,opt,name=voting_closed,json=votingClosed,proto3" json:"voting_closed,omitempty"` // true durante los 5 s de resultado
 	EjectedId     string                 `protobuf:"bytes,7,opt,name=ejected_id,json=ejectedId,proto3" json:"ejected_id,omitempty"`           // vacío si nadie salió
@@ -1867,13 +1866,6 @@ func (x *Meeting) GetTankSlot() int32 {
 		return x.TankSlot
 	}
 	return 0
-}
-
-func (x *Meeting) GetLastVisitors() []string {
-	if x != nil {
-		return x.LastVisitors
-	}
-	return nil
 }
 
 func (x *Meeting) GetVotesCast() []string {
@@ -2312,12 +2304,11 @@ const file_match_proto_rawDesc = "" +
 	"\x04done\x18\x02 \x01(\bR\x04done\"B\n" +
 	"\fTaskProgress\x12\x1c\n" +
 	"\tcompleted\x18\x01 \x01(\x05R\tcompleted\x12\x14\n" +
-	"\x05total\x18\x02 \x01(\x05R\x05total\"\x94\x02\n" +
+	"\x05total\x18\x02 \x01(\x05R\x05total\"\x84\x02\n" +
 	"\aMeeting\x12\x1f\n" +
 	"\vreporter_id\x18\x01 \x01(\tR\n" +
 	"reporterId\x12\x1b\n" +
-	"\ttank_slot\x18\x02 \x01(\x05R\btankSlot\x12#\n" +
-	"\rlast_visitors\x18\x03 \x03(\tR\flastVisitors\x12\x1d\n" +
+	"\ttank_slot\x18\x02 \x01(\x05R\btankSlot\x12\x1d\n" +
 	"\n" +
 	"votes_cast\x18\x04 \x03(\tR\tvotesCast\x12 \n" +
 	"\fends_at_tick\x18\x05 \x01(\x03R\n" +
@@ -2325,7 +2316,7 @@ const file_match_proto_rawDesc = "" +
 	"\rvoting_closed\x18\x06 \x01(\bR\fvotingClosed\x12\x1d\n" +
 	"\n" +
 	"ejected_id\x18\a \x01(\tR\tejectedId\x12!\n" +
-	"\fwas_impostor\x18\b \x01(\bR\vwasImpostor\"b\n" +
+	"\fwas_impostor\x18\b \x01(\bR\vwasImpostorJ\x04\b\x03\x10\x04R\rlast_visitors\"b\n" +
 	"\vChatMessage\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1b\n" +
 	"\tplayer_id\x18\x02 \x01(\tR\bplayerId\x12\x12\n" +

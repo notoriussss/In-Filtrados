@@ -187,7 +187,8 @@ message TaskProgress {
 message Meeting {
   string          reporter_id   = 1;
   int32           tank_slot     = 2;
-  repeated string last_visitors = 3; // últimos 3 jugadores distintos
+  reserved 3; // last_visitors: la reunión ya no dice quién pasó por el tanque
+  reserved "last_visitors";
   repeated string votes_cast    = 4; // quién ya votó, nunca por quién
   int64           ends_at_tick  = 5;
   bool            voting_closed = 6; // true durante los 5 s de resultado

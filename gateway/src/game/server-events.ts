@@ -159,7 +159,6 @@ function toMeeting(m: GrpcMeeting): Meeting {
   return {
     reporterId: m.reporterId,
     tankSlot: m.tankSlot,
-    lastVisitors: [...(m.lastVisitors ?? [])],
     votesCast: [...(m.votesCast ?? [])],
     endsAtTick: m.endsAtTick,
     votingClosed: Boolean(m.votingClosed),

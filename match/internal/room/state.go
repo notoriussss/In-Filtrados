@@ -52,7 +52,6 @@ const (
 	chatMaxChars       = 200 // caracteres máximos por mensaje de chat
 	chatCooldownTicks  = 20  // 1 s entre mensajes de chat
 	chatHistoryLimit   = 30  // mensajes guardados en snapshot
-	maxLastVisitors    = 3   // visitantes máximos en el reporte
 
 	// S3-01: lugar reservado al jugador que se desconecta en partida.
 	// En el laboratorio se sube con RECONNECT_GRACE_SECONDS.
@@ -207,7 +206,6 @@ type player struct {
 type meetingState struct {
 	reporterID   string
 	tankSlot     int32
-	lastVisitors []string
 	votes        map[string]voteChoice // voterID -> choice
 	votingEndsAt int64                 // tick donde vence la votación
 	resultEndsAt int64                 // tick donde termina resultado

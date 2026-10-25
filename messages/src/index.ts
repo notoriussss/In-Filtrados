@@ -126,7 +126,6 @@ export type TaskProgress = {
 export type Meeting = {
   reporterId: string;
   tankSlot: number;
-  lastVisitors: string[]; // últimos 3 jugadores distintos junto al tanque
   votesCast: string[]; // quién ya votó, nunca por quién
   endsAtTick: number;
   votingClosed: boolean;

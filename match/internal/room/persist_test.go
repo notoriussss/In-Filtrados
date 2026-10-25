@@ -179,7 +179,6 @@ func TestRestoreBringsBackTheMatchPausedAndComplete(t *testing.T) {
 	r.meeting = &meetingState{
 		reporterID:   "b",
 		tankSlot:     1,
-		lastVisitors: []string{"a", "c"},
 		votes:        map[string]voteChoice{"a": {targetID: "c"}},
 		votingEndsAt: 1500,
 	}
