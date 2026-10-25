@@ -57,6 +57,10 @@ export const MENU_TEXT = {
     `Infiltrado ${times} veces · ganó ${wins}`,
   HINT_CHOOSE: 'Elegir',
   HINT_ACCEPT: 'Aceptar',
+  JOIN_SHORT: 'Unirse a sala',
+  TAGLINE: 'Cada gota cuenta',
+  PROFILE: 'Perfil',
+  MENU_ARIA: 'Menú principal',
 } as const;
 
 export const JOIN_TEXT = {

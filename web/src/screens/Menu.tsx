@@ -1,13 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type KeyboardEvent } from 'react';
 import { Stage } from '../ui/Stage';
 import { Gota, SERVER_COLORS } from '../ui/Gota';
-import { Button, Chip, HintBar, Pill } from '../ui/kit';
+import { Chip, HintBar } from '../ui/kit';
+import { Icon } from '../ui/Icon';
 import { api, type MeResponse } from '../api';
 import { session } from '../session';
 import { ERROR_MESSAGES } from '../constants';
 import { APP_TEXT, MENU_TEXT } from '../texts';
 import { BACKGROUNDS } from './backgrounds';
-import { Logo } from './Logo';
+import '../styles/menu.css';
 
 // Menu (maqueta 02-menu): crear sala, unirse, cómo jugar y cerrar
 // sesión. Abajo, el jugador conectado con su latencia y su perfil
@@ -66,37 +67,54 @@ export function Menu(props: {
     }
   };
 
+  // Flechas arriba/abajo mueven el foco entre las franjas del menú.
+  const onMenuKey = (e: KeyboardEvent<HTMLElement>) => {
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    const items = Array.from(
+      e.currentTarget.querySelectorAll<HTMLButtonElement>(
+        'button:not(:disabled)',
+      ),
+    );
+    const at = items.indexOf(document.activeElement as HTMLButtonElement);
+    const step = e.key === 'ArrowDown' ? 1 : -1;
+    const next = (at + step + items.length) % items.length;
+    items[next]?.focus();
+    e.preventDefault();
+  };
+
+  const strips = [
+    { label: MENU_TEXT.CREATE, onClick: create, disabled: busy },
+    { label: MENU_TEXT.JOIN_SHORT, onClick: props.onJoin },
+    { label: MENU_TEXT.HELP, onClick: props.onHelp },
+    { label: MENU_TEXT.LOGOUT, onClick: props.onLogout },
+  ];
+
   return (
     <Stage className="scr-menu" background={BACKGROUNDS.hero}>
-      <div className="shade l" />
-      <Logo />
-      <nav className="menu-list" aria-label="Menú principal">
-        <Button variant="pri" icon="play" onClick={create} disabled={busy}>
-          {MENU_TEXT.CREATE}
-        </Button>
-        <Button icon="globe" onClick={props.onJoin}>
-          {MENU_TEXT.JOIN}
-        </Button>
-        <Button variant="sec" icon="book" onClick={props.onHelp}>
-          {MENU_TEXT.HELP}
-        </Button>
-        <Button variant="sec" icon="gear" onClick={props.onSettings}>
-          {MENU_TEXT.SETTINGS}
-        </Button>
-        <Button variant="sec" icon="door" onClick={props.onLogout}>
-          {MENU_TEXT.LOGOUT}
-        </Button>
-        {error && (
-          <Chip tone="bad" big icon="cross">
-            {error}
-          </Chip>
-        )}
-      </nav>
-      {/* gotas en el mirador, como en la maqueta */}
+      <div className="menu-vignette" />
+
+      <header className="menu-logo">
+        <h1>
+          <span className="a">{APP_TEXT.TITLE_A}</span>
+          <span className="b">{APP_TEXT.TITLE_B}</span>
+        </h1>
+        <div className="menu-rule">
+          <i />
+        </div>
+        <p className="menu-sub">
+          {APP_TEXT.REDUCE}
+          <b>·</b>
+          {APP_TEXT.REUSE}
+          <b>·</b>
+          {APP_TEXT.RECYCLE}
+        </p>
+      </header>
+
+      {/* gotas a los lados, detrás del menú */}
       {[
-        { c: 0, left: 1150, top: 691 },
-        { c: 1, left: 1340, top: 756 },
-        { c: 3, left: 1485, top: 671 },
+        { c: 0, left: 330, top: 700 },
+        { c: 1, left: 1480, top: 760 },
+        { c: 3, left: 1610, top: 680 },
       ].map((g) => (
         <div key={g.c}>
           <div
@@ -113,36 +131,78 @@ export function Menu(props: {
           </div>
         </div>
       ))}
-      <div style={{ position: 'absolute', left: 1285, top: 20 }}>
-        <Gota color={SERVER_COLORS[4]} scale={3} walk animate />
-      </div>
-      <div
-        className="col"
-        style={{ position: 'absolute', left: 110, bottom: 34, gap: 8 }}
+
+      <nav
+        className="menu-strips"
+        aria-label={MENU_TEXT.MENU_ARIA}
+        onKeyDown={onMenuKey}
       >
-        <Pill icon="user" style={{ alignSelf: 'flex-start' }}>
-          {data?.username}
-          <span className={`dot ${ping === null ? 'bad' : ''}`} />
-          {ping === null
-            ? MENU_TEXT.OFFLINE
-            : `${MENU_TEXT.CONNECTED} · ${MENU_TEXT.ping(ping)}`}
-        </Pill>
-        {me && (
-          <Pill icon="trophy" style={{ alignSelf: 'flex-start' }}>
-            {MENU_TEXT.coins(me.coins)} ·{' '}
-            {MENU_TEXT.stats(me.matchesPlayed, me.wins)}
-          </Pill>
+        {strips.map((s, i) => (
+          <button
+            key={s.label}
+            type="button"
+            className="menu-item"
+            autoFocus={i === 0}
+            disabled={s.disabled}
+            onClick={s.onClick}
+          >
+            <Icon name="right" palette="light" size={28} />
+            {s.label}
+            <Icon name="left" palette="light" size={28} />
+          </button>
+        ))}
+        {error && (
+          <Chip tone="bad" big icon="cross" className="menu-error">
+            {error}
+          </Chip>
         )}
+      </nav>
+
+      <div className="menu-player">
+        <Icon name="user" palette="light" size={36} />
+        <div className="who">
+          {data?.username}
+          <small>
+            <span className={`dot ${ping === null ? 'bad' : ''}`} />
+            {ping === null
+              ? MENU_TEXT.OFFLINE
+              : `${MENU_TEXT.CONNECTED} · ${MENU_TEXT.ping(ping)}`}
+          </small>
+        </div>
       </div>
-      <Pill
-        icon="globe"
-        style={{ position: 'absolute', right: 50, bottom: 34 }}
-      >
-        {APP_TEXT.VERSION}
-      </Pill>
+
+      <div className="menu-corner">
+        <div className="menu-profile">
+          <button
+            type="button"
+            className="menu-icon"
+            aria-label={MENU_TEXT.PROFILE}
+          >
+            <Icon name="trophy" palette="amber" size={36} />
+          </button>
+          {me && (
+            <div className="menu-tip" role="status">
+              {MENU_TEXT.coins(me.coins)}
+              <br />
+              {MENU_TEXT.stats(me.matchesPlayed, me.wins)}
+            </div>
+          )}
+        </div>
+        <button
+          type="button"
+          className="menu-icon"
+          aria-label={MENU_TEXT.SETTINGS}
+          onClick={props.onSettings}
+        >
+          <Icon name="gear" palette="light" size={36} />
+        </button>
+      </div>
+
+      <div className="menu-tagline">{MENU_TEXT.TAGLINE}</div>
+      <div className="menu-version">{APP_TEXT.VERSION}</div>
       <HintBar
         hints={[
-          ['Tab', MENU_TEXT.HINT_CHOOSE],
+          ['↑↓', MENU_TEXT.HINT_CHOOSE],
           ['Enter', MENU_TEXT.HINT_ACCEPT],
         ]}
       />
