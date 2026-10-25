@@ -16,7 +16,9 @@ export type ClientMessage =
   // S3-05: sabotear (solo el impostor) y arreglar una emergencia en un
   // punto de reparación de shared/map.json (fixPoints).
   | { type: 'sabotage'; kind: EmergencyKind }
-  | { type: 'fix'; pointId: string };
+  | { type: 'fix'; pointId: string }
+  // Elegir color en LOBBY; match lo acepta si nadie conectado lo tiene.
+  | { type: 'pickColor'; color: string };
 
 // interact: hacer una tarea en una estación o limpiar un tanque.
 // completed se manda al terminar el minijuego (S2-04).

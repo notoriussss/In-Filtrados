@@ -5,7 +5,7 @@
 
 export const FEATURES = {
   lobbyChat: false, // room chat in the lobby (maqueta 06-lobby)
-  colorPicker: false, // choosing a color in the lobby (maqueta 06-lobby)
+  colorPicker: true, // choosing a color in the lobby (maqueta 06-lobby)
   accessoryPicker: false, // choosing an accessory (maqueta 06-lobby)
   publicRooms: false, // public rooms list (maqueta 04-unirse)
 } as const;

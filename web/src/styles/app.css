@@ -85,6 +85,7 @@ button:disabled { cursor: default; opacity: .55; transform: none !important; }
 .scr-lobby .prev {height:250px}
 .scr-lobby .taken {opacity:.35}
 .scr-lobby .sw.me {outline:3px solid #fff;outline-offset:2px}
+.scr-lobby .sw:disabled {cursor:not-allowed;transform:none}
 /* 07-ayuda */
 .scr-help .r3 {display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
 .scr-help .r3 .card {min-height:300px}

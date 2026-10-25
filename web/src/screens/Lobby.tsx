@@ -11,6 +11,8 @@ import type { GameSession } from '../game/session';
 import { LOBBY_TEXT } from '../texts';
 import { BACKGROUNDS } from './backgrounds';
 import { useGame } from './game/useGame';
+import { ChoiceGrid } from './pending/ChoiceGrid';
+import { FEATURES } from '../features';
 
 const MAP_THUMB = '/assets/map/manglar-verde/thumbnail.jpg';
 const MAX_SLOTS = 10; // match acepta hasta 10 jugadores por sala
@@ -122,24 +124,50 @@ export function Lobby(props: {
           {LOBBY_TEXT.COLOR}{' '}
           <span className="muted">· {colorName(myColor)}</span>
         </div>
-        <div className="swatches" role="radiogroup">
-          {SERVER_COLORS.map((c) => {
-            const mine = c === myColor.toLowerCase();
-            const taken = players.some((p) => p.color.toLowerCase() === c);
-            return (
-              <span
-                key={c}
-                className={`sw ${mine ? 'me' : taken ? 'taken' : ''}`}
-                style={{ background: c }}
-                role="radio"
-                aria-checked={mine}
-                aria-label={colorName(c)}
-              >
-                {mine && <Icon name="check" palette="dark" size={24} />}
-              </span>
-            );
-          })}
-        </div>
+        {FEATURES.colorPicker ? (
+          <ChoiceGrid
+            kind="color"
+            label={LOBBY_TEXT.COLOR}
+            value={myColor.toLowerCase()}
+            choices={SERVER_COLORS.map((c) => ({
+              id: c,
+              label: colorName(c),
+              swatch: c,
+              // Solo otro jugador conectado bloquea el color, igual que
+              // en match.
+              taken: players.some(
+                (p) =>
+                  p.id !== meView?.id &&
+                  p.connected &&
+                  p.color.toLowerCase() === c,
+              ),
+            }))}
+            onPick={(c) => {
+              if (c !== myColor.toLowerCase()) {
+                props.game.send({ type: 'pickColor', color: c });
+              }
+            }}
+          />
+        ) : (
+          <div className="swatches" role="radiogroup">
+            {SERVER_COLORS.map((c) => {
+              const mine = c === myColor.toLowerCase();
+              const taken = players.some((p) => p.color.toLowerCase() === c);
+              return (
+                <span
+                  key={c}
+                  className={`sw ${mine ? 'me' : taken ? 'taken' : ''}`}
+                  style={{ background: c }}
+                  role="radio"
+                  aria-checked={mine}
+                  aria-label={colorName(c)}
+                >
+                  {mine && <Icon name="check" palette="dark" size={24} />}
+                </span>
+              );
+            })}
+          </div>
+        )}
         <div className="lab" style={{ marginTop: 22 }}>
           {LOBBY_TEXT.PROFILE}
         </div>

@@ -150,6 +150,15 @@ players[].activity: 'reduce' | 'reuse' | 'recycle' | 'tank' | 'fix' | null; // p
 - `emergency` no dice si la provocó el impostor: una emergencia aleatoria se ve idéntica.
 - `activity` solo se manda para jugadores vivos; con ella cada cliente anima lo que hacen los demás.
 
+**Elegir color en la sala.** También se suma sin romper lo anterior (en gRPC, `PickColor pick_color = 11` dentro de `ClientAction`):
+
+```ts
+// Navegador → gateway
+  | { type: 'pickColor'; color: string } // solo en LOBBY
+```
+
+- `match` sigue asignando un color al entrar. Acepta el cambio solo si es uno de los 8 colores y ningún otro jugador **conectado** lo tiene; si no, lo ignora. El color nuevo llega a todos en el siguiente snapshot.
+
 ### 0.6 REST del gateway
 
 | Método y ruta | Cuerpo | Respuesta |

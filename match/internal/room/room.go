@@ -226,6 +226,8 @@ func (r *Room) handleAction(a PlayerAction) {
 		r.handleSabotage(p, a.SabotageKind)
 	case a.Fix:
 		r.handleFix(p, a.FixPointID)
+	case a.PickColor:
+		r.pickColor(p, a.Color)
 	case a.InteractTask:
 		if r.phase == matchv1.Phase_PLAYING {
 			if !a.Completed {
