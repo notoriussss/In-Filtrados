@@ -39,6 +39,7 @@ export function Lobby(props: {
   const data = session.loadSession();
   const [me, setMe] = useState<MeResponse | null>(null);
   const [copied, setCopied] = useState(false);
+  const [showAccessoryMenu, setShowAccessoryMenu] = useState(false);
   const snap = state.snapshot;
 
   useEffect(() => {
@@ -127,14 +128,121 @@ export function Lobby(props: {
             </span>
           </Chip>
         </TitleBar>
-        <div className="prev stand">
+        <div className="prev stand" style={{ position: 'relative' }}>
           <div className="plank" />
           <Gota
             color={myColor}
             accessory={myAccessory}
-            scale={5}
+            scale={4}
             animate
           />
+          {FEATURES.accessoryPicker && (
+            <Button
+              variant="sec"
+              small
+              style={{
+                position: 'absolute',
+                top: 6,
+                right: 8,
+                zIndex: 5,
+                fontSize: 18,
+                minHeight: 34,
+                padding: '4px 12px 2px',
+                maxWidth: 300,
+                gap: 6,
+              }}
+              onClick={() => setShowAccessoryMenu((open) => !open)}
+            >
+              <span
+                style={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+                title={accessoryName(myAccessory)}
+              >
+                {accessoryName(myAccessory)}
+              </span>
+              <span style={{ fontSize: 13, opacity: 0.8 }}>▾</span>
+            </Button>
+          )}
+          {showAccessoryMenu && (
+            <>
+              <div
+                style={{
+                  position: 'fixed',
+                  inset: 0,
+                  zIndex: 15,
+                }}
+                onClick={() => setShowAccessoryMenu(false)}
+              />
+              <div
+                className="panel"
+                style={{
+                  position: 'absolute',
+                  top: 46,
+                  right: 8,
+                  left: 8,
+                  zIndex: 20,
+                  padding: '14px 16px',
+                  boxShadow: '0 12px 28px rgba(0,0,0,0.7)',
+                }}
+              >
+                <div
+                  className="row"
+                  style={{
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: 10,
+                  }}
+                >
+                  <span className="lab" style={{ margin: 0 }}>
+                    {LOBBY_TEXT.CHOOSE_ACCESSORY}
+                  </span>
+                  <Button
+                    variant="sec"
+                    small
+                    icon="cross"
+                    style={{
+                      fontSize: 18,
+                      minHeight: 34,
+                      padding: '4px 12px 2px',
+                      gap: 6,
+                    }}
+                    onClick={() => setShowAccessoryMenu(false)}
+                  >
+                    {LOBBY_TEXT.CLOSE}
+                  </Button>
+                </div>
+                <ChoiceGrid
+                  kind="accessory"
+                  label={LOBBY_TEXT.ACCESSORY}
+                  value={myAccessory}
+                  choices={ACCESSORIES.map((a) => ({
+                    id: a.id,
+                    label: a.name,
+                    preview: (
+                      <Gota
+                        color={myColor}
+                        accessory={a.id}
+                        scale={1.4}
+                        portrait
+                      />
+                    ),
+                  }))}
+                  onPick={(id) => {
+                    if (id !== myAccessory) {
+                      props.game.send({
+                        type: 'pickAccessory',
+                        accessory: id,
+                      });
+                    }
+                    setShowAccessoryMenu(false);
+                  }}
+                />
+              </div>
+            </>
+          )}
         </div>
         <div className="lab">
           {LOBBY_TEXT.COLOR}{' '}
@@ -183,39 +291,6 @@ export function Lobby(props: {
               );
             })}
           </div>
-        )}
-        {FEATURES.accessoryPicker && (
-          <>
-            <div className="lab" style={{ marginTop: 14 }}>
-              {LOBBY_TEXT.ACCESSORY}{' '}
-              <span className="muted">· {accessoryName(myAccessory)}</span>
-            </div>
-            <ChoiceGrid
-              kind="accessory"
-              label={LOBBY_TEXT.ACCESSORY}
-              value={myAccessory}
-              choices={ACCESSORIES.map((a) => ({
-                id: a.id,
-                label: a.name,
-                preview: (
-                  <Gota
-                    color={myColor}
-                    accessory={a.id}
-                    scale={1.4}
-                    portrait
-                  />
-                ),
-              }))}
-              onPick={(id) => {
-                if (id !== myAccessory) {
-                  props.game.send({
-                    type: 'pickAccessory',
-                    accessory: id,
-                  });
-                }
-              }}
-            />
-          </>
         )}
         <div className="lab" style={{ marginTop: 22 }}>
           {LOBBY_TEXT.PROFILE}

@@ -91,6 +91,8 @@ export const LOBBY_TEXT = {
   YOUR_GOTA: 'Tu gota',
   COLOR: 'Color',
   ACCESSORY: 'Accesorio',
+  CHOOSE_ACCESSORY: 'Elegir accesorio',
+  CLOSE: 'Cerrar',
   PROFILE: 'Tu perfil',
   COINS: 'Monedas',
   MATCHES: 'Partidas',
