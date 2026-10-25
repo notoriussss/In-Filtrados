@@ -79,15 +79,20 @@ export function Join(props: {
             autoFocus
             autoComplete="off"
             maxLength={4}
+            size={4}
             onChange={(e) => {
               setError('');
               setCode(normalizeCode(e.target.value));
             }}
             style={{
+              width: 'calc(100% - 8px)',
+              maxWidth: 'calc(100% - 8px)',
+              boxSizing: 'border-box',
               fontSize: 56,
               letterSpacing: '.3em',
               textAlign: 'center',
               height: 96,
+              paddingLeft: '.3em',
             }}
           />
         </div>

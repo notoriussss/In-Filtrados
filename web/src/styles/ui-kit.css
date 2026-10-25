@@ -161,8 +161,38 @@ h1, h2, h3, p { margin: 0; }
 .gauge i { position: absolute; left: 0; top: 0; bottom: 0; background: repeating-linear-gradient(90deg, var(--water) 0 14px, transparent 14px 18px); }
 .gauge.leaf i { background: repeating-linear-gradient(90deg, var(--leaf) 0 14px, transparent 14px 18px); } .gauge.amber i { background: repeating-linear-gradient(90deg, var(--amber) 0 14px, transparent 14px 18px); } .gauge.bad i { background: repeating-linear-gradient(90deg, var(--coral) 0 14px, transparent 14px 18px); }
 .lab { font-family: var(--head); font-size: 20px; color: var(--mut); margin: 4px 0 12px; text-transform: uppercase; }
-.field { display: grid; gap: 8px; } .field input { height: 64px; padding: 0 16px; background: var(--ink); border: 0; font-size: 38px; color: var(--txt); box-shadow: -4px 0 0 0 var(--line), 4px 0 0 0 var(--line), 0 -4px 0 0 var(--line), 0 4px 0 0 var(--line); margin: 4px; }
-.field input:focus-visible { box-shadow: -4px 0 0 0 var(--aqua), 4px 0 0 0 var(--aqua), 0 -4px 0 0 var(--aqua), 0 4px 0 0 var(--aqua); outline: none; }
+.field {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+.field input {
+  width: calc(100% - 8px);
+  max-width: calc(100% - 8px);
+  min-width: 0;
+  box-sizing: border-box;
+  height: 64px;
+  padding: 0 16px;
+  background: var(--ink);
+  border: 0;
+  font-size: 38px;
+  color: var(--txt);
+  box-shadow:
+    -4px 0 0 0 var(--line),
+    4px 0 0 0 var(--line),
+    0 -4px 0 0 var(--line),
+    0 4px 0 0 var(--line);
+  margin: 4px;
+}
+.field input:focus-visible {
+  box-shadow:
+    -4px 0 0 0 var(--aqua),
+    4px 0 0 0 var(--aqua),
+    0 -4px 0 0 var(--aqua),
+    0 4px 0 0 var(--aqua);
+  outline: none;
+}
 .swatches { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px 18px; }
 .accs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
 .ac { position: relative; border: 0; padding: 0; cursor: pointer; aspect-ratio: .86; display: grid; place-items: center; background: var(--bg2); min-width: 0; box-shadow: -4px 0 0 0 var(--line-d), 4px 0 0 0 var(--line-d), 0 -4px 0 0 var(--line-d), 0 4px 0 0 var(--line-d); }
