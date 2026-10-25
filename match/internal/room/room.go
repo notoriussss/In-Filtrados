@@ -312,6 +312,7 @@ func (r *Room) resumePlayer(
 		)
 	}
 	p.view.Connected = true
+	r.resolveColor(p)
 	p.out = out
 	p.leftAt = time.Time{}
 	p.graceUntil = time.Time{}

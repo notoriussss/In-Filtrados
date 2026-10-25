@@ -60,3 +60,25 @@ func TestPickColorOutsideLobbyIsIgnored(t *testing.T) {
 		t.Errorf("want %s, got %s", colors[0], got)
 	}
 }
+
+func TestReconnectGetsFreeColorIfTaken(t *testing.T) {
+	r := lobbyRoom()
+	out := r.players["b"].out
+	r.removePlayer(Leave{PlayerID: "b", Out: out})
+	pick(r, "a", colors[1]) // a toma el color que b cedió
+	r.addPlayer(Join{PlayerID: "b", Out: make(chan *matchv1.ServerEvent, 1)})
+	a, b := r.players["a"].view.Color, r.players["b"].view.Color
+	if a != colors[1] || b == a {
+		t.Errorf("want distinct colors, got a=%s b=%s", a, b)
+	}
+}
+
+func TestReconnectKeepsColorIfFree(t *testing.T) {
+	r := lobbyRoom()
+	out := r.players["b"].out
+	r.removePlayer(Leave{PlayerID: "b", Out: out})
+	r.addPlayer(Join{PlayerID: "b", Out: make(chan *matchv1.ServerEvent, 1)})
+	if got := r.players["b"].view.Color; got != colors[1] {
+		t.Errorf("want %s, got %s", colors[1], got)
+	}
+}
