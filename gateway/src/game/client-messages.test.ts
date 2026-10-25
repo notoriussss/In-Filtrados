@@ -97,3 +97,17 @@ test('S3-05: fix needs a point id', () => {
   assert.equal(parse({ type: 'fix', pointId: '' }), null);
   assert.equal(parse({ type: 'fix', pointId: 'x'.repeat(65) }), null);
 });
+
+test('pickColor needs a short color', () => {
+  assert.deepEqual(
+    toGrpcAction(parse({ type: 'pickColor', color: '#4363d8' })!),
+    { pickColor: { color: '#4363d8' } },
+  );
+  assert.equal(parse({ type: 'pickColor' }), null);
+  assert.equal(parse({ type: 'pickColor', color: '' }), null);
+  assert.equal(parse({ type: 'pickColor', color: 7 }), null);
+  assert.equal(
+    parse({ type: 'pickColor', color: 'x'.repeat(17) }),
+    null,
+  );
+});

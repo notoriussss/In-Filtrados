@@ -10,7 +10,8 @@ servidor y deja el resto apagado, sin cambiar lo que ve el jugador.
 | --- | --- |
 | Ajustes (08-ajustes) | Hecho en la web: `screens/Settings.tsx`, `settings.ts`. Se abre desde el menú y desde la pausa; se guarda en `localStorage`. |
 | Chat de la sala de espera | Componente listo y apagado: `screens/pending/RoomChat.tsx`. |
-| Elegir color y accesorio | Componente listo y apagado: `screens/pending/ChoiceGrid.tsx`. |
+| Elegir color | Hecho: mensaje `pickColor` (`docs/tasks.md` 0.5) y `ChoiceGrid` en `Lobby.tsx` con `FEATURES.colorPicker` en `true`. |
+| Elegir accesorio | Componente listo y apagado: `screens/pending/ChoiceGrid.tsx`. |
 | Salas públicas | Componente listo y apagado: `screens/pending/PublicRooms.tsx`. |
 
 Las banderas están en `web/src/features.ts` y valen `false`. Ponerlas en
@@ -38,13 +39,6 @@ skill `change-contract`; el servidor sigue siendo la autoridad.
 - Difusión servidor → clientes con `id`, `playerId`, `text` y la hora.
 - Dónde se monta: `screens/Lobby.tsx`, columna central bajo la lista de
   jugadores, si `FEATURES.lobbyChat`.
-
-### Elegir color
-- Mensaje `pick_color` con el color; el servidor lo acepta solo si nadie
-  conectado lo tiene y responde con el estado de la sala. Hoy lo asigna al
-  entrar y la sala lo muestra en solo lectura.
-- Dónde se monta: los `swatches` de `Lobby.tsx` pasan a `ChoiceGrid`
-  (`kind="color"`), si `FEATURES.colorPicker`.
 
 ### Elegir accesorio
 - Mensaje `pick_accessory` y el campo `accessory` en la vista de cada

@@ -36,6 +36,8 @@ message ClientAction {
     // S3-05: sabotajes del impostor y arreglos de emergencias.
     Sabotage    sabotage    = 9;
     Fix         fix         = 10;
+    // Elegir color en la sala de espera.
+    PickColor   pick_color  = 11;
   }
 }
 message Join {
@@ -89,6 +91,11 @@ message Sabotage {
 // shared/map.json (fixPoints). Hay que quedarse quieto junto al punto.
 message Fix {
   string point_id = 1;
+}
+// PickColor: solo en LOBBY. match lo acepta si es uno de los 8 colores y
+// ningún otro jugador conectado lo tiene; si no, lo ignora.
+message PickColor {
+  string color = 1;
 }
 
 message ServerEvent {

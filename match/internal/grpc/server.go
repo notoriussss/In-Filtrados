@@ -327,6 +327,12 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 					Fix:        true,
 					FixPointID: msg.GetFix().GetPointId(),
 				})
+			case msg.GetPickColor() != nil:
+				r.Act(room.PlayerAction{
+					PlayerID:  playerID,
+					PickColor: true,
+					Color:     msg.GetPickColor().GetColor(),
+				})
 			case msg.GetChat() != nil:
 				c := msg.GetChat()
 				r.Act(room.PlayerAction{
