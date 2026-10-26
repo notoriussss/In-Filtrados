@@ -1,6 +1,6 @@
 import { useEffect, useState, type KeyboardEvent } from 'react';
 import { Stage } from '../ui/Stage';
-import { Gota, SERVER_COLORS } from '../ui/Gota';
+import { PlayerFigure, type PlayerColor } from '../ui/PlayerFigure';
 import { Chip, HintBar } from '../ui/kit';
 import { Icon } from '../ui/Icon';
 import { api, type MeResponse } from '../api';
@@ -93,27 +93,52 @@ export function Menu(props: {
     <Stage className="scr-menu" background={BACKGROUNDS.hero}>
       <div className="menu-vignette" />
 
-      {/* gotas a los lados, detrás del menú */}
+      {/* personajes oficiales en el mirador del menú */}
       {[
-        { c: 0, left: 330, top: 700 },
-        { c: 1, left: 1480, top: 760 },
-        { c: 3, left: 1610, top: 680 },
-      ].map((g) => (
-        <div key={g.c}>
-          <div
-            className="shadow"
-            style={{
-              left: g.left + 12,
-              top: g.top + 145,
-              width: 96,
-              height: 22,
-            }}
-          />
-          <div style={{ position: 'absolute', left: g.left, top: g.top }}>
-            <Gota color={SERVER_COLORS[g.c]} scale={3} animate />
+        { color: 'Cyan', left: 310, top: 680, scale: 1.25, pose: 'front' },
+        { color: 'Red', left: 440, top: 730, scale: 1.15, pose: 'right' },
+        { color: 'Green', left: 1470, top: 710, scale: 1.25, pose: 'left' },
+        { color: 'Blue', left: 1610, top: 670, scale: 1.2, pose: 'front' },
+        {
+          color: 'Orange',
+          left: 1290,
+          top: 18,
+          scale: 0.85,
+          pose: 'right',
+          walk: true,
+        },
+      ].map((p, idx) => {
+        const width = Math.round(88 * p.scale);
+        const height = Math.round(125 * p.scale);
+        return (
+          <div key={`${p.color}-${idx}`}>
+            <div
+              className="player-shadow"
+              style={{
+                left: p.left + Math.round(width * 0.1),
+                top: p.top + height - 8,
+                width: Math.round(width * 0.8),
+                height: 18,
+              }}
+            />
+            <div
+              style={{
+                position: 'absolute',
+                left: p.left,
+                top: p.top,
+                zIndex: p.top < 100 ? 0 : 1,
+              }}
+            >
+              <PlayerFigure
+                color={p.color as PlayerColor}
+                scale={p.scale}
+                pose={p.pose as 'front' | 'left' | 'right'}
+                walk={p.walk}
+              />
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
 
       {/* bloque central: logo y menú juntos en el centro de la pantalla */}
       <div className="menu-center">
@@ -163,7 +188,7 @@ export function Menu(props: {
 
       <div className="menu-player">
         <div className="menu-player-badge">
-          <Icon name="user" palette="light" size={28} />
+          <Icon name="user" palette="light" size={24} />
         </div>
         <div className="who">
           <span className="name">{data?.username}</span>

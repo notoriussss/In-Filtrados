@@ -21,6 +21,48 @@
     );
 }
 
+/* personajes oficiales de Jimena en el fondo */
+.player-figure {
+  position: relative;
+  display: block;
+  user-select: none;
+  pointer-events: none;
+}
+
+.player-figure-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+
+.player-shadow {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0.75) 0%,
+    rgba(0, 0, 0, 0.3) 50%,
+    transparent 75%
+  );
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+.player-figure.breathe .player-figure-img {
+  animation: player-breathe 3.4s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+@keyframes player-breathe {
+  0%, 100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(0.97) scaleX(1.02);
+  }
+}
+
 /* bloque central unificado (logo + menú) */
 .menu-center {
   position: absolute;
@@ -187,46 +229,52 @@
 .menu-item:disabled { opacity: 0.55; }
 .menu-error { align-self: center; margin-top: 16px; }
 
-/* esquinas: tarjeta del jugador con diseño de estandarte místico */
+/* esquinas: tarjeta del jugador con diseño minimalista */
 .menu-player {
   position: absolute;
   left: 56px;
   top: 42px;
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 8px 24px 8px 12px;
-  background: linear-gradient(
-    90deg,
-    rgba(4, 16, 31, 0.94) 0%,
-    rgba(13, 42, 70, 0.75) 60%,
-    rgba(4, 16, 31, 0.45) 88%,
-    transparent 100%
-  );
-  border-top: 1px solid rgba(74, 155, 208, 0.35);
-  border-bottom: 2px solid var(--aqua);
+  gap: 12px;
+  padding: 6px 18px 6px 8px;
+  background: rgba(4, 16, 31, 0.55);
+  border: 1px solid rgba(74, 155, 208, 0.2);
+  border-radius: 24px;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  transition:
+    background 160ms ease,
+    border-color 160ms ease;
+}
+.menu-player:hover {
+  background: rgba(4, 16, 31, 0.75);
+  border-color: rgba(126, 230, 216, 0.38);
 }
 .menu-player .who {
   position: relative;
   z-index: 2;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 .menu-player-badge {
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 8px;
-  border: 2px solid var(--aqua);
-  background: radial-gradient(circle, rgba(26, 83, 132, 0.85) 0%, rgba(4, 16, 31, 0.98) 100%);
-  box-shadow: 0 0 8px rgba(126, 230, 216, 0.3);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(126, 230, 216, 0.4);
+  background: radial-gradient(
+    circle,
+    rgba(26, 83, 132, 0.7) 0%,
+    rgba(4, 16, 31, 0.9) 100%
+  );
 }
 
 .menu-player .who .name {
   font-family: var(--head);
-  font-size: 26px;
+  font-size: 22px;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: #fff;
@@ -236,22 +284,21 @@
 .menu-player small {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 22px;
+  gap: 8px;
+  font-size: 19px;
   color: var(--mut);
   line-height: 1;
 }
 .menu-player .dot.gem {
-  width: 8px;
-  height: 8px;
-  border-radius: 0;
-  transform: rotate(45deg);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
   background: var(--leaf);
-  box-shadow: 0 0 8px var(--leaf);
+  box-shadow: 0 0 6px var(--leaf);
 }
 .menu-player .dot.gem.bad {
   background: var(--coral);
-  box-shadow: 0 0 8px var(--coral);
+  box-shadow: 0 0 6px var(--coral);
 }
 
 /* botones de reliquia en esquina derecha */
