@@ -1,6 +1,7 @@
 # In-Filtrados: despliegue en la red del laboratorio
 
 Complementa a `architecture.md`. Ese documento describe **qué** hace cada servicio; este describe **dónde** corre cada uno y **cómo** se conectan las máquinas en el laboratorio.
+La lista de pasos del día, con las imágenes de `develop` y el firewall filtrado por IP de origen, está en `deployment-lab-runbook.md`.
 Fecha: 4 de octubre de 2026 (revisión 2).
 
 > Convención: igual que en `architecture.md`, los nombres de archivos, variables y servicios van en inglés. La explicación va en español.
