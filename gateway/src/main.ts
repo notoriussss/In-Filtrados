@@ -2,7 +2,9 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 import { WsAdapter } from '@nestjs/platform-ws';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { SWAGGER } from './http.constants';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -26,6 +28,17 @@ async function bootstrap() {
       whitelist: true,
       stopAtFirstError: true,
     }),
+  );
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle(SWAGGER.TITLE)
+    .setDescription(SWAGGER.DESCRIPTION)
+    .setVersion(SWAGGER.VERSION)
+    .addBearerAuth()
+    .build();
+  SwaggerModule.setup(
+    SWAGGER.PATH,
+    app,
+    SwaggerModule.createDocument(app, swaggerConfig),
   );
   app.useWebSocketAdapter(new WsAdapter(app)); // plain WebSocket, no Socket.IO
   const port = process.env.PORT || 3000;

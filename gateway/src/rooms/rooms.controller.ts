@@ -7,10 +7,14 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { SWAGGER } from '../http.constants';
 import { MatchClient, RoomReply } from '../clients/match.client';
 import { toHttpException } from '../clients/grpc-errors';
 import { AuthGuard, type AuthedRequest } from '../auth/auth.guard';
 
+@ApiTags(SWAGGER.TAG_ROOMS)
+@ApiBearerAuth()
 @Controller('api/rooms')
 @UseGuards(AuthGuard)
 export class RoomsController {

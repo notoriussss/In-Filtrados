@@ -1,8 +1,11 @@
 import { Controller, Get, Res, HttpStatus } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
+import { SWAGGER } from '../http.constants';
 import * as net from 'net';
 import { CIRCUIT_OPEN, isCircuitOpen } from '../clients/resilience';
 
+@ApiTags(SWAGGER.TAG_HEALTH)
 @Controller('health')
 export class HealthController {
   private checkGrpcClient(

@@ -7,6 +7,16 @@ export const HTTP_MESSAGES = {
   PASSWORD_REQUIRED: 'Falta la contraseña',
 } as const;
 
+export const SWAGGER = {
+  TITLE: 'In-Filtrados Gateway',
+  DESCRIPTION: 'API HTTP del gateway de In-Filtrados',
+  VERSION: '1.0',
+  PATH: 'docs',
+  TAG_AUTH: 'auth',
+  TAG_ROOMS: 'rooms',
+  TAG_HEALTH: 'health',
+} as const;
+
 export const AUTH_CONSTANTS = {
   BEARER_PREFIX: 'Bearer ',
 } as const;
