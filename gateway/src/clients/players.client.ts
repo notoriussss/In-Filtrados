@@ -1,29 +1,31 @@
 import { Injectable } from '@nestjs/common';
+import { ApiProperty } from '@nestjs/swagger';
 import * as grpc from '@grpc/grpc-js';
 import { loadPackage, requireAddr, unary } from './grpc';
 import { createBreaker, guarded } from './resilience';
 
-export type PlayerReply = {
-  playerId: string;
-  username: string;
-};
+// Clases (no types) para que Swagger lea el esquema de la respuesta.
+export class PlayerReply {
+  @ApiProperty() playerId!: string;
+  @ApiProperty() username!: string;
+}
 
-export type TokenReply = {
-  token: string;
-  playerId: string;
-  username: string;
-};
+export class TokenReply {
+  @ApiProperty() token!: string;
+  @ApiProperty() playerId!: string;
+  @ApiProperty() username!: string;
+}
 
-export type ProfileReply = {
-  playerId: string;
-  username: string;
-  coins: number;
-  matchesPlayed: number;
-  wins: number;
+export class ProfileReply {
+  @ApiProperty() playerId!: string;
+  @ApiProperty() username!: string;
+  @ApiProperty() coins!: number;
+  @ApiProperty() matchesPlayed!: number;
+  @ApiProperty() wins!: number;
   // S2-07: estadísticas como impostor.
-  timesImpostor: number;
-  winsAsImpostor: number;
-};
+  @ApiProperty() timesImpostor!: number;
+  @ApiProperty() winsAsImpostor!: number;
+}
 
 @Injectable()
 export class PlayersClient {

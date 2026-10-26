@@ -7,7 +7,12 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { SWAGGER } from '../http.constants';
 import { MatchClient, RoomReply } from '../clients/match.client';
 import { toHttpException } from '../clients/grpc-errors';
@@ -21,6 +26,7 @@ export class RoomsController {
   constructor(private readonly match: MatchClient) {}
 
   @Post()
+  @ApiCreatedResponse({ type: RoomReply })
   async createRoom(
     @Req() req: AuthedRequest,
   ): Promise<RoomReply> {
@@ -36,6 +42,7 @@ export class RoomsController {
 
   @Post(':roomCode/join')
   @HttpCode(HttpStatus.OK)
+  @ApiOkResponse({ type: RoomReply })
   async joinRoom(
     @Param('roomCode') roomCode: string,
     @Req() req: AuthedRequest,
