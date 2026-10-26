@@ -70,7 +70,7 @@ button:disabled { cursor: default; opacity: .55; transform: none !important; }
 .scr-access .stand canvas {bottom:21px}
 .scr-access .prev {height:410px}
 /* 06-lobby */
-.scr-lobby .stand {height:250px}
+.scr-lobby .stand {height:280px}
 .scr-lobby .stand .plank {width:300px}
 .scr-lobby .stand canvas {position:absolute;left:50%;transform:translateX(-50%)}
 .scr-lobby .stand .plank {bottom:6px;height:20px}
@@ -85,7 +85,7 @@ button:disabled { cursor: default; opacity: .55; transform: none !important; }
 .scr-lobby .fcg .ac {aspect-ratio:auto;height:50px}
 .scr-lobby .msg {display:grid;grid-template-columns:44px 1fr;gap:10px;margin-bottom:10px;font-size:.86em}
 .scr-lobby .msg b {display:block}
-.scr-lobby .prev {height:250px}
+.scr-lobby .prev {height:280px}
 .scr-lobby .taken {opacity:.35}
 .scr-lobby .sw.me {outline:3px solid #fff;outline-offset:2px}
 .scr-lobby .sw:disabled {cursor:not-allowed;transform:none}

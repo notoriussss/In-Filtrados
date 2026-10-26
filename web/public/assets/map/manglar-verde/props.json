@@ -2,7 +2,7 @@
   "_nota": "Escala 1:1 (1 unidad de mundo = 1 px). x,y = esquina superior izquierda del sprite en el mapa; baseY = línea de base para ordenar por profundidad con los jugadores (y-sort: dibuja primero lo de menor baseY; un jugador se ordena con su y + 6). El suelo (capas/suelo.png) ya trae pisos, paredes, decoración mural, tapetes y calcomanías.",
   "width": 2752,
   "height": 1824,
-  "total": 184,
+  "total": 190,
   "sprites": 53,
   "props": [
     {
@@ -2151,13 +2151,13 @@
       "id": "post-lamp",
       "sprite": "post-lamp",
       "x": 1056,
-      "y": 1112,
+      "y": 1058,
       "w": 32,
       "h": 108,
-      "baseY": 1216,
+      "baseY": 1166,
       "tile": [
         33,
-        37
+        36
       ],
       "footprint": [
         1,
@@ -2166,16 +2166,106 @@
       "exterior": false
     },
     {
+      "id": "rail",
+      "sprite": "rail",
+      "x": 924,
+      "y": 1114,
+      "w": 104,
+      "h": 48,
+      "baseY": 1162,
+      "tile": [
+        29,
+        36
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rail",
+      "sprite": "rail",
+      "x": 1020,
+      "y": 1114,
+      "w": 104,
+      "h": 48,
+      "baseY": 1162,
+      "tile": [
+        32,
+        36
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rail",
+      "sprite": "rail",
+      "x": 1116,
+      "y": 1114,
+      "w": 104,
+      "h": 48,
+      "baseY": 1162,
+      "tile": [
+        35,
+        36
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
       "id": "bench",
       "sprite": "bench",
-      "x": 1372,
-      "y": 1174,
+      "x": 1116,
+      "y": 1118,
       "w": 104,
       "h": 46,
-      "baseY": 1216,
+      "baseY": 1164,
       "tile": [
-        43,
-        37
+        35,
+        36
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rail",
+      "sprite": "rail",
+      "x": 1404,
+      "y": 1114,
+      "w": 104,
+      "h": 48,
+      "baseY": 1162,
+      "tile": [
+        44,
+        36
+      ],
+      "footprint": [
+        3,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rail",
+      "sprite": "rail",
+      "x": 1500,
+      "y": 1114,
+      "w": 104,
+      "h": 48,
+      "baseY": 1162,
+      "tile": [
+        47,
+        36
       ],
       "footprint": [
         3,
@@ -2187,16 +2277,34 @@
       "id": "post-lamp",
       "sprite": "post-lamp",
       "x": 1504,
-      "y": 1112,
+      "y": 1058,
       "w": 32,
       "h": 108,
-      "baseY": 1216,
+      "baseY": 1166,
       "tile": [
         47,
-        37
+        36
       ],
       "footprint": [
         1,
+        1
+      ],
+      "exterior": false
+    },
+    {
+      "id": "rail",
+      "sprite": "rail",
+      "x": 1596,
+      "y": 1114,
+      "w": 104,
+      "h": 48,
+      "baseY": 1162,
+      "tile": [
+        50,
+        36
+      ],
+      "footprint": [
+        3,
         1
       ],
       "exterior": false

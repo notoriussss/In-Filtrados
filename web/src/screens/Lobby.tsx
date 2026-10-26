@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react';
 import type { PlayerView } from '@in-filtrados/messages';
 import { Stage } from '../ui/Stage';
-import { Gota, SERVER_COLORS, colorName } from '../ui/Gota';
+import {
+  Gota,
+  SERVER_COLORS,
+  colorName,
+  ACCESSORIES,
+  accessoryName,
+  GOTA_ROSTER,
+} from '../ui/Gota';
 import { Icon } from '../ui/Icon';
 import { Button, Chip, Pill, TitleBar } from '../ui/kit';
 import { api, type MeResponse } from '../api';
@@ -32,6 +39,7 @@ export function Lobby(props: {
   const data = session.loadSession();
   const [me, setMe] = useState<MeResponse | null>(null);
   const [copied, setCopied] = useState(false);
+  const [showAccessoryMenu, setShowAccessoryMenu] = useState(false);
   const snap = state.snapshot;
 
   useEffect(() => {
@@ -51,6 +59,10 @@ export function Lobby(props: {
   const isHost = Boolean(data?.isCreator);
   const connected = players.filter((p) => p.connected).length;
   const myColor = meView?.color ?? SERVER_COLORS[1];
+  const myAccessory =
+    meView?.accessory ||
+    GOTA_ROSTER[myColor.toLowerCase()]?.accessory ||
+    ACCESSORIES[0].id;
   const code = data?.roomCode ?? '----';
   const impostors = players.length >= TWO_IMPOSTORS_FROM ? 2 : 1;
   const compact = players.length > 8;
@@ -116,9 +128,121 @@ export function Lobby(props: {
             </span>
           </Chip>
         </TitleBar>
-        <div className="prev stand">
+        <div className="prev stand" style={{ position: 'relative' }}>
           <div className="plank" />
-          <Gota color={myColor} scale={5} animate />
+          <Gota
+            color={myColor}
+            accessory={myAccessory}
+            scale={4}
+            animate
+          />
+          {FEATURES.accessoryPicker && (
+            <Button
+              variant="sec"
+              small
+              style={{
+                position: 'absolute',
+                top: 6,
+                right: 8,
+                zIndex: 5,
+                fontSize: 18,
+                minHeight: 34,
+                padding: '4px 12px 2px',
+                maxWidth: 300,
+                gap: 6,
+              }}
+              onClick={() => setShowAccessoryMenu((open) => !open)}
+            >
+              <span
+                style={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+                title={accessoryName(myAccessory)}
+              >
+                {accessoryName(myAccessory)}
+              </span>
+              <span style={{ fontSize: 13, opacity: 0.8 }}>▾</span>
+            </Button>
+          )}
+          {showAccessoryMenu && (
+            <>
+              <div
+                style={{
+                  position: 'fixed',
+                  inset: 0,
+                  zIndex: 15,
+                }}
+                onClick={() => setShowAccessoryMenu(false)}
+              />
+              <div
+                className="panel"
+                style={{
+                  position: 'absolute',
+                  top: 46,
+                  right: 8,
+                  left: 8,
+                  zIndex: 20,
+                  padding: '14px 16px',
+                  boxShadow: '0 12px 28px rgba(0,0,0,0.7)',
+                }}
+              >
+                <div
+                  className="row"
+                  style={{
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: 10,
+                  }}
+                >
+                  <span className="lab" style={{ margin: 0 }}>
+                    {LOBBY_TEXT.CHOOSE_ACCESSORY}
+                  </span>
+                  <Button
+                    variant="sec"
+                    small
+                    icon="cross"
+                    style={{
+                      fontSize: 18,
+                      minHeight: 34,
+                      padding: '4px 12px 2px',
+                      gap: 6,
+                    }}
+                    onClick={() => setShowAccessoryMenu(false)}
+                  >
+                    {LOBBY_TEXT.CLOSE}
+                  </Button>
+                </div>
+                <ChoiceGrid
+                  kind="accessory"
+                  label={LOBBY_TEXT.ACCESSORY}
+                  value={myAccessory}
+                  choices={ACCESSORIES.map((a) => ({
+                    id: a.id,
+                    label: a.name,
+                    preview: (
+                      <Gota
+                        color={myColor}
+                        accessory={a.id}
+                        scale={1.4}
+                        portrait
+                      />
+                    ),
+                  }))}
+                  onPick={(id) => {
+                    if (id !== myAccessory) {
+                      props.game.send({
+                        type: 'pickAccessory',
+                        accessory: id,
+                      });
+                    }
+                    setShowAccessoryMenu(false);
+                  }}
+                />
+              </div>
+            </>
+          )}
         </div>
         <div className="lab">
           {LOBBY_TEXT.COLOR}{' '}
@@ -311,7 +435,12 @@ function PlayerSlot(props: {
   return (
     <div className={`slot ${props.isMe ? 'me' : ''}`} style={style}>
       <span className="av">
-        <Gota color={p.color} scale={props.compact ? 1.6 : 2} portrait />
+        <Gota
+          color={p.color}
+          accessory={p.accessory}
+          scale={props.compact ? 1.6 : 2}
+          portrait
+        />
       </span>
       <span className="nm">
         <span className="fit" title={p.name}>

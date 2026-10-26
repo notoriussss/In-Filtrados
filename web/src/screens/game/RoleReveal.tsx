@@ -69,7 +69,12 @@ export function RoleReveal(props: {
         />
         {me && (
           <div className="chr">
-            <Gota color={me.color} scale={8} animate />
+            <Gota
+              color={me.color}
+              accessory={me.accessory}
+              scale={8}
+              animate
+            />
           </div>
         )}
         <div
@@ -100,7 +105,13 @@ export function RoleReveal(props: {
               }}
             >
               {others.map((p) => (
-                <Gota key={p.id} color={p.color} scale={2} animate />
+                <Gota
+                  key={p.id}
+                  color={p.color}
+                  accessory={p.accessory}
+                  scale={2}
+                  animate
+                />
               ))}
             </div>
           </div>

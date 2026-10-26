@@ -333,6 +333,12 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 					PickColor: true,
 					Color:     msg.GetPickColor().GetColor(),
 				})
+			case msg.GetPickAccessory() != nil:
+				r.Act(room.PlayerAction{
+					PlayerID:      playerID,
+					PickAccessory: true,
+					Accessory:     msg.GetPickAccessory().GetAccessory(),
+				})
 			case msg.GetChat() != nil:
 				c := msg.GetChat()
 				r.Act(room.PlayerAction{

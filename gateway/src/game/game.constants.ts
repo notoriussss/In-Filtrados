@@ -42,6 +42,8 @@ export const EMERGENCY_KINDS: readonly unknown[] = ['pipe', 'steam'];
 export const MAX_FIX_POINT_ID_LENGTH = 64;
 // Elegir color en la sala: un color CSS como "#4363d8".
 export const MAX_COLOR_LENGTH = 16;
+// Elegir accesorio en la sala: id como "straw-hat", "headphones".
+export const MAX_ACCESSORY_LENGTH = 32;
 
 // S3-02: espera entre intentos de reabrir Play si match no responde.
 export const PLAY_RETRY_DELAYS_MS: readonly number[] = [

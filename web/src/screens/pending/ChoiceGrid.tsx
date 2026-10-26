@@ -36,7 +36,11 @@ export function ChoiceGrid(props: {
             aria-label={c.label}
             title={c.label}
             disabled={c.taken && !picked}
-            className={[color ? 'sw' : 'ac', c.taken && !picked ? 'taken' : '']
+            className={[
+              color ? 'sw' : 'ac',
+              c.taken && !picked ? 'taken' : '',
+              picked ? 'me' : '',
+            ]
               .filter(Boolean)
               .join(' ')}
             style={color ? { background: c.swatch } : undefined}
