@@ -162,11 +162,13 @@ export function Menu(props: {
       </div>
 
       <div className="menu-player">
-        <Icon name="user" palette="light" size={36} />
+        <div className="menu-player-badge">
+          <Icon name="user" palette="light" size={28} />
+        </div>
         <div className="who">
-          {data?.username}
+          <span className="name">{data?.username}</span>
           <small>
-            <span className={`dot ${ping === null ? 'bad' : ''}`} />
+            <span className={`dot gem ${ping === null ? 'bad' : ''}`} />
             {ping === null
               ? MENU_TEXT.OFFLINE
               : `${MENU_TEXT.CONNECTED} · ${MENU_TEXT.ping(ping)}`}
@@ -178,26 +180,49 @@ export function Menu(props: {
         <div className="menu-profile">
           <button
             type="button"
-            className="menu-icon"
+            className="menu-icon relic"
             aria-label={MENU_TEXT.PROFILE}
           >
-            <Icon name="trophy" palette="amber" size={36} />
+            <Icon name="trophy" palette="amber" size={32} />
           </button>
           {me && (
-            <div className="menu-tip" role="status">
-              {MENU_TEXT.coins(me.coins)}
-              <br />
-              {MENU_TEXT.stats(me.matchesPlayed, me.wins)}
+            <div className="menu-tip banner" role="status">
+              <div className="tip-header">
+                <span className="tip-gem">◆</span>
+                <span className="tip-title">REGISTRO</span>
+                <span className="tip-gem">◆</span>
+              </div>
+              <div className="tip-content">
+                <span className="coins">{MENU_TEXT.coins(me.coins)}</span>
+                <span className="stats">
+                  {MENU_TEXT.stats(me.matchesPlayed, me.wins)}
+                </span>
+              </div>
+              <div className="tip-tail">◆</div>
             </div>
           )}
         </div>
         <button
           type="button"
-          className="menu-icon"
+          className="menu-icon relic"
           aria-label={MENU_TEXT.SETTINGS}
           onClick={props.onSettings}
         >
-          <Icon name="gear" palette="light" size={36} />
+          <svg
+            className="gear-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+            />
+          </svg>
         </button>
       </div>
 
@@ -205,7 +230,7 @@ export function Menu(props: {
       <div className="menu-version">{APP_TEXT.VERSION}</div>
       <HintBar
         hints={[
-          ['↑↓', MENU_TEXT.HINT_CHOOSE],
+          ['Tab', MENU_TEXT.HINT_CHOOSE],
           ['Enter', MENU_TEXT.HINT_ACCEPT],
         ]}
       />
