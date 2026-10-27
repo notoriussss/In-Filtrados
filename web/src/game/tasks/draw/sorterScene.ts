@@ -205,6 +205,7 @@ export class SorterScene implements Scene {
   frame(ctx: CanvasRenderingContext2D, now: number, dt: number): void {
     this.consume(now);
     this.update(dt);
+    if (this.game.done && this.doneAt === null) this.doneAt = now;
     ctx.drawImage(this.back, 0, 0, BOARD.w, BOARD.h);
     this.drawZones(ctx, now);
     this.drawPlaced(ctx);
