@@ -80,9 +80,13 @@ export function Game(props: {
             key={state.minigame.stationId}
             type={state.minigame.type}
             color={snap?.players.find((p) => p.id === game.meId)?.color}
+            accessory={
+              snap?.players.find((p) => p.id === game.meId)?.accessory
+            }
             onComplete={state.minigame.onComplete}
             onClose={state.minigame.onClose}
           />
+
         )}
         <ConnectionPanel status={state.status} matchDown={state.matchDown} />
       </HudLayer>

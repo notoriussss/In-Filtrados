@@ -1,6 +1,11 @@
 import type { PlayerView } from '@in-filtrados/messages';
 import { describe, expect, it } from 'vitest';
-import { PlayerAnimator, STEP_MS, VERTICAL_STEP_MS } from './playerAnim';
+import {
+  PlayerAnimator,
+  STEP_MS,
+  VERTICAL_STEP_MS,
+  gotaCell,
+} from './playerAnim';
 
 // Cada cuadro mueve 5 unidades en 5 ms (1000 u/s, por encima de
 // MOVING_SPEED), más fino que STEP_MS para no saltarse cuadros.
@@ -123,3 +128,85 @@ describe('PlayerAnimator', () => {
     expect(pose.frame).toBe('front');
   });
 });
+
+describe('gotaCell', () => {
+  it('maps walking directions to expected columns and flip states', () => {
+    const basePose = {
+      frame: 'front' as const,
+      walking: true,
+      body: {
+        frame: 'front' as const,
+        dx: 0,
+        dy: 0,
+        lean: 0,
+        sx: 1,
+        sy: 1,
+        shadow: 1,
+        strain: 0,
+        dust: null,
+        hit: false,
+      },
+      working: null,
+      celebrate: null,
+    };
+
+    expect(gotaCell({ ...basePose, heading: 'down', stepIndex: 0 }, 0)).toEqual(
+      { col: 2, flip: false },
+    );
+    expect(gotaCell({ ...basePose, heading: 'down', stepIndex: 3 }, 0)).toEqual(
+      { col: 5, flip: false },
+    );
+    expect(gotaCell({ ...basePose, heading: 'up', stepIndex: 1 }, 0)).toEqual(
+      { col: 15, flip: false },
+    );
+    expect(
+      gotaCell({ ...basePose, heading: 'right', stepIndex: 2 }, 0),
+    ).toEqual({ col: 10, flip: false });
+    expect(gotaCell({ ...basePose, heading: 'left', stepIndex: 2 }, 0)).toEqual(
+      { col: 10, flip: true },
+    );
+  });
+
+  it('maps idle directions to breathing idle frames and proper flip', () => {
+    const idlePose = {
+      frame: 'front' as const,
+      walking: false,
+      body: {
+        frame: 'front' as const,
+        dx: 0,
+        dy: 0,
+        lean: 0,
+        sx: 1,
+        sy: 1,
+        shadow: 1,
+        strain: 0,
+        dust: null,
+        hit: false,
+      },
+      working: null,
+      celebrate: null,
+    };
+
+    expect(gotaCell({ ...idlePose, heading: 'down' }, 0)).toEqual({
+      col: 0,
+      flip: false,
+    });
+    expect(gotaCell({ ...idlePose, heading: 'down' }, 500)).toEqual({
+      col: 1,
+      flip: false,
+    });
+    expect(gotaCell({ ...idlePose, heading: 'up' }, 0)).toEqual({
+      col: 12,
+      flip: false,
+    });
+    expect(gotaCell({ ...idlePose, heading: 'left' }, 0)).toEqual({
+      col: 6,
+      flip: true,
+    });
+    expect(gotaCell({ ...idlePose, heading: 'right' }, 0)).toEqual({
+      col: 6,
+      flip: false,
+    });
+  });
+});
+

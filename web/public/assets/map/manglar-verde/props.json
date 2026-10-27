@@ -348,25 +348,8 @@
       "exterior": false
     },
     {
-      "id": "solarpanel",
-      "sprite": "solarpanel",
-      "x": 1724,
-      "y": 168,
-      "w": 104,
-      "h": 92,
-      "baseY": 256,
-      "tile": [
-        54,
-        7
-      ],
-      "footprint": [
-        3,
-        1
-      ],
-      "exterior": false
-    },
-    {
       "id": "pinetree",
+
       "sprite": "pinetree",
       "x": 2156,
       "y": 102,
@@ -1665,13 +1648,13 @@
       "id": "post-lamp",
       "sprite": "post-lamp",
       "x": 1728,
-      "y": 824,
+      "y": 664,
       "w": 32,
       "h": 108,
-      "baseY": 928,
+      "baseY": 768,
       "tile": [
         54,
-        28
+        23
       ],
       "footprint": [
         1,
@@ -1679,6 +1662,7 @@
       ],
       "exterior": false
     },
+
     {
       "id": "chair",
       "sprite": "chair-v4",
@@ -1845,13 +1829,13 @@
       "id": "post-lamp",
       "sprite": "post-lamp",
       "x": 1728,
-      "y": 952,
+      "y": 760,
       "w": 32,
       "h": 108,
-      "baseY": 1056,
+      "baseY": 864,
       "tile": [
         54,
-        32
+        26
       ],
       "footprint": [
         1,
@@ -1859,6 +1843,7 @@
       ],
       "exterior": false
     },
+
     {
       "id": "rocks",
       "sprite": "rocks",

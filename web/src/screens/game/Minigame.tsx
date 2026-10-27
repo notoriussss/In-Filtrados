@@ -14,6 +14,7 @@ import { TASK_TEXT } from '../../constants';
 export function Minigame(props: {
   type: StationType;
   color?: string;
+  accessory?: string;
   onComplete: () => void;
   onClose: () => void;
 }) {
@@ -25,7 +26,13 @@ export function Minigame(props: {
     const ctx = cv?.getContext('2d');
     if (!cv || !ctx) return;
     const game = createMinigame(props.type);
-    const view = new MinigameView(game, props.color);
+    const view = new MinigameView(
+      game,
+      props.color,
+      undefined,
+      props.accessory,
+    );
+
     const toBoard = (e: PointerEvent) => {
       const r = cv.getBoundingClientRect();
       return {
