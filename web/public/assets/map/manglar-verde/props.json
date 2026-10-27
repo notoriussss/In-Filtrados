@@ -348,25 +348,8 @@
       "exterior": false
     },
     {
-      "id": "solarpanel",
-      "sprite": "solarpanel",
-      "x": 1724,
-      "y": 168,
-      "w": 104,
-      "h": 92,
-      "baseY": 256,
-      "tile": [
-        54,
-        7
-      ],
-      "footprint": [
-        3,
-        1
-      ],
-      "exterior": false
-    },
-    {
       "id": "pinetree",
+
       "sprite": "pinetree",
       "x": 2156,
       "y": 102,
