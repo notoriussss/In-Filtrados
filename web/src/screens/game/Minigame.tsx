@@ -11,8 +11,10 @@ import { TASK_TEXT } from '../../constants';
 // lógica está en game/tasks/minigames.ts y el dibujo en minigameDraw.ts;
 // aquí solo se conectan el canvas, los clics y el progreso. color es el
 // del jugador: su personaje aparece en el tablero haciendo la tarea.
+// El juego se elige por estación: cada estación tiene el suyo.
 export function Minigame(props: {
   type: StationType;
+  stationId: string;
   color?: string;
   onComplete: () => void;
   onClose: () => void;
@@ -24,7 +26,7 @@ export function Minigame(props: {
     const cv = canvas.current;
     const ctx = cv?.getContext('2d');
     if (!cv || !ctx) return;
-    const game = createMinigame(props.type);
+    const game = createMinigame(props.type, props.stationId);
     const view = new MinigameView(game, props.color);
     const toBoard = (e: PointerEvent) => {
       const r = cv.getBoundingClientRect();
@@ -72,7 +74,7 @@ export function Minigame(props: {
       cv.removeEventListener('pointercancel', up);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.type]);
+  }, [props.type, props.stationId]);
 
   const ic = TASK_ICONS[props.type];
   return (
@@ -80,7 +82,8 @@ export function Minigame(props: {
       <header className="title-bar">
         <Icon name={ic.name} palette={ic.palette} />
         <h2 className="h2 grow" style={{ fontSize: 26 }}>
-          {TASK_TEXT.GAME_TITLES[props.type]}
+          {TASK_TEXT.STATION_TITLES[props.stationId] ??
+            TASK_TEXT.GAME_TITLES[props.type]}
         </h2>
         <Button variant="sec" small onClick={props.onClose}>
           {TASK_TEXT.CLOSE} <Kbd>Esc</Kbd>

@@ -243,9 +243,6 @@ export function clamp01(v: number): number {
   return Math.min(Math.max(v, 0), 1);
 }
 
-// Dos números a partir de uno, para repartir al azar sin guardar nada:
-// el mismo i da siempre el mismo valor.
-export function hash01(i: number): number {
-  const s = Math.sin(i * 127.1 + 311.7) * 43758.5453;
-  return s - Math.floor(s);
-}
+// hash01 vive en minigames.ts porque también la usa la lógica de los
+// juegos; aquí solo se reexporta para las escenas.
+export { hash01 } from '../minigames';
