@@ -157,6 +157,10 @@ export const HELP_TEXT = {
   SABOTAGE: 'Sabotear',
   MENU: 'Menú',
   CLOSE: 'Cerrar',
+  TAB_3R: 'Las 3R',
+  TAB_ROLES: 'Roles',
+  TAB_CONTROLS: 'Controles',
+  BACK: 'Volver',
 } as const;
 
 export const ROLE_TEXT = {

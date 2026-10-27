@@ -96,15 +96,7 @@ button:disabled { cursor: default; opacity: .55; transform: none !important; }
 .scr-lobby .taken {opacity:.35}
 .scr-lobby .sw.me {outline:3px solid #fff;outline-offset:2px}
 .scr-lobby .sw:disabled {cursor:not-allowed;transform:none}
-/* 07-ayuda */
-.scr-help .r3 {display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
-.scr-help .r3 .card {min-height:300px}
-.scr-help .bl {display:flex;gap:12px;align-items:flex-start;margin-top:10px;font-size:.9em}
-.scr-help .bl i {flex:none;width:14px;height:14px;margin-top:10px;background:var(--teal,#7ee6d8)}
-.scr-help .roles {display:grid;grid-template-columns:1fr 1fr;gap:24px}
-.scr-help .roles .card {min-width:0;display:flex;gap:22px;align-items:center;min-height:250px}
-.scr-help .ctl {display:flex;gap:30px;justify-content:space-between;flex-wrap:nowrap}
-.scr-help .ctl>div {display:flex;align-items:center;gap:12px;white-space:nowrap}
+/* 07-ayuda: estilos encapsulados en styles/help.css */
 /* 09-rol */
 .scr-role .chr {position:absolute;left:800px;top:350px}
 .scr-role .mates {position:absolute;left:0;right:0;top:830px;display:flex;justify-content:center;gap:34px;align-items:flex-end}
