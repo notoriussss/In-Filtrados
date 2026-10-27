@@ -603,13 +603,16 @@ export class FillGame extends BaseGame implements Minigame {
 }
 
 // Reutilizar (rain-1 y rain-2, cosecha de lluvia): primera lluvia. Las
-// primeras gotas lavan el techo y salen marrones: van al desvío. Las
-// limpias van al barril; una sucia que entre lo vacía un poco.
+// gotas caen de la canaleta y algunas salen marrones porque lavan el
+// polvo del techo: van al desvío. Las limpias van al barril; una sucia
+// que entre lo vacía un poco. Cuántas sucias trae la lluvia sale de
+// una semilla: cada partida es distinta.
 export const RAIN_CLEAN_GOAL = 6;
-export const RAIN_DIRTY_FIRST = 2;
+// A lo sumo cuántas gotas sucias trae una primera lluvia.
+export const RAIN_DIRTY_MAX = 3;
 export const RAIN_FALL_MS = 900; // de la canaleta a la compuerta
 export const RAIN_GAP_MS = 520; // entre gota y gota
-export const RAIN_MAX_DROPS = RAIN_DIRTY_FIRST + RAIN_CLEAN_GOAL + 3;
+export const RAIN_MAX_DROPS = RAIN_DIRTY_MAX + RAIN_CLEAN_GOAL + 5;
 export const RAIN_SPOUT = { x: 100, y: 46 }; // de donde caen
 export const RAIN_JUNCTION = { x: 100, y: 132 }; // la compuerta
 export const RAIN_LEVER = { x: 66, y: 96, w: 68, h: 64 }; // clic aquí
@@ -625,12 +628,26 @@ export type RainDrop = {
   resolved: boolean;
 };
 
+// La primera lluvia lava el techo: al principio casi todas las gotas
+// salen sucias y a medida que pasa, casi ninguna.
+const dirtyChance = (i: number): number =>
+  Math.max(0.15, 0.8 - i * 0.15);
+
 export class FirstRainGame extends BaseGame implements Minigame {
   readonly drops: RainDrop[] = [];
   gate: RainSide = 'deflect'; // al abrir la lluvia, el desvío
   barrel = 0; // gotas limpias que juntó el barril
   elapsed = 0;
   private spawned = 0;
+  private dirtyLeft: number;
+  private readonly seed: number;
+
+  constructor(seed: number = Math.random() * 9973) {
+    super();
+    this.seed = seed;
+    // Cuántas gotas sucias trae esta lluvia: de 1 a 3.
+    this.dirtyLeft = 1 + Math.floor(hash01(seed + 3) * RAIN_DIRTY_MAX);
+  }
 
   get done(): boolean {
     return this.barrel >= RAIN_CLEAN_GOAL && this.elapsed >= MIN_GAME_MS;
@@ -680,9 +697,18 @@ export class FirstRainGame extends BaseGame implements Minigame {
   }
 
   private spawn(): void {
+    if (this.spawned >= RAIN_MAX_DROPS) return;
+    // La primera siempre sale sucia (es el primer lavado del techo);
+    // las demás, con chance que baja gota a gota y solo mientras
+    // quede presupuesto de suciedad en esta lluvia.
+    const dirty =
+      this.spawned === 0 ||
+      (this.dirtyLeft > 0 &&
+        hash01(this.seed + this.spawned * 7.31) < dirtyChance(this.spawned));
+    if (dirty) this.dirtyLeft -= 1;
     this.drops.push({
       index: this.spawned,
-      clean: this.spawned >= RAIN_DIRTY_FIRST,
+      clean: !dirty,
       fall: 0,
       resolved: false,
     });

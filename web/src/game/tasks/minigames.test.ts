@@ -25,9 +25,12 @@ import {
   PRESSURE_ZONE_START,
   PressureGame,
   RAIN_CLEAN_GOAL,
+  type RainDrop,
   RAIN_FALL_MS,
   RAIN_GAP_MS,
   RAIN_LEVER,
+  RAIN_MAX_DROPS,
+  RAIN_DIRTY_MAX,
   REUSE_TANK,
   SEAL_CRACK_AFTER_MS,
   SEAL_GOAL,
@@ -408,22 +411,25 @@ describe('FirstRainGame', () => {
     x: RAIN_LEVER.x + RAIN_LEVER.w / 2,
     y: RAIN_LEVER.y + RAIN_LEVER.h / 2,
   };
+  const wholeRain = (seed: number): RainDrop[] => {
+    const g = new FirstRainGame(seed);
+    g.step(RAIN_GAP_MS * RAIN_MAX_DROPS + RAIN_FALL_MS);
+    return g.drops;
+  };
 
-  it('starts raining on its own: the first drops are dirty', () => {
-    const g = new FirstRainGame();
+  it('starts raining on its own; the first drop is always dirty', () => {
+    const g = new FirstRainGame(42);
     g.step(RAIN_GAP_MS * 2 + 10);
     expect(g.drops.length).toBe(3);
     expect(g.drops[0].clean).toBe(false);
-    expect(g.drops[1].clean).toBe(false);
-    expect(g.drops[2].clean).toBe(true);
-    // El desvío arranca abierto: la sucia pasa y no toca el barril.
+    // El desvío arranca abierto: la primera pasa y no toca el barril.
     g.step(RAIN_FALL_MS);
     expect(g.drops[0].resolved).toBe(true);
     expect(g.barrel).toBe(0);
   });
 
   it('moves the gate with a click on it and nothing elsewhere', () => {
-    const g = new FirstRainGame();
+    const g = new FirstRainGame(42);
     g.pointerDown({ x: 10, y: 250 });
     expect(g.gate).toBe('deflect');
     g.pointerDown(lever);
@@ -433,9 +439,9 @@ describe('FirstRainGame', () => {
   });
 
   it('fills the barrel with clean drops; a dirty one empties it', () => {
-    const g = new FirstRainGame();
+    const g = new FirstRainGame(42);
     g.pointerDown(lever); // barril abierto desde el inicio
-    // La primera (sucia) entra al barril: lo vacía y avisa.
+    // La primera (siempre sucia) entra al barril: lo vacía y avisa.
     g.step(RAIN_FALL_MS + 10);
     expect(g.barrel).toBe(0);
     expect(g.drainEvents().some((e) => e.type === 'spill')).toBe(true);
@@ -444,11 +450,29 @@ describe('FirstRainGame', () => {
     expect(g.done).toBe(true);
   });
 
-  it('loses clean drops that go to the deflector', () => {
-    const g = new FirstRainGame();
-    for (let t = 0; t < 20000 && g.barrel < 3; t += 40) g.step(40);
-    expect(g.drainEvents().some((e) => e.type === 'drop-out')).toBe(true);
+  it('loses clean drops sent to the deflector', () => {
+    const g = new FirstRainGame(42);
+    for (let t = 0; t < 20000; t += 40) {
+      g.step(40);
+      if (g.drops.some((d) => d.clean && d.resolved)) break;
+    }
     expect(g.barrel).toBe(0);
+    expect(g.drainEvents().some((e) => e.type === 'drop-out')).toBe(true);
+  });
+
+  it('brings 1 to 3 dirty drops in any seed', () => {
+    for (let seed = 1; seed <= 20; seed++) {
+      const dirty = wholeRain(seed).filter((d) => !d.clean).length;
+      expect(dirty).toBeGreaterThanOrEqual(1);
+      expect(dirty).toBeLessThanOrEqual(RAIN_DIRTY_MAX);
+    }
+  });
+
+  it('deals a different rain with a different seed', () => {
+    const seeds = [1, 2, 3, 4, 5, 6].map((s) =>
+      wholeRain(s).map((d) => (d.clean ? 'L' : 'S')).join(''),
+    );
+    expect(new Set(seeds).size).toBeGreaterThanOrEqual(3);
   });
 });
 
