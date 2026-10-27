@@ -8,6 +8,22 @@ button:disabled { cursor: default; opacity: .55; transform: none !important; }
 .btn:disabled:hover { background: var(--pan2); }
 .btn.pri:disabled:hover { background: var(--leaf); }
 
+/* Transición fluida al montar cualquier pantalla */
+.stage {
+  animation: stageScreenEnter 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes stageScreenEnter {
+  0% {
+    opacity: 0;
+    filter: brightness(0.75);
+  }
+  100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+}
+
 /* capa del juego */
 .game-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; }
 .hud-layer { position: fixed; left: 0; top: 0; transform-origin: 0 0; pointer-events: none; }

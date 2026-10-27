@@ -1,0 +1,477 @@
+/* Pantalla de acceso / login / registro (rediseño estético y de UX).
+   Estilos encapsulados en .scr-access sin alterar clases globales. */
+
+.stage.scr-access {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Viñeta mística acuática de fondo */
+.scr-access .access-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(4, 20, 42, 0.65) 0%,
+    rgba(3, 10, 24, 0.92) 100%
+  );
+  z-index: 1;
+}
+
+/* Tarjeta / modal central con diseño fluido de un solo color oscuro (sin scroll) */
+.scr-access .access-card {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  transform: translate(-50%, -50%);
+  width: 1100px;
+  height: 650px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  background: #061528;
+  border: 2px solid var(--line-d);
+  border-radius: 14px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85);
+  overflow: hidden;
+}
+
+/* Cabecera del panel */
+.scr-access .access-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 22px 40px 16px;
+  border-bottom: 2px solid var(--line-d);
+  position: relative;
+  text-align: center;
+}
+
+.scr-access .access-head h2 {
+  font-family: var(--head);
+  font-size: 28px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--aqua);
+  text-shadow: 2px 2px 0 var(--ink);
+  margin: 0;
+  text-align: center;
+}
+
+/* Cuerpo dividido en 2 columnas fluidas - CERO SCROLLBAR */
+.scr-access .access-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 24px 50px 28px;
+  gap: 52px;
+  overflow: hidden;
+}
+
+/* Columna izquierda: formulario completo con inputs, submit y switch */
+.scr-access .access-form-col {
+  flex: 1.15;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Animación al alternar modo Login / Registro */
+.scr-access .access-mode-anim {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: accessModeSwitch 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Campos de entrada con espaciado limpio y notas de altura fija */
+.scr-access .access-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.scr-access .access-field label {
+  font-family: var(--head);
+  font-size: 20px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #e0f2fe;
+  text-shadow: 1px 1px 0 var(--ink);
+}
+
+.scr-access .access-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.scr-access .access-input {
+  width: 100%;
+  height: 56px;
+  background: rgba(4, 16, 31, 0.78);
+  border: 2px solid var(--line-d);
+  border-radius: 8px;
+  padding: 0 20px;
+  color: #fff;
+  font-family: var(--body);
+  font-size: 38px;
+  letter-spacing: 2px;
+  box-sizing: border-box;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.scr-access #password.access-input {
+  padding-right: 60px;
+}
+
+.scr-access .access-input:focus {
+  outline: none;
+  border-color: var(--line);
+  background: rgba(13, 42, 70, 0.75);
+}
+
+.scr-access .access-input.has-error {
+  border-color: var(--coral);
+}
+
+.scr-access .access-toggle-pw {
+  position: absolute;
+  right: 14px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 0;
+  color: var(--mut);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  transition:
+    color 120ms steps(3),
+    background 120ms steps(3);
+}
+
+.scr-access .access-toggle-pw:hover {
+  color: var(--aqua);
+  background: rgba(26, 83, 132, 0.5);
+}
+
+/* Mensajes de validación con altura consistente para evitar saltos */
+.scr-access .access-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 20px;
+  font-size: 19px;
+  line-height: 1.2;
+  padding-left: 4px;
+}
+
+.scr-access .access-note.info {
+  color: var(--mut);
+}
+
+.scr-access .access-note.bad {
+  color: var(--coral);
+}
+
+.scr-access .access-note.ok {
+  color: var(--leaf);
+}
+
+.scr-access .access-alert {
+  min-height: 0;
+  display: flex;
+  align-items: center;
+}
+
+.scr-access .access-alert:empty {
+  display: none;
+}
+
+/* Botón de acción principal dentro del flujo del formulario */
+.scr-access .access-submit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  height: 56px;
+  margin-top: 6px;
+  font-family: var(--head);
+  font-size: 24px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #fff;
+  background: #145a32;
+  border: 2px solid #27ae60;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+  text-shadow: 2px 2px 0 var(--ink);
+  cursor: pointer;
+  transition: all 120ms steps(3);
+}
+
+.scr-access .access-submit-btn:hover:not(:disabled) {
+  background: #196f3d;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
+  transform: translateY(-2px);
+}
+
+.scr-access .access-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.scr-access .access-submit-label {
+  display: inline-flex;
+  align-items: center;
+  animation: accessFadeIn 200ms ease-out both;
+}
+
+/* Alternador de cuenta clásico centrado debajo del botón */
+.scr-access .access-switch-mode {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: var(--body);
+  font-size: 26px;
+  letter-spacing: 1px;
+  margin-top: 8px;
+}
+
+.scr-access .access-switch-prompt {
+  color: var(--mut);
+  text-shadow: 1px 1px 0 var(--ink);
+}
+
+.scr-access .access-switch-btn {
+  background: transparent;
+  border: 0;
+  padding: 2px 4px;
+  font-family: var(--body);
+  font-size: 28px;
+  letter-spacing: 1.5px;
+  color: var(--aqua);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-shadow: 1px 1px 0 var(--ink);
+  transition: color 120ms ease;
+}
+
+.scr-access .access-switch-btn:hover {
+  color: #fff;
+}
+
+.scr-access .access-mode-crossfade {
+  animation: accessFadeIn 200ms ease-out both;
+}
+
+/* Columna derecha: Gota de agua flotante con sombra real debajo */
+.scr-access .access-water-col {
+  flex: 0.95;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 10px 16px 10px 32px;
+  border-left: 1px solid rgba(74, 155, 208, 0.2);
+  text-align: center;
+}
+
+/* Showcase de la gota de agua */
+.scr-access .water-drop-showcase {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.scr-access .water-drop-wrapper {
+  animation: water-drop-float 3.6s ease-in-out infinite;
+  z-index: 2;
+}
+
+.scr-access .water-drop-svg {
+  width: 130px;
+  height: 175px;
+  display: block;
+}
+
+/* SOMBRA BIEN VISIBLE DEBAJO DE LA GOTA */
+.scr-access .water-drop-shadow {
+  width: 115px;
+  height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    #000000 0%,
+    rgba(0, 0, 0, 0.9) 45%,
+    rgba(0, 0, 0, 0.4) 70%,
+    transparent 100%
+  );
+  filter: blur(2px);
+  margin-top: 10px;
+  animation: water-shadow-scale 3.6s ease-in-out infinite;
+}
+
+@keyframes water-drop-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+@keyframes water-shadow-scale {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.95;
+  }
+  50% {
+    transform: scale(0.72);
+    opacity: 0.45;
+  }
+}
+
+/* Caja de mensaje concientizador */
+.scr-access .water-message-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  max-width: 380px;
+}
+
+.scr-access .water-message-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.scr-access .water-gem {
+  color: var(--aqua);
+  font-size: 11px;
+}
+
+.scr-access .water-tagline {
+  font-family: var(--head);
+  font-size: 20px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--aqua);
+  text-shadow: 2px 2px 0 var(--ink);
+}
+
+.scr-access .water-awareness-text {
+  font-family: var(--body);
+  font-size: 28px;
+  line-height: 1.35;
+  letter-spacing: 1px;
+  color: #e0f2fe;
+  text-shadow: 1px 1px 0 var(--ink);
+  margin: 0;
+  padding: 0 4px;
+}
+
+/* Animaciones de transición */
+@keyframes accessModeSwitch {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes accessFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Barra de teclas en acceso: diseño idéntico al main menu y visible */
+.stage.scr-access .hint {
+  position: absolute;
+  left: 50%;
+  right: auto;
+  bottom: 68px;
+  width: 660px;
+  height: 64px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 56px;
+  padding-top: 4px;
+  background: linear-gradient(
+    90deg,
+    rgba(4, 16, 31, 0),
+    rgba(4, 16, 31, 0.85) 22%,
+    rgba(4, 16, 31, 0.85) 78%,
+    rgba(4, 16, 31, 0)
+  );
+  z-index: 10;
+}
+
+.stage.scr-access .hint::after {
+  content: '';
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: 0;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    rgba(74, 155, 208, 0),
+    var(--line-d) 30%,
+    var(--line-d) 70%,
+    rgba(74, 155, 208, 0)
+  );
+}
+
+.stage.scr-access .hint span {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--head);
+  font-size: 20px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: #e0f2fe;
+  text-shadow: 2px 2px 0 var(--ink);
+}
+
+.stage.scr-access .hint .kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 0;
+  height: auto;
+  padding: 0 0 4px;
+  font-family: var(--head);
+  font-size: 20px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--aqua) !important;
+  background: none !important;
+  border: none !important;
+  border-bottom: 3px solid var(--aqua) !important;
+  box-shadow: none !important;
+  text-shadow: 2px 2px 0 var(--ink);
+}

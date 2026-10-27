@@ -27,12 +27,18 @@ export const ACCESS_TEXT = {
   TITLE: 'Entra a la estación',
   LOGIN_TAB: 'Entrar',
   REGISTER_TAB: 'Crear cuenta',
+  NO_ACCOUNT: '¿No tienes cuenta?',
+  CREATE_ONE: 'Crea una',
+  HAVE_ACCOUNT: '¿Ya tienes cuenta?',
+  LOGIN_ACTION: 'Inicia sesión',
   USERNAME: 'Usuario',
   PASSWORD: 'Contraseña',
-  USERNAME_RULE: '3 a 20 caracteres, sin espacios: letras, números y _',
+  USERNAME_RULE:
+    '3 a 20 caracteres: no puede llevar espacios, acentos ni símbolos',
   PASSWORD_RULE: 'Mínimo 8 caracteres',
   // Lo que se le dice al jugador mientras escribe (accountRules.ts).
-  USERNAME_BAD_CHARS: 'Solo letras sin acento, números y _ (sin espacios)',
+  USERNAME_BAD_CHARS:
+    'No puede llevar espacios, acentos ni caracteres especiales',
   usernameTooShort: (min: number) => `Muy corto: mínimo ${min} caracteres`,
   usernameTooLong: (max: number, used: number) =>
     `Muy largo: máximo ${max} caracteres (llevas ${used})`,

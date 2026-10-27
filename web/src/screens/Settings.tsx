@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Stage } from '../ui/Stage';
 import { Icon, type IconName } from '../ui/Icon';
-import { Button, Chip, Kbd, TitleBar } from '../ui/kit';
+import { Chip, Kbd } from '../ui/kit';
 import {
   type Settings as SettingsData,
   applySettings,
@@ -11,6 +11,7 @@ import {
 } from '../settings';
 import { SETTINGS_TEXT as T } from '../texts';
 import { BACKGROUNDS } from './backgrounds';
+import '../styles/settings.css';
 
 type TabId = 'video' | 'controls' | 'access';
 
@@ -20,8 +21,7 @@ const TABS: { id: TabId; icon: IconName; label: string }[] = [
   { id: 'access', icon: 'eye', label: T.TAB_ACCESS },
 ];
 
-// Settings (maqueta 08-ajustes). Changes preview at once; "Aplicar" keeps
-// them in this browser and "Volver" (or Esc) puts the saved ones back.
+// Settings (maqueta 08-ajustes): rediseñado acorde al menú principal.
 export function Settings(props: { onClose: () => void; overlay?: boolean }) {
   const [saved] = useState(loadSettings);
   const [draft, setDraft] = useState<SettingsData>(saved);
@@ -73,37 +73,62 @@ export function Settings(props: { onClose: () => void; overlay?: boolean }) {
   return (
     <Stage
       className="scr-settings"
-      background={props.overlay ? undefined : BACKGROUNDS.mapBlur}
+      background={props.overlay ? undefined : BACKGROUNDS.hero}
     >
-      <div className="shade dim" />
-      <section
-        className="panel"
-        style={{ left: 260, top: 60, width: 1400, height: 960 }}
-      >
-        <div style={{ padding: '26px 40px' }}>
-          <TitleBar icon="gear" title={T.TITLE}>
-            <Kbd>Esc</Kbd>
-          </TitleBar>
-          <div className="tabs" role="tablist">
-            {TABS.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                role="tab"
-                aria-selected={tab === t.id}
-                className={`tab ${tab === t.id ? 'on' : ''}`}
-                onClick={() => setTab(t.id)}
-              >
-                <Icon
-                  name={t.icon}
-                  palette={tab === t.id ? 'water' : 'light'}
-                  size={24}
-                />
-                {t.label}
-              </button>
-            ))}
+      <div className="settings-backdrop" />
+      <section className="settings-modal" role="dialog" aria-modal="true">
+        <header className="settings-head">
+          <div className="settings-head-title">
+            <svg
+              className="gear-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="3" />
+              <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+              />
+            </svg>
+            <h2>{T.TITLE}</h2>
           </div>
-          <div className="well pane" role="tabpanel">
+          <button
+            type="button"
+            className="settings-esc-btn"
+            onClick={close}
+            aria-label={T.BACK}
+          >
+            <span>{T.BACK}</span>
+            <Kbd>Esc</Kbd>
+          </button>
+        </header>
+
+        <div className="settings-tabs" role="tablist">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={tab === t.id}
+              className={`settings-tab ${tab === t.id ? 'on' : ''}`}
+              onClick={() => setTab(t.id)}
+            >
+              <Icon
+                name={t.icon}
+                palette={tab === t.id ? 'water' : 'light'}
+                size={24}
+              />
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="settings-body" role="tabpanel">
+          <div className="settings-pane">
             {tab === 'video' && (
               <Row title={T.SCREEN} sub={T.SCREEN_SUB} last>
                 <Segmented
@@ -122,6 +147,7 @@ export function Settings(props: { onClose: () => void; overlay?: boolean }) {
                 )}
               </Row>
             )}
+
             {tab === 'controls' && (
               <>
                 <Row title={T.MOVE}>
@@ -149,6 +175,7 @@ export function Settings(props: { onClose: () => void; overlay?: boolean }) {
                 </Row>
               </>
             )}
+
             {tab === 'access' && (
               <>
                 <Row title={T.HIGH_CONTRAST} sub={T.HIGH_CONTRAST_SUB}>
@@ -168,23 +195,36 @@ export function Settings(props: { onClose: () => void; overlay?: boolean }) {
               </>
             )}
           </div>
-          <p className="small muted" style={{ marginTop: 10 }}>
-            {T.STORED_NOTE}
-          </p>
+          <p className="note-text">{T.STORED_NOTE}</p>
         </div>
-        <div className="settings-foot">
-          <Button variant="sec" icon="left" iconPalette="light" onClick={close}>
+
+        <footer className="settings-foot">
+          <button
+            type="button"
+            className="settings-btn sec"
+            onClick={close}
+          >
+            <Icon name="left" palette="light" size={24} />
             {T.BACK}
-          </Button>
-          <div className="row">
-            <Button variant="sec" onClick={() => change(defaultSettings())}>
+          </button>
+          <div className="settings-actions">
+            <button
+              type="button"
+              className="settings-btn ghost"
+              onClick={() => change(defaultSettings())}
+            >
               {T.RESET}
-            </Button>
-            <Button variant="pri" icon="check" onClick={apply}>
+            </button>
+            <button
+              type="button"
+              className="settings-btn pri"
+              onClick={apply}
+            >
+              <Icon name="check" palette="light" size={24} />
               {T.APPLY}
-            </Button>
+            </button>
           </div>
-        </div>
+        </footer>
       </section>
     </Stage>
   );
@@ -197,12 +237,12 @@ function Row(props: {
   children: React.ReactNode;
 }) {
   return (
-    <div className="sr" style={props.last ? { border: 0 } : undefined}>
-      <div>
+    <div className={`settings-row ${props.last ? 'last' : ''}`}>
+      <div className="settings-row-info">
         <b>{props.title}</b>
         {props.sub && <div className="d">{props.sub}</div>}
       </div>
-      <div className="ctl2">{props.children}</div>
+      <div className="settings-row-ctrl">{props.children}</div>
     </div>
   );
 }
