@@ -842,10 +842,18 @@ Sin esta tarea tampoco se puede verificar S2-13 jugando (completar 3 tareas y ve
 9. **Lista de misiones** en la esquina superior izquierda, sobre el canvas: "Misiones (2/4)" y una fila por tarea con su tipo (Reducir, Reutilizar, Reciclar) y la zona donde está, por ejemplo "Reducir · Cuarto de bombas". La zona se calcula en el navegador con `shared/map.json`: la zona más pequeña que contiene la estación (así se ignora "Arroyo", que cubre todo el mapa). Las hechas aparecen tachadas. Se oculta en `LOBBY` y durante la reunión.
 10. **En el mapa:** resaltar solo las estaciones pendientes del jugador (anillo pulsante o signo "!"); las demás y las hechas se dibujan atenuadas.
 11. **Iniciar:** junto a una estación propia pendiente a 40 unidades o menos, el botón contextual de S2-09 (tecla `E`) dice "Hacer tarea" y manda `interact { stationId }`. El minijuego se abre cuando el snapshot trae `myActiveTask === stationId` (lo confirma el servidor, no el navegador).
-12. **Minijuegos**, en un panel encima del canvas; mientras está abierto no se manda `move`:
-    1. **Reducir (cerrar fuga):** girar una válvula manteniendo presionado el clic hasta llenar una barra.
-    2. **Reutilizar (agua gris):** arrastrar 3 cubetas al tanque.
-    3. **Reciclar (filtrar):** hacer clic en 4 partículas de suciedad que flotan en el agua.
+12. **Minijuegos**, en un panel encima del canvas; mientras está abierto no se manda `move`. Se eligen **por estación** (`createMinigame(type, stationId)` en `web/src/game/tasks/minigames.ts`): cada estación tiene el suyo y el juego de su tipo queda de respaldo. El detalle y el porqué están en `docs/design/minigames-3r.md`:
+    1. **Reducir (cerrar fuga, `leak-1`):** girar una válvula manteniendo presionado el clic hasta llenar una barra.
+    2. **Reutilizar (agua gris, `greywater-1`):** arrastrar 3 cubetas al tanque.
+    3. **Reciclar (filtrar, `filter-1` y `filter-2`):** hacer clic en 4 partículas de suciedad que flotan en el agua.
+    4. **Reducir (regular la presión, `valve-1`):** presionar el botón cuando la aguja pasa por la franja verde; 3 aciertos y la franja se encoge.
+    5. **Reducir (llenar sin derramar, `valve-2`):** sostener el grifo y soltar cuando el agua pase la marca; cruzar el borde derrama y el vaso vuelve a empezar. 3 vasos.
+    6. **Reutilizar (primera lluvia, `rain-1` y `rain-2`):** las primeras gotas salen marrones (van al desvío) y las limpias al barril; un clic cambia la compuerta de lado. 6 gotas limpias.
+    7. **Reciclar (clasificar residuos, `sorter-1`):** arrastrar 4 residuos al cajón de su color.
+    8. **Reutilizar (¿sirve para regar?, `greywater-2`):** arrastrar 4 recipientes a Regar o a Tratar según su origen.
+    9. **Reducir (sellar la fuga, `leak-2`):** clic en las grietas que se abren solas para ponerles cinta; se sellan 5.
+    10. **Reciclar (capas del compost, `compost-1`):** arrastrar los sacos en orden (seco, húmedo, tierra), dos rondas.
+    Todos los juegos nuevos respetan un mínimo de 3 s (`MIN_GAME_MS`): match rechaza tareas más rápidas (`taskMinTicks`).
 13. **Terminar:** al completar el minijuego, mandar `interact { stationId, completed: true }`. Si se completó antes de 3 s desde el inicio, esperar a que pasen antes de mandarlo (el servidor rechaza los menores de 3 s). Se cierra con `Esc`, al empezar una reunión o si `myActiveTask` deja de ser esa estación (el jugador se alejó).
 14. El impostor ve sus tareas y los minijuegos igual que un tripulante (las "finge"; `match` no suma nada).
 15. Textos que ve el jugador como constantes en `web/src/constants.ts` (regla 9). Pruebas con `vitest` del cálculo de zona, del armado de la lista y de la lógica de cada minijuego (sin canvas).
