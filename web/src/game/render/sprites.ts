@@ -72,9 +72,73 @@ export function spriteImageOrFront(
   return spriteImage(color, frame) ?? spriteImage(color, 'front');
 }
 
-// preloadSprites pide todos los cuadros al entrar a la partida, para
+// Constantes de dimensiones para las hojas de sprites Gota (v3).
+export const GOTA_URL = '/assets/characters/gota';
+export const GOTA_CELL_W = 40;
+export const GOTA_CELL_H = 56;
+export const GOTA_ANCHOR_X = 20;
+export const GOTA_ANCHOR_Y = 46;
+
+export const GOTA_ACCESSORIES = [
+  'backpack',
+  'cap',
+  'diving-mask',
+  'fisher-hat',
+  'flower',
+  'glasses',
+  'headphones',
+  'helmet',
+  'raincoat',
+  'scarf',
+  'sprout',
+  'straw-hat',
+] as const;
+
+const gotaCache = new Map<string, HTMLImageElement>();
+
+// gotaBodyImage devuelve la hoja de sprites del cuerpo según el color.
+export function gotaBodyImage(color: string): HTMLImageElement | null {
+  const hex = color.toLowerCase().replace('#', '');
+  const url = `${GOTA_URL}/bodies/${hex}.png`;
+  if (typeof Image === 'undefined') return null;
+  let img = gotaCache.get(url);
+  if (!img) {
+    img = new Image();
+    img.src = url;
+    gotaCache.set(url, img);
+  }
+  return img.complete && img.naturalWidth > 0 ? img : null;
+}
+
+// gotaAccessoryImage devuelve la hoja de sprites del accesorio.
+export function gotaAccessoryImage(
+  accessory: string | undefined,
+): HTMLImageElement | null {
+  if (!accessory || accessory === 'none') return null;
+  const id = accessory.toLowerCase();
+  const url = `${GOTA_URL}/accessories/${id}.png`;
+  if (typeof Image === 'undefined') return null;
+  let img = gotaCache.get(url);
+  if (!img) {
+    img = new Image();
+    img.src = url;
+    gotaCache.set(url, img);
+  }
+  return img.complete && img.naturalWidth > 0 ? img : null;
+}
+
+// preloadSprites pide todos los cuadros y hojas al entrar a la partida, para
 // que nadie aparezca como círculo el primer segundo.
 export function preloadSprites(): void {
+  // Precargar hojas modulares de Gota (cuerpos y accesorios)
+  for (const color of Object.keys(SPRITE_COLORS)) {
+    gotaBodyImage(color);
+  }
+  for (const acc of GOTA_ACCESSORIES) {
+    gotaAccessoryImage(acc);
+  }
+
+  // Precargar cuadros clásicos de Jimena por compatibilidad
   const frames: SpriteFrame[] = [
     'front',
     'front-walking1',
@@ -95,3 +159,4 @@ export function preloadSprites(): void {
     for (const frame of frames) spriteImage(color, frame);
   }
 }
+

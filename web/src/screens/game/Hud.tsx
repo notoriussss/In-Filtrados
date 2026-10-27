@@ -19,7 +19,7 @@ import type { GameSession, GameState } from '../../game/session';
 import { pauseMessage } from '../../game/pause';
 import { session } from '../../session';
 import { APP_TEXT, HUD_TEXT } from '../../texts';
-import { spriteFile } from '../../game/render/sprites';
+import { Gota } from '../../ui/Gota';
 import { useNow } from './useNow';
 
 const TYPE_NAMES = {
@@ -232,18 +232,18 @@ function PlayerCard(props: { snap: Snapshot; me?: PlayerView }) {
     : snap.myRole === 'IMPOSTOR'
       ? { tone: 'bad' as const, text: HUD_TEXT.IMPOSTOR }
       : { tone: 'ok' as const, text: HUD_TEXT.CREW };
-  const file = spriteFile(me.color, 'front');
   const clean = tank ? 100 - tank.contamination : 0;
   return (
     <section className="panel glass me-card" aria-label={me.name}>
       <div className="row" style={{ gap: 18 }}>
-        {file && (
-          <img
-            className="portrait"
-            alt=""
-            src={`/assets/characters/jimena/${file}`}
-          />
-        )}
+        <Gota
+          color={me.color}
+          accessory={me.accessory}
+          portrait
+          scale={2.5}
+          className="portrait"
+        />
+
         <div className="who-box">
           <div className="who">
             <b className="hud-name" title={me.name}>

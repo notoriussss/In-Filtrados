@@ -33,9 +33,10 @@ export class MinigameView {
     game: Minigame,
     color: string | undefined,
     private readonly calm: boolean = motionIsReduced(),
+    accessory?: string,
   ) {
     warmBannerFont();
-    this.scene = buildScene(game, color, calm);
+    this.scene = buildScene(game, color, calm, accessory);
   }
 
   // frame dibuja un cuadro; now son los ms del requestAnimationFrame.
@@ -63,18 +64,20 @@ function buildScene(
   game: Minigame,
   color: string | undefined,
   calm: boolean,
+  accessory?: string,
 ): Scene {
   if (game instanceof ValveGame) {
-    const hero = new Hero(color, VALVE_HERO_X, HERO_FEET_Y);
+    const hero = new Hero(color, VALVE_HERO_X, HERO_FEET_Y, accessory);
     return new ValveScene(game, { hero, calm });
   }
   if (game instanceof BucketsGame) {
-    const hero = new Hero(color, BUCKETS_HERO_X, HERO_FEET_Y);
+    const hero = new Hero(color, BUCKETS_HERO_X, HERO_FEET_Y, accessory);
     return new BucketsScene(game, { hero, calm });
   }
   if (game instanceof ParticlesGame) {
-    const hero = new Hero(color, PARTICLES_HERO_X, HERO_FEET_Y);
+    const hero = new Hero(color, PARTICLES_HERO_X, HERO_FEET_Y, accessory);
     return new ParticlesScene(game, { hero, calm });
   }
   throw new Error('minijuego sin escena');
 }
+
