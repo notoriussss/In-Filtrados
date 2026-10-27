@@ -80,13 +80,13 @@
     {
       "id": "rocks",
       "sprite": "rocks",
-      "x": 1552,
-      "y": 122,
+      "x": 1684,
+      "y": 132,
       "w": 64,
       "h": 42,
-      "baseY": 160,
+      "baseY": 170,
       "tile": [
-        49,
+        53,
         4
       ],
       "footprint": [
@@ -152,7 +152,7 @@
     {
       "id": "terrarium",
       "sprite": "terrarium",
-      "x": 1244,
+      "x": 1240,
       "y": 108,
       "w": 72,
       "h": 88,
@@ -170,14 +170,14 @@
     {
       "id": "battery",
       "sprite": "battery",
-      "x": 1560,
-      "y": 112,
+      "x": 1800,
+      "y": 364,
       "w": 48,
       "h": 84,
-      "baseY": 192,
+      "baseY": 444,
       "tile": [
-        49,
-        5
+        56,
+        13
       ],
       "footprint": [
         1,
@@ -188,14 +188,14 @@
     {
       "id": "battery",
       "sprite": "battery",
-      "x": 1592,
-      "y": 112,
+      "x": 1832,
+      "y": 364,
       "w": 48,
       "h": 84,
-      "baseY": 192,
+      "baseY": 444,
       "tile": [
-        50,
-        5
+        58,
+        13
       ],
       "footprint": [
         1,
@@ -206,14 +206,14 @@
     {
       "id": "battery",
       "sprite": "battery",
-      "x": 1624,
-      "y": 112,
+      "x": 1864,
+      "y": 364,
       "w": 48,
       "h": 84,
-      "baseY": 192,
+      "baseY": 444,
       "tile": [
-        51,
-        5
+        58,
+        13
       ],
       "footprint": [
         1,
@@ -224,14 +224,14 @@
     {
       "id": "valve",
       "sprite": "valve",
-      "x": 1756,
-      "y": 92,
+      "x": 1716,
+      "y": 348,
       "w": 72,
       "h": 104,
-      "baseY": 192,
+      "baseY": 448,
       "tile": [
-        55,
-        5
+        54,
+        13
       ],
       "footprint": [
         2,
@@ -261,13 +261,13 @@
       "id": "seedtable",
       "sprite": "seedtable",
       "x": 508,
-      "y": 154,
+      "y": 130,
       "w": 104,
       "h": 74,
-      "baseY": 224,
+      "baseY": 200,
       "tile": [
         16,
-        6
+        5
       ],
       "footprint": [
         3,
@@ -279,13 +279,13 @@
       "id": "seedtable",
       "sprite": "seedtable-v2",
       "x": 668,
-      "y": 154,
+      "y": 130,
       "w": 104,
       "h": 74,
-      "baseY": 224,
+      "baseY": 200,
       "tile": [
         21,
-        6
+        5
       ],
       "footprint": [
         3,
@@ -296,7 +296,7 @@
     {
       "id": "fridge",
       "sprite": "fridge",
-      "x": 1306,
+      "x": 1298,
       "y": 138,
       "w": 44,
       "h": 90,
@@ -332,13 +332,13 @@
     {
       "id": "solarpanel",
       "sprite": "solarpanel",
-      "x": 1532,
+      "x": 1568,
       "y": 168,
       "w": 104,
       "h": 92,
       "baseY": 256,
       "tile": [
-        48,
+        49,
         7
       ],
       "footprint": [
@@ -349,7 +349,6 @@
     },
     {
       "id": "pinetree",
-
       "sprite": "pinetree",
       "x": 2156,
       "y": 102,
@@ -603,14 +602,14 @@
     {
       "id": "greywater",
       "sprite": "greywater",
-      "x": 980,
-      "y": 280,
+      "x": 996,
+      "y": 94,
       "w": 88,
       "h": 108,
-      "baseY": 384,
+      "baseY": 198,
       "tile": [
-        31,
-        11
+        32,
+        5
       ],
       "footprint": [
         2,
@@ -621,13 +620,13 @@
     {
       "id": "ecobench",
       "sprite": "ecobench",
-      "x": 1212,
+      "x": 1255,
       "y": 310,
       "w": 104,
       "h": 78,
       "baseY": 384,
       "tile": [
-        38,
+        39,
         11
       ],
       "footprint": [
@@ -639,14 +638,14 @@
     {
       "id": "solarpanel",
       "sprite": "solarpanel",
-      "x": 1660,
-      "y": 296,
+      "x": 1752,
+      "y": 168,
       "w": 104,
       "h": 92,
-      "baseY": 384,
+      "baseY": 256,
       "tile": [
-        52,
-        11
+        55,
+        7
       ],
       "footprint": [
         3,
@@ -657,14 +656,14 @@
     {
       "id": "solarpanel",
       "sprite": "solarpanel",
-      "x": 1788,
-      "y": 296,
+      "x": 2124,
+      "y": 520,
       "w": 104,
       "h": 92,
-      "baseY": 384,
+      "baseY": 608,
       "tile": [
-        56,
-        11
+        66,
+        18
       ],
       "footprint": [
         3,
@@ -693,7 +692,7 @@
     {
       "id": "tower",
       "sprite": "tower",
-      "x": 824,
+      "x": 820,
       "y": 316,
       "w": 48,
       "h": 104,
@@ -711,7 +710,7 @@
     {
       "id": "tower",
       "sprite": "tower",
-      "x": 856,
+      "x": 848,
       "y": 316,
       "w": 48,
       "h": 104,
@@ -729,13 +728,13 @@
     {
       "id": "stool",
       "sprite": "stool",
-      "x": 1250,
+      "x": 1293,
       "y": 382,
       "w": 28,
       "h": 38,
       "baseY": 416,
       "tile": [
-        39,
+        40,
         12
       ],
       "footprint": [
@@ -747,14 +746,14 @@
     {
       "id": "plant-l",
       "sprite": "plant-l",
-      "x": 1304,
-      "y": 334,
+      "x": 1000,
+      "y": 362,
       "w": 48,
       "h": 86,
-      "baseY": 416,
+      "baseY": 444,
       "tile": [
-        41,
-        12
+        32,
+        13
       ],
       "footprint": [
         1,
@@ -765,14 +764,14 @@
     {
       "id": "rocks",
       "sprite": "rocks",
-      "x": 1840,
-      "y": 378,
+      "x": 1640,
+      "y": 396,
       "w": 64,
       "h": 42,
-      "baseY": 416,
+      "baseY": 434,
       "tile": [
-        58,
-        12
+        52,
+        13
       ],
       "footprint": [
         1,
@@ -1017,13 +1016,13 @@
     {
       "id": "battery",
       "sprite": "battery",
-      "x": 280,
+      "x": 296,
       "y": 560,
       "w": 48,
       "h": 84,
       "baseY": 640,
       "tile": [
-        9,
+        10,
         19
       ],
       "footprint": [
@@ -1035,7 +1034,7 @@
     {
       "id": "battery",
       "sprite": "battery",
-      "x": 312,
+      "x": 328,
       "y": 560,
       "w": 48,
       "h": 84,
@@ -1287,13 +1286,13 @@
     {
       "id": "leak",
       "sprite": "leak",
-      "x": 276,
+      "x": 292,
       "y": 660,
       "w": 120,
       "h": 80,
       "baseY": 736,
       "tile": [
-        9,
+        10,
         22
       ],
       "footprint": [
@@ -1305,14 +1304,14 @@
     {
       "id": "pump",
       "sprite": "pump",
-      "x": 472,
-      "y": 668,
+      "x": 572,
+      "y": 636,
       "w": 112,
       "h": 72,
-      "baseY": 736,
+      "baseY": 704,
       "tile": [
-        15,
-        22
+        18,
+        21
       ],
       "footprint": [
         3,
@@ -1449,7 +1448,7 @@
     {
       "id": "telescope",
       "sprite": "telescope",
-      "x": 1210,
+      "x": 1218,
       "y": 758,
       "w": 44,
       "h": 78,
@@ -1467,7 +1466,7 @@
     {
       "id": "plant-l",
       "sprite": "plant-l",
-      "x": 1400,
+      "x": 1392,
       "y": 750,
       "w": 48,
       "h": 86,
@@ -1503,11 +1502,11 @@
     {
       "id": "chair",
       "sprite": "chair",
-      "x": 1279,
-      "y": 822,
+      "x": 1295,
+      "y": 834,
       "w": 34,
       "h": 46,
-      "baseY": 864,
+      "baseY": 876,
       "tile": [
         40,
         26
@@ -1521,13 +1520,13 @@
     {
       "id": "chair",
       "sprite": "chair",
-      "x": 1311,
-      "y": 822,
+      "x": 1327,
+      "y": 834,
       "w": 34,
       "h": 46,
-      "baseY": 864,
+      "baseY": 876,
       "tile": [
-        41,
+        42,
         26
       ],
       "footprint": [
@@ -1539,13 +1538,13 @@
     {
       "id": "chair",
       "sprite": "chair-v2",
-      "x": 1247,
-      "y": 854,
+      "x": 1263,
+      "y": 866,
       "w": 34,
       "h": 46,
-      "baseY": 896,
+      "baseY": 908,
       "tile": [
-        39,
+        40,
         27
       ],
       "footprint": [
@@ -1557,11 +1556,11 @@
     {
       "id": "chair",
       "sprite": "chair-v3",
-      "x": 1343,
-      "y": 854,
+      "x": 1359,
+      "y": 866,
       "w": 34,
       "h": 46,
-      "baseY": 896,
+      "baseY": 908,
       "tile": [
         42,
         27
@@ -1593,13 +1592,13 @@
     {
       "id": "chair",
       "sprite": "chair-v2",
-      "x": 1247,
-      "y": 886,
+      "x": 1263,
+      "y": 898,
       "w": 34,
       "h": 46,
-      "baseY": 928,
+      "baseY": 940,
       "tile": [
-        39,
+        40,
         28
       ],
       "footprint": [
@@ -1611,11 +1610,11 @@
     {
       "id": "table-r",
       "sprite": "table-r",
-      "x": 1272,
-      "y": 868,
+      "x": 1288,
+      "y": 880,
       "w": 80,
       "h": 64,
-      "baseY": 928,
+      "baseY": 940,
       "tile": [
         40,
         27
@@ -1629,11 +1628,11 @@
     {
       "id": "chair",
       "sprite": "chair-v3",
-      "x": 1343,
-      "y": 886,
+      "x": 1359,
+      "y": 898,
       "w": 34,
       "h": 46,
-      "baseY": 928,
+      "baseY": 940,
       "tile": [
         42,
         28
@@ -1662,15 +1661,14 @@
       ],
       "exterior": false
     },
-
     {
       "id": "chair",
       "sprite": "chair-v4",
-      "x": 1279,
-      "y": 918,
+      "x": 1295,
+      "y": 930,
       "w": 34,
       "h": 46,
-      "baseY": 960,
+      "baseY": 972,
       "tile": [
         40,
         29
@@ -1684,13 +1682,13 @@
     {
       "id": "chair",
       "sprite": "chair-v4",
-      "x": 1311,
-      "y": 918,
+      "x": 1327,
+      "y": 930,
       "w": 34,
       "h": 46,
-      "baseY": 960,
+      "baseY": 972,
       "tile": [
-        41,
+        42,
         29
       ],
       "footprint": [
@@ -1703,10 +1701,10 @@
       "id": "crate",
       "sprite": "crate",
       "x": 314,
-      "y": 954,
+      "y": 944,
       "w": 44,
       "h": 42,
-      "baseY": 992,
+      "baseY": 982,
       "tile": [
         10,
         30
@@ -1721,10 +1719,10 @@
       "id": "bin",
       "sprite": "bin",
       "x": 416,
-      "y": 954,
+      "y": 944,
       "w": 32,
       "h": 42,
-      "baseY": 992,
+      "baseY": 982,
       "tile": [
         13,
         30
@@ -1757,13 +1755,13 @@
       "id": "workbench",
       "sprite": "workbench",
       "x": 276,
-      "y": 936,
+      "y": 920,
       "w": 120,
       "h": 92,
-      "baseY": 1024,
+      "baseY": 1008,
       "tile": [
         9,
-        31
+        30
       ],
       "footprint": [
         3,
@@ -1775,13 +1773,13 @@
       "id": "workbench",
       "sprite": "workbench",
       "x": 404,
-      "y": 936,
+      "y": 920,
       "w": 120,
       "h": 92,
-      "baseY": 1024,
+      "baseY": 1008,
       "tile": [
         13,
-        31
+        30
       ],
       "footprint": [
         3,
@@ -1843,7 +1841,6 @@
       ],
       "exterior": false
     },
-
     {
       "id": "rocks",
       "sprite": "rocks",
@@ -1919,14 +1916,14 @@
     {
       "id": "greywater",
       "sprite": "greywater",
-      "x": 436,
-      "y": 1016,
+      "x": 576,
+      "y": 1126,
       "w": 88,
       "h": 108,
-      "baseY": 1120,
+      "baseY": 1230,
       "tile": [
-        14,
-        34
+        18,
+        37
       ],
       "footprint": [
         2,
@@ -1992,13 +1989,13 @@
       "id": "pump",
       "sprite": "pump-v2",
       "x": 2008,
-      "y": 1084,
+      "y": 1036,
       "w": 112,
       "h": 72,
-      "baseY": 1152,
+      "baseY": 1104,
       "tile": [
         63,
-        35
+        34
       ],
       "footprint": [
         3,
@@ -2010,13 +2007,13 @@
       "id": "rainstation",
       "sprite": "rainstation",
       "x": 2104,
-      "y": 1038,
+      "y": 990,
       "w": 80,
       "h": 118,
-      "baseY": 1152,
+      "baseY": 1104,
       "tile": [
         66,
-        35
+        34
       ],
       "footprint": [
         2,
@@ -2027,14 +2024,14 @@
     {
       "id": "valve",
       "sprite": "valve",
-      "x": 2204,
-      "y": 1052,
+      "x": 2224,
+      "y": 1004,
       "w": 72,
       "h": 104,
-      "baseY": 1152,
+      "baseY": 1104,
       "tile": [
-        69,
-        35
+        70,
+        34
       ],
       "footprint": [
         2,
@@ -2207,14 +2204,14 @@
     {
       "id": "bench",
       "sprite": "bench",
-      "x": 1116,
+      "x": 1180,
       "y": 1118,
       "w": 104,
       "h": 46,
       "baseY": 1164,
       "tile": [
-        35,
-        36
+        37,
+        35
       ],
       "footprint": [
         3,
@@ -2297,7 +2294,7 @@
     {
       "id": "barrel",
       "sprite": "barrel",
-      "x": 670,
+      "x": 664,
       "y": 1204,
       "w": 36,
       "h": 48,
@@ -2567,14 +2564,14 @@
     {
       "id": "rocks",
       "sprite": "rocks",
-      "x": 752,
-      "y": 1370,
+      "x": 490,
+      "y": 1462,
       "w": 64,
       "h": 42,
-      "baseY": 1408,
+      "baseY": 1500,
       "tile": [
-        24,
-        43
+        16,
+        46
       ],
       "footprint": [
         1,
@@ -2585,7 +2582,7 @@
     {
       "id": "recyclebins",
       "sprite": "recyclebins",
-      "x": 1788,
+      "x": 1784,
       "y": 1348,
       "w": 104,
       "h": 64,
@@ -2621,13 +2618,13 @@
     {
       "id": "reedbed",
       "sprite": "reedbed",
-      "x": 700,
+      "x": 784,
       "y": 1380,
       "w": 72,
       "h": 64,
       "baseY": 1440,
       "tile": [
-        22,
+        25,
         44
       ],
       "footprint": [
@@ -2639,7 +2636,7 @@
     {
       "id": "wormbin",
       "sprite": "wormbin",
-      "x": 988,
+      "x": 996,
       "y": 1384,
       "w": 72,
       "h": 60,
@@ -2657,13 +2654,13 @@
     {
       "id": "wormbin",
       "sprite": "wormbin",
-      "x": 1212,
+      "x": 1252,
       "y": 1384,
       "w": 72,
       "h": 60,
       "baseY": 1440,
       "tile": [
-        38,
+        39,
         44
       ],
       "footprint": [
@@ -2675,13 +2672,13 @@
     {
       "id": "compost",
       "sprite": "compost",
-      "x": 1298,
+      "x": 1316,
       "y": 1380,
       "w": 60,
       "h": 64,
       "baseY": 1440,
       "tile": [
-        41,
+        42,
         44
       ],
       "footprint": [
@@ -2693,13 +2690,13 @@
     {
       "id": "beehive",
       "sprite": "beehive",
-      "x": 2008,
+      "x": 1992,
       "y": 1380,
       "w": 48,
       "h": 64,
       "baseY": 1440,
       "tile": [
-        63,
+        62,
         44
       ],
       "footprint": [
@@ -2711,7 +2708,7 @@
     {
       "id": "beehive",
       "sprite": "beehive",
-      "x": 2040,
+      "x": 2024,
       "y": 1380,
       "w": 48,
       "h": 64,
@@ -2765,13 +2762,13 @@
     {
       "id": "stump",
       "sprite": "stump",
-      "x": 2334,
+      "x": 2352,
       "y": 1406,
       "w": 36,
       "h": 38,
       "baseY": 1440,
       "tile": [
-        73,
+        74,
         44
       ],
       "footprint": [
@@ -2783,14 +2780,14 @@
     {
       "id": "filterstation",
       "sprite": "filterstation",
-      "x": 1720,
-      "y": 1350,
+      "x": 1688,
+      "y": 1302,
       "w": 80,
       "h": 126,
-      "baseY": 1472,
+      "baseY": 1424,
       "tile": [
-        54,
-        45
+        53,
+        44
       ],
       "footprint": [
         2,
@@ -2801,14 +2798,14 @@
     {
       "id": "filterstation",
       "sprite": "filterstation",
-      "x": 568,
-      "y": 1382,
+      "x": 700,
+      "y": 1318,
       "w": 80,
       "h": 126,
-      "baseY": 1504,
+      "baseY": 1440,
       "tile": [
-        18,
-        46
+        22,
+        44
       ],
       "footprint": [
         2,
@@ -2819,13 +2816,13 @@
     {
       "id": "sorttable",
       "sprite": "sorttable",
-      "x": 1532,
+      "x": 1504,
       "y": 1430,
       "w": 104,
       "h": 78,
       "baseY": 1504,
       "tile": [
-        48,
+        47,
         46
       ],
       "footprint": [
@@ -2837,14 +2834,14 @@
     {
       "id": "flowerbed",
       "sprite": "flowerbed",
-      "x": 2108,
-      "y": 1460,
+      "x": 2040,
+      "y": 1584,
       "w": 104,
       "h": 48,
-      "baseY": 1504,
+      "baseY": 1628,
       "tile": [
-        66,
-        46
+        64,
+        50
       ],
       "footprint": [
         3,
@@ -2873,13 +2870,13 @@
     {
       "id": "compost",
       "sprite": "compost",
-      "x": 1234,
+      "x": 1274,
       "y": 1476,
       "w": 60,
       "h": 64,
       "baseY": 1536,
       "tile": [
-        39,
+        40,
         47
       ],
       "footprint": [
@@ -2909,14 +2906,14 @@
     {
       "id": "valve",
       "sprite": "valve",
-      "x": 2172,
-      "y": 1468,
+      "x": 2268,
+      "y": 1528,
       "w": 72,
       "h": 104,
-      "baseY": 1568,
+      "baseY": 1628,
       "tile": [
-        68,
-        48
+        71,
+        50
       ],
       "footprint": [
         2,
@@ -2927,13 +2924,13 @@
     {
       "id": "beehive",
       "sprite": "beehive",
-      "x": 2328,
+      "x": 2360,
       "y": 1508,
       "w": 48,
       "h": 64,
       "baseY": 1568,
       "tile": [
-        73,
+        74,
         48
       ],
       "footprint": [
@@ -2963,13 +2960,13 @@
     {
       "id": "stump",
       "sprite": "stump",
-      "x": 638,
+      "x": 520,
       "y": 1566,
       "w": 36,
       "h": 38,
       "baseY": 1600,
       "tile": [
-        20,
+        16,
         49
       ],
       "footprint": [
@@ -2981,14 +2978,14 @@
     {
       "id": "beehive",
       "sprite": "beehive",
-      "x": 2040,
-      "y": 1540,
+      "x": 2056,
+      "y": 1380,
       "w": 48,
       "h": 64,
-      "baseY": 1600,
+      "baseY": 1440,
       "tile": [
         64,
-        49
+        44
       ],
       "footprint": [
         1,
@@ -2999,14 +2996,14 @@
     {
       "id": "beehive",
       "sprite": "beehive",
-      "x": 2264,
-      "y": 1540,
+      "x": 2296,
+      "y": 1380,
       "w": 48,
       "h": 64,
-      "baseY": 1600,
+      "baseY": 1440,
       "tile": [
-        71,
-        49
+        72,
+        44
       ],
       "footprint": [
         1,
@@ -3089,7 +3086,7 @@
     {
       "id": "barrel",
       "sprite": "barrel-v2",
-      "x": 1502,
+      "x": 1510,
       "y": 1588,
       "w": 36,
       "h": 48,
@@ -3143,7 +3140,7 @@
     {
       "id": "bush",
       "sprite": "bush-v2",
-      "x": 1976,
+      "x": 1984,
       "y": 1598,
       "w": 48,
       "h": 38,
