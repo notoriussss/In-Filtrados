@@ -1,4 +1,5 @@
 import { ERROR_MESSAGES } from './constants';
+import type { ShopResponse } from './shop';
 
 export interface AuthResponse {
   token: string;
@@ -80,6 +81,21 @@ export const api = {
       headers: {
         Authorization: `Bearer ${token}`,
       },
+    });
+  },
+
+  async getShop(token: string): Promise<ShopResponse> {
+    return apiFetch<ShopResponse>('/shop', {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+
+  async buyItem(token: string, itemId: string): Promise<ShopResponse> {
+    return apiFetch<ShopResponse>('/shop/buy', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ itemId }),
     });
   },
 

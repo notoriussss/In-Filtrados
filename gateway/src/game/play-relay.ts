@@ -16,6 +16,9 @@ export type JoinInfo = {
   matchId: string;
   playerId: string; // siempre el del token, nunca uno del navegador
   lastTick: number;
+  // Artículos comprados (de players), para que match valide personaje y
+  // accesorio. Nunca vienen del navegador.
+  owned?: string[];
 };
 
 export type PlayRelayOptions = {
@@ -57,6 +60,13 @@ export class PlayRelay {
   // navegador reenvía lo que importa al volver, como el chat).
   write(action: object): void {
     this.stream?.write(action);
+  }
+
+  // setOwned guarda lo comprado para los próximos Join y se lo manda a
+  // match si Play está abierto.
+  setOwned(items: string[]): void {
+    this.opts.join.owned = items;
+    this.stream?.write({ setOwned: { items } });
   }
 
   get connected(): boolean {

@@ -1,5 +1,5 @@
 import type { PlayerView } from '@in-filtrados/messages';
-import { GOTA_ROSTER } from '../../ui/Gota';
+import { SKIN_GOTA, skinOf } from '../../shop';
 import { phaseOf } from './activityFx';
 import {
   type PlayerAnimator,
@@ -101,12 +101,10 @@ export function drawPlayer(
     sh: GOTA_CELL_H,
   };
 
-  const bodyImg = gotaBodyImage(p.color);
-  const rawAcc =
-    p.accessory !== undefined && p.accessory !== ''
-      ? p.accessory
-      : GOTA_ROSTER[p.color.toLowerCase()]?.accessory;
-  const accImg = gotaAccessoryImage(rawAcc);
+  // Jimena de inicio; la gota solo si el jugador la compró (match lo valida).
+  const isGota = skinOf(p.skin) === SKIN_GOTA;
+  const bodyImg = isGota ? gotaBodyImage(p.color) : null;
+  const accImg = isGota ? gotaAccessoryImage(p.accessory) : null;
 
   if (bodyImg) {
     const box = { x: p.x, feetY, w: PLAYER_W, h: PLAYER_H };

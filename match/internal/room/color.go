@@ -21,6 +21,7 @@ func (r *Room) pickColor(p *player, color string) {
 		return
 	}
 	p.view.Color = color
+	r.fixSkin(p)
 }
 
 func isPlayerColor(color string) bool {
@@ -53,6 +54,7 @@ func (r *Room) resolveColor(p *player) {
 	for _, c := range colors {
 		if !r.colorTaken(p, c) {
 			p.view.Color = c
+			r.fixSkin(p)
 			return
 		}
 	}

@@ -1,3 +1,4 @@
+import type { Skin } from '../../shop';
 import { motionIsReduced } from '../../settings';
 import {
   BOARD,
@@ -48,9 +49,10 @@ export class MinigameView {
     color: string | undefined,
     private readonly calm: boolean = motionIsReduced(),
     accessory?: string,
+    skin?: Skin,
   ) {
     warmBannerFont();
-    this.scene = buildScene(game, color, calm, accessory);
+    this.scene = buildScene(game, color, calm, accessory, skin);
   }
 
   // frame dibuja un cuadro; now son los ms del requestAnimationFrame.
@@ -79,12 +81,14 @@ function buildScene(
   color: string | undefined,
   calm: boolean,
   accessory?: string,
+  skin?: Skin,
 ): Scene {
   const hero = new Hero(
     color,
     heroXOf(game),
     HERO_FEET_Y,
     accessory,
+    skin,
   );
   const env: SceneEnv = { hero, calm };
   if (game instanceof ValveGame) return new ValveScene(game, env);

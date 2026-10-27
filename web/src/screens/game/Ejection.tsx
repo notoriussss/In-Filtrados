@@ -1,3 +1,4 @@
+import { skinOf } from '../../shop';
 import type { Snapshot } from '@in-filtrados/messages';
 import { Stage } from '../../ui/Stage';
 import { Gota } from '../../ui/Gota';
@@ -27,6 +28,7 @@ export function Ejection(props: { snap: Snapshot }) {
               <Gota
                 color={ejected.color}
                 accessory={ejected.accessory}
+                skin={skinOf(ejected.skin)}
                 scale={9}
               />
             </div>

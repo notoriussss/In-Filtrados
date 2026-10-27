@@ -13,3 +13,6 @@ pub const ERR_MSG_INVALID_CREDENTIALS: &str =
 pub const ERR_MSG_INVALID_TOKEN: &str = "Token inválido o vencido";
 pub const ERR_MSG_INTERNAL: &str = "Error interno del servidor";
 pub const ERR_MSG_PLAYER_NOT_FOUND: &str = "El jugador no existe";
+pub const ERR_MSG_ITEM_NOT_FOUND: &str = "Ese artículo no existe";
+pub const ERR_MSG_ITEM_ALREADY_OWNED: &str = "Ya tienes este artículo";
+pub const ERR_MSG_NOT_ENOUGH_COINS: &str = "No te alcanzan las monedas";

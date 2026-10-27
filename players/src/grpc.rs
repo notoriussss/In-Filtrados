@@ -11,9 +11,11 @@ use crate::accounts::{self, AccountError};
 use crate::messages::{
     ERR_MSG_ALREADY_EXISTS, ERR_MSG_INTERNAL, ERR_MSG_INVALID_CREDENTIALS,
     ERR_MSG_INVALID_PASSWORD, ERR_MSG_INVALID_TOKEN, ERR_MSG_INVALID_USERNAME,
-    ERR_MSG_PLAYER_NOT_FOUND,
+    ERR_MSG_ITEM_ALREADY_OWNED, ERR_MSG_ITEM_NOT_FOUND,
+    ERR_MSG_NOT_ENOUGH_COINS, ERR_MSG_PLAYER_NOT_FOUND,
 };
 use crate::progress::{self, ProfileError};
+use crate::shop::{self, ShopError, ShopView};
 
 pub mod players_v1 {
     tonic::include_proto!("players.v1");
@@ -21,8 +23,8 @@ pub mod players_v1 {
 
 use players_v1::players_server::Players;
 use players_v1::{
-    LoginRequest, Player, PlayerIdRequest, Profile, RegisterRequest, Token,
-    ValidateRequest,
+    BuyItemRequest, LoginRequest, Player, PlayerIdRequest, Profile,
+    RegisterRequest, Shop, ShopItem, Token, ValidateRequest,
 };
 
 /// Servicio gRPC de cuentas; comparte el pool con el resto del proceso.
@@ -107,6 +109,72 @@ impl Players for PlayersService {
             times_impostor: profile.times_impostor,
             wins_as_impostor: profile.wins_as_impostor,
         }))
+    }
+
+    async fn get_shop(
+        &self,
+        request: Request<PlayerIdRequest>,
+    ) -> Result<Response<Shop>, Status> {
+        let player_id = parse_player_id(&request.into_inner().player_id)?;
+        let view = shop::get_shop(&self.pool, player_id)
+            .await
+            .map_err(status_from_shop)?;
+        Ok(Response::new(shop_reply(view)))
+    }
+
+    async fn buy_item(
+        &self,
+        request: Request<BuyItemRequest>,
+    ) -> Result<Response<Shop>, Status> {
+        let input = request.into_inner();
+        let player_id = parse_player_id(&input.player_id)?;
+        let view = shop::buy_item(&self.pool, player_id, &input.item_id)
+            .await
+            .map_err(status_from_shop)?;
+        Ok(Response::new(shop_reply(view)))
+    }
+}
+
+/// Un id que no es UUID no puede existir: también es NOT_FOUND.
+fn parse_player_id(raw: &str) -> Result<Uuid, Status> {
+    Uuid::parse_str(raw)
+        .map_err(|_| Status::not_found(ERR_MSG_PLAYER_NOT_FOUND))
+}
+
+fn shop_reply(view: ShopView) -> Shop {
+    Shop {
+        coins: view.coins,
+        items: view
+            .entries
+            .into_iter()
+            .map(|entry| ShopItem {
+                id: entry.item.id,
+                kind: entry.item.kind.to_string(),
+                price: entry.item.price,
+                owned: entry.owned,
+            })
+            .collect(),
+    }
+}
+
+/// Traduce un error de la tienda al código gRPC que espera el gateway.
+fn status_from_shop(error: ShopError) -> Status {
+    match error {
+        ShopError::PlayerNotFound => {
+            Status::not_found(ERR_MSG_PLAYER_NOT_FOUND)
+        }
+        ShopError::ItemNotFound => Status::not_found(ERR_MSG_ITEM_NOT_FOUND),
+        ShopError::AlreadyOwned => {
+            Status::already_exists(ERR_MSG_ITEM_ALREADY_OWNED)
+        }
+        // RESOURCE_EXHAUSTED es el código que el gateway ya manda a 409.
+        ShopError::NotEnoughCoins => {
+            Status::resource_exhausted(ERR_MSG_NOT_ENOUGH_COINS)
+        }
+        ShopError::Database(error) => {
+            eprintln!("players: error de base de datos: {}", error);
+            Status::internal(ERR_MSG_INTERNAL)
+        }
     }
 }
 
@@ -506,5 +574,129 @@ mod tests {
             assert_eq!(status.code(), Code::NotFound);
             assert_eq!(status.message(), ERR_MSG_PLAYER_NOT_FOUND);
         }
+    }
+
+    /// Registra un jugador y le da monedas directo en la base.
+    async fn player_with_coins(
+        service: &PlayersService,
+        pool: &PgPool,
+        coins: i32,
+    ) -> String {
+        let player = register_player(service, &unique_username()).await;
+        sqlx::query("UPDATE players SET coins = $1 WHERE id = $2")
+            .bind(coins)
+            .bind(Uuid::parse_str(&player.player_id).unwrap())
+            .execute(pool)
+            .await
+            .unwrap();
+        player.player_id
+    }
+
+    async fn buy(
+        service: &PlayersService,
+        player_id: &str,
+        item_id: &str,
+    ) -> Result<Shop, Status> {
+        service
+            .buy_item(Request::new(BuyItemRequest {
+                player_id: player_id.to_string(),
+                item_id: item_id.to_string(),
+            }))
+            .await
+            .map(Response::into_inner)
+    }
+
+    #[tokio::test]
+    async fn new_player_owns_nothing() {
+        let Some(pool) = test_pool().await else {
+            return;
+        };
+        let service = PlayersService::new(pool.clone());
+        let player_id = player_with_coins(&service, &pool, 0).await;
+
+        let shop = service
+            .get_shop(Request::new(PlayerIdRequest { player_id }))
+            .await
+            .unwrap()
+            .into_inner();
+
+        assert_eq!(shop.coins, 0);
+        assert_eq!(shop.items.len(), 20);
+        assert!(shop.items.iter().all(|item| !item.owned));
+    }
+
+    #[tokio::test]
+    async fn buying_charges_the_coins_and_marks_the_item() {
+        let Some(pool) = test_pool().await else {
+            return;
+        };
+        let service = PlayersService::new(pool.clone());
+        let player_id = player_with_coins(&service, &pool, 200).await;
+
+        let shop = buy(&service, &player_id, "gota-e6194b").await.unwrap();
+
+        assert_eq!(shop.coins, 200 - shop::GOTA_PRICE);
+        let item = shop.items.iter().find(|i| i.id == "gota-e6194b");
+        assert!(item.unwrap().owned);
+    }
+
+    #[tokio::test]
+    async fn buying_without_enough_coins_changes_nothing() {
+        let Some(pool) = test_pool().await else {
+            return;
+        };
+        let service = PlayersService::new(pool.clone());
+        let player_id = player_with_coins(&service, &pool, 10).await;
+
+        let status = buy(&service, &player_id, "cap").await.unwrap_err();
+        assert_eq!(status.code(), Code::ResourceExhausted);
+        assert_eq!(status.message(), ERR_MSG_NOT_ENOUGH_COINS);
+
+        let shop = service
+            .get_shop(Request::new(PlayerIdRequest { player_id }))
+            .await
+            .unwrap()
+            .into_inner();
+        assert_eq!(shop.coins, 10);
+        assert!(shop.items.iter().all(|item| !item.owned));
+    }
+
+    #[tokio::test]
+    async fn buying_twice_is_already_exists_and_charges_once() {
+        let Some(pool) = test_pool().await else {
+            return;
+        };
+        let service = PlayersService::new(pool.clone());
+        let player_id = player_with_coins(&service, &pool, 500).await;
+
+        buy(&service, &player_id, "helmet").await.unwrap();
+        let status = buy(&service, &player_id, "helmet").await.unwrap_err();
+
+        assert_eq!(status.code(), Code::AlreadyExists);
+        assert_eq!(status.message(), ERR_MSG_ITEM_ALREADY_OWNED);
+        let shop = service
+            .get_shop(Request::new(PlayerIdRequest { player_id }))
+            .await
+            .unwrap()
+            .into_inner();
+        assert_eq!(shop.coins, 500 - shop::ACCESSORY_PRICE);
+    }
+
+    #[tokio::test]
+    async fn unknown_item_and_unknown_player_are_not_found() {
+        let Some(pool) = test_pool().await else {
+            return;
+        };
+        let service = PlayersService::new(pool.clone());
+        let player_id = player_with_coins(&service, &pool, 500).await;
+
+        let status = buy(&service, &player_id, "tiara").await.unwrap_err();
+        assert_eq!(status.code(), Code::NotFound);
+        assert_eq!(status.message(), ERR_MSG_ITEM_NOT_FOUND);
+
+        let ghost = Uuid::new_v4().to_string();
+        let status = buy(&service, &ghost, "cap").await.unwrap_err();
+        assert_eq!(status.code(), Code::NotFound);
+        assert_eq!(status.message(), ERR_MSG_PLAYER_NOT_FOUND);
     }
 }

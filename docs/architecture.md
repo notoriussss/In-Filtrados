@@ -224,7 +224,7 @@ players/
 | Tabla | Para qué |
 |---|---|
 | `players` | id, nombre, hash de la contraseña, monedas |
-| `upgrades` | qué mejoras y atuendos compró cada jugador |
+| `purchases` | llave `(player_id, item_id)`: lo que compró cada jugador en la tienda (gotas y accesorios) y a qué precio |
 | `results` | llave `(match_id, player_id)`: cosecha y monedas ganadas en cada partida |
 
 **Cómo guarda un resultado sin duplicarlo (D5):** al recibir `match.finished`, en una sola transacción hace `INSERT INTO results ... ON CONFLICT DO NOTHING` y solo si se insertó la fila suma las monedas. Después confirma el mensaje a RabbitMQ (ack). Si el mensaje llega dos veces, la segunda no hace nada.

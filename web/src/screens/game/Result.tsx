@@ -1,3 +1,4 @@
+import { skinOf } from '../../shop';
 import { useEffect, useState } from 'react';
 import type { Snapshot, Winner } from '@in-filtrados/messages';
 import { Stage } from '../../ui/Stage';
@@ -133,6 +134,7 @@ export function Result(props: {
                   <Gota
                     color={p.color}
                     accessory={p.accessory}
+                    skin={skinOf(p.skin)}
                     scale={1.2}
                     portrait
                   />

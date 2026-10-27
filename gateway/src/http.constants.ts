@@ -5,6 +5,7 @@ export const HTTP_MESSAGES = {
   MISSING_TOKEN: 'Falta el token de sesión',
   USERNAME_REQUIRED: 'Falta el usuario',
   PASSWORD_REQUIRED: 'Falta la contraseña',
+  ITEM_REQUIRED: 'Falta el artículo',
 } as const;
 
 export const SWAGGER = {
@@ -14,6 +15,7 @@ export const SWAGGER = {
   PATH: 'docs',
   TAG_AUTH: 'auth',
   TAG_ROOMS: 'rooms',
+  TAG_SHOP: 'shop',
   TAG_HEALTH: 'health',
 } as const;
 

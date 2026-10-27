@@ -1,3 +1,4 @@
+import { skinOf } from '../../shop';
 import { type FormEvent, useEffect, useRef, useState } from 'react';
 import type { PlayerView, Snapshot } from '@in-filtrados/messages';
 import { Stage } from '../../ui/Stage';
@@ -233,6 +234,7 @@ function PlayerCard(props: {
         <Gota
           color={p.color}
           accessory={p.accessory}
+          skin={skinOf(p.skin)}
           scale={props.scale}
           portrait={!ghost}
           ghost={ghost}
@@ -264,6 +266,7 @@ function ChatLine(props: {
           <Gota
             color={p.color}
             accessory={p.accessory}
+            skin={skinOf(p.skin)}
             scale={1}
             portrait
           />

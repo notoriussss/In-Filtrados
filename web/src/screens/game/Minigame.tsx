@@ -1,3 +1,4 @@
+import type { Skin } from '../../shop';
 import { useEffect, useRef, useState } from 'react';
 import type { StationType } from '../../map';
 import { TASK_ICONS, Icon } from '../../ui/Icon';
@@ -17,6 +18,7 @@ export function Minigame(props: {
   stationId: string;
   color?: string;
   accessory?: string;
+  skin?: Skin;
   onComplete: () => void;
   onClose: () => void;
 }) {
@@ -33,6 +35,7 @@ export function Minigame(props: {
       props.color,
       undefined,
       props.accessory,
+      props.skin,
     );
     const toBoard = (e: PointerEvent) => {
       const r = cv.getBoundingClientRect();

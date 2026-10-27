@@ -230,6 +230,11 @@ func (r *Room) handleAction(a PlayerAction) {
 		r.pickColor(p, a.Color)
 	case a.PickAccessory:
 		r.pickAccessory(p, a.Accessory)
+	case a.PickSkin:
+		r.pickSkin(p, a.Skin)
+	case a.SetOwned:
+		p.setOwned(a.Owned)
+		r.fixSkin(p)
 	case a.InteractTask:
 		if r.phase == matchv1.Phase_PLAYING {
 			if !a.Completed {
@@ -247,6 +252,7 @@ func (r *Room) handleAction(a PlayerAction) {
 
 func (r *Room) addPlayer(j Join) {
 	if p, ok := r.players[j.PlayerID]; ok { // same player coming back
+		p.setOwned(j.Owned)
 		r.resumePlayer(j.PlayerID, p, j.Out)
 		return
 	}
@@ -263,6 +269,7 @@ func (r *Room) addPlayer(j Join) {
 	color := colors[r.order%len(colors)]
 	r.players[j.PlayerID] = &player{
 		tankSlot: tankSlot,
+		owned:    ownedSet(j.Owned),
 		view: &matchv1.PlayerView{
 			Id:        j.PlayerID,
 			Name:      name,
@@ -271,7 +278,7 @@ func (r *Room) addPlayer(j Join) {
 			Y:         float32(y),
 			Connected: true,
 			Alive:     true,
-			Accessory: defaultAccessoryForColor(color),
+			Skin:      skinJimena,
 		},
 		out: j.Out,
 	}

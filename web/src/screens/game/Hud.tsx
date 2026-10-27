@@ -1,3 +1,4 @@
+import { skinOf } from '../../shop';
 import { useEffect } from 'react';
 import type {
   EmergencyKind,
@@ -240,6 +241,7 @@ function PlayerCard(props: { snap: Snapshot; me?: PlayerView }) {
         <Gota
           color={me.color}
           accessory={me.accessory}
+          skin={skinOf(me.skin)}
           portrait
           scale={2.5}
           className="portrait"

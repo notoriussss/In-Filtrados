@@ -69,6 +69,7 @@ export const MENU_TEXT = {
   HINT_CHOOSE: 'Elegir',
   HINT_ACCEPT: 'Aceptar',
   JOIN_SHORT: 'Unirse a sala',
+  SHOP: 'Tienda',
   TAGLINE: 'Cada gota cuenta',
   PROFILE: 'Perfil',
   MENU_ARIA: 'Menú principal',
@@ -96,6 +97,14 @@ export const LOBBY_TEXT = {
   COLOR: 'Color',
   ACCESSORY: 'Accesorio',
   CHOOSE_ACCESSORY: 'Elegir accesorio',
+  NO_ACCESSORY: 'Sin accesorio',
+  CHARACTER: 'Personaje',
+  CHARACTER_JIMENA: 'Jimena',
+  CHARACTER_GOTA: 'Gota',
+  LOCKED: 'Bloqueado',
+  lockedHint: (name: string) => `${name} · bloqueado, cómpralo en la tienda`,
+  ACCESSORY_NEEDS_GOTA:
+    'Los accesorios solo se ven en los personajes gota.',
   CLOSE: 'Cerrar',
   PROFILE: 'Tu perfil',
   COINS: 'Monedas',
@@ -332,4 +341,23 @@ export const PENDING_TEXT = {
   ROOM_JOIN: 'Unirse',
   ROOM_FULL: 'Llena',
   roomPlayers: (n: number, max: number) => `${n}/${max} jugadores`,
+} as const;
+
+export const SHOP_TEXT = {
+  TITLE: 'Tienda',
+  BACK: 'Volver',
+  COINS: 'Tus monedas',
+  CHARACTERS: 'Personajes gota',
+  CHARACTERS_SUB:
+    'Los personajes de Jimena son gratis. Las gotas se compran, una por color.',
+  ACCESSORIES: 'Accesorios',
+  ACCESSORIES_SUB: 'Se ven en las gotas. Cada uno se compra una sola vez.',
+  BUY: 'Comprar',
+  OWNED: 'Tuyo',
+  NOT_ENOUGH: 'No te alcanzan las monedas',
+  price: (n: number) => `${n} ◆`,
+  bought: (name: string) => `Compraste: ${name}`,
+  LOADING: 'Cargando la tienda…',
+  LOAD_ERROR: 'No se pudo abrir la tienda',
+  HINT_WIN: 'Las monedas se ganan jugando: la cosecha y 20 más si gana tu equipo.',
 } as const;

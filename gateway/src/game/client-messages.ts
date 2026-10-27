@@ -10,6 +10,7 @@ import {
   MAX_CLIENT_MSG_ID_LENGTH,
   MAX_FIX_POINT_ID_LENGTH,
   MAX_PLAYER_ID_LENGTH,
+  MAX_SKIN_LENGTH,
   MAX_STATION_ID_LENGTH,
   MAX_TANK_SLOT,
 } from './game.constants';
@@ -67,6 +68,12 @@ export function parseClientMessage(raw: string): ClientMessage | null {
         return null;
       }
       return { type: 'pickAccessory', accessory: msg.accessory };
+    case 'pickSkin':
+      // match revisa la fase y que el jugador la haya comprado.
+      if (!isShortString(msg.skin, MAX_SKIN_LENGTH)) return null;
+      return { type: 'pickSkin', skin: msg.skin };
+    case 'refreshShop':
+      return { type: 'refreshShop' };
     default:
       return null;
   }
@@ -106,6 +113,9 @@ export function toGrpcAction(msg: ClientMessage): object | null {
       return { pickColor: { color: msg.color } };
     case 'pickAccessory':
       return { pickAccessory: { accessory: msg.accessory } };
+    case 'pickSkin':
+      return { pickSkin: { skin: msg.skin } };
+    // refreshShop no es de match: el gateway lo atiende solo.
     default:
       return null;
   }

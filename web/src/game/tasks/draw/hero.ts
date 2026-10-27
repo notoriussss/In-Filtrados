@@ -10,7 +10,7 @@ import {
   gotaBodyImage,
   spriteImage,
 } from '../../render/sprites';
-import { GOTA_ROSTER } from '../../../ui/Gota';
+import { SKIN_GOTA, type Skin } from '../../../shop';
 import { drawDust, drawSparkles, drawSweat } from '../../render/workFx';
 import {
   IDLE_POSE,
@@ -61,13 +61,16 @@ export class Hero {
   private face: Face = 'right';
   private readonly color: string;
   private readonly accessory?: string;
+  private readonly skin: Skin | undefined;
 
   constructor(
     color: string | undefined,
     readonly x: number,
     readonly feetY: number,
     accessory?: string,
+    skin?: Skin,
   ) {
+    this.skin = skin;
     const known = color && SPRITE_COLORS[color.toLowerCase()];
     this.color = known && color ? color : DEFAULT_COLOR;
     this.accessory = accessory;
@@ -103,12 +106,10 @@ export class Hero {
     );
     this.drawShadow(ctx, shown.shadow);
 
-    const bodyImg = gotaBodyImage(this.color);
-    const rawAcc =
-      this.accessory !== undefined && this.accessory !== ''
-        ? this.accessory
-        : GOTA_ROSTER[this.color.toLowerCase()]?.accessory;
-    const accImg = gotaAccessoryImage(rawAcc);
+    // Jimena de inicio; la gota solo si el jugador la compró.
+    const isGota = this.skin === SKIN_GOTA;
+    const bodyImg = isGota ? gotaBodyImage(this.color) : null;
+    const accImg = isGota ? gotaAccessoryImage(this.accessory) : null;
 
     if (bodyImg) {
       const col = frameToGotaCol(shown.frame);

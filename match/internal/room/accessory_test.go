@@ -14,16 +14,42 @@ func pickAcc(r *Room, id, acc string) {
 	})
 }
 
-func TestPickValidAccessory(t *testing.T) {
+// own le da a un jugador los artículos de la tienda (lo que haría players).
+func own(r *Room, id string, items ...string) {
+	r.handleAction(PlayerAction{PlayerID: id, SetOwned: true, Owned: items})
+}
+
+func TestPickOwnedAccessory(t *testing.T) {
 	r := lobbyRoom()
+	own(r, "a", "straw-hat")
 	pickAcc(r, "a", "STRAW-HAT") // mayúsculas: se normaliza a minúsculas
 	if got := r.players["a"].view.Accessory; got != "straw-hat" {
 		t.Errorf("want straw-hat, got %s", got)
 	}
 }
 
+func TestPickLockedAccessoryIsIgnored(t *testing.T) {
+	r := lobbyRoom()
+	pickAcc(r, "a", "helmet")
+	if got := r.players["a"].view.Accessory; got != "" {
+		t.Errorf("a locked accessory was equipped: %s", got)
+	}
+}
+
+func TestAccessoryCanBeRemoved(t *testing.T) {
+	r := lobbyRoom()
+	own(r, "a", "cap")
+	pickAcc(r, "a", "cap")
+	pickAcc(r, "a", "none")
+	if got := r.players["a"].view.Accessory; got != "" {
+		t.Errorf("want no accessory, got %s", got)
+	}
+}
+
 func TestMultiplePlayersCanShareSameAccessory(t *testing.T) {
 	r := lobbyRoom()
+	own(r, "a", "headphones")
+	own(r, "b", "headphones")
 	pickAcc(r, "a", "headphones")
 	pickAcc(r, "b", "headphones")
 	if r.players["a"].view.Accessory != "headphones" ||
@@ -34,31 +60,28 @@ func TestMultiplePlayersCanShareSameAccessory(t *testing.T) {
 
 func TestPickUnknownAccessoryIsIgnored(t *testing.T) {
 	r := lobbyRoom()
-	initial := r.players["a"].view.Accessory
+	own(r, "a", "unknown_hat")
 	pickAcc(r, "a", "unknown_hat")
-	if got := r.players["a"].view.Accessory; got != initial {
-		t.Errorf("want %s, got %s", initial, got)
+	if got := r.players["a"].view.Accessory; got != "" {
+		t.Errorf("want no accessory, got %s", got)
 	}
 }
 
 func TestPickAccessoryOutsideLobbyIsIgnored(t *testing.T) {
 	r := lobbyRoom()
-	initial := r.players["a"].view.Accessory
+	own(r, "a", "diving-mask")
 	r.phase = matchv1.Phase_PLAYING
 	pickAcc(r, "a", "diving-mask")
-	if got := r.players["a"].view.Accessory; got != initial {
-		t.Errorf("want %s, got %s", initial, got)
+	if got := r.players["a"].view.Accessory; got != "" {
+		t.Errorf("want no accessory, got %s", got)
 	}
 }
 
-func TestDefaultAccessoryAssignedOnJoin(t *testing.T) {
+func TestNoAccessoryOnJoin(t *testing.T) {
 	r := lobbyRoom()
-	// "a" recibe color[0] ("#e6194b" -> cap)
-	// "b" recibe color[1] ("#3cb44b" -> sprout)
-	if got := r.players["a"].view.Accessory; got != "cap" {
-		t.Errorf("want cap for player a, got %s", got)
-	}
-	if got := r.players["b"].view.Accessory; got != "sprout" {
-		t.Errorf("want sprout for player b, got %s", got)
+	for _, id := range []string{"a", "b"} {
+		if got := r.players[id].view.Accessory; got != "" {
+			t.Errorf("player %s starts with accessory %q", id, got)
+		}
 	}
 }

@@ -27,6 +27,18 @@ export class ProfileReply {
   @ApiProperty() winsAsImpostor!: number;
 }
 
+export class ShopItemReply {
+  @ApiProperty() id!: string;
+  @ApiProperty({ enum: ['character', 'accessory'] }) kind!: string;
+  @ApiProperty() price!: number;
+  @ApiProperty() owned!: boolean;
+}
+
+export class ShopReply {
+  @ApiProperty() coins!: number;
+  @ApiProperty({ type: [ShopItemReply] }) items!: ShopItemReply[];
+}
+
 @Injectable()
 export class PlayersClient {
   private readonly client: any;
@@ -72,6 +84,23 @@ export class PlayersClient {
       unary<PlayerReply>(this.client, 'ValidateToken', {
         token,
       }),
+    );
+  }
+
+  getShop(playerId: string): Promise<ShopReply> {
+    return guarded(this.breaker, () =>
+      unary<ShopReply>(this.client, 'GetShop', { playerId }),
+    );
+  }
+
+  // Comprar no se reintenta sola: si la respuesta se pierde, volver a
+  // intentar podría cobrar dos veces (players igual lo rechaza con
+  // ALREADY_EXISTS, pero el jugador vería un error de más).
+  buyItem(playerId: string, itemId: string): Promise<ShopReply> {
+    return guarded(
+      this.breaker,
+      () => unary<ShopReply>(this.client, 'BuyItem', { playerId, itemId }),
+      false,
     );
   }
 

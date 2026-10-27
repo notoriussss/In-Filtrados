@@ -7,6 +7,9 @@ service Players {
   rpc Login(LoginRequest)             returns (Token);
   rpc ValidateToken(ValidateRequest)  returns (Player);
   rpc GetProfile(PlayerIdRequest)     returns (Profile);
+  // Tienda: catálogo con lo que ya tiene el jugador, y compras con monedas.
+  rpc GetShop(PlayerIdRequest)        returns (Shop);
+  rpc BuyItem(BuyItemRequest)         returns (Shop);
 }
 
 message RegisterRequest {
@@ -45,4 +48,23 @@ message Profile {
   // S2-07: estadísticas como impostor.
   int32  times_impostor   = 6;
   int32  wins_as_impostor = 7;
+}
+// BuyItemRequest: comprar un artículo del catálogo con monedas.
+message BuyItemRequest {
+  string player_id = 1;
+  string item_id   = 2;
+}
+// ShopItem: un artículo del catálogo. kind es "character" (personaje gota,
+// id "gota-<color sin #>") o "accessory" (id del accesorio, como "cap").
+message ShopItem {
+  string id    = 1;
+  string kind  = 2;
+  int32  price = 3;
+  bool   owned = 4;
+}
+// Shop: monedas del jugador y el catálogo completo (lo suyo marcado).
+// Lo devuelven GetShop y BuyItem (ya con la compra hecha).
+message Shop {
+  int32             coins = 1;
+  repeated ShopItem items = 2;
 }

@@ -105,6 +105,9 @@ var colors = []string{
 type Join struct {
 	PlayerID string
 	Out      chan *matchv1.ServerEvent
+	// Owned son los artículos que el jugador compró (los pone el gateway
+	// con lo que dice players).
+	Owned []string
 }
 
 // Leave says that the stream ended.
@@ -154,17 +157,26 @@ type PlayerAction struct {
 	// Elegir accesorio en la sala de espera.
 	PickAccessory bool
 	Accessory     string
+
+	// Elegir personaje (jimena o gota) en la sala de espera.
+	PickSkin bool
+	Skin     string
+
+	// Reemplazar lo comprado (solo lo manda el gateway).
+	SetOwned bool
+	Owned    []string
 }
 
 // isMove: la acción solo cambia la dirección (un Move).
 func (a PlayerAction) isMove() bool {
 	return !a.Start && !a.Contaminate && !a.Clean && !a.InteractTask &&
 		!a.Report && !a.Vote && !a.Chat && !a.Sabotage && !a.Fix &&
-		!a.PickColor && !a.PickAccessory
+		!a.PickColor && !a.PickAccessory && !a.PickSkin && !a.SetOwned
 }
 
 type player struct {
 	view         *matchv1.PlayerView
+	owned        map[string]bool // artículos comprados (ids de la tienda)
 	dx, dy       int32
 	out          chan *matchv1.ServerEvent
 	pendingEnded bool

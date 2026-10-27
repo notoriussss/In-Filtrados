@@ -56,6 +56,8 @@ type savedPlayer struct {
 	ID             string       `json:"id"`
 	Name           string       `json:"name"`
 	Color          string       `json:"color"`
+	Skin           string       `json:"skin,omitempty"`
+	Accessory      string       `json:"accessory,omitempty"`
 	X              float32      `json:"x"`
 	Y              float32      `json:"y"`
 	Alive          bool         `json:"alive"`
@@ -181,6 +183,8 @@ func (r *Room) toSaved() savedRoom {
 			ID:              id,
 			Name:            p.view.Name,
 			Color:           p.view.Color,
+			Skin:            p.view.Skin,
+			Accessory:       p.view.Accessory,
 			X:               p.view.X,
 			Y:               p.view.Y,
 			Alive:           p.view.Alive,
@@ -300,6 +304,8 @@ func Restore(state []byte, m *Map, opts ...Option) (*Room, error) {
 				Id:        sp.ID,
 				Name:      sp.Name,
 				Color:     sp.Color,
+				Skin:      skinOrDefault(sp.Skin),
+				Accessory: sp.Accessory,
 				X:         sp.X,
 				Y:         sp.Y,
 				Connected: false,

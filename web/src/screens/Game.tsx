@@ -1,3 +1,4 @@
+import { skinOf } from '../shop';
 import { useEffect, useRef, useState } from 'react';
 import { HudLayer } from '../ui/Stage';
 import { api, type MeResponse } from '../api';
@@ -84,6 +85,9 @@ export function Game(props: {
             accessory={
               snap?.players.find((p) => p.id === game.meId)?.accessory
             }
+            skin={skinOf(
+              snap?.players.find((p) => p.id === game.meId)?.skin,
+            )}
             onComplete={state.minigame.onComplete}
             onClose={state.minigame.onClose}
           />

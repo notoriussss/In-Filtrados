@@ -160,6 +160,22 @@ players[].activity: 'reduce' | 'reuse' | 'recycle' | 'tank' | 'fix' | null; // p
 
 - `match` sigue asignando un color al entrar. Acepta el cambio solo si es uno de los 8 colores y ningún otro jugador **conectado** lo tiene; si no, lo ignora. El color nuevo llega a todos en el siguiente snapshot.
 
+**Tienda: personaje y accesorio.** También se suma sin romper lo anterior (en gRPC, `PickSkin pick_skin = 13` y `SetOwned set_owned = 14` dentro de `ClientAction`, `repeated string owned = 4` en `Join` y `string skin = 10` en `PlayerView`):
+
+```ts
+// Navegador → gateway
+  | { type: 'pickSkin'; skin: string }   // 'jimena' o 'gota', solo en LOBBY
+  | { type: 'pickAccessory'; accessory: string } // 'none' lo quita
+  | { type: 'refreshShop' }              // tras comprar en otra pestaña
+
+// Campo nuevo del snapshot
+players[].skin: 'jimena' | 'gota';       // 'jimena' es el personaje de inicio
+```
+
+- Los personajes de **Jimena** son gratis y vienen de inicio. Las **gotas** (una por color, id `gota-<color sin #>`, como `gota-e6194b`) y los **accesorios** (id como `cap`) solo se usan si el jugador los compró en la tienda.
+- `match` no se fía del navegador: el **gateway** le pregunta a `players` qué tiene comprado y se lo pasa en `Join.owned` (y en `SetOwned` tras un `refreshShop`). `match` acepta `pickSkin: 'gota'` solo si el jugador tiene la gota de su color actual, y `pickAccessory` solo si tiene ese accesorio. Si cambia a un color cuya gota no compró, vuelve a Jimena.
+- El accesorio solo se ve en las gotas; los sprites de Jimena no lo llevan.
+
 ### 0.6 REST del gateway
 
 | Método y ruta | Cuerpo | Respuesta |
@@ -167,6 +183,8 @@ players[].activity: 'reduce' | 'reuse' | 'recycle' | 'tank' | 'fix' | null; // p
 | `POST /api/auth/register` | `{ username, password }` | `201 { playerId, username }` |
 | `POST /api/auth/login` | `{ username, password }` | `200 { token, playerId, username }` |
 | `GET /api/me` | — (header `Authorization: Bearer <token>`) | `200 { playerId, username, coins, matchesPlayed, wins, timesImpostor, winsAsImpostor }` (las dos últimas desde S2-07) |
+| `GET /api/shop` | — | `200 { coins, items: [{ id, kind: 'character' \| 'accessory', price, owned }] }` (tienda: lo que se compra con monedas) |
+| `POST /api/shop/buy` | `{ itemId }` | `200` igual que `GET /api/shop`, con la compra hecha. `404` si el artículo no existe, `409` si ya lo tiene o no le alcanzan las monedas |
 | `POST /api/rooms` | — | `201 { roomCode, matchId }` |
 | `POST /api/rooms/:roomCode/join` | — | `200 { roomCode, matchId }` |
 

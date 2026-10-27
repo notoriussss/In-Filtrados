@@ -54,6 +54,7 @@ export class GameGateway implements OnGatewayConnection {
     let isAuthenticated = false;
     const messageQueue: RawData[] = [];
     let relay: PlayRelay | null = null;
+    let joining = false;
     let matchId: string | null = null;
     let playerId: string | null = null;
 
@@ -97,13 +98,32 @@ export class GameGateway implements OnGatewayConnection {
         return;
       }
       if (msg.type === 'join') {
-        if (!relay && playerId) {
+        if (!relay && playerId && !joining) {
           matchId = msg.matchId;
-          relay = this.openPlay(
-            socket,
-            playerId,
-            msg.matchId,
-            msg.lastTick,
+          joining = true;
+          const id = playerId;
+          // Lo comprado se pregunta a players antes de abrir Play: match
+          // no puede fiarse de lo que diga el navegador.
+          void this.ownedItems(id).then((owned) => {
+            if (socket.readyState !== socket.OPEN) return;
+            relay = this.openPlay(
+              socket,
+              id,
+              msg.matchId,
+              msg.lastTick,
+              owned,
+            );
+          });
+        }
+        return;
+      }
+      if (msg.type === 'refreshShop') {
+        // Tras una compra: se vuelve a leer lo comprado y se le pasa a
+        // match, que decide si el personaje y el accesorio valen.
+        const current = relay;
+        if (current && playerId) {
+          void this.ownedItems(playerId).then((owned) =>
+            current.setOwned(owned),
           );
         }
         return;
@@ -164,6 +184,18 @@ export class GameGateway implements OnGatewayConnection {
     messageQueue.forEach(processMessage);
   }
 
+  // ownedItems: los artículos comprados del jugador. Si players no
+  // responde se juega con lo de inicio (Jimena, sin accesorios).
+  private async ownedItems(playerId: string): Promise<string[]> {
+    try {
+      const shop = await this.players.getShop(playerId);
+      return shop.items.filter((i) => i.owned).map((i) => i.id);
+    } catch (err) {
+      this.logger.warn(`shop ${playerId}: ${(err as Error).message}`);
+      return [];
+    }
+  }
+
   // openPlay abre el stream Play del jugador. Si match se cae, el
   // WebSocket sigue abierto: el navegador ve SERVICE_UNAVAILABLE y el
   // relay reabre Play con espera creciente (S3-02).
@@ -172,10 +204,11 @@ export class GameGateway implements OnGatewayConnection {
     playerId: string,
     matchId: string,
     lastTick: number,
+    owned: string[],
   ): PlayRelay {
     const relay = new PlayRelay({
       open: () => this.match.play(),
-      join: { matchId, playerId, lastTick },
+      join: { matchId, playerId, lastTick, owned },
       onMessage: (msg) => send(socket, msg),
       onUnavailable: (attempt, err) => {
         this.logger.warn(

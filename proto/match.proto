@@ -40,12 +40,19 @@ message ClientAction {
     PickColor     pick_color     = 11;
     // Elegir accesorio en la sala de espera.
     PickAccessory pick_accessory = 12;
+    // Elegir personaje (jimena o gota) en la sala de espera.
+    PickSkin      pick_skin      = 13;
+    // Lo que el jugador tiene comprado; solo lo manda el gateway.
+    SetOwned      set_owned      = 14;
   }
 }
 message Join {
   string match_id   = 1;
   string player_id  = 2;
   int64  last_tick  = 3;
+  // Artículos comprados del jugador (ids de players.proto ShopItem). Los
+  // pone el gateway con lo que dice players, nunca el navegador.
+  repeated string owned = 4;
 }
 message Move {
   int32 dx = 1;
@@ -102,6 +109,15 @@ message PickColor {
 // PickAccessory: solo en LOBBY. match lo acepta si es un accesorio válido.
 message PickAccessory {
   string accessory = 1;
+}
+// PickSkin: solo en LOBBY. "jimena" siempre; "gota" solo si el jugador
+// compró la gota de su color actual ("gota-<color sin #>").
+message PickSkin {
+  string skin = 1;
+}
+// SetOwned: reemplaza lo comprado de quien lo manda (tras una compra).
+message SetOwned {
+  repeated string items = 1;
 }
 
 message ServerEvent {
@@ -218,8 +234,10 @@ message PlayerView {
   // "reduce", "reuse" o "recycle" (tarea), "tank" (limpiar o
   // contaminar: se ven igual) o "fix" (arreglar una emergencia).
   string activity  = 8;
-  // Accesorio/sombrero del jugador (vacío si no tiene o por defecto).
+  // Accesorio del personaje gota (vacío si no lleva ninguno).
   string accessory = 9;
+  // Personaje: "jimena" (el de inicio) o "gota" (comprado).
+  string skin = 10;
 }
 message Error {
   string code    = 1;

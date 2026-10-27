@@ -1,3 +1,4 @@
+import { skinOf } from '../../shop';
 import { useEffect, useState } from 'react';
 import type { Snapshot } from '@in-filtrados/messages';
 import { Icon } from '../../ui/Icon';
@@ -72,6 +73,7 @@ export function RoleReveal(props: {
             <Gota
               color={me.color}
               accessory={me.accessory}
+              skin={skinOf(me.skin)}
               scale={8}
               animate
             />
@@ -109,6 +111,7 @@ export function RoleReveal(props: {
                   key={p.id}
                   color={p.color}
                   accessory={p.accessory}
+                  skin={skinOf(p.skin)}
                   scale={2}
                   animate
                 />

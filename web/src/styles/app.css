@@ -87,6 +87,11 @@ button:disabled { cursor: default; opacity: .55; transform: none !important; }
 .scr-lobby .msg b {display:block}
 .scr-lobby .prev {height:280px}
 .scr-lobby .taken {opacity:.35}
+.scr-lobby .ac.locked {opacity:.55;cursor:not-allowed}
+.scr-lobby .ac.locked::after {content:'\1F512';position:absolute;right:4px;bottom:2px;font-size:20px;line-height:1}
+.scr-lobby .chars .acg {display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:10px}
+.scr-lobby .chars .ac {aspect-ratio:auto;height:96px}
+.scr-lobby .acc-note {font-size:18px;opacity:.75;margin:0 0 8px}
 .scr-lobby .sw.me {outline:3px solid #fff;outline-offset:2px}
 .scr-lobby .sw:disabled {cursor:not-allowed;transform:none}
 /* 07-ayuda */
@@ -256,3 +261,16 @@ html[data-motion='reduced'] *::after {
 .room-chat .field {gap:12px;align-items:center}
 .room-chat .field input {flex:1;min-width:0;height:56px;font-size:30px}
 .room-row {font-size:30px}
+
+/* Tienda */
+.scr-shop .shop-sub { margin: 4px 0 14px; font-size: 22px; }
+.scr-shop .shop-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.scr-shop .shop-card { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px 8px 14px; background: var(--bg2); box-shadow: -4px 0 0 0 var(--line-d), 4px 0 0 0 var(--line-d), 0 -4px 0 0 var(--line-d), 0 4px 0 0 var(--line-d); min-width: 0; }
+.scr-shop .shop-card.owned { background: var(--pan3); }
+.scr-shop .shop-prev { height: 104px; display: grid; place-items: center; }
+.scr-shop .shop-name { font-size: 22px; text-align: center; }
+.scr-shop .shop-foot { position: absolute; left: 60px; right: 60px; top: 920px; font-size: 24px; text-align: center; }
+.scr-shop .shop-grid.six { grid-template-columns: repeat(6, 1fr); gap: 10px; }
+.scr-shop .shop-card .btn { font-size: 20px; padding: 6px 8px 4px; white-space: nowrap; }
+.scr-shop .shop-grid.six .shop-name { font-size: 18px; }
+.scr-shop .shop-grid.six .shop-card .btn { font-size: 17px; }
