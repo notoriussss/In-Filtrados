@@ -64,7 +64,17 @@ describe('contextAction', () => {
     const me = player('other', 410, 100);
     expect(contextAction(me, 'CREW', tanks, map, 0, 0)).toBeNull();
     const dirty = [tank(0, 'impostor'), tank(1, 'crew', 35)];
-    expect(contextAction(me, 'CREW', dirty, map, 0, 0)?.kind).toBe('clean');
+    expect(contextAction(me, 'CREW', dirty, map, 0, 0)).toBeNull();
+  });
+
+  it('never offers Limpiar to a crewmate, only to the impostor', () => {
+    const own = player('crew', 410, 100);
+    const dirty = [tank(0, 'impostor', 20), tank(1, 'crew', 35)];
+    expect(contextAction(own, 'CREW', dirty, map, 0, 0)).toBeNull();
+    const imp = player('impostor', 100, 110);
+    const a = contextAction(imp, 'IMPOSTOR', dirty, map, 0, 0);
+    expect(a?.kind).toBe('clean');
+    expect(a?.tankSlot).toBe(0);
   });
 
   it('does not let the impostor contaminate their own tank', () => {

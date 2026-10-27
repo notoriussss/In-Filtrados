@@ -211,8 +211,8 @@ func TestThreeContaminationsKillTheTank(t *testing.T) {
 	}
 
 	// Un tanque muerto ya no se limpia.
-	placeAt(r, "crew2", 1)
-	clean(r, "crew2", 1)
+	placeAt(r, "imp", 1)
+	clean(r, "imp", 1)
 	tickN(r, cleanTicks)
 	if level(r, 1) != maxContamination {
 		t.Errorf("un tanque muerto no debe poder limpiarse")
@@ -231,8 +231,7 @@ func TestCleanTakesTwoSecondsAndSubtracts(t *testing.T) {
 	contaminate(r, "imp", 1)
 	tickN(r, contaminateTicks)
 
-	placeAt(r, "crew2", 1)
-	clean(r, "crew2", 1)
+	clean(r, "imp", 1)
 	tickN(r, cleanTicks-1)
 	if level(r, 1) != contaminateAmount {
 		t.Fatalf("limpió antes de 2 s")
@@ -250,11 +249,51 @@ func TestCleanTakesTwoSecondsAndSubtracts(t *testing.T) {
 func TestCleanNeverGoesBelowZero(t *testing.T) {
 	r, _ := playingRoom(t)
 	r.tankAt(2).contamination = 5
-	placeAt(r, "crew2", 2)
-	clean(r, "crew2", 2)
+	placeAt(r, "imp", 2)
+	clean(r, "imp", 2)
 	tickN(r, cleanTicks)
 	if got := level(r, 2); got != 0 {
 		t.Fatalf("want 0, got %d", got)
+	}
+}
+
+// Los tripulantes no limpian ningún tanque, ni el propio ni uno ajeno.
+func TestCrewCannotClean(t *testing.T) {
+	r, eventLog := playingRoom(t)
+	r.tankAt(1).contamination = contaminateAmount
+	r.tankAt(2).contamination = contaminateAmount
+
+	placeAt(r, "crew1", 1) // su propio tanque
+	clean(r, "crew1", 1)
+	placeAt(r, "crew2", 1) // tanque ajeno
+	clean(r, "crew2", 1)
+	tickN(r, cleanTicks+1)
+
+	if got := level(r, 1); got != contaminateAmount {
+		t.Fatalf("un tripulante no debe poder limpiar: %d", got)
+	}
+	if eventLog.count(LogClean, 1) != 0 {
+		t.Errorf("no debe quedar ninguna limpieza en event_log")
+	}
+}
+
+// El tanque del impostor nunca muere solo: ni la subida automática ni la
+// tubería lo pasan de 99 (partida EEES: 60 de subida + 2 tuberías).
+func TestImpostorTankNeverDies(t *testing.T) {
+	r, _ := playingRoom(t)
+	imp := r.tankAt(0)
+	imp.contamination = maxContamination - 1
+	tickN(r, impostorDriftTicks)
+	r.addContamination(imp, pipeDamage)
+
+	if imp.contamination != maxContamination-1 || imp.dead {
+		t.Fatalf("el tanque del impostor debía quedar en 99: %+v", imp)
+	}
+	if !r.players["imp"].view.Alive {
+		t.Fatal("el impostor no debe quedar fantasma por su tanque")
+	}
+	if r.phase != matchv1.Phase_PLAYING {
+		t.Fatal("la partida no debe terminar")
 	}
 }
 
