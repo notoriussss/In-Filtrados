@@ -419,8 +419,16 @@ func (r *Room) updateGrace() {
 // paused: la sala espera a alguien en su periodo de gracia (S3-02).
 // El despliegue del laboratorio pausa con cualquier desconectado
 // (docs/deployment-lab.md, sección 9).
+//
+// Solo el host (el creador de la sala) pausa la partida: si se va otro
+// jugador, la partida sigue sin él mientras conserva su lugar durante la
+// gracia. Una sala sin creador (DEV) nunca se pausa.
 func (r *Room) paused() bool {
-	return r.inMatch() && len(r.waitingFor()) > 0
+	if !r.inMatch() || r.creatorID == "" {
+		return false
+	}
+	host, ok := r.players[r.creatorID]
+	return ok && !host.graceUntil.IsZero()
 }
 
 // waitingFor son los jugadores en periodo de gracia, ordenados.

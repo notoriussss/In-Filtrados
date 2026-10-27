@@ -56,6 +56,11 @@ export const CHAT_IDS_PER_MATCH = 500;
 export const CHAT_DEDUPE_MATCHES = 200;
 export const CHAT_IN_FLIGHT_MS = 3000;
 
+// Heartbeat (deployment-lab.md, 9.1): el navegador manda ping cada 2 s;
+// si pasan 5 s sin ningún mensaje, el gateway corta el WebSocket.
+export const HEARTBEAT_TIMEOUT_MS = 5_000;
+export const HEARTBEAT_CHECK_MS = 1_000;
+
 // WebSocket close codes used by the gateway.
 export const WS_CLOSE_CODES = {
   NORMAL: 1000,

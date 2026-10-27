@@ -19,6 +19,7 @@ import { FloodLimiter, TokenBucket } from './rate-limit';
 import { PlayersClient } from '../clients/players.client';
 import { PlayRelay } from './play-relay';
 import { ChatDeduper } from './chat-dedupe';
+import { Heartbeat } from './heartbeat';
 
 // WebSocket /ws?token=...; one Play stream per player
 @WebSocketGateway({ path: '/ws' })
@@ -65,7 +66,19 @@ export class GameGateway implements OnGatewayConnection {
       RATE_LIMIT_WARNING_RESET_MS,
     );
 
+    // Heartbeat (deployment-lab.md, 9.1): un navegador que lleva 5 s
+    // callado se corta con terminate, sin esperar el cierre ordenado que
+    // nunca va a contestar; el 'close' cierra el relay y match pausa.
+    const heartbeat = new Heartbeat({
+      onDead: () => {
+        this.logger.warn(`ws sin heartbeat ${playerId ?? ''}`);
+        socket.terminate();
+      },
+    });
+    heartbeat.start();
+
     socket.on('message', (raw: RawData) => {
+      heartbeat.seen();
       if (!isAuthenticated) {
         messageQueue.push(raw);
         return;
@@ -96,6 +109,10 @@ export class GameGateway implements OnGatewayConnection {
         });
         return;
       }
+      if (msg.type === 'ping') {
+        send(socket, { type: 'pong' });
+        return;
+      }
       if (msg.type === 'join') {
         if (!relay && playerId) {
           matchId = msg.matchId;
@@ -120,6 +137,7 @@ export class GameGateway implements OnGatewayConnection {
     };
 
     socket.on('close', () => {
+      heartbeat.stop();
       if (playerId) {
         this.logger.log(`ws close ${playerId}`);
         const current = this.activeSockets.get(playerId);

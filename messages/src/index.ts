@@ -20,7 +20,10 @@ export type ClientMessage =
   // Elegir color en LOBBY; match lo acepta si nadie conectado lo tiene.
   | { type: 'pickColor'; color: string }
   // Elegir accesorio en LOBBY.
-  | { type: 'pickAccessory'; accessory: string };
+  | { type: 'pickAccessory'; accessory: string }
+  // Heartbeat (deployment-lab.md, 9.1): cada 2 s; el gateway responde
+  // pong y nunca lo reenvía a match.
+  | { type: 'ping' };
 
 // interact: hacer una tarea en una estación o limpiar un tanque.
 // completed se manda al terminar el minijuego (S2-04).
@@ -32,7 +35,8 @@ export type InteractMessage =
 export type ServerMessage =
   | Snapshot
   | { type: 'matchEnded'; winner: Winner; impostorIds: string[] }
-  | { type: 'error'; code: ErrorCode; message: string };
+  | { type: 'error'; code: ErrorCode; message: string }
+  | { type: 'pong' }; // respuesta al ping del navegador
 
 export type Snapshot = {
   type: 'snapshot';
@@ -47,8 +51,8 @@ export type Snapshot = {
   meeting: Meeting | null; // solo en MEETING
   chat: ChatMessage[]; // últimos 30 mensajes
   oilDrops: OilDrop[]; // S2-12: rastro del impostor
-  // S3-02: en pausa mientras alguien está en su periodo de gracia;
-  // waitingFor son los ids de esos jugadores.
+  // S3-02: en pausa solo mientras el host está en su periodo de gracia;
+  // waitingFor son los ids de todos los que están en gracia.
   paused: boolean;
   waitingFor: string[];
   // S2-11: las tareas propias (nunca las de otro) y la estación cuya

@@ -125,3 +125,8 @@ test('pickAccessory needs a short accessory string', () => {
     null,
   );
 });
+
+test('ping is accepted but never goes to match', () => {
+  assert.deepEqual(parse({ type: 'ping' }), { type: 'ping' });
+  assert.equal(toGrpcAction({ type: 'ping' }), null);
+});
