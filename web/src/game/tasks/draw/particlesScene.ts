@@ -471,8 +471,9 @@ export class ParticlesScene implements Scene {
 }
 
 // Lanzar la red: toma impulso con el brazo doblado, lo estira de golpe y
-// vuelve a la postura compacta.
-function swingPose(t: number): Pose {
+// vuelve a la postura compacta. La reusan las escenas de clic (presión y
+// grietas), que golpean igual.
+export function swingPose(t: number): Pose {
   if (t < 80) {
     const u = t / 80;
     return {

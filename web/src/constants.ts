@@ -149,6 +149,22 @@ export const TASK_TEXT = {
     reuse: 'Reutilizar: guarda el agua gris',
     recycle: 'Reciclar: filtra el agua',
   },
+  // Título del minijuego por estación (docs/design/minigames-3r.md):
+  // cada estación tiene el suyo; si falta, vale el del tipo de arriba.
+  STATION_TITLES: {
+    'leak-1': 'Reducir: cierra la fuga',
+    'leak-2': 'Reducir: sella las grietas',
+    'valve-1': 'Reducir: regular la presión',
+    'valve-2': 'Reducir: llenar sin derramar',
+    'rain-1': 'Reutilizar: primera lluvia',
+    'rain-2': 'Reutilizar: primera lluvia',
+    'greywater-1': 'Reutilizar: guarda el agua gris',
+    'greywater-2': 'Reutilizar: ¿sirve para regar?',
+    'filter-1': 'Reciclar: filtra el agua',
+    'filter-2': 'Reciclar: filtra el agua',
+    'compost-1': 'Reciclar: capas del compost',
+    'sorter-1': 'Reciclar: clasifica los residuos',
+  } as Record<string, string>,
   ROW: (type: string, zone: string) => `${type} · ${zone}`,
   UNKNOWN_ZONE: 'Zona desconocida',
   DO_TASK: 'Hacer tarea',

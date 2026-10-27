@@ -79,6 +79,7 @@ export function Game(props: {
           <Minigame
             key={state.minigame.stationId}
             type={state.minigame.type}
+            stationId={state.minigame.stationId}
             color={snap?.players.find((p) => p.id === game.meId)?.color}
             accessory={
               snap?.players.find((p) => p.id === game.meId)?.accessory

@@ -149,7 +149,7 @@ export class TaskSession {
     const snap = this.deps.snapshot();
     const me = this.deps.me();
     if (!snap || !me || snap.phase !== 'PLAYING') return null;
-    return pickStation(me, snap.myTasks, this.deps.stations);
+    return pickStation(me, snap.myTasks ?? [], this.deps.stations);
   }
 }
 
