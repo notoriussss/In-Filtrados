@@ -4437,9 +4437,9 @@
           "visible": true,
           "type": "wall",
           "name": "pared-14",
-          "x": 2016,
+          "x": 2048,
           "y": 256,
-          "width": 736,
+          "width": 704,
           "height": 64
         },
         {
@@ -7631,7 +7631,7 @@
           "name": "tunel-este",
           "x": 1920,
           "y": 256,
-          "width": 96,
+          "width": 128,
           "height": 64,
           "properties": [
             {
