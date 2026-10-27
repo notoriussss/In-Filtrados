@@ -89,6 +89,7 @@ export const JOIN_TEXT = {
     'El código tiene 4 letras y números. ' + 'Pídeselo a quien creó la sala.',
   BACK: 'Volver',
   JOIN: 'Unirme',
+  CONNECTING: 'Conectando…',
   NOT_FOUND: 'No existe una sala con ese código',
   FULL: 'La sala está llena',
 } as const;
