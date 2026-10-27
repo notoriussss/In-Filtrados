@@ -82,6 +82,10 @@ export class FillScene implements Scene {
   private readonly bits: Bit[] = [];
   private pipeX: number = FILL_SPOTS[0];
   private cheerAt = -1e9;
+  private spillAt = -1e9;
+  private spillGlass = -1;
+  private spillX = 0;
+  private spillY = 0;
   private doneAt: number | null = null;
   readonly settleMs = 1100;
 
@@ -110,12 +114,30 @@ export class FillScene implements Scene {
     });
     this.drawStream(ctx, now);
     this.drawBits(ctx);
+    this.drawSpillRing(ctx, now);
     this.drawHint(ctx, now);
+  }
+
+  // Anillo rojo que se abre en el borde del vaso que se derramó.
+  private drawSpillRing(
+    ctx: CanvasRenderingContext2D,
+    now: number,
+  ): void {
+    if (this.env.calm) return;
+    const k = (now - this.spillAt) / 450;
+    if (k < 0 || k >= 1) return;
+    drawTapRing(ctx, this.spillX, this.spillY, k, C.coral);
   }
 
   private consume(now: number): void {
     for (const e of this.game.drainEvents()) {
-      if (e.type === 'spill' && !this.env.calm) this.burst(e.x, e.y);
+      if (e.type === 'spill') {
+        this.spillAt = now;
+        this.spillGlass = e.index;
+        this.spillX = e.x;
+        this.spillY = e.y;
+        if (!this.env.calm) this.burst(e.x, e.y);
+      }
       if (e.type === 'drop-in') this.cheerAt = now;
     }
   }
@@ -245,20 +267,40 @@ export class FillScene implements Scene {
       px(ctx, x + PX, s + wave, FILL_GLASS.w - PX * 2, PX, C.waterHi);
     }
     // Borde (derramar) y marca (mínimo), por encima del agua. La marca
-    // se pone verde cuando el nivel ya está en la zona de soltar.
+    // se pone verde cuando el nivel ya está en la zona de soltar, y el
+    // vaso parpadea en coral un instante tras derramar.
+    const flashK = (now - this.spillAt) / 300;
+    const flash =
+      !this.env.calm &&
+      this.spillGlass === g.index &&
+      flashK >= 0 &&
+      flashK < 1;
+    const rimY = IN_BOTTOM - FILL_RIM * (IN_BOTTOM - IN_TOP);
     pxLine(
       ctx,
       x + 1,
-      IN_BOTTOM - FILL_RIM * (IN_BOTTOM - IN_TOP),
+      rimY,
       x + FILL_GLASS.w - 1,
-      IN_BOTTOM - FILL_RIM * (IN_BOTTOM - IN_TOP),
-      C.coral,
-      1,
+      rimY,
+      flash ? C.coralHi : C.coral,
+      flash ? 2 : 1,
     );
     const inBand = g.fill >= FILL_MARK && g.fill < FILL_RIM;
     const markY = IN_BOTTOM - FILL_MARK * (IN_BOTTOM - IN_TOP);
     for (let mx = x + 3; mx < x + FILL_GLASS.w - 3; mx += 8) {
       px(ctx, mx, markY, 5, PX, inBand ? C.leaf : C.amber);
+    }
+    if (flash) {
+      ctx.globalAlpha = (1 - flashK) * 0.35;
+      px(
+        ctx,
+        x + PX,
+        y + PX,
+        FILL_GLASS.w - PX * 2,
+        FILL_GLASS.h - PX * 2,
+        C.coral,
+      );
+      ctx.globalAlpha = 1;
     }
     // Marco del vidrio: contorno hueco, para que el nivel se vea.
     px(ctx, x, y, FILL_GLASS.w, PX * 2, C.metalInk); // labio
