@@ -106,17 +106,18 @@ export function Hud(props: { game: GameSession; state: GameState }) {
 
 function TasksPanel(props: { snap: Snapshot }) {
   const { snap } = props;
-  const done = snap.myTasks.filter((t) => t.done).length;
+  const myTasks = snap.myTasks ?? [];
+  const done = myTasks.filter((t) => t.done).length;
   return (
     <section className="panel glass tasks" aria-label={HUD_TEXT.TASKS}>
       <div className="ttl hud-ttl">
         <Icon name="check" palette="leaf" />
         <span style={{ flex: 1 }}>{HUD_TEXT.TASKS.toUpperCase()}</span>
         <span className="tg ok num">
-          {done}/{snap.myTasks.length}
+          {done}/{myTasks.length}
         </span>
       </div>
-      {snap.myTasks.map((t) => {
+      {myTasks.map((t) => {
         const st = gameMap.stations.find((s) => s.id === t.stationId);
         if (!st) return null;
         const ic = TASK_ICONS[st.type];
@@ -294,7 +295,7 @@ function Minimap(props: { snap: Snapshot; meId: string; now: number }) {
     left: `${(x / gameMap.width) * 100}%`,
     top: `${(y / gameMap.height) * 100}%`,
   });
-  const pending = snap.myTasks.filter((t) => !t.done);
+  const pending = (snap.myTasks ?? []).filter((t) => !t.done);
   const meeting = meetingMarker(gameMap);
   return (
     <section className="panel glass mini" aria-label={HUD_TEXT.MAP}>
