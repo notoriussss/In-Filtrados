@@ -426,25 +426,45 @@ export class WasteGame extends BaseGame implements Minigame {
 }
 
 // Reducir (valve-1, Válvula de riego): regular la presión. La aguja
-// barre el medidor de arriba a abajo; hay que presionar el botón cuando
-// pasa por la franja verde, que se encoge un poco con cada acierto.
+// barre el medidor; hay que presionar el botón cuando pasa por la
+// franja verde, que se encoge un poco con cada acierto. La franja
+// inicial y el arranque de la aguja salen de una semilla: cada partida
+// es distinta.
 export const PRESSURE_HITS = 3;
 export const PRESSURE_SWEEP_MS = 2800; // de abajo a arriba de la aguja
 export const PRESSURE_ZONE_START = 0.18; // alto de la franja, en nivel
 export const PRESSURE_ZONE_SHRINK = 0.04;
 export const PRESSURE_ZONE_MIN = 0.09;
+// Entre qué alturas puede caer la franja (siempre alcanzable).
+export const PRESSURE_ZONE_LO = 0.3;
+export const PRESSURE_ZONE_HI = 0.7;
 export const PRESSURE_TUBE = { x: 156, y: 44, w: 52, h: 162 };
 export const PRESSURE_BUTTON = { x: 246, y: 152, w: 84, h: 58 };
 
 export class PressureGame extends BaseGame implements Minigame {
   elapsed = 0;
   hits = 0;
-  zoneCenter = 0.5;
+  zoneCenter: number;
   zoneHalf = PRESSURE_ZONE_START;
 
+  // Semilla de la ronda: la franja inicial y el desface de la aguja
+  // salen de ella, así que cada partida es distinta. Los tests pasan
+  // una semilla fija para repetir el mismo escenario.
+  readonly phaseMs: number;
+  private readonly seed: number;
+
+  constructor(seed: number = Math.random() * 9973) {
+    super();
+    this.seed = seed;
+    this.phaseMs = hash01(seed + 1) * PRESSURE_SWEEP_MS * 2;
+    this.zoneCenter = this.nextZone();
+  }
+
   // La aguja va y vuelve: 0 abajo, 1 arriba, tarda PRESSURE_SWEEP_MS.
+  // phaseMs corre el ciclo para que no empiece siempre desde abajo.
   get level(): number {
-    return (1 - Math.cos((this.elapsed / PRESSURE_SWEEP_MS) * Math.PI)) / 2;
+    const t = this.elapsed + this.phaseMs;
+    return (1 - Math.cos((t / PRESSURE_SWEEP_MS) * Math.PI)) / 2;
   }
 
   get done(): boolean {
@@ -470,7 +490,7 @@ export class PressureGame extends BaseGame implements Minigame {
         this.zoneHalf - PRESSURE_ZONE_SHRINK,
       );
       // Siguiente franja en otra altura, siempre igual de alcanzable.
-      this.zoneCenter = 0.3 + 0.4 * hash01(this.hits * 13 + 5);
+      this.zoneCenter = this.nextZone();
       this.events.push({ type: 'pop', x: p.x, y: p.y, index: this.hits - 1 });
       return;
     }
@@ -484,6 +504,12 @@ export class PressureGame extends BaseGame implements Minigame {
   step(dtMs: number): void {
     this.elapsed += dtMs;
     if (this.done) return; // ganado: la aguja se queda donde está
+  }
+
+  // Altura de la siguiente franja: pseudo-azar anclado a la semilla.
+  private nextZone(): number {
+    const h = hash01(this.seed + this.hits * 13 + 5);
+    return PRESSURE_ZONE_LO + (PRESSURE_ZONE_HI - PRESSURE_ZONE_LO) * h;
   }
 }
 

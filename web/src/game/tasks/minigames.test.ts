@@ -19,6 +19,8 @@ import {
   PRESSURE_BUTTON,
   PRESSURE_HITS,
   PRESSURE_SWEEP_MS,
+  PRESSURE_ZONE_HI,
+  PRESSURE_ZONE_LO,
   PRESSURE_ZONE_SHRINK,
   PRESSURE_ZONE_START,
   PressureGame,
@@ -276,22 +278,27 @@ describe('WasteGame', () => {
   });
 });
 
-// Nivel: dónde está la aguja del medidor al tiempo t (ms).
-const levelAt = (t: number): number =>
-  (1 - Math.cos((t / PRESSURE_SWEEP_MS) * Math.PI)) / 2;
+// Nivel de la aguja del juego g al tiempo t (ms), con el desface de
+// su semilla.
+const levelOf = (g: PressureGame, t: number): number =>
+  (1 - Math.cos(((t + g.phaseMs) / PRESSURE_SWEEP_MS) * Math.PI)) / 2;
 
 // timeAtLevel busca el primer instante desde `from` en que la aguja
 // pasa por `target`; siempre lo encuentra (barre todo el rango).
-function timeAtLevel(target: number, from: number): number {
+function timeAtLevel(
+  g: PressureGame,
+  target: number,
+  from: number,
+): number {
   for (let t = from; t <= from + PRESSURE_SWEEP_MS * 2; t += 2) {
-    if (Math.abs(levelAt(t) - target) <= 0.004) return t;
+    if (Math.abs(levelOf(g, t) - target) <= 0.004) return t;
   }
   throw new Error(`la aguja nunca pasa por ${target}`);
 }
 
 function timeOffBand(g: PressureGame, from: number): number {
   for (let t = from; t <= from + PRESSURE_SWEEP_MS * 2; t += 2) {
-    if (Math.abs(levelAt(t) - g.zoneCenter) > g.zoneHalf) return t;
+    if (Math.abs(levelOf(g, t) - g.zoneCenter) > g.zoneHalf) return t;
   }
   throw new Error('la aguja nunca sale de la franja');
 }
@@ -305,32 +312,49 @@ describe('PressureGame', () => {
   };
 
   it('misses a press outside the button', () => {
-    const g = new PressureGame();
+    const g = new PressureGame(42);
     g.pointerDown({ x: 10, y: 10 });
     expect(g.drainEvents().map((e) => e.type)).toEqual(['miss']);
     expect(g.hits).toBe(0);
   });
 
   it('misses a press in the button but outside the band', () => {
-    const g = new PressureGame();
+    const g = new PressureGame(42);
     press(g, timeOffBand(g, 0));
     expect(g.hits).toBe(0);
     expect(g.drainEvents().some((e) => e.type === 'miss')).toBe(true);
   });
 
   it('hits when pressed while the needle is in the band, and tightens', () => {
-    const g = new PressureGame();
-    press(g, timeAtLevel(g.zoneCenter, 0));
+    const g = new PressureGame(42);
+    press(g, timeAtLevel(g, g.zoneCenter, 0));
     expect(g.hits).toBe(1);
     expect(g.zoneHalf).toBeCloseTo(
       PRESSURE_ZONE_START - PRESSURE_ZONE_SHRINK,
     );
-    expect(g.zoneCenter).toBeCloseTo(0.3 + 0.4 * hash01(1 * 13 + 5));
-    press(g, timeAtLevel(g.zoneCenter, g.elapsed));
-    press(g, timeAtLevel(g.zoneCenter, g.elapsed));
+    expect(g.zoneCenter).toBeCloseTo(
+      PRESSURE_ZONE_LO +
+        (PRESSURE_ZONE_HI - PRESSURE_ZONE_LO) * hash01(42 + 13 + 5),
+    );
+    press(g, timeAtLevel(g, g.zoneCenter, g.elapsed));
+    press(g, timeAtLevel(g, g.zoneCenter, g.elapsed));
     expect(g.hits).toBe(PRESSURE_HITS);
     // Estos tres toques ya tomaron más de 3 s de reloj: está listo.
     expect(g.done).toBe(true);
+  });
+
+  it('deals a different round with a different seed', () => {
+    const a = new PressureGame(1);
+    const b = new PressureGame(2);
+    // La franja arranca en otra altura y la aguja en otro punto.
+    expect(a.zoneCenter).not.toBe(b.zoneCenter);
+    expect(a.phaseMs).not.toBe(b.phaseMs);
+    expect(a.level).not.toBe(b.level);
+    // La franja nunca sale de su rango alcanzable.
+    for (const g of [a, b]) {
+      expect(g.zoneCenter).toBeGreaterThanOrEqual(PRESSURE_ZONE_LO);
+      expect(g.zoneCenter).toBeLessThanOrEqual(PRESSURE_ZONE_HI);
+    }
   });
 });
 
