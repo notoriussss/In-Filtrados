@@ -1,0 +1,218 @@
+/* Pantalla de carga (rediseño minimalista, místico y uniforme con el menú principal). */
+
+.stage.scr-boot {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Viñeta mística suave */
+.scr-boot .boot-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    rgba(4, 20, 42, 0.55) 0%,
+    rgba(3, 10, 24, 0.92) 100%
+  );
+  z-index: 1;
+}
+
+/* Bloque central de contenido */
+.scr-boot .boot-center {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 48%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 36px;
+  z-index: 2;
+}
+
+/* Logo con la gota */
+.scr-boot .boot-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.scr-boot .boot-logo h1 {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: var(--logo);
+  font-weight: 400;
+  font-size: 88px;
+  line-height: 1.1;
+  white-space: nowrap;
+  color: var(--txt);
+  text-shadow:
+    6px 6px 0 #0b5a8a,
+    12px 12px 0 var(--ink);
+  margin: 0;
+}
+
+.scr-boot .boot-logo h1 .a {
+  color: var(--leaf);
+}
+
+.scr-boot .boot-logo h1 .b {
+  color: var(--aqua);
+}
+
+/* Barra divisoria */
+.scr-boot .boot-rule {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 12px auto 0;
+  width: 620px;
+}
+
+.scr-boot .boot-rule::before,
+.scr-boot .boot-rule::after {
+  content: '';
+  flex: 1;
+  height: 3px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--aqua)
+  );
+}
+
+.scr-boot .boot-rule::after {
+  transform: scaleX(-1);
+}
+
+.scr-boot .boot-rule i {
+  width: 12px;
+  height: 12px;
+  background: var(--aqua);
+  transform: rotate(45deg);
+}
+
+/* Subtítulo 3R */
+.scr-boot .boot-sub {
+  margin: 12px 0 0 0;
+  font-family: var(--head);
+  font-size: 24px;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: var(--mut);
+  text-shadow: 2px 2px 0 var(--ink);
+  text-align: center;
+}
+
+.scr-boot .boot-sub b {
+  color: var(--aqua);
+  font-weight: 400;
+  margin: 0 12px;
+}
+
+/* Bloque del loader minimalista */
+.scr-boot .boot-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 540px;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+/* Pista de la barra de carga */
+.scr-boot .boot-bar-track {
+  width: 100%;
+  height: 14px;
+  background: #040e1b;
+  border: 2px solid var(--line-d);
+  border-radius: 8px;
+  padding: 2px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Relleno de la barra */
+.scr-boot .boot-bar-fill {
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    #1b7a43 0%,
+    var(--leaf) 35%,
+    var(--aqua) 100%
+  );
+  border-radius: 4px;
+  transition: width 180ms ease-out;
+}
+
+.scr-boot .boot-bar-fill.bad {
+  background: #e74c3c;
+}
+
+/* Estado de carga: etiqueta y porcentaje */
+.scr-boot .boot-status {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 4px;
+}
+
+.scr-boot .boot-label {
+  font-family: var(--head);
+  font-size: 19px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--mut);
+  text-shadow: 1px 1px 0 var(--ink);
+}
+
+.scr-boot .boot-pct {
+  font-family: var(--head);
+  font-size: 20px;
+  letter-spacing: 1px;
+  color: var(--aqua);
+  text-shadow: 1px 1px 0 var(--ink);
+}
+
+/* Botón de reintento si falla */
+.scr-boot .boot-retry-btn {
+  margin-top: 8px;
+  padding: 8px 24px;
+  font-family: var(--head);
+  font-size: 18px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #fff;
+  background: #145a32;
+  border: 2px solid #27ae60;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 120ms steps(3);
+}
+
+.scr-boot .boot-retry-btn:hover {
+  background: #196f3d;
+  border-color: var(--leaf);
+  transform: translateY(-2px);
+}
+
+/* Versión en pie de pantalla */
+.scr-boot .boot-version {
+  position: absolute;
+  right: 50px;
+  bottom: 30px;
+  font-family: var(--head);
+  font-size: 18px;
+  letter-spacing: 1px;
+  color: var(--mut);
+  opacity: 0.7;
+  text-shadow: 1px 1px 0 var(--ink);
+  z-index: 2;
+}

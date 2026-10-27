@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Stage } from '../ui/Stage';
-import { Icon, type IconName } from '../ui/Icon';
-import { Chip, Kbd } from '../ui/kit';
+import { Chip, HintBar, Kbd } from '../ui/kit';
 import {
   type Settings as SettingsData,
   applySettings,
@@ -9,16 +8,16 @@ import {
   loadSettings,
   saveSettings,
 } from '../settings';
-import { SETTINGS_TEXT as T } from '../texts';
+import { MENU_TEXT, SETTINGS_TEXT as T } from '../texts';
 import { BACKGROUNDS } from './backgrounds';
 import '../styles/settings.css';
 
 type TabId = 'video' | 'controls' | 'access';
 
-const TABS: { id: TabId; icon: IconName; label: string }[] = [
-  { id: 'video', icon: 'screen', label: T.TAB_VIDEO },
-  { id: 'controls', icon: 'keyboard', label: T.TAB_CONTROLS },
-  { id: 'access', icon: 'eye', label: T.TAB_ACCESS },
+const TABS: { id: TabId; label: string }[] = [
+  { id: 'video', label: T.TAB_VIDEO },
+  { id: 'controls', label: T.TAB_CONTROLS },
+  { id: 'access', label: T.TAB_ACCESS },
 ];
 
 // Settings (maqueta 08-ajustes): rediseñado acorde al menú principal.
@@ -79,55 +78,43 @@ export function Settings(props: { onClose: () => void; overlay?: boolean }) {
       <section className="settings-modal" role="dialog" aria-modal="true">
         <header className="settings-head">
           <div className="settings-head-title">
-            <svg
-              className="gear-icon"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <circle cx="12" cy="12" r="3" />
-              <path
-                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
-              />
-            </svg>
             <h2>{T.TITLE}</h2>
           </div>
           <button
             type="button"
-            className="settings-esc-btn"
+            className="settings-close-btn"
             onClick={close}
             aria-label={T.BACK}
+            title={`${T.BACK} (Esc)`}
           >
-            <span>{T.BACK}</span>
-            <Kbd>Esc</Kbd>
+            ✕
           </button>
         </header>
 
-        <div className="settings-tabs" role="tablist">
+        <nav className="settings-tabs" role="tablist" aria-label={T.TITLE}>
           {TABS.map((t) => (
             <button
               key={t.id}
               type="button"
               role="tab"
+              id={`tab-${t.id}`}
+              aria-controls={`panel-${t.id}`}
               aria-selected={tab === t.id}
+              tabIndex={tab === t.id ? 0 : -1}
               className={`settings-tab ${tab === t.id ? 'on' : ''}`}
               onClick={() => setTab(t.id)}
             >
-              <Icon
-                name={t.icon}
-                palette={tab === t.id ? 'water' : 'light'}
-                size={24}
-              />
               {t.label}
             </button>
           ))}
-        </div>
+        </nav>
 
-        <div className="settings-body" role="tabpanel">
+        <div
+          className="settings-body"
+          role="tabpanel"
+          id={`panel-${tab}`}
+          aria-labelledby={`tab-${tab}`}
+        >
           <div className="settings-pane">
             {tab === 'video' && (
               <Row title={T.SCREEN} sub={T.SCREEN_SUB} last>
@@ -141,7 +128,7 @@ export function Settings(props: { onClose: () => void; overlay?: boolean }) {
                   onChange={(v) => setScreenMode(v === 'full')}
                 />
                 {fullscreenFailed && (
-                  <Chip tone="bad" icon="cross">
+                  <Chip tone="bad">
                     {T.FULLSCREEN_BLOCKED}
                   </Chip>
                 )}
@@ -204,7 +191,6 @@ export function Settings(props: { onClose: () => void; overlay?: boolean }) {
             className="settings-btn sec"
             onClick={close}
           >
-            <Icon name="left" palette="light" size={24} />
             {T.BACK}
           </button>
           <div className="settings-actions">
@@ -220,12 +206,21 @@ export function Settings(props: { onClose: () => void; overlay?: boolean }) {
               className="settings-btn pri"
               onClick={apply}
             >
-              <Icon name="check" palette="light" size={24} />
               {T.APPLY}
             </button>
           </div>
         </footer>
       </section>
+
+      {!props.overlay && (
+        <HintBar
+          hints={[
+            ['Tab', MENU_TEXT.HINT_CHOOSE],
+            ['Enter', MENU_TEXT.HINT_ACCEPT],
+            ['Esc', T.BACK],
+          ]}
+        />
+      )}
     </Stage>
   );
 }

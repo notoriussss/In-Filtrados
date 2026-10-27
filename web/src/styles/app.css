@@ -69,13 +69,7 @@ button:disabled { cursor: default; opacity: .55; transform: none !important; }
 .tab { border: 0; }
 
 /* ===== pantallas (de las maquetas B-noche) ===== */
-/* 01-carga */
-.scr-boot .logo.c {left:360px;top:110px;width:1200px;text-align:center}
-.scr-boot .logo.c .sub {justify-content:center;display:flex}
-.scr-boot .walkers {position:absolute;left:0;right:0;top:0;height:1080px;pointer-events:none}
-.scr-boot .walkers canvas {position:absolute}
-.scr-boot .dock {position:absolute;left:0;right:0;top:930px;height:86px}
-.scr-boot .dock {background:repeating-linear-gradient(90deg,var(--pan2) 0 150px,var(--line) 150px 154px);border-top:4px solid var(--aqua);box-shadow:0 6px 0 var(--line),0 18px 0 rgba(0,0,0,.35)}
+/* 01-carga: estilos encapsulados en styles/boot.css */
 /* 03-acceso */
 .scr-access .stand .plank {width:340px}
 .scr-access .stand canvas {position:absolute;left:50%;transform:translateX(-50%)}
@@ -193,14 +187,7 @@ button:disabled { cursor: default; opacity: .55; transform: none !important; }
 .rt { text-align: right; }
 .scr-result .tr { grid-template-columns: 84px 1fr 180px 10px 200px; }
 
-/* 08-ajustes */
-.scr-settings .pane {min-height:600px;padding:12px 28px}
-.scr-settings .ctl2 {display:flex;align-items:center;gap:20px}
-.scr-settings .sr {padding-block:10px}
-.scr-settings .settings-foot {position:absolute;left:40px;right:40px;bottom:28px;display:flex;justify-content:space-between;align-items:center}
-.seg button {padding:8px 20px 6px;font-size:30px;color:var(--mut);min-width:62px;text-align:center;background:transparent;border:0;cursor:pointer}
-.seg button.on {background:var(--pan3);color:var(--aqua)}
-button.tog {border:0;padding:0;cursor:pointer}
+/* 08-ajustes: estilos encapsulados en styles/settings.css */
 
 /* Ajustes de accesibilidad (settings.ts los pone en <html>) */
 html[data-contrast='high'] {
