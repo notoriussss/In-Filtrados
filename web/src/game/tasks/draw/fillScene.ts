@@ -217,19 +217,35 @@ export class FillScene implements Scene {
     ctx.globalAlpha = 0.25;
     pxDisc(ctx, spot + 3, FILL_BASE_Y + 1, FILL_GLASS.w * 0.42, C.ink);
     ctx.globalAlpha = 1;
-    // Interior y agua.
-    px(ctx, x + 2, IN_TOP, FILL_GLASS.w - 4, IN_BOTTOM - IN_TOP, '#0a2136');
+    // Vidrio vacío: el fondo del interior, del labio a la base.
+    px(
+      ctx,
+      x + PX,
+      y + PX,
+      FILL_GLASS.w - PX * 2,
+      FILL_GLASS.h - PX * 2,
+      '#0a2136',
+    );
+    // Agua hasta su nivel.
     if (g.fill > 0.01 || g.filled) {
       const s = surfaceY(g);
-      px(ctx, x + 2, s, FILL_GLASS.w - 4, IN_BOTTOM - s, C.water);
-      px(ctx, x + 2, s + 10, FILL_GLASS.w - 4, IN_BOTTOM - s - 10, C.waterDeep);
+      px(ctx, x + PX, s, FILL_GLASS.w - PX * 2, IN_BOTTOM - s, C.water);
+      px(
+        ctx,
+        x + PX,
+        s + 10,
+        FILL_GLASS.w - PX * 2,
+        IN_BOTTOM - s - 10,
+        C.waterDeep,
+      );
       px(ctx, x + 6, s + 3, 3, IN_BOTTOM - s - 6, C.waterHi);
       const wave = this.env.calm
         ? 0
         : Math.round(Math.sin(now / 240 + g.index) * 1.3) * PX;
-      px(ctx, x + 2, s + wave, FILL_GLASS.w - 4, PX, C.waterHi);
+      px(ctx, x + PX, s + wave, FILL_GLASS.w - PX * 2, PX, C.waterHi);
     }
-    // Borde (derramar) y marca (mínimo).
+    // Borde (derramar) y marca (mínimo), por encima del agua. La marca
+    // se pone verde cuando el nivel ya está en la zona de soltar.
     pxLine(
       ctx,
       x + 1,
@@ -239,19 +255,19 @@ export class FillScene implements Scene {
       C.coral,
       1,
     );
+    const inBand = g.fill >= FILL_MARK && g.fill < FILL_RIM;
     const markY = IN_BOTTOM - FILL_MARK * (IN_BOTTOM - IN_TOP);
     for (let mx = x + 3; mx < x + FILL_GLASS.w - 3; mx += 8) {
-      px(ctx, mx, markY, 5, PX, C.amber);
+      px(ctx, mx, markY, 5, PX, inBand ? C.leaf : C.amber);
     }
-    // Vidrio: contorno y reflejo.
-    px(ctx, x, y, FILL_GLASS.w, FILL_GLASS.h, C.metalInk);
-    px(ctx, x + 2, y + 2, FILL_GLASS.w - 4, FILL_GLASS.h - 4, C.metalDeep);
+    // Marco del vidrio: contorno hueco, para que el nivel se vea.
+    px(ctx, x, y, FILL_GLASS.w, PX * 2, C.metalInk); // labio
+    px(ctx, x, y, PX, FILL_GLASS.h, C.metalInk); // pared izquierda
+    px(ctx, x + FILL_GLASS.w - PX, y, PX, FILL_GLASS.h, C.metalInk); // derecha
+    px(ctx, x, FILL_BASE_Y - PX, FILL_GLASS.w, PX, C.metalInk); // base
     ctx.globalAlpha = 0.2;
     px(ctx, x + 6, y + 8, 4, FILL_GLASS.h - 24, C.white);
     ctx.globalAlpha = 1;
-    px(ctx, x, y + 6, PX, FILL_GLASS.h - 6, C.metalInk);
-    px(ctx, x + FILL_GLASS.w - PX, y + 6, PX, FILL_GLASS.h - 6, C.metalInk);
-    px(ctx, x, FILL_BASE_Y - PX, FILL_GLASS.w, PX, C.metalInk);
     if (g.filled) this.drawCheck(ctx, spot, y - 12);
   }
 
