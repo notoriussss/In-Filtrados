@@ -218,14 +218,35 @@ test('snapshot maps my tasks and the active one', () => {
   assert.equal(msg.myActiveTask, 'rain-1');
 });
 
-test('matchEnded keeps winner and impostors', () => {
+test('matchEnded keeps winner, impostors and reason', () => {
   const ev: GrpcServerEvent = {
     event: 'matchEnded',
-    matchEnded: { winner: 'impostor', impostorIds: ['p3'] },
+    matchEnded: {
+      winner: 'impostor',
+      impostorIds: ['p3'],
+      reason: 'tanks_contaminated',
+    },
   };
   assert.deepEqual(toServerMessage(ev), {
     type: 'matchEnded',
     winner: 'impostor',
+    impostorIds: ['p3'],
+    reason: 'tanks_contaminated',
+  });
+});
+
+test('matchEnded with unknown reason drops reason field', () => {
+  const ev: GrpcServerEvent = {
+    event: 'matchEnded',
+    matchEnded: {
+      winner: 'crew',
+      impostorIds: ['p3'],
+      reason: 'unknown_reason',
+    },
+  };
+  assert.deepEqual(toServerMessage(ev), {
+    type: 'matchEnded',
+    winner: 'crew',
     impostorIds: ['p3'],
   });
 });

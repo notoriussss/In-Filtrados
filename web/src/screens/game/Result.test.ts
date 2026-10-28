@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Snapshot } from '@in-filtrados/messages';
 import { myImpact } from './Result';
+import { endSubtitle } from '../../game/meeting';
 
 describe('myImpact', () => {
   it('counts my tasks by 3R type', () => {
@@ -18,5 +19,20 @@ describe('myImpact', () => {
       reuse: { done: 1, total: 1 },
       recycle: { done: 0, total: 1 },
     });
+  });
+
+  it('selects the specific win subtitle per reason', () => {
+    expect(endSubtitle('impostor', 'tanks_contaminated')).toBe(
+      'Los tanques se contaminaron.',
+    );
+    expect(endSubtitle('impostor', 'timeout')).toBe(
+      'Se acabó el tiempo.',
+    );
+    expect(endSubtitle('crew', 'reservoir_full')).toBe(
+      'El embalse se llenó con las tareas 3R.',
+    );
+    expect(endSubtitle('crew', 'impostors_ejected', 1)).toBe(
+      'El infiltrado fue descubierto y expulsado.',
+    );
   });
 });

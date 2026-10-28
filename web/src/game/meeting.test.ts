@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Meeting, Snapshot } from '@in-filtrados/messages';
 import {
   coinsEarned,
+  endSubtitle,
   endTitle,
   meetingView,
   resultText,
@@ -161,6 +162,31 @@ describe('end of match', () => {
     expect(endTitle('crew')).toBe('¡Ganaron los cuidadores!');
     expect(endTitle('impostor')).toBe('¡Ganó el infiltrado!');
     expect(endTitle(null)).toBe('La partida terminó');
+  });
+
+  it('distinguishes why crew or impostor won in subtitle', () => {
+    expect(endSubtitle('crew', 'reservoir_full')).toBe(
+      'El embalse se llenó con las tareas 3R.',
+    );
+    expect(endSubtitle('crew', 'impostors_ejected', 1)).toBe(
+      'El infiltrado fue descubierto y expulsado.',
+    );
+    expect(endSubtitle('crew', 'impostors_ejected', 2)).toBe(
+      'Los infiltrados fueron expulsados.',
+    );
+    expect(endSubtitle('crew', null)).toBe(
+      'El embalse se llenó o el infiltrado quedó fuera.',
+    );
+    expect(endSubtitle('impostor', 'tanks_contaminated')).toBe(
+      'Los tanques se contaminaron.',
+    );
+    expect(endSubtitle('impostor', 'timeout')).toBe(
+      'Se acabó el tiempo.',
+    );
+    expect(endSubtitle('impostor', null)).toBe(
+      'Los tanques se contaminaron o se acabó el tiempo.',
+    );
+    expect(endSubtitle(null)).toBe('');
   });
 
   it('coins appear only after players counted the match', () => {

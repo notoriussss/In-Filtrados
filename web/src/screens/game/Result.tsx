@@ -1,6 +1,6 @@
 import { skinOf } from '../../shop';
 import { useEffect, useState } from 'react';
-import type { Snapshot, Winner } from '@in-filtrados/messages';
+import type { EndReason, Snapshot, Winner } from '@in-filtrados/messages';
 import { Stage } from '../../ui/Stage';
 import { Gota } from '../../ui/Gota';
 import { Icon, TASK_ICONS } from '../../ui/Icon';
@@ -8,7 +8,7 @@ import { Button, Chip, Gauge, TitleBar } from '../../ui/kit';
 import { api, type MeResponse } from '../../api';
 import { session } from '../../session';
 import { gameMap, type StationType } from '../../map';
-import { coinsEarned } from '../../game/meeting';
+import { coinsEarned, endSubtitle } from '../../game/meeting';
 import { APP_TEXT, RESULT_TEXT as T } from '../../texts';
 import { BACKGROUNDS } from '../backgrounds';
 
@@ -39,6 +39,7 @@ export function Result(props: {
   snap: Snapshot;
   meId: string;
   winner: Winner | null;
+  reason?: EndReason | null;
   impostorIds: string[];
   before: MeResponse | null;
   onExit: () => void;
@@ -101,7 +102,11 @@ export function Result(props: {
             className="sub1"
             style={{ position: 'absolute', left: 0, right: 0, top: 150 }}
           >
-            {crewWon ? T.CREW_SUB : T.IMPOSTOR_SUB}
+            {endSubtitle(
+              winner,
+              props.reason,
+              props.impostorIds.length,
+            )}
           </div>
         )}
         <section

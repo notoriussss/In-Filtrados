@@ -1,6 +1,7 @@
 import type {
   ClientMessage,
   EmergencyKind,
+  EndReason,
   PlayerView,
   Snapshot,
   Winner,
@@ -56,6 +57,7 @@ export type GameState = {
   status: SocketStatus;
   matchDown: boolean; // el gateway avisó que match no responde
   winner: Winner | null;
+  reason: EndReason | null;
   impostorIds: string[];
   action: Action | null; // botón USAR del HUD
   holding: boolean;
@@ -82,6 +84,7 @@ export class GameSession {
     status: { state: 'connected' },
     matchDown: false,
     winner: null,
+    reason: null,
     impostorIds: [],
     action: null,
     holding: false,
@@ -150,7 +153,11 @@ export class GameSession {
     this.socket.onMessage((msg) => {
       if (msg.type === 'snapshot') this.onSnapshot(msg);
       else if (msg.type === 'matchEnded') {
-        this.set({ winner: msg.winner, impostorIds: msg.impostorIds });
+        this.set({
+          winner: msg.winner,
+          reason: msg.reason ?? null,
+          impostorIds: msg.impostorIds,
+        });
       } else if (msg.type === 'error') {
         if (msg.code === 'SERVICE_UNAVAILABLE') {
           this.chatQueue.offline();

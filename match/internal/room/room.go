@@ -536,9 +536,13 @@ func (r *Room) startMatch(playerID string) {
 }
 
 // finishMatch termina la partida con el ganador dado y persiste (S2-06).
-func (r *Room) finishMatch(winner string) {
+func (r *Room) finishMatch(winner string, optReason ...string) {
 	if r.phase != matchv1.Phase_PLAYING && r.phase != matchv1.Phase_MEETING {
 		return
+	}
+	reason := ""
+	if len(optReason) > 0 {
+		reason = optReason[0]
 	}
 	r.phase = matchv1.Phase_ENDED
 	r.endedAt = r.now()
@@ -590,23 +594,25 @@ func (r *Room) finishMatch(winner string) {
 		r.publishAsync(events.RoutingKeyFinished, event)
 	}
 	log.Printf(
-		"room %s: partida %s terminada (ganador: %s)",
+		"room %s: partida %s terminada (ganador: %s, motivo: %s)",
 		r.Code,
 		r.MatchID,
 		winner,
+		reason,
 	)
 	r.broadcast()
-	r.broadcastMatchEnded(winner)
+	r.broadcastMatchEnded(winner, reason)
 }
 
 // broadcastMatchEnded envía MatchEnded a los streams de los jugadores (S2-06).
-func (r *Room) broadcastMatchEnded(winner string) {
+func (r *Room) broadcastMatchEnded(winner string, reason string) {
 	impostorIDs := r.impostorIDs()
 	ev := &matchv1.ServerEvent{
 		Event: &matchv1.ServerEvent_MatchEnded{
 			MatchEnded: &matchv1.MatchEnded{
 				Winner:      winner,
 				ImpostorIds: impostorIDs,
+				Reason:      reason,
 			},
 		},
 	}
@@ -650,20 +656,20 @@ func (r *Room) checkEndConditions() {
 		return
 	}
 	if r.reservoir >= reservoirMax {
-		r.finishMatch(events.WinnerCrew)
+		r.finishMatch(events.WinnerCrew, events.ReasonReservoirFull)
 		return
 	}
 	aliveImp, aliveCrew, deadCrew := r.countRoles()
 	if aliveImp == 0 {
-		r.finishMatch(events.WinnerCrew)
+		r.finishMatch(events.WinnerCrew, events.ReasonImpostorsEjected)
 		return
 	}
 	if aliveImp > 0 && deadCrew > 0 && aliveImp >= aliveCrew {
-		r.finishMatch(events.WinnerImpostor)
+		r.finishMatch(events.WinnerImpostor, events.ReasonTanksContaminated)
 		return
 	}
 	if r.tick-r.startTick >= int64(r.matchDuration/tickInterval) {
-		r.finishMatch(events.WinnerImpostor)
+		r.finishMatch(events.WinnerImpostor, events.ReasonTimeOut)
 		return
 	}
 }

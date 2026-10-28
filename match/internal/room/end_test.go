@@ -387,6 +387,13 @@ drainLoop:
 			receivedEnded.Winner,
 		)
 	}
+	if receivedEnded.Reason != events.ReasonReservoirFull {
+		t.Errorf(
+			"reason en MatchEnded esperado %s, got %s",
+			events.ReasonReservoirFull,
+			receivedEnded.Reason,
+		)
+	}
 	sort.Strings(receivedEnded.ImpostorIds)
 	if len(receivedEnded.ImpostorIds) != 1 ||
 		receivedEnded.ImpostorIds[0] != "imp" {
@@ -449,5 +456,84 @@ func TestRoomMemoryCleanupAfterDelay(t *testing.T) {
 	_, openOut := <-outA
 	if openOut {
 		t.Errorf("el canal outA debio cerrarse")
+	}
+}
+
+// TestMatchEndedReasons verifica que cada condición de fin envía su motivo.
+func TestMatchEndedReasons(t *testing.T) {
+	cases := []struct {
+		name       string
+		setup      func(r *Room)
+		wantWinner string
+		wantReason string
+	}{
+		{
+			name: "reservoir_full",
+			setup: func(r *Room) {
+				r.reservoir = 100
+			},
+			wantWinner: events.WinnerCrew,
+			wantReason: events.ReasonReservoirFull,
+		},
+		{
+			name: "impostors_ejected",
+			setup: func(r *Room) {
+				r.players["imp"].view.Alive = false
+				r.players["imp"].ejected = true
+			},
+			wantWinner: events.WinnerCrew,
+			wantReason: events.ReasonImpostorsEjected,
+		},
+		{
+			name: "tanks_contaminated",
+			setup: func(r *Room) {
+				r.players["c2"].view.Alive = false
+			},
+			wantWinner: events.WinnerImpostor,
+			wantReason: events.ReasonTanksContaminated,
+		},
+		{
+			name: "timeout",
+			setup: func(r *Room) {
+				r.tick = r.startTick + int64(r.matchDuration/tickInterval)
+			},
+			wantWinner: events.WinnerImpostor,
+			wantReason: events.ReasonTimeOut,
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			players := []string{"c1", "c2", "imp"}
+			impMap := map[string]bool{"imp": true}
+			r := setupPlayingRoom(t, players, impMap, nil, nil)
+			tc.setup(r)
+			r.step()
+
+			if r.phase != matchv1.Phase_ENDED {
+				t.Fatalf("debio terminar en ENDED")
+			}
+			if r.ended == nil {
+				t.Fatalf("r.ended es nil")
+			}
+			me := r.ended.GetMatchEnded()
+			if me == nil {
+				t.Fatalf("GetMatchEnded es nil")
+			}
+			if me.Winner != tc.wantWinner {
+				t.Errorf(
+					"winner esperado %s, got %s",
+					tc.wantWinner,
+					me.Winner,
+				)
+			}
+			if me.Reason != tc.wantReason {
+				t.Errorf(
+					"reason esperado %s, got %s",
+					tc.wantReason,
+					me.Reason,
+				)
+			}
+		})
 	}
 }

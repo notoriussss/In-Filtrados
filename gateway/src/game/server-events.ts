@@ -3,6 +3,7 @@ import type {
   ChatMessage,
   Emergency,
   EmergencyKind,
+  EndReason,
   ErrorCode,
   Meeting,
   MeetingButton,
@@ -58,8 +59,25 @@ const ACTIVITIES: readonly string[] = [
   'fix',
 ];
 const EMERGENCY_KINDS: readonly string[] = ['pipe', 'steam'];
+const VALID_END_REASONS: readonly EndReason[] = [
+  'reservoir_full',
+  'impostors_ejected',
+  'tanks_contaminated',
+  'timeout',
+];
 
-type GrpcMatchEnded = { winner: string; impostorIds: string[] };
+function normalizeEndReason(raw?: string): EndReason | undefined {
+  if (!raw) return undefined;
+  return VALID_END_REASONS.includes(raw as EndReason)
+    ? (raw as EndReason)
+    : undefined;
+}
+
+type GrpcMatchEnded = {
+  winner: string;
+  impostorIds: string[];
+  reason?: string;
+};
 
 export type GrpcServerEvent =
   | { event: 'snapshot'; snapshot: GrpcSnapshot }
@@ -75,10 +93,12 @@ export function toServerMessage(ev: GrpcServerEvent): ServerMessage | null {
   if (ev.event === 'matchEnded') {
     const winner = ev.matchEnded.winner;
     if (winner !== 'crew' && winner !== 'impostor') return null;
+    const reason = normalizeEndReason(ev.matchEnded.reason);
     return {
       type: 'matchEnded',
       winner,
       impostorIds: [...(ev.matchEnded.impostorIds ?? [])],
+      ...(reason ? { reason } : {}),
     };
   }
   if (ev.event === 'error') {

@@ -47,7 +47,12 @@ export type InteractMessage =
 // Gateway -> browser
 export type ServerMessage =
   | Snapshot
-  | { type: 'matchEnded'; winner: Winner; impostorIds: string[] }
+  | {
+      type: 'matchEnded';
+      winner: Winner;
+      impostorIds: string[];
+      reason?: EndReason;
+    }
   | { type: 'error'; code: ErrorCode; message: string }
   | { type: 'pong' }; // respuesta al ping del navegador
 
@@ -124,6 +129,13 @@ export type Phase = 'LOBBY' | 'PLAYING' | 'MEETING' | 'ENDED';
 export type Role = 'NO_ROLE' | 'CREW' | 'IMPOSTOR';
 
 export type Winner = 'crew' | 'impostor';
+
+// Motivos por los que termina la partida (S2-06).
+export type EndReason =
+  | 'reservoir_full'
+  | 'impostors_ejected'
+  | 'tanks_contaminated'
+  | 'timeout';
 
 export type PlayerView = {
   id: string;

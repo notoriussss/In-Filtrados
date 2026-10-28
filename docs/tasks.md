@@ -116,7 +116,16 @@ En la semana 2 se agregan mensajes; se agregan aquí, nunca se duplican en `web`
   | { type: 'callMeeting' }                                       // mesa de reuniones
 
 // Gateway → navegador
-  | { type: 'matchEnded'; winner: 'crew' | 'impostor'; impostorIds: string[] }
+  | {
+      type: 'matchEnded';
+      winner: 'crew' | 'impostor';
+      impostorIds: string[];
+      reason?:
+        | 'reservoir_full'
+        | 'impostors_ejected'
+        | 'tanks_contaminated'
+        | 'timeout';
+    }
 
 // Campos nuevos del snapshot
 tanks: { slot, ownerId, contamination /* 0 a 100 */, dead }[];

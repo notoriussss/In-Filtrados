@@ -246,9 +246,12 @@ message ChatMessage {
   int64  tick      = 4;
 }
 // MatchEnded: fin de la partida. impostor_ids tiene 2 con 7 o más jugadores.
+// reason indica el motivo ("reservoir_full", "impostors_ejected",
+// "tanks_contaminated", "timeout").
 message MatchEnded {
   string          winner       = 1; // "crew" o "impostor"
   repeated string impostor_ids = 2;
+  string          reason       = 3;
 }
 message PlayerView {
   string id        = 1;

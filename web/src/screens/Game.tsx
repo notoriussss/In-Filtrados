@@ -110,6 +110,7 @@ export function Game(props: {
           snap={snap}
           meId={game.meId}
           winner={state.winner}
+          reason={state.reason}
           impostorIds={state.impostorIds}
           before={before}
           onExit={props.onLeave}

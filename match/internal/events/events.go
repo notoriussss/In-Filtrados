@@ -29,6 +29,14 @@ const (
 	WinnerImpostor = "impostor"
 )
 
+// Razones de fin de partida (S2-06).
+const (
+	ReasonReservoirFull     = "reservoir_full"
+	ReasonImpostorsEjected  = "impostors_ejected"
+	ReasonTanksContaminated = "tanks_contaminated"
+	ReasonTimeOut           = "timeout"
+)
+
 // Publisher publica un evento en el exchange `game.events`.
 type Publisher interface {
 	Publish(ctx context.Context, routingKey string, payload any) error
