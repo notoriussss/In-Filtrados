@@ -1,10 +1,12 @@
 import type {
   Emergency,
+  MeetingButton,
   OilDrop,
   PlayerView,
   TankView,
 } from '@in-filtrados/messages';
 import { type GameMap, meetingMarker } from '../../map';
+import { GAME_RULES } from '../../constants';
 import type { Frame, MapAssets } from './assets';
 import {
   type Camera,
@@ -13,12 +15,14 @@ import {
   worldToScreen,
 } from './camera';
 import {
+  type MeetingPointState,
   type StationMarks,
   drawBar,
   drawFixArrows,
   drawFixPoints,
   drawHoldProgress,
-  drawMeetingPoint,
+  drawMeetingBeacon,
+  drawMeetingFloor,
   drawOilDrops,
   drawStationMarks,
   drawTag,
@@ -41,6 +45,7 @@ export type WorldFrame = {
   tanks: TankView[];
   oilDrops: OilDrop[];
   emergency: Emergency | null;
+  meeting: MeetingButton | null;
   marks: StationMarks | null;
   visionRadius: number | null; // null: sin límite (fantasma, reunión)
   visible: (p: PlayerView) => boolean;
@@ -86,6 +91,12 @@ export class WorldRenderer {
         f.tick,
       );
     }
+    drawMeetingFloor(
+      ctx,
+      meetingMarker(this.map),
+      now,
+      this.meetingState(f),
+    );
     this.drawDepthSorted(ctx, f, view);
     // La luz de noche del paquete se multiplica sobre todo el mundo.
     ctx.globalCompositeOperation = 'multiply';
@@ -93,9 +104,14 @@ export class WorldRenderer {
     ctx.globalCompositeOperation = 'source-over';
 
     drawFixPoints(ctx, this.map.fixPoints, f.emergency, now);
-    drawMeetingPoint(ctx, meetingMarker(this.map), now);
     renderActivities(ctx, f.players, now, f.visible);
     this.drawLabels(ctx, f);
+    drawMeetingBeacon(
+      ctx,
+      meetingMarker(this.map),
+      now,
+      this.meetingState(f),
+    );
     renderDarkness(ctx, view, this.me(f), f.visionRadius);
     if (f.marks) drawStationMarks(ctx, this.map.stations, f.marks, now);
     const me = this.me(f);
@@ -122,6 +138,21 @@ export class WorldRenderer {
 
   private me(f: WorldFrame): PlayerView | undefined {
     return f.players.find((p) => p.id === f.meId);
+  }
+
+  // meetingState: estado de la mesa para el jugador de este frame.
+  private meetingState(f: WorldFrame): MeetingPointState | null {
+    const me = this.me(f);
+    const marker = meetingMarker(this.map);
+    if (!f.meeting || !me || !marker) return null;
+    const near =
+      Math.hypot(me.x - marker.x, me.y - marker.y) <=
+      GAME_RULES.MEETING_RANGE;
+    return {
+      button: f.meeting,
+      tick: f.tick ?? 0,
+      near,
+    };
   }
 
   private drawLayer(

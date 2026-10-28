@@ -31,9 +31,18 @@ button:disabled { cursor: default; opacity: .55; transform: none !important; }
 .hud .mini .dot { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; box-shadow: 0 0 0 3px var(--ink); }
 .hud .mini .dot.me { background: #fff; }
 .hud .mini .dot.task { background: var(--amber); width: 9px; height: 9px; margin: -4px 0 0 -4px; }
+.hud .mini .dot.tank { width: 16px; height: 16px; margin: -8px 0 0 -8px; background: var(--pan); border: 3px solid var(--aqua); border-radius: 3px; box-shadow: 0 0 0 2px var(--ink); }
+.hud .mini .dot.tank::after { content: ''; position: absolute; left: 3px; right: 3px; bottom: 2px; height: 5px; background: var(--water); }
+.hud .mini .dot.tank.dead { border-color: var(--coral); }
+.hud .mini .dot.tank.dead::after { background: var(--coral); }
 .hud .mini .dot.meet { background: transparent; border: 3px solid var(--amber); width: 16px; height: 16px; margin: -8px 0 0 -8px; box-shadow: 0 0 0 3px var(--ink); border-radius: 50%; }
+.hud .mini .dot.meet.ready { border-color: var(--aqua); animation: meet-pulse 1.2s steps(2) infinite; }
+@keyframes meet-pulse { 50% { transform: scale(1.3); box-shadow: 0 0 0 3px var(--ink), 0 0 0 6px rgba(126, 230, 216, .35); } }
+.hud .mini .mm-keys { display: inline-flex; align-items: center; gap: 10px; }
 .hud .mini .mm-key { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--amber); }
 .hud .mini .mm-key i { width: 10px; height: 10px; border: 2px solid var(--amber); border-radius: 50%; }
+.hud .mini .mm-key.tank { color: var(--aqua); }
+.hud .mini .mm-key.tank i { border-color: var(--aqua); background: rgba(126, 230, 216, .35); border-radius: 3px; }
 .hud .mini .dot.fix { background: var(--coral); animation: blink 0.6s steps(1) infinite; }
 .hud .me-card .portrait { width: 88px; height: 125px; image-rendering: pixelated; margin: -10px 0 -10px; }
 

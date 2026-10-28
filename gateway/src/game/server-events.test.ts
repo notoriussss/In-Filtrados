@@ -24,6 +24,7 @@ test('snapshot keeps only the fields of the contract', () => {
       meeting: {
         reporterId: 'p2',
         tankSlot: 1,
+        reason: 'MEETING_REASON_REPORT',
         votesCast: [],
         endsAtTick: 900,
         votingClosed: false,
@@ -55,6 +56,7 @@ test('snapshot keeps only the fields of the contract', () => {
     meeting: {
       reporterId: 'p2',
       tankSlot: 1,
+      reason: 'report',
       votesCast: [],
       endsAtTick: 900,
       votingClosed: false,
@@ -71,6 +73,7 @@ test('snapshot keeps only the fields of the contract', () => {
     myActiveTask: null,
     emergency: null,
     mySabotage: null,
+    myMeeting: null,
   });
 });
 
@@ -88,6 +91,7 @@ test('snapshot with meeting result maps ejectedId', () => {
       meeting: {
         reporterId: 'p1',
         tankSlot: 0,
+        reason: 'MEETING_REASON_EMERGENCY',
         votesCast: ['p1', 'p2'],
         endsAtTick: 1000,
         votingClosed: true,
@@ -110,6 +114,7 @@ test('snapshot with meeting result maps ejectedId', () => {
     meeting: {
       reporterId: 'p1',
       tankSlot: 0,
+      reason: 'emergency',
       votesCast: ['p1', 'p2'],
       endsAtTick: 1000,
       votingClosed: true,
@@ -124,6 +129,7 @@ test('snapshot with meeting result maps ejectedId', () => {
     myActiveTask: null,
     emergency: null,
     mySabotage: null,
+    myMeeting: null,
   });
 });
 
@@ -281,6 +287,7 @@ test('S3-05: activity, emergency and mySabotage are mapped', () => {
         extra: 'x',
       },
       mySabotage: { readyAtTick: 840, pipesLeft: 1, extra: 'x' },
+      myMeeting: { readyAtTick: 1000, callsLeft: 1, extra: 'x' },
     },
   } as unknown as GrpcServerEvent;
 
@@ -308,6 +315,7 @@ test('S3-05: activity, emergency and mySabotage are mapped', () => {
     heldPoints: ['pipe-west'],
   });
   assert.deepEqual(msg.mySabotage, { readyAtTick: 840, pipesLeft: 1 });
+  assert.deepEqual(msg.myMeeting, { readyAtTick: 1000, callsLeft: 1 });
 });
 
 test('S3-05: an unknown emergency kind is dropped', () => {

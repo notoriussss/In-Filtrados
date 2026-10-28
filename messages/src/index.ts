@@ -17,6 +17,8 @@ export type ClientMessage =
   // punto de reparación de shared/map.json (fixPoints).
   | { type: 'sabotage'; kind: EmergencyKind }
   | { type: 'fix'; pointId: string }
+  // Mesa: convocar una reunión desde la mesa del mirador.
+  | { type: 'callMeeting' }
   // Elegir color en LOBBY; match lo acepta si nadie conectado lo tiene.
   | { type: 'pickColor'; color: string }
   // Elegir accesorio en LOBBY.
@@ -70,6 +72,13 @@ export type Snapshot = {
   // solo en el snapshot del impostor, cuándo puede volver a sabotear.
   emergency: Emergency | null;
   mySabotage: SabotageStatus | null;
+  // Mesa: estado de la mesa de reuniones; null fuera de PLAYING.
+  myMeeting: MeetingButton | null;
+};
+
+export type MeetingButton = {
+  readyAtTick: number; // próximo tick en que se puede convocar
+  callsLeft: number; // convocatorias que quedan en la partida
 };
 
 // S3-05: tubería rota o vapor en la planta.
@@ -135,9 +144,12 @@ export type TaskProgress = {
   total: number;
 };
 
+export type MeetingReason = 'report' | 'emergency';
+
 export type Meeting = {
   reporterId: string;
-  tankSlot: number;
+  tankSlot: number; // -1 si la reunión fue convocada
+  reason: MeetingReason;
   votesCast: string[]; // quién ya votó, nunca por quién
   endsAtTick: number;
   votingClosed: boolean;

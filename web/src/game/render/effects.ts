@@ -1,5 +1,11 @@
-import type { Emergency, OilDrop } from '@in-filtrados/messages';
+import type {
+  Emergency,
+  MeetingButton,
+  OilDrop,
+} from '@in-filtrados/messages';
 import type { FixPoint, Marker, Station } from '../../map';
+import { ACTION_TEXT, GAME_RULES } from '../../constants';
+import { HUD_TEXT } from '../../texts';
 import { type Camera, worldToScreen } from './camera';
 
 // Lo que se dibuja encima del mapa, en unidades del mundo (el contexto ya
@@ -235,35 +241,247 @@ export function drawFixPoints(
   }
 }
 
-// drawMeetingPoint: el anillo que late en la mesa de reuniones y su
-// cartel, para que se sepa adónde llevan a todos al abrirse una reunión.
-export function drawMeetingPoint(
+// Mesa: estado visual. button llega del snapshot; near lo
+// calcula el renderer con la posición del jugador.
+export type MeetingPointState = {
+  button: MeetingButton;
+  tick: number;
+  near: boolean;
+};
+
+const COOLDOWN_COLOR = '#5b7386';
+
+function meetingAvailable(state: MeetingPointState | null): boolean {
+  return (
+    state !== null &&
+    state.button.callsLeft > 0 &&
+    state.tick >= state.button.readyAtTick
+  );
+}
+
+function meetingColor(
+  state: MeetingPointState | null,
+  near: boolean,
+): string {
+  if (!meetingAvailable(state)) return COOLDOWN_COLOR;
+  return near ? AQUA : AMBER;
+}
+
+// drawMeetingFloor: el decal que va debajo de los jugadores. Un anillo
+// de agua, las marcas de las 3R y un arco de espera cuando la mesa está
+// en cooldown.
+export function drawMeetingFloor(
   ctx: CanvasRenderingContext2D,
   marker: Marker | undefined,
   now: number,
+  state: MeetingPointState | null,
 ): void {
   if (!marker) return;
+  const near = state?.near ?? false;
+  const color = meetingColor(state, near);
   const t = (now % 2400) / 2400;
-  ctx.strokeStyle = AMBER;
+
+  ctx.save();
+  ctx.strokeStyle = color;
   ctx.lineWidth = 3;
   ctx.globalAlpha = 0.9;
   ctx.beginPath();
-  ctx.ellipse(marker.x, marker.y + 6, 46, 18, 0, 0, Math.PI * 2);
+  ctx.ellipse(marker.x, marker.y + 8, 68, 28, 0, 0, Math.PI * 2);
   ctx.stroke();
-  ctx.globalAlpha = (1 - t) * 0.7;
+
+  ctx.globalAlpha = 0.45;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.ellipse(marker.x, marker.y + 8, 54, 22, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Onda de agua que sale del centro cada 2.4 s.
+  ctx.globalAlpha = (1 - t) * 0.35;
+  ctx.lineWidth = 2;
   ctx.beginPath();
   ctx.ellipse(
     marker.x,
-    marker.y + 6,
-    46 + t * 40,
-    18 + t * 16,
+    marker.y + 8,
+    68 + t * 44,
+    28 + t * 18,
     0,
     0,
     Math.PI * 2,
   );
   ctx.stroke();
+
+  // Doce marcas alrededor, como las horas de un reloj de estación.
+  ctx.globalAlpha = 0.8;
+  ctx.fillStyle = color;
+  for (let i = 0; i < 12; i++) {
+    const angle = (i / 12) * Math.PI * 2;
+    const x = marker.x + Math.cos(angle) * 68;
+    const y = marker.y + 8 + Math.sin(angle) * 28;
+    ctx.fillRect(Math.round(x) - 2, Math.round(y) - 2, 4, 4);
+  }
+
+  // Arco de espera: se vacía solo cuando la mesa está en cooldown.
+  if (state && state.button.callsLeft > 0) {
+    const left = Math.max(0, state.button.readyAtTick - state.tick);
+    if (left > 0) {
+      const fraction = Math.min(
+        1,
+        left / GAME_RULES.MEETING_CALL_COOLDOWN_TICKS,
+      );
+      ctx.globalAlpha = 0.9;
+      ctx.strokeStyle = AMBER;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.ellipse(
+        marker.x,
+        marker.y + 8,
+        76,
+        32,
+        0,
+        -Math.PI / 2,
+        -Math.PI / 2 + fraction * Math.PI * 2,
+      );
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
+// drawMeetingBeacon: el holograma y el cartel que se ven por encima de
+// la mesa. Cuando el jugador está cerca muestra la acción disponible.
+export function drawMeetingBeacon(
+  ctx: CanvasRenderingContext2D,
+  marker: Marker | undefined,
+  now: number,
+  state: MeetingPointState | null,
+): void {
+  if (!marker) return;
+  const near = state?.near ?? false;
+  const color = meetingColor(state, near);
+  const bob = Math.sin(now / 600) * 3;
+
+  ctx.save();
+  // Columna de luz: tres franjas translúcidas, más anchas abajo.
+  ctx.fillStyle = color;
+  for (let i = 0; i < 3; i++) {
+    ctx.globalAlpha = 0.07 - i * 0.018;
+    ctx.fillRect(
+      marker.x - 20 + i * 7,
+      marker.y - 78,
+      40 - i * 14,
+      70,
+    );
+  }
+
+  // Base del holograma sobre la mesa.
+  ctx.globalAlpha = 0.9;
+  ctx.fillStyle = INK;
+  ctx.beginPath();
+  ctx.ellipse(marker.x, marker.y - 20, 18, 7, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.ellipse(marker.x, marker.y - 20, 12, 4.5, 0, 0, Math.PI * 2);
+  ctx.fill();
   ctx.globalAlpha = 1;
-  drawTag(ctx, marker.name, marker.x, marker.y - 46);
+  drawWaterDrop(ctx, marker.x, marker.y - 42 + bob, color);
+
+  let label: string = ACTION_TEXT.CALL_MEETING;
+  if (state) {
+    if (state.button.callsLeft <= 0) {
+      label = ACTION_TEXT.NO_MEETINGS;
+    } else if (state.tick < state.button.readyAtTick) {
+      const wait = Math.ceil(
+        (state.button.readyAtTick - state.tick) /
+          GAME_RULES.TICKS_PER_SECOND,
+      );
+      label = ACTION_TEXT.meetingWait(wait);
+    }
+  }
+
+  if (near) {
+    drawMeetingPrompt(ctx, marker.x, marker.y - 64, label, color, true);
+  } else {
+    drawMeetingPrompt(
+      ctx,
+      marker.x,
+      marker.y + 44,
+      HUD_TEXT.MEETING_POINT.toUpperCase(),
+      color,
+      false,
+    );
+  }
+  ctx.restore();
+}
+
+// drawWaterDrop: gota de píxel que flota sobre la mesa.
+function drawWaterDrop(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  color: string,
+): void {
+  ctx.fillStyle = INK;
+  ctx.fillRect(x - 6, y - 6, 12, 12);
+  ctx.fillRect(x - 2, y - 12, 4, 6);
+  ctx.fillStyle = color;
+  ctx.fillRect(x - 4, y - 5, 8, 8);
+  ctx.fillRect(x - 2, y - 10, 4, 5);
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(x - 1, y - 3, 2, 2);
+}
+
+// drawMeetingPrompt: cartel o acción contextual debajo de la mesa.
+function drawMeetingPrompt(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  label: string,
+  color: string,
+  key: boolean,
+): void {
+  ctx.font = TAG_FONT;
+  const textWidth = Math.ceil(ctx.measureText(label).width);
+  const keyWidth = key ? 18 : 0;
+  const width = textWidth + keyWidth + 18;
+  const height = 20;
+  const left = Math.round(x - width / 2);
+  const top = Math.round(y - height / 2);
+
+  ctx.fillStyle = INK;
+  ctx.fillRect(left - 2, top - 2, width + 4, height + 4);
+  ctx.fillStyle = PANEL;
+  ctx.fillRect(left, top, width, height);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(left + 1, top + 1, width - 2, height - 2);
+
+  let textX = left + 9;
+  if (key) {
+    drawKeycap(ctx, left + 7, top + 3, ACTION_TEXT.KEY_HINT);
+    textX += keyWidth;
+  }
+  ctx.fillStyle = TEXT;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(label, textX, top + height / 2 + 1);
+}
+
+function drawKeycap(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  label: string,
+): void {
+  ctx.fillStyle = '#6c8da1';
+  ctx.fillRect(x, y, 14, 14);
+  ctx.fillStyle = INK;
+  ctx.fillRect(x + 2, y + 2, 10, 10);
+  ctx.fillStyle = TEXT;
+  ctx.font = TAG_FONT;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(label, x + 7, y + 8);
 }
 
 function drawPipe(ctx: CanvasRenderingContext2D, x: number, y: number) {

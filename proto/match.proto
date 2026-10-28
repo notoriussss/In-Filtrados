@@ -44,6 +44,8 @@ message ClientAction {
     PickSkin      pick_skin      = 13;
     // Lo que el jugador tiene comprado; solo lo manda el gateway.
     SetOwned      set_owned      = 14;
+    // Convocar una reunión desde la mesa del mirador.
+    CallMeeting   call_meeting   = 15;
   }
 }
 message Join {
@@ -78,6 +80,9 @@ message Contaminate {
 message Report {
   int32 tank_slot = 1;
 }
+// CallMeeting: convocar una reunión desde la mesa del mirador. La valida
+// match: fase, distancia, espera y convocatorias restantes.
+message CallMeeting {}
 // Vote: votar por un jugador o saltar el voto (S2-05).
 message Vote {
   oneof choice {
@@ -166,6 +171,8 @@ message Snapshot {
   Emergency      emergency   = 15;
   // S3-05: solo en el snapshot del impostor (vacío para el resto).
   SabotageStatus my_sabotage = 16;
+  // Mesa: estado de la mesa de reuniones; vacío fuera de PLAYING.
+  MeetingButton  my_meeting  = 17;
 }
 // Emergency: tubería rota o vapor en la planta (S3-05).
 message Emergency {
@@ -177,6 +184,11 @@ message Emergency {
 message SabotageStatus {
   int64 ready_at_tick = 1; // espera compartida de 40 s
   int32 pipes_left    = 2; // la tubería se rompe máximo 2 veces
+}
+// MeetingButton: estado de la mesa para el destinatario.
+message MeetingButton {
+  int64 ready_at_tick = 1; // próximo tick en que se puede convocar
+  int32 calls_left    = 2; // convocatorias que quedan en la partida
 }
 // OilDrop: gota del rastro del impostor tras contaminar (S2-12).
 message OilDrop {
@@ -200,9 +212,13 @@ message TaskProgress {
   int32 completed = 1;
   int32 total     = 2;
 }
+enum MeetingReason {
+  MEETING_REASON_REPORT    = 0; // alguien reportó un tanque muerto
+  MEETING_REASON_EMERGENCY = 1; // alguien convocó desde la mesa
+}
 message Meeting {
   string          reporter_id   = 1;
-  int32           tank_slot     = 2;
+  int32           tank_slot     = 2; // -1 si la reunión fue convocada
   reserved 3; // last_visitors: la reunión ya no dice quién pasó por el tanque
   reserved "last_visitors";
   repeated string votes_cast    = 4; // quién ya votó, nunca por quién
@@ -210,6 +226,7 @@ message Meeting {
   bool            voting_closed = 6; // true durante los 5 s de resultado
   string          ejected_id    = 7; // vacío si nadie salió
   bool            was_impostor  = 8; // solo vale si ejected_id no está vacío
+  MeetingReason   reason        = 9;
 }
 message ChatMessage {
   string id        = 1; // client_msg_id

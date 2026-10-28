@@ -360,6 +360,7 @@ export class GameSession {
       tanks: snap?.tanks ?? [],
       oilDrops: snap?.oilDrops ?? [],
       emergency: playing ? (snap?.emergency ?? null) : null,
+      meeting: playing ? (snap?.myMeeting ?? null) : null,
       marks: playing && snap ? stationMarks(snap) : null,
       visionRadius: shown,
       visible: (p) => visiblePlayer(me, p, shown),
@@ -400,6 +401,8 @@ export class GameSession {
             this.reportedTanks,
             snap.myTasks ?? [],
             snap.emergency,
+            snap.myMeeting,
+            snap.tick,
           )
         : null;
     if (!sameAction(action, this.state.action)) this.set({ action });

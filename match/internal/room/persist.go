@@ -44,6 +44,9 @@ type savedRoom struct {
 	SabotageReadyAt int64           `json:"sabotage_ready_at,omitempty"`
 	PipesUsed       int             `json:"pipes_used,omitempty"`
 	NextRandomAt    int64           `json:"next_random_at,omitempty"`
+	// Mesa: estado de la mesa de reuniones.
+	MeetingReadyAt   int64 `json:"meeting_ready_at,omitempty"`
+	MeetingCallsUsed int   `json:"meeting_calls_used,omitempty"`
 }
 
 type savedEmergency struct {
@@ -87,14 +90,15 @@ type savedTank struct {
 }
 
 type savedMeeting struct {
-	ReporterID   string               `json:"reporter_id"`
-	TankSlot     int32                `json:"tank_slot"`
-	Votes        map[string]savedVote `json:"votes"`
-	VotingEndsAt int64                `json:"voting_ends_at"`
-	ResultEndsAt int64                `json:"result_ends_at"`
-	VotingClosed bool                 `json:"voting_closed"`
-	EjectedID    string               `json:"ejected_id"`
-	WasImpostor  bool                 `json:"was_impostor"`
+	ReporterID   string                `json:"reporter_id"`
+	TankSlot     int32                 `json:"tank_slot"`
+	Reason       matchv1.MeetingReason `json:"reason,omitempty"`
+	Votes        map[string]savedVote  `json:"votes"`
+	VotingEndsAt int64                 `json:"voting_ends_at"`
+	ResultEndsAt int64                 `json:"result_ends_at"`
+	VotingClosed bool                  `json:"voting_closed"`
+	EjectedID    string                `json:"ejected_id"`
+	WasImpostor  bool                  `json:"was_impostor"`
 }
 
 type savedVote struct {
@@ -162,9 +166,11 @@ func (r *Room) toSaved() savedRoom {
 		Participants: r.participants,
 		EventHistory: r.eventHistory,
 
-		SabotageReadyAt: r.sabotageReadyAt,
-		PipesUsed:       r.pipesUsed,
-		NextRandomAt:    r.nextRandomAt,
+		SabotageReadyAt:  r.sabotageReadyAt,
+		PipesUsed:        r.pipesUsed,
+		NextRandomAt:     r.nextRandomAt,
+		MeetingReadyAt:   r.meetingReadyAt,
+		MeetingCallsUsed: r.meetingCallsUsed,
 	}
 	if e := r.emergency; e != nil {
 		s.Emergency = &savedEmergency{
@@ -222,6 +228,7 @@ func (r *Room) toSaved() savedRoom {
 		s.Meeting = &savedMeeting{
 			ReporterID:   m.reporterID,
 			TankSlot:     m.tankSlot,
+			Reason:       m.reason,
 			Votes:        votes,
 			VotingEndsAt: m.votingEndsAt,
 			ResultEndsAt: m.resultEndsAt,
@@ -273,6 +280,11 @@ func Restore(state []byte, m *Map, opts ...Option) (*Room, error) {
 	r.sabotageReadyAt = s.SabotageReadyAt
 	r.pipesUsed = s.PipesUsed
 	r.nextRandomAt = s.NextRandomAt
+	r.meetingReadyAt = s.MeetingReadyAt
+	if r.meetingReadyAt == 0 {
+		r.meetingReadyAt = r.startTick + meetingCallGraceTicks
+	}
+	r.meetingCallsUsed = s.MeetingCallsUsed
 	if se := s.Emergency; se != nil && isEmergencyKind(se.Kind) {
 		r.emergency = &emergencyState{
 			kind:     se.Kind,
@@ -350,6 +362,7 @@ func Restore(state []byte, m *Map, opts ...Option) (*Room, error) {
 		r.meeting = &meetingState{
 			reporterID:   sm.ReporterID,
 			tankSlot:     sm.TankSlot,
+			reason:       sm.Reason,
 			votes:        votes,
 			votingEndsAt: sm.VotingEndsAt,
 			resultEndsAt: sm.ResultEndsAt,

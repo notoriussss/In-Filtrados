@@ -4,15 +4,21 @@ import type {
   ClientMessage,
   Emergency,
   EmergencyKind,
+  MeetingButton,
   MyTask,
   PlayerView,
   Role,
   TankView,
 } from '@in-filtrados/messages';
-import type { GameMap } from '../map';
+import { type GameMap, meetingMarker } from '../map';
 import { ACTION_TEXT, GAME_RULES } from '../constants';
 
-export type ActionKind = 'task' | 'report' | 'contaminate' | 'fix';
+export type ActionKind =
+  | 'task'
+  | 'report'
+  | 'contaminate'
+  | 'fix'
+  | 'meeting';
 
 export type Action = {
   kind: ActionKind;
@@ -42,6 +48,8 @@ export function contextAction(
   reported: ReadonlySet<number> = new Set(),
   myTasks?: readonly MyTask[],
   emergency: Emergency | null = null,
+  meeting: MeetingButton | null = null,
+  tick = 0,
 ): Action | null {
   const tankPos = (slot: number) => map.tanks.find((t) => t.slot === slot);
   const nearestTank = (
@@ -91,6 +99,37 @@ export function contextAction(
         label: ACTION_TEXT.REPORT,
         enabled: true,
         tankSlot: dead.slot,
+      };
+    }
+
+    const table = meetingMarker(map);
+    if (
+      meeting &&
+      table &&
+      emergency === null &&
+      distance(me.x, me.y, table.x, table.y) <= GAME_RULES.MEETING_RANGE
+    ) {
+      if (meeting.callsLeft <= 0) {
+        return {
+          kind: 'meeting',
+          label: ACTION_TEXT.NO_MEETINGS,
+          enabled: false,
+        };
+      }
+      if (tick < meeting.readyAtTick) {
+        const wait = Math.ceil(
+          (meeting.readyAtTick - tick) / GAME_RULES.TICKS_PER_SECOND,
+        );
+        return {
+          kind: 'meeting',
+          label: ACTION_TEXT.meetingWait(wait),
+          enabled: false,
+        };
+      }
+      return {
+        kind: 'meeting',
+        label: ACTION_TEXT.CALL_MEETING,
+        enabled: true,
       };
     }
 
@@ -150,6 +189,8 @@ export function actionMessage(action: Action): ClientMessage {
       return { type: 'interact', stationId: action.stationId! };
     case 'fix':
       return { type: 'fix', pointId: action.pointId! };
+    case 'meeting':
+      return { type: 'callMeeting' };
   }
 }
 
@@ -163,6 +204,7 @@ export function holdDuration(kind: ActionKind): number {
     case 'fix':
       return GAME_RULES.STEAM_FIX_MS;
     case 'report':
+    case 'meeting':
       return 0;
   }
 }

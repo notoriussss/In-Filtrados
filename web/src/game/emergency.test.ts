@@ -23,6 +23,7 @@ function snap(extra: Partial<Snapshot>): Snapshot {
     myActiveTask: null,
     emergency: null,
     mySabotage: { readyAtTick: 0, pipesLeft: 2 },
+    myMeeting: null,
     ...extra,
   };
 }

@@ -76,6 +76,16 @@ test('unknown types and invalid JSON are rejected', () => {
   assert.equal(parseClientMessage('{ no es json'), null);
 });
 
+test('Mesa: callMeeting is a message with no payload', () => {
+  assert.deepEqual(parse({ type: 'callMeeting' }), {
+    type: 'callMeeting',
+  });
+  assert.deepEqual(
+    toGrpcAction(parse({ type: 'callMeeting' })!),
+    { callMeeting: {} },
+  );
+});
+
 test('S3-05: sabotage only with a known kind', () => {
   assert.deepEqual(toGrpcAction(parse({ type: 'sabotage', kind: 'pipe' })!), {
     sabotage: { kind: 'pipe' },

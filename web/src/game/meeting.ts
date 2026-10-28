@@ -52,7 +52,10 @@ export function meetingView(snap: Snapshot, meId: string): MeetingView | null {
   const voting = !meeting.votingClosed;
   const canVote = voting && iAmAlive && !iVoted;
 
-  const tank = snap.tanks.find((t) => t.slot === meeting.tankSlot);
+  const emergency = meeting.reason === 'emergency';
+  const tank = emergency
+    ? undefined
+    : snap.tanks.find((t) => t.slot === meeting.tankSlot);
   const tankOwner = tank ? nameOf(snap.players, tank.ownerId) : '';
 
   const players = snap.players.map((p) => ({
@@ -77,11 +80,12 @@ export function meetingView(snap: Snapshot, meId: string): MeetingView | null {
     snap.players,
   );
 
+  const reporter = nameOf(snap.players, meeting.reporterId);
   return {
     stage: voting ? 'voting' : 'result',
-    reporterText: MEETING_TEXT.REPORTED_BY(
-      nameOf(snap.players, meeting.reporterId),
-    ),
+    reporterText: emergency
+      ? MEETING_TEXT.EMERGENCY_BY(reporter)
+      : MEETING_TEXT.REPORTED_BY(reporter),
     tankText: tank ? MEETING_TEXT.TANK_OF(tankOwner) : '',
     countdownText: voting
       ? MEETING_TEXT.VOTING_ENDS_IN(seconds)
