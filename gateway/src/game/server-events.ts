@@ -127,6 +127,7 @@ function toSnapshot(s: GrpcSnapshot): Snapshot {
           callsLeft: s.myMeeting.callsLeft,
         }
       : null,
+    tasksPerPlayer: s.tasksPerPlayer ?? 0,
   };
 }
 

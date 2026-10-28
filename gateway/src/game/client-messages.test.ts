@@ -122,6 +122,19 @@ test('pickColor needs a short color', () => {
   );
 });
 
+test('setTaskCount needs an integer; match checks the range', () => {
+  for (const n of [4, 6, 8]) {
+    assert.deepEqual(
+      toGrpcAction(parse({ type: 'setTaskCount', tasksPerPlayer: n })!),
+      { setTaskCount: { tasksPerPlayer: n } },
+    );
+  }
+  assert.equal(parse({ type: 'setTaskCount' }), null);
+  assert.equal(parse({ type: 'setTaskCount', tasksPerPlayer: 5.5 }), null);
+  assert.equal(parse({ type: 'setTaskCount', tasksPerPlayer: '6' }), null);
+  assert.equal(parse({ type: 'setTaskCount', tasksPerPlayer: null }), null);
+});
+
 test('pickAccessory needs a short accessory string', () => {
   assert.deepEqual(
     toGrpcAction(parse({ type: 'pickAccessory', accessory: 'straw-hat' })!),
