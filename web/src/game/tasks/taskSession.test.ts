@@ -30,6 +30,7 @@ function snap(
     emergency: null,
     mySabotage: null,
     myMeeting: null,
+    tasksPerPlayer: 6,
   };
 }
 

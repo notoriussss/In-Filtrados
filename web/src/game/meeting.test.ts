@@ -61,6 +61,7 @@ function snap(meeting: Partial<Meeting>, tick = 100): Snapshot {
     emergency: null,
     mySabotage: null,
     myMeeting: null,
+    tasksPerPlayer: 6,
   };
 }
 

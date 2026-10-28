@@ -179,6 +179,17 @@ players[].activity: 'reduce' | 'reuse' | 'recycle' | 'tank' | 'fix' | null; // p
 
 - `match` sigue asignando un color al entrar. Acepta el cambio solo si es uno de los 8 colores y ningún otro jugador **conectado** lo tiene; si no, lo ignora. El color nuevo llega a todos en el siguiente snapshot.
 
+**Tareas por jugador.** También se suma sin romper lo anterior (en gRPC, `SetTaskCount set_task_count = 16` dentro de `ClientAction` y `tasks_per_player = 18` en `Snapshot`):
+
+```ts
+// Navegador → gateway
+  | { type: 'setTaskCount'; tasksPerPlayer: number } // solo el creador, en LOBBY
+// Gateway → navegador: Snapshot.tasksPerPlayer
+```
+
+- Cada jugador, cuidador o impostor, recibe `tasksPerPlayer` tareas. El rango es de 4 a 8 y el valor por defecto es 6; `match` lo define (`minTasksPerPlayer`, `maxTasksPerPlayer`, `defaultTasksPerPlayer` en `match/internal/room/state.go`) y el navegador solo lo dibuja (`web/src/game/taskCount.ts`).
+- Fuera de rango, `match` no cambia nada y responde un error `INVALID_TASK_COUNT` ("La cantidad de tareas debe estar entre 4 y 8"). Un invitado o una fase distinta de LOBBY se ignoran.
+
 **Tienda: personaje y accesorio.** También se suma sin romper lo anterior (en gRPC, `PickSkin pick_skin = 13` y `SetOwned set_owned = 14` dentro de `ClientAction`, `repeated string owned = 4` en `Join` y `string skin = 10` en `PlayerView`):
 
 ```ts
@@ -758,7 +769,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 **Pasos:**
 1. Las estaciones de `map.json` tienen tipo `reduce` (cerrar fuga), `reuse` (recoger agua gris o de lluvia) o `recycle` (filtrar en la planta).
 2. `Interact` sobre una estación a 40 unidades o menos inicia la tarea: el servidor registra que empezó y el navegador muestra el minijuego (S2-11). Al terminar, el navegador manda `Interact` otra vez con `completed: true`, y el servidor la acepta solo si pasaron al menos 3 segundos desde el inicio y el jugador sigue cerca.
-3. Cada tarea completa suma al embalse: `reduce` +3, `reuse` +4, `recycle` +5. Cada jugador tiene 4 tareas asignadas al azar por partida.
+3. Cada tarea completa suma al embalse: `reduce` +3, `reuse` +4, `recycle` +5. Cada jugador tiene `tasksPerPlayer` tareas (4 a 8, por defecto 6) asignadas al azar por partida.
 4. Publicar `task.completed` con `liters_saved` (100 por cada punto de embalse).
 5. El impostor puede "fingir" una tarea: se le muestra el minijuego, pero no suma nada.
 

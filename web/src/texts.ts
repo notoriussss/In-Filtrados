@@ -119,7 +119,9 @@ export const LOBBY_TEXT = {
   OFFLINE: 'Desconectado',
   WAITING: 'Esperando jugador…',
   impostors: (n: number) => (n === 1 ? '1 infiltrado' : `${n} infiltrados`),
-  TASKS: '4 tareas',
+  tasks: (n: number) => `${n} tareas`,
+  TASK_COUNT: 'Tareas por jugador',
+  taskCountOption: (n: number) => `${n} tareas`,
   DURATION: '8 min',
   onlyHost: (name: string) => `Solo ${name} puede iniciar la partida.`,
   HOW_TO_WIN: 'Cómo se gana',
@@ -150,7 +152,7 @@ export const HELP_TEXT = {
   ROLES: 'Roles',
   CREW: 'Cuidador',
   CREW_TEXT:
-    'Haz tus 4 tareas, vigila los tanques y vota en las reuniones. ' +
+    'Haz tus tareas, vigila los tanques y vota en las reuniones. ' +
     'Lo que se contamina no se limpia.',
   CREW_WIN: 'Ganan: embalse lleno o infiltrado expulsado',
   IMPOSTOR: 'Infiltrado',

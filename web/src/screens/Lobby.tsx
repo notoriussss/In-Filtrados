@@ -30,6 +30,7 @@ import { BACKGROUNDS } from './backgrounds';
 import { useGame } from './game/useGame';
 import { ChoiceGrid } from './pending/ChoiceGrid';
 import { FEATURES } from '../features';
+import { shownTaskCount, taskCountOptions } from '../game/taskCount';
 
 const NO_ACCESSORY = 'none'; // pickAccessory: quitar el accesorio
 const MAP_THUMB = '/assets/map/manglar-verde/thumbnail.jpg';
@@ -94,6 +95,7 @@ export function Lobby(props: {
   const meView = players.find((p) => p.id === data?.playerId);
   const host = players[0]; // match pone primero a quien creó la sala
   const isHost = Boolean(data?.isCreator);
+  const tasksPerPlayer = shownTaskCount(snap?.tasksPerPlayer);
   const connected = players.filter((p) => p.connected).length;
   const myColor = meView?.color ?? SERVER_COLORS[1];
   const mySkin = skinOf(meView?.skin);
@@ -477,9 +479,40 @@ export function Lobby(props: {
         </div>
         <div className="row" style={{ marginTop: 8, gap: 8, flexWrap: 'wrap' }}>
           <Chip>{LOBBY_TEXT.impostors(impostors)}</Chip>
-          <Chip>{LOBBY_TEXT.TASKS}</Chip>
+          <Chip>{LOBBY_TEXT.tasks(tasksPerPlayer)}</Chip>
           <Chip>{LOBBY_TEXT.DURATION}</Chip>
         </div>
+        {isHost && (
+          <>
+            <div className="lab" style={{ marginTop: 14 }}>
+              {LOBBY_TEXT.TASK_COUNT}
+            </div>
+            <div
+              className="row"
+              role="radiogroup"
+              aria-label={LOBBY_TEXT.TASK_COUNT}
+              style={{ gap: 8, flexWrap: 'wrap' }}
+            >
+              {taskCountOptions().map((n) => (
+                <Button
+                  key={n}
+                  small
+                  variant={n === tasksPerPlayer ? 'pri' : ''}
+                  onClick={() => {
+                    if (n !== tasksPerPlayer) {
+                      props.game.send({
+                        type: 'setTaskCount',
+                        tasksPerPlayer: n,
+                      });
+                    }
+                  }}
+                >
+                  {n}
+                </Button>
+              ))}
+            </div>
+          </>
+        )}
         {host && (
           <p className="small muted" style={{ marginTop: 8 }}>
             {LOBBY_TEXT.onlyHost(host.name)}
