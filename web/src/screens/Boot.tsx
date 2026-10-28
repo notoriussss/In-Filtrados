@@ -9,7 +9,7 @@ import '../styles/boot.css';
 
 const FONTS = ['16px "Press Start 2P"', '16px VT323', '16px Silkscreen'];
 
-// Boot: pantalla de carga minimalista y sobria (descarga fuentes, mapa y personajes).
+// Boot: pantalla de carga de recursos del juego.
 export function Boot(props: { onDone: (assets: MapAssets) => void }) {
   const [progress, setProgress] = useState(0);
   const [, setFonts] = useState(false);
@@ -30,7 +30,7 @@ export function Boot(props: { onDone: (assets: MapAssets) => void }) {
     });
     Promise.all([fontsReady, mapReady])
       .then(([, a]) => {
-        // Un instante para que se aprecie la barra completada antes de entrar.
+        // Momento sutil para apreciar la barra completa antes de avanzar.
         if (alive) setTimeout(() => alive && props.onDone(a), 300);
       })
       .catch(() => alive && setFailed(true));
@@ -49,6 +49,7 @@ export function Boot(props: { onDone: (assets: MapAssets) => void }) {
       <div className="boot-center">
         <div className="boot-logo">
           <div className="water-drop-badge">
+            <div className="boot-drop-halo" />
             <Gota color="cyan" scale={3.5} view="front" animate />
           </div>
           <h1>
@@ -65,18 +66,19 @@ export function Boot(props: { onDone: (assets: MapAssets) => void }) {
           </p>
         </div>
 
-        <div className="boot-loader">
-          <div className="boot-bar-track">
-            <div
-              className={`boot-bar-fill ${failed ? 'bad' : ''}`}
-              style={{ width: `${pct}%` }}
-            />
-          </div>
+        <div className="boot-loader-card">
           <div className="boot-status">
             <span className="boot-label">
               {failed ? BOOT_TEXT.FAILED : BOOT_TEXT.LOADING}
             </span>
             <span className="boot-pct">{pct}%</span>
+          </div>
+
+          <div className="boot-bar-track">
+            <div
+              className={`boot-bar-fill ${failed ? 'bad' : ''}`}
+              style={{ width: `${pct}%` }}
+            />
           </div>
 
           {failed && (

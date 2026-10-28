@@ -81,10 +81,7 @@ button:disabled { cursor: default; opacity: .55; transform: none !important; }
 .scr-access .prev {height:410px}
 /* 06-lobby: estilos encapsulados en styles/lobby.css */
 /* 07-ayuda: estilos encapsulados en styles/help.css */
-/* 09-rol */
-.scr-role .chr {position:absolute;left:800px;top:350px}
-.scr-role .mates {position:absolute;left:0;right:0;top:830px;display:flex;justify-content:center;gap:34px;align-items:flex-end}
-.scr-role .mates canvas {opacity:.95}
+/* 09-rol: estilos encapsulados en styles/roleReveal.css */
 /* 11-conexion */
 .scr-conn .mo {padding:26px 34px!important}
 .scr-conn .mo p {margin:0 0 16px}

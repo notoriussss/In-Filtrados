@@ -3,19 +3,29 @@ import { useEffect, useState } from 'react';
 import type { Snapshot, Winner } from '@in-filtrados/messages';
 import { Stage } from '../../ui/Stage';
 import { Gota } from '../../ui/Gota';
-import { Icon, TASK_ICONS } from '../../ui/Icon';
-import { Button, Chip, Gauge, TitleBar } from '../../ui/kit';
+import { Gauge } from '../../ui/kit';
 import { api, type MeResponse } from '../../api';
 import { session } from '../../session';
 import { gameMap, type StationType } from '../../map';
 import { coinsEarned } from '../../game/meeting';
 import { APP_TEXT, RESULT_TEXT as T } from '../../texts';
 import { BACKGROUNDS } from '../backgrounds';
+import '../../styles/result.css';
 
 const COINS_POLL_MS = 1500;
 const COINS_POLL_TRIES = 12; // players suma las monedas en segundo plano
 const LITERS_PER_POINT = 100; // litersPerPoint en match
-const POINTS: Record<StationType, number> = { reduce: 3, reuse: 4, recycle: 5 };
+const POINTS: Record<StationType, number> = {
+  reduce: 3,
+  reuse: 4,
+  recycle: 5,
+};
+
+const TYPE_NAMES: Record<StationType, string> = {
+  reduce: APP_TEXT.REDUCE,
+  reuse: APP_TEXT.REUSE,
+  recycle: APP_TEXT.RECYCLE,
+};
 
 // myImpact: tus tareas por tipo y los litros que ahorraron (S2-04).
 export function myImpact(snap: Snapshot) {
@@ -33,8 +43,8 @@ export function myImpact(snap: Snapshot) {
   return out;
 }
 
-// Result (maqueta 12-resultado): quién ganó, los roles revelados y tu
-// impacto. Las monedas llegan cuando players procesa match.finished.
+// Result: pantalla unificada de fin de partida. Muestra quién ganó,
+// roles revelados, métricas de impacto 3R y monedas acumuladas.
 export function Result(props: {
   snap: Snapshot;
   meId: string;
@@ -46,6 +56,7 @@ export function Result(props: {
   const { snap, meId, winner } = props;
   const [coins, setCoins] = useState<number | null>(null);
   const crewWon = winner === 'crew';
+  const roomCode = session.loadSession()?.roomCode ?? '';
 
   useEffect(() => {
     const data = session.loadSession();
@@ -77,168 +88,166 @@ export function Result(props: {
   const cleanTanks = snap.tanks.filter((t) => !t.dead).length;
   const title =
     winner === null ? T.ENDED : crewWon ? T.CREW_WON : T.IMPOSTOR_WON;
+  const sub = winner ? (crewWon ? T.CREW_SUB : T.IMPOSTOR_SUB) : '';
+
   return (
     <div className="overlay-stage solid">
       <Stage className="scr-result" background={BACKGROUNDS.mapBlur}>
         <div
-          className={crewWon || winner === null ? 'shade dim' : 'shade bad'}
+          className={`result-vignette ${
+            crewWon || winner === null ? '' : 'bad'
+          }`}
         />
-        <div
-          className={`big1 ${crewWon || winner === null ? '' : 'bad'}`}
-          style={{
-            position: 'absolute',
-            left: 0,
-            right: 0,
-            top: 40,
-            fontSize: 68,
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {title}
-        </div>
-        {winner && (
-          <div
-            className="sub1"
-            style={{ position: 'absolute', left: 0, right: 0, top: 150 }}
+
+        {/* HERO / TÍTULO DE RESULTADO */}
+        <header className="result-hero">
+          <h1
+            className={`result-title ${
+              crewWon || winner === null ? '' : 'bad'
+            }`}
           >
-            {crewWon ? T.CREW_SUB : T.IMPOSTOR_SUB}
-          </div>
-        )}
-        <section
-          className="panel"
-          style={{
-            left: 60,
-            top: 250,
-            width: 1080,
-            height: 720,
-            padding: '22px 30px',
-          }}
-        >
-          <TitleBar icon="user" title={T.PLAYERS} size={34}>
-            <Chip tone="info">
-              {T.room(session.loadSession()?.roomCode ?? '')}
-            </Chip>
-          </TitleBar>
-          <div className="tr head">
-            <span />
-            <span>{T.PLAYER}</span>
-            <span>{T.ROLE}</span>
-            <span />
-            <span>{T.STATE}</span>
-          </div>
-          {snap.players.map((p) => {
-            const impostor = props.impostorIds.includes(p.id);
-            return (
-              <div className={`tr ${p.id === meId ? 'on' : ''}`} key={p.id}>
-                <span className="av">
-                  <Gota
-                    color={p.color}
-                    accessory={p.accessory}
-                    skin={skinOf(p.skin)}
-                    scale={1.2}
-                    portrait
-                  />
-                </span>
-                <b>
-                  {p.name}
-                  {p.id === meId && ' (tú)'}
-                </b>
-                <Chip tone={impostor ? 'bad' : 'ok'}>
-                  {impostor ? T.IMPOSTOR : T.CREW}
-                </Chip>
-                <span />
-                {p.alive ? (
-                  <Chip tone="ok" icon="check">
-                    {p.connected ? T.ALIVE : T.OFFLINE}
-                  </Chip>
-                ) : (
-                  <Chip tone="warn">{T.GHOST}</Chip>
-                )}
-              </div>
-            );
-          })}
-        </section>
-        <section
-          className="panel"
-          style={{
-            left: 1180,
-            top: 250,
-            width: 680,
-            height: 720,
-            padding: '22px 30px',
-          }}
-        >
-          <TitleBar icon="drop" palette="water" title={T.IMPACT} size={30} />
-          {(['reduce', 'reuse', 'recycle'] as const).map((type) => {
-            const r = impact[type];
-            const ic = TASK_ICONS[type];
-            const liters = r.done * POINTS[type] * LITERS_PER_POINT;
-            return (
-              <div className="imp" key={type}>
-                <div className="row">
-                  <Icon name={ic.name} palette={ic.palette} size={34} />
-                  <b className="grow">
-                    {
-                      {
-                        reduce: APP_TEXT.REDUCE,
-                        reuse: APP_TEXT.REUSE,
-                        recycle: APP_TEXT.RECYCLE,
-                      }[type]
-                    }
-                    {' · '}
-                    {T.tasksOf(r.done, r.total)}
-                  </b>
-                  <span className="num h3">{T.liters(liters)}</span>
-                </div>
-                <Gauge
-                  value={r.total ? r.done / r.total : 0}
-                  tone={
-                    type === 'reduce' ? '' : type === 'reuse' ? 'amber' : 'leaf'
-                  }
-                  height={26}
-                />
-              </div>
-            );
-          })}
-          <div className="well" style={{ marginTop: 6 }}>
-            <div className="row" style={{ justifyContent: 'space-between' }}>
-              <div className="stat">
-                <b className="num">
+            {title}
+          </h1>
+          {sub && <span className="result-sub">{sub}</span>}
+        </header>
+
+        {/* PANELES PRINCIPALES */}
+        <div className="result-content">
+          {/* 1. JUGADORES Y ROLES */}
+          <section className="result-panel" aria-label={T.PLAYERS}>
+            <header className="result-panel-header">
+              <span className="result-panel-title">{T.PLAYERS}</span>
+              {roomCode && (
+                <span className="result-room-pill">{T.room(roomCode)}</span>
+              )}
+            </header>
+
+            <div className="result-players-list">
+              {snap.players.map((p) => {
+                const impostor = props.impostorIds.includes(p.id);
+                const isMe = p.id === meId;
+                const statusCls = !p.alive
+                  ? 'ghost'
+                  : p.connected
+                    ? 'alive'
+                    : 'offline';
+                const statusTxt = !p.alive
+                  ? T.GHOST
+                  : p.connected
+                    ? T.ALIVE
+                    : T.OFFLINE;
+
+                return (
+                  <div
+                    key={p.id}
+                    className={`result-player-row ${isMe ? 'is-me' : ''}`}
+                  >
+                    <div className="result-player-avatar">
+                      <Gota
+                        color={p.color}
+                        accessory={p.accessory}
+                        skin={skinOf(p.skin)}
+                        scale={1.8}
+                        portrait
+                      />
+                    </div>
+
+                    <strong className="result-player-name">
+                      {p.name}
+                      {isMe && ` ${T.YOU}`}
+                    </strong>
+
+                    <span
+                      className={`result-role-pill ${
+                        impostor ? 'impostor' : 'crew'
+                      }`}
+                    >
+                      {impostor ? T.IMPOSTOR : T.CREW}
+                    </span>
+
+                    <span className={`result-status-pill ${statusCls}`}>
+                      {statusTxt}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* 2. TU IMPACTO 3R Y ESTADÍSTICAS */}
+          <section className="result-panel" aria-label={T.IMPACT}>
+            <header className="result-panel-header">
+              <span className="result-panel-title">{T.IMPACT}</span>
+            </header>
+
+            <div className="result-impact-items">
+              {(['reduce', 'reuse', 'recycle'] as const).map((type) => {
+                const r = impact[type];
+                const liters = r.done * POINTS[type] * LITERS_PER_POINT;
+                const gaugeVal = r.total ? r.done / r.total : 0;
+                const tone =
+                  type === 'reduce' ? '' : type === 'reuse' ? 'amber' : 'leaf';
+
+                return (
+                  <div key={type} className="result-impact-row">
+                    <div className="result-impact-meta">
+                      <strong className="result-impact-title">
+                        {TYPE_NAMES[type]} · {T.tasksOf(r.done, r.total)}
+                      </strong>
+                      <span className="result-impact-liters">
+                        {T.liters(liters)}
+                      </span>
+                    </div>
+                    <Gauge value={gaugeVal} tone={tone} height={22} />
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="result-stats-well">
+              <div className="result-stat-box">
+                <strong className="result-stat-val">
                   {cleanTanks}/{snap.tanks.length}
-                </b>
-                <span>{T.CLEAN_TANKS}</span>
+                </strong>
+                <span className="result-stat-lbl">{T.CLEAN_TANKS}</span>
               </div>
-              <div className="stat">
-                <b className="num">{snap.reservoir} %</b>
-                <span>{T.RESERVOIR}</span>
+              <div className="result-stat-box">
+                <strong className="result-stat-val">
+                  {snap.reservoir} %
+                </strong>
+                <span className="result-stat-lbl">{T.RESERVOIR}</span>
               </div>
-              <div className="stat">
-                <b className="num">{coins === null ? '…' : `+${coins}`}</b>
-                <span>{T.COINS}</span>
+              <div className="result-stat-box">
+                <strong className="result-stat-val">
+                  {coins === null ? '…' : `+${coins}`}
+                </strong>
+                <span className="result-stat-lbl">{T.COINS}</span>
               </div>
             </div>
-          </div>
-          <p className="small muted" style={{ marginTop: 16 }}>
-            {coins === null ? T.COINS_PENDING : T.FACT}
-          </p>
-        </section>
-        <div
-          className="row"
-          style={{
-            position: 'absolute',
-            left: 60,
-            right: 60,
-            top: 990,
-            justifyContent: 'space-between',
-          }}
-        >
-          <Button variant="sec" icon="door" onClick={props.onExit}>
-            {T.EXIT}
-          </Button>
-          <Button variant="pri" icon="play" onClick={props.onExit}>
-            {T.BACK}
-          </Button>
+
+            <p className="result-fact-note">
+              {coins === null ? T.COINS_PENDING : T.FACT}
+            </p>
+          </section>
         </div>
+
+        {/* BARRA INFERIOR DE ACCIONES */}
+        <footer className="result-footer">
+          <button
+            type="button"
+            className="result-btn sec"
+            onClick={props.onExit}
+          >
+            {T.EXIT}
+          </button>
+          <button
+            type="button"
+            className="result-btn pri"
+            onClick={props.onExit}
+          >
+            {T.BACK}
+          </button>
+        </footer>
       </Stage>
     </div>
   );
