@@ -44,6 +44,7 @@ import {
   WASTE_KINDS,
   WASTE_SIZE,
   WateringGame,
+  type WaterKind,
   WATERING_COUNT,
   WATERING_HOME,
   WATERING_PLOT,
@@ -531,32 +532,49 @@ describe('WateringGame', () => {
 
   it('counts the right box and sends the wrong one back', () => {
     const g = new WateringGame();
-    // El 0 (agua de verduras) va a Regar.
-    g.pointerDown(home);
-    g.pointerMove({ x: WATERING_PLOT.x + 40, y: WATERING_PLOT.y + 40 });
-    g.pointerUp();
-    expect(g.items[0].placed).toBe(true);
-    expect(g.current).toBe(1);
-    // El 1 (agua de ropa) también sirve: a Tratar está mal.
-    g.pointerDown(home);
-    g.pointerMove({ x: WATERING_TREAT.x + 40, y: WATERING_TREAT.y + 40 });
-    g.pointerUp();
-    expect(g.items[1].placed).toBe(false);
-    // ... y a Regar está bien.
-    g.pointerDown(home);
-    g.pointerMove({ x: WATERING_PLOT.x + 40, y: WATERING_PLOT.y + 40 });
-    g.pointerUp();
-    expect(g.items[1].placed).toBe(true);
-    // El 2 y el 3 (aceite y cloro) van a Tratar.
-    for (const _ of [2, 3]) {
+    const box = (kind: WaterKind) =>
+      kind === 'water' ? WATERING_PLOT : WATERING_TREAT;
+    const drop = (kind: WaterKind) => {
       g.pointerDown(home);
-      g.pointerMove({ x: WATERING_TREAT.x + 40, y: WATERING_TREAT.y + 40 });
+      g.pointerMove({ x: box(kind).x + 40, y: box(kind).y + 40 });
       g.pointerUp();
+    };
+    for (let i = 0; i < WATERING_COUNT; i++) {
+      const kind = g.items[i].kind;
+      // La caja contraria está mal: vuelve a la mesa.
+      drop(kind === 'water' ? 'treat' : 'water');
+      expect(g.items[i].placed).toBe(false);
+      // Su caja está bien.
+      drop(kind);
+      expect(g.items[i].placed).toBe(true);
     }
     expect(g.placed).toBe(WATERING_COUNT);
     expect(g.done).toBe(false);
     g.step(MIN_GAME_MS);
     expect(g.done).toBe(true);
+  });
+
+  it('deals two of each kind, never the same origin twice', () => {
+    for (let seed = 1; seed <= 30; seed++) {
+      let n = seed * 13;
+      const g = new WateringGame(() => hash01(n++));
+      const kinds = g.items.map((i) => i.kind);
+      expect(kinds.filter((k) => k === 'water').length).toBe(2);
+      expect(kinds.filter((k) => k === 'treat').length).toBe(2);
+      expect(new Set(g.items.map((i) => i.origin)).size).toBe(
+        WATERING_COUNT,
+      );
+    }
+  });
+
+  it('deals different objects from game to game', () => {
+    const deals = new Set<string>();
+    for (let i = 0; i < 30; i++) {
+      deals.add(
+        new WateringGame().items.map((it) => it.origin).join(),
+      );
+    }
+    expect(deals.size).toBeGreaterThan(5);
   });
 });
 

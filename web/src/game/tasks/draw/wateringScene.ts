@@ -8,8 +8,8 @@ import {
 import {
   BOARD,
   type WaterKind,
+  type WaterOrigin,
   WATERING_HOME,
-  WATERING_KINDS,
   WATERING_PLOT,
   WATERING_SIZE,
   WATERING_TREAT,
@@ -29,19 +29,21 @@ import {
 } from './pixel';
 import { roomLayer } from './room';
 
-// Reutilizar (greywater-2): ¿sirve para regar? Aparece un recipiente
-// con el dibujo de su origen y se arrastra a Regar (la planta) o a
-// Tratar (la caja de tratamiento). Errar lo devuelve a la mesa.
+// Reutilizar (greywater-2): ¿sirve para regar? Aparece el objeto de donde
+// viene el agua y se arrastra a Regar (la planta) o a Tratar (la caja de
+// tratamiento). Errar lo devuelve a la mesa.
 
 const TABLE = { x: 140, y: 170, w: 80, h: 26 };
 export const WATERING_HERO_X = 126;
 type Look = { rows: string[]; palette: Record<string, string> };
 
 // Cada pieza es el objeto de donde viene el agua, a color, para que se
-// reconozca sin leer nada: tomate (verduras), camiseta (ropa), botella de
-// aceite y botella de cloro con su «!».
-const ORIGINS: Look[] = [
-  {
+// reconozca sin leer nada. Sirven para regar: tomate y zanahoria (agua de
+// verduras), camiseta (de enjuagar ropa) y tazón de arroz. No sirven:
+// botella de aceite, botella de cloro con su «!», bidón de combustible y
+// olla de pasta (con sal).
+const LOOKS: Record<WaterOrigin, Look> = {
+  tomato: {
     rows: [
       '......gg......',
       '....ggGGgg....',
@@ -64,7 +66,30 @@ const ORIGINS: Look[] = [
       G: C.leafLo,
     },
   },
-  {
+  carrot: {
+    rows: [
+      '....g..g..g...',
+      '.....gGgGg....',
+      '...oooooooo...',
+      '..oOOOOOOOOo..',
+      '..oOhOOOOOOo..',
+      '...oOOOOOOo...',
+      '...oOOOOOOo...',
+      '....oOOOOo....',
+      '....oOOOOo....',
+      '.....oOOo.....',
+      '.....oOOo.....',
+      '......oo......',
+    ],
+    palette: {
+      o: C.ink,
+      O: '#ff9a3c',
+      h: '#ffd09a',
+      g: C.leaf,
+      G: C.leafLo,
+    },
+  },
+  shirt: {
     rows: [
       '..oooo..oooo..',
       '.oBBBBooBBBBo.',
@@ -79,7 +104,27 @@ const ORIGINS: Look[] = [
     ],
     palette: { o: C.ink, B: C.water, w: C.white },
   },
-  {
+  rice: {
+    rows: [
+      '....oooooo....',
+      '..ooWWWWWWoo..',
+      '.oWWwWWWWwWWo.',
+      'oBBBBBBBBBBBBo',
+      'oBhBBBBBBBBBBo',
+      '.oBBBBBBBBBBo.',
+      '..oBBBBBBBBo..',
+      '...oBBBBBBo...',
+      '....oooooo....',
+    ],
+    palette: {
+      o: C.ink,
+      W: C.white,
+      w: '#b8c8d8',
+      B: C.lineHi,
+      h: C.waterHi,
+    },
+  },
+  oil: {
     rows: [
       '.....oooo.....',
       '.....ommo.....',
@@ -103,7 +148,7 @@ const ORIGINS: Look[] = [
       d: '#8a5a2c',
     },
   },
-  {
+  bleach: {
     rows: [
       '....oooooo....',
       '....occcco....',
@@ -121,11 +166,51 @@ const ORIGINS: Look[] = [
     ],
     palette: { o: C.ink, c: C.water, w: C.white, r: C.coral },
   },
-];
+  fuel: {
+    rows: [
+      '......oooooo..',
+      '..oyo.o....o..',
+      '.oooooooooooo.',
+      '.oRRRRRRRRRRo.',
+      '.oRhRRRRRRRRo.',
+      '.oRRRyyyyRRRo.',
+      '.oRRRyyyyRRRo.',
+      '.oRRRRyyRRRRo.',
+      '.oRRRRRRRRRRo.',
+      '.oRRRRRRRRRRo.',
+      '.oRRRRRRRRRRo.',
+      '.oooooooooooo.',
+    ],
+    palette: {
+      o: C.ink,
+      R: C.coral,
+      h: C.coralHi,
+      y: C.amber,
+    },
+  },
+  pasta: {
+    rows: [
+      '.....w..w.....',
+      '....w..w......',
+      '.....oooo.....',
+      '..oooooooooo..',
+      '..oMMMMMMMMo..',
+      'ooMMMMMMMMMMoo',
+      '.oMhMMMMMMMMo.',
+      '.oMMMMMMMMMMo.',
+      '.oMMMMMMMMMMo.',
+      '.oooooooooooo.',
+    ],
+    palette: { o: C.ink, M: C.metal, h: C.white, w: C.white },
+  },
+};
 
-const originSprites = ORIGINS.map((o) =>
-  spriteFromRows(o.rows, o.palette),
-);
+const originSprites = Object.fromEntries(
+  Object.entries(LOOKS).map(([id, look]) => [
+    id,
+    spriteFromRows(look.rows, look.palette),
+  ]),
+) as Record<WaterOrigin, HTMLCanvasElement>;
 // El objeto se dibuja más grande que su arte: es la pieza que se arrastra.
 const ITEM_SCALE = 2;
 
@@ -224,7 +309,7 @@ export class WateringScene implements Scene {
     left: boolean;
     x: number;
     y: number;
-    index: number;
+    origin: WaterOrigin;
   }[] = [];
   private readonly shown = {
     x: WATERING_HOME.x,
@@ -272,7 +357,7 @@ export class WateringScene implements Scene {
           left: e.x < BOARD.w / 2,
           x: e.x,
           y: e.y,
-          index: e.index,
+          origin: this.game.items[e.index].origin,
         });
         this.cheerAt = now;
       } else if (e.type === 'drop-out') {
@@ -374,7 +459,7 @@ export class WateringScene implements Scene {
     if (!overPlot && !overTreat) return;
     const kind: WaterKind = overPlot ? 'water' : 'treat';
     const tone: ZoneTone =
-      WATERING_KINDS[it.index] === kind ? 'good' : 'bad';
+      it.kind === kind ? 'good' : 'bad';
     drawDropZone(
       ctx,
       overPlot ? WATERING_PLOT : WATERING_TREAT,
@@ -392,7 +477,8 @@ export class WateringScene implements Scene {
     if (it.placed) return;
     const cx = this.shown.x + WATERING_SIZE / 2;
     const cy = this.shown.y + WATERING_SIZE / 2;
-    stamp(ctx, originSprites[i], cx, cy - 2 * this.shown.lift, {
+    const sprite = originSprites[it.origin];
+    stamp(ctx, sprite, cx, cy - 2 * this.shown.lift, {
       angle: this.shown.tilt,
       scale: ITEM_SCALE,
     });
@@ -415,7 +501,7 @@ export class WateringScene implements Scene {
         (target.y + target.h * 0.6 - gh.y) * k -
         Math.sin(Math.PI * k) * 22;
       ctx.globalAlpha = 1 - t * 0.4;
-      stamp(ctx, originSprites[gh.index], x, y, {
+      stamp(ctx, originSprites[gh.origin], x, y, {
         angle: k * 3,
         scale: ITEM_SCALE,
       });

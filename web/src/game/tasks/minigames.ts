@@ -343,13 +343,17 @@ export type WasteItem = {
 // Baraja los cuatro residuos con el generador que le pasen. Así cada
 // partida empieza con otro orden, pero las pruebas pueden fijar la
 // secuencia.
-function shuffleKinds(rnd: () => number): WasteKind[] {
-  const kinds = [...WASTE_KINDS];
-  for (let i = kinds.length - 1; i > 0; i--) {
+function shuffle<T>(list: readonly T[], rnd: () => number): T[] {
+  const out = [...list];
+  for (let i = out.length - 1; i > 0; i--) {
     const j = Math.floor(rnd() * (i + 1));
-    [kinds[i], kinds[j]] = [kinds[j], kinds[i]];
+    [out[i], out[j]] = [out[j], out[i]];
   }
-  return kinds;
+  return out;
+}
+
+function shuffleKinds(rnd: () => number): WasteKind[] {
+  return shuffle(WASTE_KINDS, rnd);
 }
 
 export class WasteGame extends BaseGame implements Minigame {
@@ -762,18 +766,36 @@ export class FirstRainGame extends BaseGame implements Minigame {
 }
 
 // Reutilizar (greywater-2, Agua gris del laboratorio): ¿sirve para
-// regar? Aparece un recipiente con el dibujo de su origen y se arrastra
-// a Regar o a Tratar. Errar lo devuelve a la mesa. Cuatro aciertos.
+// regar? Aparece un objeto de donde viene el agua y se arrastra a Regar o
+// a Tratar. Errar lo devuelve a la mesa. Cada partida saca al azar dos
+// orígenes de cada tipo, así que casi nunca se repiten.
 export const WATERING_COUNT = 4;
 export const WATERING_SIZE = 48;
 export type WaterKind = 'water' | 'treat';
-// Origen de cada recipiente: el agua de lavar verduras y de enjuagar
-// ropa sirve para regar; con aceite o cloro, hay que tratarla.
-export const WATERING_KINDS: readonly WaterKind[] = [
-  'water',
-  'water',
-  'treat',
-  'treat',
+export type WaterOrigin =
+  | 'tomato'
+  | 'carrot'
+  | 'shirt'
+  | 'rice'
+  | 'oil'
+  | 'bleach'
+  | 'fuel'
+  | 'pasta';
+// El agua de lavar verduras, enjuagar ropa o lavar arroz sirve para
+// regar; con aceite, cloro, combustible o sal (agua de cocer pasta), hay
+// que tratarla.
+export const WATERING_ORIGINS: readonly {
+  id: WaterOrigin;
+  kind: WaterKind;
+}[] = [
+  { id: 'tomato', kind: 'water' },
+  { id: 'carrot', kind: 'water' },
+  { id: 'shirt', kind: 'water' },
+  { id: 'rice', kind: 'water' },
+  { id: 'oil', kind: 'treat' },
+  { id: 'bleach', kind: 'treat' },
+  { id: 'fuel', kind: 'treat' },
+  { id: 'pasta', kind: 'treat' },
 ];
 export const WATERING_HOME = { x: 156, y: 116 }; // sobre la mesa del centro
 export const WATERING_PLOT = { x: 20, y: 140, w: 92, h: 88 }; // regar
@@ -781,6 +803,8 @@ export const WATERING_TREAT = { x: 248, y: 140, w: 92, h: 88 }; // tratar
 
 export type WaterItem = {
   index: number;
+  origin: WaterOrigin;
+  kind: WaterKind;
   x: number; // esquina superior izquierda
   y: number;
   homeX: number;
@@ -795,18 +819,25 @@ export class WateringGame extends BaseGame implements Minigame {
   private grabDx = 0;
   private grabDy = 0;
 
-  constructor() {
+  constructor(rnd: () => number = Math.random) {
     super();
-    for (let i = 0; i < WATERING_COUNT; i++) {
+    const pick = (kind: WaterKind) =>
+      shuffle(
+        WATERING_ORIGINS.filter((o) => o.kind === kind),
+        rnd,
+      ).slice(0, WATERING_COUNT / 2);
+    shuffle([...pick('water'), ...pick('treat')], rnd).forEach((o, i) => {
       this.items.push({
         index: i,
+        origin: o.id,
+        kind: o.kind,
         x: WATERING_HOME.x,
         y: WATERING_HOME.y,
         homeX: WATERING_HOME.x,
         homeY: WATERING_HOME.y,
         placed: false,
       });
-    }
+    });
   }
 
   get placed(): number {
@@ -862,8 +893,8 @@ export class WateringGame extends BaseGame implements Minigame {
     const inTreat = inRect(cx, cy, WATERING_TREAT);
     it.x = it.homeX;
     it.y = it.homeY;
-    const kind: WaterKind = inPlot ? 'water' : inTreat ? 'treat' : 'water';
-    if ((inPlot || inTreat) && WATERING_KINDS[i] === kind) {
+    const kind: WaterKind = inPlot ? 'water' : 'treat';
+    if ((inPlot || inTreat) && it.kind === kind) {
       it.placed = true;
       this.events.push({ type: 'drop-in', x: cx, y: cy, index: i });
       return;
