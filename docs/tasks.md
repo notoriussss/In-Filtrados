@@ -873,9 +873,9 @@ para el mismo usuario responde 429.
 2. Indicador del embalse arriba de la pantalla, de 0 a 100 %.
 3. Botón de acción contextual (tecla `E`) que cambia según lo que haya cerca: "Hacer tarea", "Reportar" o, si eres impostor, "Contaminar".
 4. Barra de progreso circular durante las acciones que requieren quedarse quieto.
-5. Aviso al dueño: "¡Tu tanque se está contaminando!" cuando su tanque sube, sin decir quién.
+5. ~~Aviso al dueño "¡Tu tanque se está contaminando!"~~ (quitado: el dueño no recibe aviso cuando su tanque sube; descubrir un tanque contaminado es la pista del juego).
 
-**Criterio de verificación:** en una partida de 3, el impostor ve "Contaminar" junto a un tanque ajeno y los tripulantes no. Al contaminar, el dueño recibe el aviso y todos ven la barra subir.
+**Criterio de verificación:** en una partida de 3, el impostor ve "Contaminar" junto a un tanque ajeno y los tripulantes no. Al contaminar, todos ven la barra subir; el dueño no recibe aviso.
 
 ---
 

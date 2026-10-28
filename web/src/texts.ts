@@ -220,8 +220,6 @@ export const HUD_TEXT = {
   FIX: 'Arreglar',
   PIPE: 'Tubería',
   STEAM: 'Vapor',
-  TANK_ALERT: '¡Tu tanque se está contaminando!',
-  TANK_ALERT_HINT: 'Ve a limpiarlo antes de que se arruine',
   PAUSED: 'Partida en pausa',
   waiting: (names: string) => `Esperando a ${names}`,
   percent: (n: number) => `${n}%`,
