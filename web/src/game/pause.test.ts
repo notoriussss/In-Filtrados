@@ -32,6 +32,7 @@ function snap(paused: boolean, waitingFor: string[]): Snapshot {
     emergency: null,
     mySabotage: null,
     myMeeting: null,
+    tasksPerPlayer: 6,
   };
 }
 

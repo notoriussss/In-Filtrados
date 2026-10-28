@@ -21,6 +21,10 @@ export type ClientMessage =
   | { type: 'callMeeting' }
   // Elegir color en LOBBY; match lo acepta si nadie conectado lo tiene.
   | { type: 'pickColor'; color: string }
+  // Cuántas tareas hace cada jugador (4 a 8, por defecto 6). Solo el
+  // creador y solo en LOBBY; fuera de rango match responde un error
+  // INVALID_TASK_COUNT.
+  | { type: 'setTaskCount'; tasksPerPlayer: number }
   // Elegir accesorio en LOBBY.
   | { type: 'pickAccessory'; accessory: string }
   // Personaje en LOBBY: 'jimena' (de inicio) o 'gota' (comprada, de tu color).
@@ -74,6 +78,8 @@ export type Snapshot = {
   mySabotage: SabotageStatus | null;
   // Mesa: estado de la mesa de reuniones; null fuera de PLAYING.
   myMeeting: MeetingButton | null;
+  // Tareas que hace cada jugador (cuidador o impostor); 4 a 8.
+  tasksPerPlayer: number;
 };
 
 export type MeetingButton = {
@@ -168,4 +174,5 @@ export type ErrorCode =
   | 'UNAUTHORIZED'
   | 'MATCH_NOT_FOUND'
   | 'SERVICE_UNAVAILABLE'
-  | 'BAD_MESSAGE';
+  | 'BAD_MESSAGE'
+  | 'INVALID_TASK_COUNT';

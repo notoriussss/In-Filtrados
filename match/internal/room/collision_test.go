@@ -173,8 +173,8 @@ func TestEverythingIsReachable(t *testing.T) {
 			t.Errorf("fix point %s is out of reach", fp.ID)
 		}
 	}
-	if len(m.Stations) < tasksPerPlayer {
-		t.Errorf("want at least %d stations", tasksPerPlayer)
+	if len(m.Stations) < maxTasksPerPlayer {
+		t.Errorf("want at least %d stations", maxTasksPerPlayer)
 	}
 	if len(m.Tanks) < 10 {
 		t.Errorf("want 10 tanks, got %d", len(m.Tanks))

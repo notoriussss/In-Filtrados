@@ -29,11 +29,14 @@ const (
 	impostorDriftTicks  = 100 // el tanque del impostor sube solo cada 5 s
 	impostorDriftAmount = 1
 
-	// S2-04: tareas 3R
-	tasksPerPlayer = 4
-	taskMinTicks   = 60 // 3 s
-	taskRadius     = 40
-	reservoirMax   = 100
+	// S2-04: tareas 3R. Cuántas hace cada jugador (cuidador o impostor)
+	// lo elige el creador en LOBBY, entre el mínimo y el máximo.
+	minTasksPerPlayer     = 4
+	maxTasksPerPlayer     = 8
+	defaultTasksPerPlayer = 6
+	taskMinTicks          = 60 // 3 s
+	taskRadius            = 40
+	reservoirMax          = 100
 
 	taskReduce     = "reduce"
 	taskReuse      = "reuse"
@@ -162,6 +165,10 @@ type PlayerAction struct {
 	PickColor bool
 	Color     string
 
+	// Elegir cuántas tareas hace cada jugador (solo el creador, en LOBBY).
+	SetTaskCount bool
+	TaskCount    int32
+
 	// Elegir accesorio en la sala de espera.
 	PickAccessory bool
 	Accessory     string
@@ -179,7 +186,7 @@ type PlayerAction struct {
 func (a PlayerAction) isMove() bool {
 	return !a.Start && !a.Contaminate && !a.InteractTask &&
 		!a.Report && !a.Vote && !a.Chat && !a.Sabotage && !a.Fix &&
-		!a.CallMeeting &&
+		!a.CallMeeting && !a.SetTaskCount &&
 		!a.PickColor && !a.PickAccessory && !a.PickSkin && !a.SetOwned
 }
 

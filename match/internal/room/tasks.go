@@ -45,11 +45,14 @@ func pickRandomStations(all []Station, count int) ([]string, error) {
 	return result, nil
 }
 
-// assignTasks randomly assigns exactly tasksPerPlayer tasks to each player
-// using the stations defined in the map.
+// assignTasks randomly assigns exactly r.tasksPerPlayer tasks to each
+// player (crew or impostor) using the stations defined in the map.
 func (r *Room) assignTasks() error {
 	for _, p := range r.players {
-		stations, err := pickRandomStations(r.m.Stations, tasksPerPlayer)
+		stations, err := pickRandomStations(
+			r.m.Stations,
+			r.tasksPerPlayer,
+		)
 		if err != nil {
 			return err
 		}

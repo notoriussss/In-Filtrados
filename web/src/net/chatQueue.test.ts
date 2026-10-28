@@ -22,6 +22,7 @@ function meeting(chatIds: string[], phase: Snapshot['phase'] = 'MEETING') {
     emergency: null,
     mySabotage: null,
     myMeeting: null,
+    tasksPerPlayer: 6,
   } as Snapshot;
 }
 

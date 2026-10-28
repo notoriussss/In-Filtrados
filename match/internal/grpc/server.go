@@ -339,6 +339,12 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 					PickColor: true,
 					Color:     msg.GetPickColor().GetColor(),
 				})
+			case msg.GetSetTaskCount() != nil:
+				r.Act(room.PlayerAction{
+					PlayerID:     playerID,
+					SetTaskCount: true,
+					TaskCount:    msg.GetSetTaskCount().GetTasksPerPlayer(),
+				})
 			case msg.GetPickAccessory() != nil:
 				r.Act(room.PlayerAction{
 					PlayerID:      playerID,

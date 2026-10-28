@@ -65,6 +65,13 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       // match revisa la fase y que el color esté libre.
       if (!isShortString(msg.color, MAX_COLOR_LENGTH)) return null;
       return { type: 'pickColor', color: msg.color };
+    case 'setTaskCount':
+      // match revisa el rango (4 a 8), la fase y que sea el creador.
+      if (!Number.isInteger(msg.tasksPerPlayer)) return null;
+      return {
+        type: 'setTaskCount',
+        tasksPerPlayer: msg.tasksPerPlayer,
+      };
     case 'pickAccessory':
       if (!isShortString(msg.accessory, MAX_ACCESSORY_LENGTH)) {
         return null;
@@ -118,6 +125,10 @@ export function toGrpcAction(msg: ClientMessage): object | null {
       return { callMeeting: {} };
     case 'pickColor':
       return { pickColor: { color: msg.color } };
+    case 'setTaskCount':
+      return {
+        setTaskCount: { tasksPerPlayer: msg.tasksPerPlayer },
+      };
     case 'pickAccessory':
       return { pickAccessory: { accessory: msg.accessory } };
     case 'pickSkin':
