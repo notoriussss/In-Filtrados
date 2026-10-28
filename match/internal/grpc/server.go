@@ -303,6 +303,11 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 					Report:   true,
 					TankSlot: msg.GetReport().GetTankSlot(),
 				})
+			case msg.GetCallMeeting() != nil:
+				r.Act(room.PlayerAction{
+					PlayerID:    playerID,
+					CallMeeting: true,
+				})
 			case msg.GetVote() != nil:
 				v := msg.GetVote()
 				action := room.PlayerAction{
@@ -333,6 +338,28 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 					PlayerID:  playerID,
 					PickColor: true,
 					Color:     msg.GetPickColor().GetColor(),
+				})
+			case msg.GetLeave() != nil:
+				r.Act(room.PlayerAction{PlayerID: playerID, Leave: true})
+			case msg.GetSetTaskCount() != nil:
+				r.Act(room.PlayerAction{
+					PlayerID:     playerID,
+					SetTaskCount: true,
+					TaskCount:    msg.GetSetTaskCount().GetTasksPerPlayer(),
+				})
+			case msg.GetSetImpostorCount() != nil:
+				r.Act(room.PlayerAction{
+					PlayerID:         playerID,
+					SetImpostorCount: true,
+					ImpostorCount: msg.GetSetImpostorCount().
+						GetImpostors(),
+				})
+			case msg.GetSetMatchDuration() != nil:
+				r.Act(room.PlayerAction{
+					PlayerID:        playerID,
+					SetMatchMinutes: true,
+					MatchMinutes: msg.GetSetMatchDuration().
+						GetMinutes(),
 				})
 			case msg.GetPickAccessory() != nil:
 				r.Act(room.PlayerAction{
@@ -365,19 +392,14 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 	}
 }
 
-// interactAction traduce Interact: sobre un tanque es limpiar (S2-03),
-// y sobre una estación es una tarea (S2-04).
+// interactAction traduce Interact: sobre una estación es una tarea (S2-04).
+// Sobre un tanque ya no hace nada: los tanques no se limpian (el campo
+// tank_slot sigue en el contrato para no romper a los clientes viejos).
 func interactAction(
 	playerID string,
 	interact *matchv1.Interact,
 ) (room.PlayerAction, bool) {
 	switch target := interact.GetTarget().(type) {
-	case *matchv1.Interact_TankSlot:
-		return room.PlayerAction{
-			PlayerID: playerID,
-			Clean:    true,
-			TankSlot: target.TankSlot,
-		}, true
 	case *matchv1.Interact_StationId:
 		return room.PlayerAction{
 			PlayerID:     playerID,

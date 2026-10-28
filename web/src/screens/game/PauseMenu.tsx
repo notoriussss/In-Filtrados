@@ -11,7 +11,8 @@ export function PauseMenu(props: {
   onSettings: () => void;
   onLeave: () => void;
 }) {
-  const code = session.loadSession()?.roomCode ?? '';
+  const data = session.loadSession();
+  const code = data?.roomCode ?? '';
 
   return (
     <div className="overlay-stage">
@@ -62,7 +63,11 @@ export function PauseMenu(props: {
             </button>
           </div>
 
-          <p className="pause-leave-note">{PAUSE_TEXT.LEAVE_NOTE}</p>
+          <p className="pause-leave-note">
+            {data?.isCreator
+              ? PAUSE_TEXT.LEAVE_NOTE_HOST
+              : PAUSE_TEXT.LEAVE_NOTE}
+          </p>
         </section>
       </Stage>
     </div>

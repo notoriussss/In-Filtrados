@@ -1,8 +1,13 @@
-import type { Activity, PlayerView } from '@in-filtrados/messages';
+import type {
+  Activity,
+  EmergencyKind,
+  PlayerView,
+} from '@in-filtrados/messages';
+import { VALVE_TURN_MS } from './workPose';
 
 // Animaciones en el mapa de lo que hace cada jugador (PlayerView.activity).
 // Cada tarea de las 3R tiene la suya, así desde lejos se distingue quién
-// cierra una fuga, quién junta agua y quién filtra. Limpiar y contaminar
+// cierra una fuga, quién junta agua y quién filtra. Contaminar
 // un tanque se ven igual a propósito: estar junto a un tanque no prueba
 // nada (docs/design/game-plan.md, pistas).
 
@@ -28,6 +33,7 @@ export function renderActivities(
   players: PlayerView[],
   now: number,
   visible?: (p: PlayerView) => boolean,
+  fix: EmergencyKind | null = null,
 ): void {
   for (const p of players) {
     if (!p.activity) continue;
@@ -37,7 +43,7 @@ export function renderActivities(
     const t = now + phaseOf(p.id);
     ctx.save();
     ctx.globalAlpha = p.alive ? 1 : 0.5;
-    drawActivity(ctx, p.activity, s.x, s.y, t);
+    drawActivity(ctx, p.activity, s.x, s.y, t, fix);
     ctx.restore();
   }
 }
@@ -48,6 +54,7 @@ export function drawActivity(
   x: number,
   y: number,
   t: number,
+  fix: EmergencyKind | null = null,
 ): void {
   switch (activity) {
     case 'reduce':
@@ -63,7 +70,9 @@ export function drawActivity(
       drawTankWork(ctx, x, y, t);
       break;
     case 'fix':
-      drawRepair(ctx, x + SIDE_X, y + HAND_Y, t);
+      if (fix === 'steam') drawTurnValve(ctx, x + SIDE_X, y + HAND_Y, t);
+      else if (fix === 'pipe') drawHoldPipe(ctx, x + SIDE_X, y + HAND_Y, t);
+      else drawRepair(ctx, x + SIDE_X, y + HAND_Y, t);
       break;
   }
 }
@@ -251,7 +260,7 @@ function drawFilter(
   ctx.restore();
 }
 
-// Tanque (limpiar o contaminar): ondas en el agua alrededor de los pies
+// Tanque (contaminar): ondas en el agua alrededor de los pies
 // y un cucharón que revuelve en círculos con espuma. Igual para los dos.
 function drawTankWork(
   ctx: CanvasRenderingContext2D,
@@ -326,6 +335,118 @@ function drawRepair(
     }
     ctx.globalAlpha = 1;
   }
+}
+
+// Vapor: flechas que giran alrededor de las manos al ritmo del volante
+// (el volante mismo lo dibuja fixFx.ts en la válvula) y vaho caliente que
+// les pega en la cara.
+function drawTurnValve(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  t: number,
+): void {
+  const spin = t / VALVE_TURN_MS;
+  ctx.lineCap = 'round';
+  for (let i = 0; i < 3; i++) {
+    const a = spin + (i * Math.PI * 2) / 3;
+    ctx.globalAlpha = 0.9 - i * 0.2;
+    ctx.strokeStyle = SPARK;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(x, y - 4, 13, a - 0.9, a);
+    ctx.stroke();
+    // Punta de la flecha al final del arco.
+    const hx = x + Math.cos(a) * 13;
+    const hy = y - 4 + Math.sin(a) * 13;
+    ctx.fillStyle = SPARK;
+    ctx.beginPath();
+    ctx.moveTo(hx + Math.cos(a + 1.57) * 4, hy + Math.sin(a + 1.57) * 4);
+    ctx.lineTo(
+      hx + Math.cos(a) * 4 + Math.cos(a - 1.57) * 2.5,
+      hy + Math.sin(a) * 4 + Math.sin(a - 1.57) * 2.5,
+    );
+    ctx.lineTo(hx + Math.cos(a - 1.57) * 4, hy + Math.sin(a - 1.57) * 4);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  ctx.lineCap = 'butt';
+  ctx.fillStyle = FOAM;
+  for (let i = 0; i < 5; i++) {
+    const k = (t / 800 + i / 5) % 1;
+    ctx.globalAlpha = (1 - k) * 0.55;
+    ctx.beginPath();
+    ctx.arc(
+      x + 6 + k * 18,
+      y - 16 - k * 14 + Math.sin(i * 2 + k * 6) * 2,
+      2 + k * 3,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+// Tubería: el parche de acero entre las manos, que vibra por la presión,
+// líneas de empuje que convergen y gotas que rebotan contra el parche.
+function drawHoldPipe(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  t: number,
+): void {
+  const shake = Math.sin(t / 37) * 0.9;
+  ctx.save();
+  ctx.translate(x + 4 + shake, y - 4);
+  ctx.fillStyle = OUTLINE;
+  ctx.fillRect(-9, -11, 18, 22);
+  ctx.fillStyle = METAL_DARK;
+  ctx.fillRect(-8, -10, 16, 20);
+  ctx.fillStyle = METAL;
+  ctx.fillRect(-8, -10, 16, 4);
+  ctx.fillStyle = '#2b333b';
+  ctx.fillRect(-6, -2, 12, 6);
+  ctx.fillStyle = FOAM;
+  for (const [bx, by] of [
+    [-7, -8],
+    [4, -8],
+    [-7, 6],
+    [4, 6],
+  ]) {
+    ctx.fillRect(bx, by, 3, 3);
+  }
+  ctx.restore();
+  // Líneas de empuje: entran desde la izquierda hacia el parche.
+  ctx.strokeStyle = FOAM;
+  ctx.lineWidth = 1.5;
+  for (let i = 0; i < 3; i++) {
+    const k = (t / 360 + i / 3) % 1;
+    ctx.globalAlpha = Math.sin(k * Math.PI) * 0.7;
+    const ly = y - 12 + i * 8;
+    ctx.beginPath();
+    ctx.moveTo(x - 22 + k * 8, ly);
+    ctx.lineTo(x - 12 + k * 8, ly);
+    ctx.stroke();
+  }
+  // Gotas que salpican a los lados del parche.
+  ctx.fillStyle = WATER;
+  for (let i = 0; i < 6; i++) {
+    const k = (t / 420 + i / 6) % 1;
+    const side = i % 2 === 0 ? 1 : -1;
+    ctx.globalAlpha = 1 - k;
+    ctx.beginPath();
+    ctx.arc(
+      x + 4 + side * (10 + k * 14),
+      y - 6 - Math.sin(k * Math.PI) * 12 + k * k * 10,
+      1.8,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
 }
 
 // phaseOf da a cada jugador un desfase fijo a partir de su id.

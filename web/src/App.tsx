@@ -79,6 +79,9 @@ export function App() {
   // leaveRoom: salir de la sala o volver al menú al terminar.
   const leaveRoom = useCallback(
     (error?: string) => {
+      // Se avisa antes de cerrar el socket: así match distingue salir a
+      // propósito de perder la conexión (que sí se espera).
+      game?.leave();
       game?.destroy();
       setGame(null);
       const data = session.loadSession();

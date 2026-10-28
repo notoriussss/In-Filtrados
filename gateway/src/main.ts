@@ -39,6 +39,38 @@ async function bootstrap() {
     SWAGGER.PATH,
     app,
     SwaggerModule.createDocument(app, swaggerConfig),
+    {
+      swaggerOptions: {
+        persistAuthorization: true,
+        responseInterceptor: (res: {
+          obj?: { token?: string };
+          body?: { token?: string };
+          text?: string;
+        }) => {
+          try {
+            const data =
+              res?.obj ??
+              res?.body ??
+              (typeof res?.text === 'string'
+                ? JSON.parse(res.text)
+                : null);
+            if (
+              data?.token &&
+              typeof data.token === 'string' &&
+              (globalThis as Record<string, any>).ui
+            ) {
+              (globalThis as Record<string, any>).ui.preauthorizeApiKey(
+                'bearer',
+                data.token,
+              );
+            }
+          } catch {
+            // Ignorar respuestas que no sean JSON válido.
+          }
+          return res;
+        },
+      },
+    },
   );
   app.useWebSocketAdapter(new WsAdapter(app)); // plain WebSocket, no Socket.IO
   const port = process.env.PORT || 3000;

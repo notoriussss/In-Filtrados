@@ -29,32 +29,35 @@ type Room struct {
 	phase   matchv1.Phase
 	tick    int64
 
-	creatorID     string
-	publisher     events.Publisher
-	store         MatchStore
-	matchDuration time.Duration
-	startedAt     time.Time
-	participants  []PlayerInfo
-	tanks         []*tank
-	rnd           io.Reader // azar de los roles: crypto/rand
-	startTick     int64
-	eventLog      EventLog
-	reservoir     int32 // S2-04
-	eventHistory  []LogEntry
-	meeting       *meetingState
-	chat          []chatEntry
-	oilDrops      []*oilDrop        // S2-12
-	cleanupDelay  time.Duration     // S2-06
-	onCleanup     func(code string) // S2-06
-	endedAt       time.Time         // S2-06
-	ended         *matchv1.ServerEvent
-	done          chan struct{}
-	grace         time.Duration    // S3-01
-	snapshots     SnapshotSaver    // S3-02
-	savedKey      string           // fase de la última instantánea
-	savedTick     int64            // tick de la última instantánea
-	seenChat      map[string]bool  // S3-04: client_msg_id de la partida
-	now           func() time.Time // S3-01: reloj, cambiable en tests
+	creatorID      string
+	tasksPerPlayer int // 4 a 8; lo elige el creador en LOBBY
+	impostors      int // 0 = sin elegir: impostorCount(jugadores)
+	publisher      events.Publisher
+	store          MatchStore
+	matchDuration  time.Duration
+	startedAt      time.Time
+	participants   []PlayerInfo
+	tanks          []*tank
+	rnd            io.Reader // azar de los roles: crypto/rand
+	startTick      int64
+	meetingTicks   int64 // ticks en reunión: el reloj de la partida no corre
+	eventLog       EventLog
+	reservoir      int32 // S2-04
+	eventHistory   []LogEntry
+	meeting        *meetingState
+	chat           []chatEntry
+	oilDrops       []*oilDrop        // S2-12
+	cleanupDelay   time.Duration     // S2-06
+	onCleanup      func(code string) // S2-06
+	endedAt        time.Time         // S2-06
+	ended          *matchv1.ServerEvent
+	done           chan struct{}
+	grace          time.Duration    // S3-01
+	snapshots      SnapshotSaver    // S3-02
+	savedKey       string           // fase de la última instantánea
+	savedTick      int64            // tick de la última instantánea
+	seenChat       map[string]bool  // S3-04: client_msg_id de la partida
+	now            func() time.Time // S3-01: reloj, cambiable en tests
 
 	joins   chan Join
 	leaves  chan Leave
@@ -71,27 +74,32 @@ type Room struct {
 	nextRandomAt      int64
 	randomEmergencies bool
 	emergencyRand     func(n int) int
+
+	// Mesa: estado de la mesa de reuniones.
+	meetingReadyAt   int64
+	meetingCallsUsed int
 }
 
 func NewRoom(code string, matchID string, m *Map, opts ...Option) *Room {
 	r := &Room{
-		Code:          code,
-		MatchID:       matchID,
-		m:             m,
-		players:       make(map[string]*player),
-		names:         make(map[string]string),
-		phase:         matchv1.Phase_LOBBY,
-		matchDuration: defaultMatchDuration,
-		cleanupDelay:  defaultCleanupDelay,
-		grace:         defaultGracePeriod,
-		now:           time.Now,
-		done:          make(chan struct{}),
-		joins:         make(chan Join),
-		leaves:        make(chan Leave),
-		actions:       make(chan PlayerAction, actionBuffer),
-		nameCh:        make(chan Name),
-		seenChat:      make(map[string]bool),
-		rnd:           rand.Reader,
+		Code:           code,
+		MatchID:        matchID,
+		m:              m,
+		players:        make(map[string]*player),
+		names:          make(map[string]string),
+		phase:          matchv1.Phase_LOBBY,
+		matchDuration:  defaultMatchDuration,
+		tasksPerPlayer: defaultTasksPerPlayer,
+		cleanupDelay:   defaultCleanupDelay,
+		grace:          defaultGracePeriod,
+		now:            time.Now,
+		done:           make(chan struct{}),
+		joins:          make(chan Join),
+		leaves:         make(chan Leave),
+		actions:        make(chan PlayerAction, actionBuffer),
+		nameCh:         make(chan Name),
+		seenChat:       make(map[string]bool),
+		rnd:            rand.Reader,
 	}
 	for _, opt := range opts {
 		opt(r)
@@ -193,6 +201,10 @@ func (r *Room) handleAction(a PlayerAction) {
 	if !ok {
 		return
 	}
+	if a.Leave {
+		r.handleLeave(a.PlayerID)
+		return
+	}
 	// S3-02: en pausa solo se guarda hacia dónde quiere ir cada uno (para
 	// que al soltar una tecla no siga caminando al reanudar); el resto de
 	// las acciones se ignora para que todo quede exactamente igual.
@@ -202,6 +214,8 @@ func (r *Room) handleAction(a PlayerAction) {
 	switch {
 	case a.Report:
 		r.handleReport(a.PlayerID, a.TankSlot)
+	case a.CallMeeting:
+		r.handleCallMeeting(a.PlayerID)
 	case a.Chat:
 		r.handleChat(
 			a.PlayerID,
@@ -218,16 +232,18 @@ func (r *Room) handleAction(a PlayerAction) {
 		if r.phase == matchv1.Phase_PLAYING {
 			r.startContaminate(a.PlayerID, p, a.TankSlot)
 		}
-	case a.Clean:
-		if r.phase == matchv1.Phase_PLAYING {
-			r.startClean(p, a.TankSlot)
-		}
 	case a.Sabotage:
 		r.handleSabotage(p, a.SabotageKind)
 	case a.Fix:
 		r.handleFix(p, a.FixPointID)
 	case a.PickColor:
 		r.pickColor(p, a.Color)
+	case a.SetTaskCount:
+		r.setTaskCount(a.PlayerID, p, a.TaskCount)
+	case a.SetImpostorCount:
+		r.setImpostorCount(a.PlayerID, p, a.ImpostorCount)
+	case a.SetMatchMinutes:
+		r.setMatchMinutes(a.PlayerID, p, a.MatchMinutes)
 	case a.PickAccessory:
 		r.pickAccessory(p, a.Accessory)
 	case a.PickSkin:
@@ -304,6 +320,32 @@ func (r *Room) removePlayer(l Leave) {
 		// disconnectDebounce: cambiar de socket (de la sala de espera a
 		// la partida, o al recargar) no pausa ni avisa al monitor.
 		p.leftAt = r.now()
+	}
+}
+
+// handleLeave atiende a quien tocó "Salir" a propósito. Si es el creador,
+// la sala se cierra para todos con la razón host_left: sin él nadie puede
+// empezar ni la partida tiene a quién esperar. Si se va otro jugador no
+// cambia nada: se cae el stream y se guarda su lugar como siempre.
+// Perder la conexión nunca llega aquí, solo pasa por removePlayer.
+func (r *Room) handleLeave(playerID string) {
+	if r.creatorID == "" || playerID != r.creatorID {
+		return
+	}
+	log.Printf(
+		"room %s: el creador %s salió; se cierra la sala",
+		r.Code,
+		playerID,
+	)
+	switch {
+	case r.inMatch():
+		r.finishMatch(events.WinnerNone, events.ReasonHostLeft)
+	case r.phase == matchv1.Phase_LOBBY:
+		// Sin partida guardada: solo se avisa y se libera la sala.
+		r.phase = matchv1.Phase_ENDED
+		r.endedAt = r.now()
+		r.broadcast()
+		r.broadcastMatchEnded(events.WinnerNone, events.ReasonHostLeft)
 	}
 }
 
@@ -426,8 +468,16 @@ func (r *Room) updateGrace() {
 // paused: la sala espera a alguien en su periodo de gracia (S3-02).
 // El despliegue del laboratorio pausa con cualquier desconectado
 // (docs/deployment-lab.md, sección 9).
+//
+// Solo el host (el creador de la sala) pausa la partida: si se va otro
+// jugador, la partida sigue sin él mientras conserva su lugar durante la
+// gracia. Una sala sin creador (DEV) nunca se pausa.
 func (r *Room) paused() bool {
-	return r.inMatch() && len(r.waitingFor()) > 0
+	if !r.inMatch() || r.creatorID == "" {
+		return false
+	}
+	host, ok := r.players[r.creatorID]
+	return ok && !host.graceUntil.IsZero()
 }
 
 // waitingFor son los jugadores en periodo de gracia, ordenados.
@@ -449,7 +499,7 @@ func (r *Room) inMatch() bool {
 }
 
 // startMatch pasa la sala a PLAYING: guarda la partida y publica el evento.
-// Solo lo acepta el creador, en LOBBY y con al menos 2 jugadores conectados.
+// Solo lo acepta el creador, en LOBBY y con al menos 3 jugadores conectados.
 func (r *Room) startMatch(playerID string) {
 	if r.phase != matchv1.Phase_LOBBY {
 		return
@@ -492,6 +542,8 @@ func (r *Room) startMatch(playerID string) {
 	r.sabotageReadyAt = 0
 	r.pipesUsed = 0
 	r.nextRandomAt = 0
+	r.meetingReadyAt = r.startTick + meetingCallGraceTicks
+	r.meetingCallsUsed = 0
 	r.participants = r.snapshotParticipants()
 
 	ctx, cancel := context.WithTimeout(context.Background(), depsTimeout)
@@ -520,9 +572,13 @@ func (r *Room) startMatch(playerID string) {
 }
 
 // finishMatch termina la partida con el ganador dado y persiste (S2-06).
-func (r *Room) finishMatch(winner string) {
+func (r *Room) finishMatch(winner string, optReason ...string) {
 	if r.phase != matchv1.Phase_PLAYING && r.phase != matchv1.Phase_MEETING {
 		return
+	}
+	reason := ""
+	if len(optReason) > 0 {
+		reason = optReason[0]
 	}
 	r.phase = matchv1.Phase_ENDED
 	r.endedAt = r.now()
@@ -555,10 +611,11 @@ func (r *Room) finishMatch(winner string) {
 		results := make([]events.PlayerResult, 0, len(r.players))
 		for id, p := range r.players {
 			results = append(results, events.PlayerResult{
-				PlayerID: id,
-				Role:     roleName(p.role),
-				Ejected:  p.ejected,
-				Harvest:  r.calculateHarvest(p),
+				PlayerID:    id,
+				Role:        roleName(p.role),
+				Ejected:     p.ejected,
+				Harvest:     r.calculateHarvest(p),
+				LitersSaved: p.litersSaved,
 			})
 		}
 		sort.Slice(results, func(i, j int) bool {
@@ -573,23 +630,25 @@ func (r *Room) finishMatch(winner string) {
 		r.publishAsync(events.RoutingKeyFinished, event)
 	}
 	log.Printf(
-		"room %s: partida %s terminada (ganador: %s)",
+		"room %s: partida %s terminada (ganador: %s, motivo: %s)",
 		r.Code,
 		r.MatchID,
 		winner,
+		reason,
 	)
 	r.broadcast()
-	r.broadcastMatchEnded(winner)
+	r.broadcastMatchEnded(winner, reason)
 }
 
 // broadcastMatchEnded envía MatchEnded a los streams de los jugadores (S2-06).
-func (r *Room) broadcastMatchEnded(winner string) {
+func (r *Room) broadcastMatchEnded(winner string, reason string) {
 	impostorIDs := r.impostorIDs()
 	ev := &matchv1.ServerEvent{
 		Event: &matchv1.ServerEvent_MatchEnded{
 			MatchEnded: &matchv1.MatchEnded{
 				Winner:      winner,
 				ImpostorIds: impostorIDs,
+				Reason:      reason,
 			},
 		},
 	}
@@ -633,22 +692,39 @@ func (r *Room) checkEndConditions() {
 		return
 	}
 	if r.reservoir >= reservoirMax {
-		r.finishMatch(events.WinnerCrew)
+		r.finishMatch(events.WinnerCrew, events.ReasonReservoirFull)
 		return
 	}
 	aliveImp, aliveCrew, deadCrew := r.countRoles()
 	if aliveImp == 0 {
-		r.finishMatch(events.WinnerCrew)
+		r.finishMatch(events.WinnerCrew, events.ReasonImpostorsEjected)
 		return
 	}
 	if aliveImp > 0 && deadCrew > 0 && aliveImp >= aliveCrew {
-		r.finishMatch(events.WinnerImpostor)
+		r.finishMatch(events.WinnerImpostor, events.ReasonTanksContaminated)
 		return
 	}
-	if r.tick-r.startTick >= int64(r.matchDuration/tickInterval) {
-		r.finishMatch(events.WinnerImpostor)
+	if r.tick >= r.matchEndTick() {
+		r.finishMatch(events.WinnerImpostor, events.ReasonTimeOut)
 		return
 	}
+}
+
+// matchEndTick es el tick en que se acaba el tiempo de la partida. Las
+// reuniones no cuentan: cada tick en MEETING corre el fin un tick.
+func (r *Room) matchEndTick() int64 {
+	return r.startTick + r.meetingTicks +
+		int64(r.matchDuration/tickInterval)
+}
+
+// matchEndsAtTick es lo que viaja en el snapshot: 0 si la partida no
+// está en curso (LOBBY o ENDED).
+func (r *Room) matchEndsAtTick() int64 {
+	switch r.phase {
+	case matchv1.Phase_PLAYING, matchv1.Phase_MEETING:
+		return r.matchEndTick()
+	}
+	return 0
 }
 
 // allImpostorsEjected verifica si todos los impostores fueron expulsados.
@@ -717,7 +793,7 @@ func (r *Room) assignRoles() error {
 		ids = append(ids, id)
 	}
 	sort.Strings(ids)
-	impostors, err := pickImpostors(ids, r.rnd)
+	impostors, err := pickImpostors(ids, r.impostorsNow(), r.rnd)
 	if err != nil {
 		return err
 	}
@@ -787,6 +863,9 @@ func (r *Room) snapshotParticipants() []PlayerInfo {
 
 // step mueve a cada jugador y evalúa las condiciones de la partida.
 func (r *Room) step() {
+	if r.phase == matchv1.Phase_MEETING {
+		r.meetingTicks++
+	}
 	if r.phase != matchv1.Phase_MEETING {
 		for _, p := range r.players {
 			nx, ny := r.m.Move(
@@ -898,6 +977,13 @@ func (r *Room) sendTo(p *player, s sharedState) {
 		MyActiveTask: p.taskStation,
 		Emergency:    s.emergency,
 		MySabotage:   r.sabotageView(p),
+		MyMeeting:    r.meetingButtonView(),
+
+		TasksPerPlayer: int32(r.tasksPerPlayer),
+		Impostors:      int32(r.impostorsNow()),
+		MatchMinutes:   int32(r.matchDuration / time.Minute),
+
+		MatchEndsAtTick: r.matchEndsAtTick(),
 	}
 	ev := &matchv1.ServerEvent{
 		Event: &matchv1.ServerEvent_Snapshot{
@@ -918,6 +1004,7 @@ func (r *Room) tankViews() []*matchv1.TankView {
 			OwnerId:       t.ownerID,
 			Contamination: t.contamination,
 			Dead:          t.dead,
+			Reported:      t.reported,
 		})
 	}
 	return views

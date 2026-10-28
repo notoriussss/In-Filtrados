@@ -92,8 +92,6 @@ export function Boot(props: { onDone: (assets: MapAssets) => void }) {
           )}
         </div>
       </div>
-
-      <div className="boot-version">{APP_TEXT.VERSION}</div>
     </Stage>
   );
 }

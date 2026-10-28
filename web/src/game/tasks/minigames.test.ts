@@ -4,9 +4,13 @@ import {
   BUCKET_COUNT,
   BUCKET_SIZE,
   BucketsGame,
-  CompostGame,
-  COMPOST_BIN,
-  COMPOST_SIZE,
+  JugFilterGame,
+  JUG_BUCKET_HOME,
+  JUG_FILTER_MS,
+  JUG_ROUNDS,
+  JUG_SIZE,
+  JUG_TAP,
+  JUG_TOP,
   FILL_COUNT,
   FILL_MARK,
   FILL_RATE,
@@ -37,16 +41,23 @@ import {
   SealGame,
   VALVE_FILL_MS,
   ValveGame,
-  WasteGame,
-  WASTE_BINS,
-  WASTE_COUNT,
-  WASTE_SIZE,
-  WateringGame,
-  WATERING_COUNT,
-  WATERING_HOME,
-  WATERING_PLOT,
-  WATERING_SIZE,
-  WATERING_TREAT,
+  PipesGame,
+  StreamGame,
+  STREAM_END_X,
+  STREAM_GOAL,
+  STREAM_SPEED,
+  STREAM_START_X,
+  PIPES_COLS,
+  PIPES_GRID,
+  PIPES_TILE,
+  ShowerBucketGame,
+  SHOWER_BUCKET,
+  SHOWER_BUCKET_HOME,
+  SHOWER_FILL_MS,
+  SHOWER_FLOOR_Y,
+  SHOWER_PLANT,
+  SHOWER_ROUNDS,
+  SHOWER_ZONE,
   hash01,
   createMinigame,
 } from './minigames';
@@ -64,16 +75,16 @@ describe('createMinigame', () => {
     expect(createMinigame('reduce', 'leak-2')).toBeInstanceOf(SealGame);
     expect(createMinigame('reuse', 'rain-1')).toBeInstanceOf(FirstRainGame);
     expect(createMinigame('reuse', 'rain-2')).toBeInstanceOf(FirstRainGame);
-    expect(createMinigame('reuse', 'greywater-2')).toBeInstanceOf(WateringGame);
-    expect(createMinigame('recycle', 'compost-1')).toBeInstanceOf(CompostGame);
-    expect(createMinigame('recycle', 'sorter-1')).toBeInstanceOf(WasteGame);
+    expect(createMinigame('reuse', 'greywater-2')).toBeInstanceOf(ShowerBucketGame);
+    expect(createMinigame('recycle', 'compost-1')).toBeInstanceOf(JugFilterGame);
+    expect(createMinigame('recycle', 'sorter-1')).toBeInstanceOf(PipesGame);
+    expect(createMinigame('recycle', 'filter-2')).toBeInstanceOf(StreamGame);
   });
 
   it('keeps the type game as fallback for the rest of the stations', () => {
     expect(createMinigame('reduce', 'leak-1')).toBeInstanceOf(ValveGame);
     expect(createMinigame('reuse', 'greywater-1')).toBeInstanceOf(BucketsGame);
     expect(createMinigame('recycle', 'filter-1')).toBeInstanceOf(ParticlesGame);
-    expect(createMinigame('recycle', 'filter-2')).toBeInstanceOf(ParticlesGame);
   });
 });
 
@@ -239,45 +250,150 @@ describe('ParticlesGame', () => {
 
 // ─── Minijuegos por estación ────────────────────────────────────────────
 
-describe('WasteGame', () => {
-  const center = (g: WasteGame, i: number) => ({
-    x: g.items[i].x + WASTE_SIZE / 2,
-    y: g.items[i].y + WASTE_SIZE / 2,
+describe('StreamGame', () => {
+  // Corre el arroyo sin tocar nada: n pasos de 50 ms.
+  const run = (g: StreamGame, ms: number) => {
+    for (let t = 0; t < ms; t += 50) g.step(50);
+  };
+
+  it('sends the first piece of trash right away, drifting to the right', () => {
+    const g = new StreamGame(() => 0);
+    g.step(50);
+    expect(g.items.length).toBe(1);
+    const x0 = g.items[0].x;
+    expect(x0).toBeGreaterThanOrEqual(STREAM_START_X);
+    g.step(1000);
+    expect(g.items[0].x).toBeCloseTo(x0 + STREAM_SPEED, 0);
   });
 
-  it('sorts a residue into its matching bin', () => {
-    const g = new WasteGame();
-    const bin = WASTE_BINS[0]; // plástico
-    g.pointerDown(center(g, 0));
-    g.pointerMove({ x: bin.x + bin.w / 2, y: bin.y + bin.h / 2 });
-    g.pointerUp();
-    expect(g.items[0].placed).toBe(true);
-    expect(g.placed).toBe(1);
-    expect(g.progress()).toBe(0.25);
+  it('takes a piece out with a click on it, the nearest one', () => {
+    const g = new StreamGame(() => 0);
+    run(g, 1000);
+    const it = g.items[0];
+    g.pointerDown({ x: it.x + 3, y: it.y - 3 });
+    expect(g.caught).toBe(1);
+    expect(g.items.includes(it)).toBe(false);
+    expect(g.drainEvents().some((e) => e.type === 'pop')).toBe(true);
   });
 
-  it('sends a residue in the wrong bin back to the table', () => {
-    const g = new WasteGame();
-    const home = { x: g.items[1].x, y: g.items[1].y };
-    const bin = WASTE_BINS[2]; // orgánico, no el suyo (vidrio)
-    g.pointerDown(center(g, 1));
-    g.pointerMove({ x: bin.x + bin.w / 2, y: bin.y + bin.h / 2 });
-    g.pointerUp();
-    expect(g.items[1].placed).toBe(false);
-    expect({ x: g.items[1].x, y: g.items[1].y }).toEqual(home);
+  it('ignores clicks away from the trash', () => {
+    const g = new StreamGame(() => 0);
+    run(g, 500);
+    g.pointerDown({ x: 330, y: 20 });
+    expect(g.caught).toBe(0);
+    expect(g.drainEvents().some((e) => e.type === 'miss')).toBe(true);
   });
 
-  it('is done after every residue, but not before 3 s', () => {
-    const g = new WasteGame();
-    WASTE_BINS.forEach((bin, i) => {
-      g.pointerDown(center(g, i));
-      g.pointerMove({ x: bin.x + bin.w / 2, y: bin.y + bin.h / 2 });
-      g.pointerUp();
-    });
-    expect(g.placed).toBe(WASTE_COUNT);
+  it('lets a piece through at the intake without counting it', () => {
+    const g = new StreamGame(() => 0);
+    run(g, ((STREAM_END_X - STREAM_START_X) / STREAM_SPEED) * 1000 + 100);
+    expect(g.escaped).toBeGreaterThanOrEqual(1);
+    expect(g.caught).toBe(0);
+    expect(g.drainEvents().some((e) => e.type === 'spill')).toBe(true);
+  });
+
+  it('keeps sending trash even if nothing is caught', () => {
+    const g = new StreamGame(() => 0);
+    run(g, 30000);
+    expect(g.escaped).toBeGreaterThan(STREAM_GOAL * 2);
+    expect(g.items.length).toBeGreaterThan(0);
+  });
+
+  it('is done after STREAM_GOAL pieces, but not before 3 s', () => {
+    const g = new StreamGame(() => 0);
+    while (g.caught < STREAM_GOAL) {
+      g.step(50);
+      for (const it of [...g.items]) g.pointerDown({ x: it.x, y: it.y });
+    }
+    expect(g.progress()).toBe(1);
+    expect(g.done).toBe(g.elapsed >= MIN_GAME_MS);
+    g.step(MIN_GAME_MS);
+    expect(g.done).toBe(true);
+  });
+});
+
+describe('PipesGame', () => {
+  const seeded = (seed: number) => {
+    let n = seed * 17;
+    return () => hash01(n++);
+  };
+  const center = (t: { col: number; row: number }) => ({
+    x: PIPES_GRID.x + (t.col + 0.5) * PIPES_TILE,
+    y: PIPES_GRID.y + (t.row + 0.5) * PIPES_TILE,
+  });
+  const solve = (g: PipesGame) => {
+    for (const t of g.tiles) t.rot = t.solution;
+  };
+
+  it('is built as a path from the first column to the last', () => {
+    for (let seed = 1; seed <= 30; seed++) {
+      const g = new PipesGame(seeded(seed));
+      const t = g.tiles;
+      expect(t[0].col).toBe(0);
+      expect(t[0].row).toBe(g.startRow);
+      expect(t[t.length - 1].col).toBe(PIPES_COLS - 1);
+      expect(t[t.length - 1].row).toBe(g.endRow);
+      for (let i = 1; i < t.length; i++) {
+        const step =
+          Math.abs(t[i].col - t[i - 1].col) + Math.abs(t[i].row - t[i - 1].row);
+        expect(step).toBe(1);
+        expect(t[i].col).toBeGreaterThanOrEqual(t[i - 1].col);
+      }
+      // Dos o tres curvas: nunca recto, nunca largo.
+      expect(t.length).toBeGreaterThanOrEqual(PIPES_COLS + 2);
+      expect(t.length).toBeLessThanOrEqual(PIPES_COLS + 3);
+    }
+  });
+
+  it('never starts already connected', () => {
+    for (let seed = 1; seed <= 30; seed++) {
+      const g = new PipesGame(seeded(seed));
+      expect(g.connected).toBe(false);
+      // Ningún tramo empieza bien puesto: el agua no sale de la fuente.
+      expect(g.flow).toBe(0);
+    }
+  });
+
+  it('turns a path tile a quarter on click and ignores the rest', () => {
+    const g = new PipesGame(seeded(3));
+    const t = g.tiles[0];
+    const before = t.rot;
+    g.pointerDown(center(t));
+    expect(t.rot).toBe((before + 1) % 4);
+    expect(g.drainEvents().some((e) => e.type === 'pop')).toBe(true);
+    // Fuera de la cuadrícula no pasa nada.
+    g.pointerDown({ x: 2, y: 2 });
+    expect(g.drainEvents().some((e) => e.type === 'miss')).toBe(true);
+    expect(t.rot).toBe((before + 1) % 4);
+  });
+
+  it('lets the water through the tiles that are already in place', () => {
+    const g = new PipesGame(seeded(5));
+    expect(g.flow).toBeLessThan(g.tiles.length);
+    g.tiles[0].rot = g.tiles[0].solution;
+    expect(g.flow).toBeGreaterThanOrEqual(1);
+    solve(g);
+    expect(g.flow).toBe(g.tiles.length);
+    expect(g.connected).toBe(true);
+    expect(g.progress()).toBe(1);
+  });
+
+  it('is done once connected, but not before 3 s', () => {
+    const g = new PipesGame(seeded(7));
+    solve(g);
+    expect(g.connected).toBe(true);
     expect(g.done).toBe(false);
     g.step(MIN_GAME_MS);
     expect(g.done).toBe(true);
+  });
+
+  it('deals a different route each game', () => {
+    const routes = new Set<string>();
+    for (let seed = 1; seed <= 30; seed++) {
+      const g = new PipesGame(seeded(seed));
+      routes.add(g.tiles.map((t) => `${t.col}${t.row}`).join());
+    }
+    expect(routes.size).toBeGreaterThan(3);
   });
 });
 
@@ -476,47 +592,82 @@ describe('FirstRainGame', () => {
   });
 });
 
-describe('WateringGame', () => {
-  const home = {
-    x: WATERING_HOME.x + WATERING_SIZE / 2,
-    y: WATERING_HOME.y + WATERING_SIZE / 2,
+describe('ShowerBucketGame', () => {
+  const center = (g: ShowerBucketGame) => ({
+    x: g.bucket.x + SHOWER_BUCKET.w / 2,
+    y: g.bucket.y + SHOWER_BUCKET.h / 2,
+  });
+  // Lleva el balde a un punto (por su centro) y lo suelta.
+  const dropAt = (g: ShowerBucketGame, x: number, y: number) => {
+    g.pointerDown(center(g));
+    g.pointerMove({ x, y });
+    g.pointerUp();
+  };
+  const shower = {
+    x: SHOWER_ZONE.x + SHOWER_ZONE.w / 2,
+    y: SHOWER_ZONE.y + SHOWER_ZONE.h / 2,
+  };
+  const plant = {
+    x: SHOWER_PLANT.x + SHOWER_PLANT.w / 2,
+    y: SHOWER_PLANT.y + SHOWER_PLANT.h / 2,
   };
 
-  it('releases a container dropped outside the boxes back home', () => {
-    const g = new WateringGame();
-    expect(g.current).toBe(0);
-    g.pointerDown(home);
-    g.pointerUp();
-    expect(g.items[0].placed).toBe(false);
-    expect({ x: g.items[0].x, y: g.items[0].y }).toEqual(WATERING_HOME);
+  it('starts empty, away from the shower', () => {
+    const g = new ShowerBucketGame();
+    expect(g.fill).toBe(0);
+    expect(g.underShower).toBe(false);
+    g.step(SHOWER_FILL_MS);
+    expect(g.fill).toBe(0);
   });
 
-  it('counts the right box and sends the wrong one back', () => {
-    const g = new WateringGame();
-    // El 0 (agua de verduras) va a Regar.
-    g.pointerDown(home);
-    g.pointerMove({ x: WATERING_PLOT.x + 40, y: WATERING_PLOT.y + 40 });
-    g.pointerUp();
-    expect(g.items[0].placed).toBe(true);
-    expect(g.current).toBe(1);
-    // El 1 (agua de ropa) también sirve: a Tratar está mal.
-    g.pointerDown(home);
-    g.pointerMove({ x: WATERING_TREAT.x + 40, y: WATERING_TREAT.y + 40 });
-    g.pointerUp();
-    expect(g.items[1].placed).toBe(false);
-    // ... y a Regar está bien.
-    g.pointerDown(home);
-    g.pointerMove({ x: WATERING_PLOT.x + 40, y: WATERING_PLOT.y + 40 });
-    g.pointerUp();
-    expect(g.items[1].placed).toBe(true);
-    // El 2 y el 3 (aceite y cloro) van a Tratar.
-    for (const _ of [2, 3]) {
-      g.pointerDown(home);
-      g.pointerMove({ x: WATERING_TREAT.x + 40, y: WATERING_TREAT.y + 40 });
-      g.pointerUp();
+  it('fills only while the bucket is under the shower', () => {
+    const g = new ShowerBucketGame();
+    dropAt(g, shower.x, shower.y);
+    expect(g.underShower).toBe(true);
+    g.step(SHOWER_FILL_MS / 2);
+    expect(g.fill).toBeCloseTo(0.5, 1);
+    // Se lo lleva: deja de llenarse y conserva lo que tenía.
+    dropAt(g, 200, 120);
+    const kept = g.fill;
+    g.step(SHOWER_FILL_MS);
+    expect(g.fill).toBe(kept);
+  });
+
+  it('leaves the bucket on the floor when released away from the plant', () => {
+    const g = new ShowerBucketGame();
+    dropAt(g, 200, 100);
+    expect(g.bucket.y).toBe(SHOWER_FLOOR_Y);
+  });
+
+  it('does not water with a bucket that is not full', () => {
+    const g = new ShowerBucketGame();
+    dropAt(g, shower.x, shower.y);
+    g.step(SHOWER_FILL_MS / 2);
+    dropAt(g, plant.x, plant.y);
+    expect(g.poured).toBe(0);
+    expect(g.drainEvents().some((e) => e.type === 'drop-out')).toBe(true);
+  });
+
+  it('waters the plant with a full bucket and starts over empty', () => {
+    const g = new ShowerBucketGame();
+    dropAt(g, shower.x, shower.y);
+    g.step(SHOWER_FILL_MS);
+    expect(g.full).toBe(true);
+    dropAt(g, plant.x, plant.y);
+    expect(g.poured).toBe(1);
+    expect(g.fill).toBe(0);
+    expect(g.bucket).toEqual(SHOWER_BUCKET_HOME);
+  });
+
+  it('is done after every bucket, but not before 3 s', () => {
+    const g = new ShowerBucketGame();
+    for (let i = 0; i < SHOWER_ROUNDS; i++) {
+      dropAt(g, shower.x, shower.y);
+      g.step(SHOWER_FILL_MS);
+      dropAt(g, plant.x, plant.y);
     }
-    expect(g.placed).toBe(WATERING_COUNT);
-    expect(g.done).toBe(false);
+    expect(g.poured).toBe(SHOWER_ROUNDS);
+    expect(g.progress()).toBe(1);
     g.step(MIN_GAME_MS);
     expect(g.done).toBe(true);
   });
@@ -568,52 +719,73 @@ describe('SealGame', () => {
   });
 });
 
-describe('CompostGame', () => {
-  const center = (g: CompostGame, i: number) => ({
-    x: g.sacks[i].x + COMPOST_SIZE / 2,
-    y: g.sacks[i].y + COMPOST_SIZE / 2,
+describe('JugFilterGame', () => {
+  const bucket = (g: JugFilterGame) => ({
+    x: g.bucket.x + JUG_SIZE / 2,
+    y: g.bucket.y + JUG_SIZE / 2,
   });
-  const bin = {
-    x: COMPOST_BIN.x + COMPOST_BIN.w / 2,
-    y: COMPOST_BIN.y + COMPOST_BIN.h / 2,
+  const top = { x: JUG_TOP.x + JUG_TOP.w / 2, y: JUG_TOP.y + JUG_TOP.h / 2 };
+  const tap = { x: JUG_TAP.x + JUG_TAP.w / 2, y: JUG_TAP.y + JUG_TAP.h / 2 };
+  const pour = (g: JugFilterGame) => {
+    g.pointerDown(bucket(g));
+    g.pointerMove(top);
+    g.pointerUp();
   };
 
-  it('takes the sacks in order (seco, húmedo, tierra), two rounds', () => {
-    const g = new CompostGame();
-    for (const round of [0, 1]) {
-      for (const i of [0, 1, 2]) {
-        expect(g.required).toBe(i);
-        g.pointerDown(center(g, i));
-        g.pointerMove(bin);
-        g.pointerUp();
-        expect(g.sacks[i].inBin).toBe(round + 1);
-        expect({ x: g.sacks[i].x, y: g.sacks[i].y }).toEqual({
-          x: g.sacks[i].homeX,
-          y: g.sacks[i].homeY,
-        });
-      }
-    }
-    expect(g.steps).toBe(6);
-    expect(g.done).toBe(false);
-    g.step(MIN_GAME_MS);
-    expect(g.done).toBe(true);
+  it('starts waiting for the bucket and ignores the tap', () => {
+    const g = new JugFilterGame();
+    expect(g.phase).toBe('pour');
+    g.pointerDown(tap);
+    expect(g.glasses).toBe(0);
+    expect(g.phase).toBe('pour');
   });
 
-  it('shakes the wrong sack back without counting it', () => {
-    const g = new CompostGame();
-    expect(g.required).toBe(0);
-    g.pointerDown(center(g, 1)); // húmedo primero: mal
-    g.pointerMove(bin);
-    g.pointerUp();
-    expect(g.steps).toBe(0);
-    expect({ x: g.sacks[1].x, y: g.sacks[1].y }).toEqual({
-      x: g.sacks[1].homeX,
-      y: g.sacks[1].homeY,
-    });
-    // Soltar fuera de la compostera tampoco cuenta.
-    g.pointerDown(center(g, 0));
+  it('returns the bucket when dropped away from the jug', () => {
+    const g = new JugFilterGame();
+    g.pointerDown(bucket(g));
     g.pointerMove({ x: 20, y: 20 });
     g.pointerUp();
-    expect(g.steps).toBe(0);
+    expect(g.phase).toBe('pour');
+    expect(g.bucket).toEqual(JUG_BUCKET_HOME);
+  });
+
+  it('filters the poured water for JUG_FILTER_MS before the tap works', () => {
+    const g = new JugFilterGame();
+    pour(g);
+    expect(g.phase).toBe('filter');
+    // Con el agua todavía bajando, el clic en la llave no cuenta.
+    g.pointerDown(tap);
+    expect(g.glasses).toBe(0);
+    g.step(JUG_FILTER_MS - 1);
+    expect(g.phase).toBe('filter');
+    g.step(1);
+    expect(g.phase).toBe('tap');
+  });
+
+  it('fills a glass on the tap and misses clicks elsewhere', () => {
+    const g = new JugFilterGame();
+    pour(g);
+    g.step(JUG_FILTER_MS);
+    g.drainEvents();
+    g.pointerDown({ x: 10, y: 10 });
+    expect(g.drainEvents().some((e) => e.type === 'miss')).toBe(true);
+    expect(g.glasses).toBe(0);
+    g.pointerDown(tap);
+    expect(g.glasses).toBe(1);
+    expect(g.phase).toBe('pour');
+  });
+
+  it('is done after every glass, but not before 3 s', () => {
+    const g = new JugFilterGame();
+    for (let i = 0; i < JUG_ROUNDS; i++) {
+      pour(g);
+      g.step(JUG_FILTER_MS);
+      g.pointerDown(tap);
+    }
+    expect(g.glasses).toBe(JUG_ROUNDS);
+    expect(g.progress()).toBe(1);
+    expect(g.done).toBe(g.elapsed >= MIN_GAME_MS);
+    g.step(MIN_GAME_MS);
+    expect(g.done).toBe(true);
   });
 });

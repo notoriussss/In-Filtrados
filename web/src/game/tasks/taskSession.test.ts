@@ -29,6 +29,11 @@ function snap(
     myActiveTask,
     emergency: null,
     mySabotage: null,
+    myMeeting: null,
+    tasksPerPlayer: 6,
+    impostors: 1,
+    matchMinutes: 8,
+    matchEndsAtTick: 0,
   };
 }
 

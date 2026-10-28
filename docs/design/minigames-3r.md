@@ -18,8 +18,8 @@ Añadir minijuegos le da mucha variedad al juego y es barato: solo toca `web/`. 
 
 | Minijuego | Veredicto | Por qué |
 |---|---|---|
-| **Clasificar residuos** (Mesa clasificadora) | ✅ Añadir | Es el mejor. Es el mensaje de Reciclar más claro y encaja perfecto con la estación. Bajar de 6 a **4 residuos**, porque 6 se hace largo para una tarea. Usar residuos relacionados con el agua (botella, bidón, cáscaras, frasco). |
-| **Regular la presión** (Válvula de riego) | ✅ Añadir | Barato, se entiende al instante y es de habilidad. Ningún juego actual es de "clic en el momento justo". Que la zona verde no quede demasiado pequeña al tercer acierto. |
+| **Conectar las tuberías** (Tuberías del ecopunto; antes Clasificar residuos) | ✅ Añadir | Clasificar basura no trataba del agua, y la versión "tratar el agua sucia" tampoco se entendía a simple vista. Un rompecabezas de tuberías se explica solo: el agua corre por donde el tramo está bien puesto. |
+| **Regular la presión** (Válvula de riego) | ✅ Añadir | Barato, se entiende al instante y es de habilidad. Ningún juego actual es de "clic en el momento justo". Que la zona verde no quede demasiado pequeña al tercer acierto. Es Reducir porque una presión mal regulada desperdicia agua: cada error revienta la junta de la tubería y deja un charco que crece. |
 | **Llenar sin derramar** (Lavadero) | ✅ Añadir, **pero como Reducir** | Llenar justo lo necesario es *no desperdiciar agua*, o sea Reducir, no Reutilizar. Moverlo a `valve-2` (Válvula de la estación solar). En el lavadero la etiqueta diría "Reutilizar" y no cuadraría. |
 | **Calibrar el pluviómetro** (Cosecha de lluvia) | 🔁 Cambiar | Es un Simon con gotas de colores: es divertido, pero no enseña nada de reutilizar agua. Para la cosecha de lluvia es mejor **Primera lluvia** (abajo). |
 
@@ -37,14 +37,14 @@ Añadir minijuegos le da mucha variedad al juego y es barato: solo toca `web/`. 
 
 Enseña algo real: el *desvío de primer lavado* que se usa en los sistemas de cosecha de lluvia.
 
-### ¿Sirve para regar? (Reutilizar)
-**Estación:** `greywater-2` (Agua gris del laboratorio).
+### Agua de la ducha (Reutilizar)
+**Estación:** `greywater-2` (Ducha del laboratorio; antes ¿Sirve para regar?).
 
-1. Aparece un recipiente con agua y un dibujo de su origen: agua de lavar verduras, de enjuagar ropa, con aceite de cocina, con cloro.
-2. El jugador lo arrastra a **Regar** o a **Tratar**.
-3. Si falla, vuelve al centro.
+1. La ducha sale mientras se calienta y esa agua se va por el desagüe.
+2. Se arrastra un balde debajo del chorro; se llena solo mientras esté ahí.
+3. Lleno, se lleva a la planta marchita y se riega; la planta revive un poco. El balde vuelve vacío.
 
-**Se completa al:** acertar 4 recipientes. Es el mismo esquema de arrastre que *Clasificar residuos*, así que se reutiliza casi todo el código.
+**Se completa al:** regar con 2 baldes. Reemplaza a ¿Sirve para regar?, que obligaba a adivinar de qué agua venía cada objeto y no se entendía sin explicación.
 
 ### Sellar la fuga (Reducir)
 **Estación:** `leak-2` (Fuga del ecotaller).
@@ -55,14 +55,32 @@ Enseña algo real: el *desvío de primer lavado* que se usa en los sistemas de c
 
 **Se completa al:** sellar 5 grietas.
 
-### Capas del compost (Reciclar)
-**Estación:** `compost-1` (Compostera).
+### Jarra filtrante (Reciclar)
+**Estación:** `compost-1` (Purificador de agua, en la sala de Compostaje y lombricultura).
 
-1. Hay tres sacos: hojas secas, restos de comida y tierra.
-2. Se arrastran a la compostera en el orden que señala la mano (seco, húmedo, tierra), dos veces.
-3. Si se equivoca de saco, se sacude y vuelve.
+1. Hay un balde de agua turbia, una jarra con filtro y un vaso.
+2. Se arrastra el balde a la jarra; el agua baja por el filtro y abajo queda clara (1,5 s).
+3. Se hace clic en la llave para llenar el vaso. Soltar el balde fuera de la jarra lo devuelve a su lugar.
 
-**Se completa al:** completar las 2 rondas.
+**Se completa al:** llenar 2 vasos. Reemplaza al biofiltro de capas (grava, arena y carbón), que no se entendía sin explicación.
+
+### Conectar las tuberías (Reciclar)
+**Estación:** `sorter-1` (Tuberías del ecopunto).
+
+1. Una cuadrícula de 4 × 3 casillas lleva tramos de tubería desordenados, de la fuente (izquierda) al tanque (derecha).
+2. Cada clic gira un tramo un cuarto de vuelta. El agua avanza por los tramos que ya están bien y se queda goteando en el primero que no.
+3. El recorrido sale al azar en cada partida y nunca empieza resuelto.
+
+**Se completa al:** conectar la fuente con el tanque.
+
+### Limpiar el arroyo (Reciclar)
+**Estación:** `filter-2` (Arroyo del ecopunto; antes repetía Partículas de suciedad).
+
+1. La basura (botella, bolsa, lata, bota) baja flotando por un canal hacia la reja de la toma de agua.
+2. Se saca con un clic. La más cercana a la reja se marca en rojo; la que se cuela ensucia el agua, pero no resta.
+3. La basura sigue llegando hasta juntar la cantidad pedida.
+
+**Se completa al:** sacar 6 basuras.
 
 ## Cómo quedaría el mapa
 
@@ -75,23 +93,23 @@ Enseña algo real: el *desvío de primer lavado* que se usa en los sistemas de c
 | `rain-1` Colector de lluvia | Primera lluvia *(extra)* | Reutilizar |
 | `rain-2` Cosecha de lluvia | Primera lluvia *(extra)* | Reutilizar |
 | `greywater-1` Lavadero comunitario | Cubetas de agua gris (actual) | Reutilizar |
-| `greywater-2` Agua gris del laboratorio | ¿Sirve para regar? *(extra)* | Reutilizar |
+| `greywater-2` Ducha del laboratorio | Agua de la ducha *(extra)* | Reutilizar |
 | `filter-1` Filtro de carrizo | Partículas de suciedad (actual) | Reciclar |
-| `filter-2` Filtro de residuos | Partículas de suciedad (actual) | Reciclar |
-| `compost-1` Compostera | Capas del compost *(extra)* | Reciclar |
-| `sorter-1` Mesa clasificadora | Clasificar residuos | Reciclar |
+| `filter-2` Arroyo del ecopunto | Limpiar el arroyo *(extra)* | Reciclar |
+| `compost-1` Purificador de agua | Jarra filtrante *(extra)* | Reciclar |
+| `sorter-1` Tuberías del ecopunto | Conectar las tuberías | Reciclar |
 
 Así cada R tiene 3 juegos distintos y ninguno se repite más de dos veces.
 
 ## Orden sugerido
 
-1. Clasificar residuos
+1. Conectar las tuberías
 2. Regular la presión
 3. Llenar sin derramar
 4. Primera lluvia
-5. ¿Sirve para regar? (sale casi gratis después de Clasificar residuos)
+5. Agua de la ducha
 6. Sellar la fuga
-7. Capas del compost
+7. Jarra filtrante y limpiar el arroyo
 
 Los 4 primeros son la meta; el resto, si sobra tiempo.
 

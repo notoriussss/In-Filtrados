@@ -38,6 +38,12 @@ button:disabled { cursor: default; opacity: .55; transform: none !important; }
   box-shadow: -6px 0 0 0 #9cc3d6, 6px 0 0 0 #9cc3d6, 0 -6px 0 0 #9cc3d6, 0 6px 0 0 #9cc3d6; }
 .hud .alert.calm { background: var(--pan); animation: none;
   box-shadow: -6px 0 0 0 var(--line), 6px 0 0 0 var(--line), 0 -6px 0 0 var(--line), 0 6px 0 0 var(--line); }
+.hud .alert.ghost { background: #1b1a3a; animation: none;
+  box-shadow: -6px 0 0 0 #7ee6d8, 6px 0 0 0 #7ee6d8, 0 -6px 0 0 #7ee6d8, 0 6px 0 0 #7ee6d8; }
+.hud .alert.ghost .tx span { color: #bfe9ff; }
+@keyframes alert-float { 0%, 100% { transform: translateY(2px); opacity: .75; } 50% { transform: translateY(-5px); opacity: 1; } }
+.hud .alert.ghost .px-icon { animation: alert-float 1.8s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .hud .alert.ghost .px-icon { animation: none; } }
 .hud .slotk:disabled { opacity: .45; }
 .hud .slotk .cd { position: absolute; right: 6px; top: 6px; font-family: var(--body); font-size: 22px; color: var(--amber); }
 .hud .slotk.danger { box-shadow: -4px 0 0 0 #b34545, 4px 0 0 0 #b34545, 0 -4px 0 0 #b34545, 0 4px 0 0 #b34545; }
@@ -47,9 +53,18 @@ button:disabled { cursor: default; opacity: .55; transform: none !important; }
 .hud .mini .dot { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; box-shadow: 0 0 0 3px var(--ink); }
 .hud .mini .dot.me { background: #fff; }
 .hud .mini .dot.task { background: var(--amber); width: 9px; height: 9px; margin: -4px 0 0 -4px; }
+.hud .mini .dot.tank { width: 16px; height: 16px; margin: -8px 0 0 -8px; background: var(--pan); border: 3px solid var(--aqua); border-radius: 3px; box-shadow: 0 0 0 2px var(--ink); }
+.hud .mini .dot.tank::after { content: ''; position: absolute; left: 3px; right: 3px; bottom: 2px; height: 5px; background: var(--water); }
+.hud .mini .dot.tank.dead { border-color: var(--coral); }
+.hud .mini .dot.tank.dead::after { background: var(--coral); }
 .hud .mini .dot.meet { background: transparent; border: 3px solid var(--amber); width: 16px; height: 16px; margin: -8px 0 0 -8px; box-shadow: 0 0 0 3px var(--ink); border-radius: 50%; }
+.hud .mini .dot.meet.ready { border-color: var(--aqua); animation: meet-pulse 1.2s steps(2) infinite; }
+@keyframes meet-pulse { 50% { transform: scale(1.3); box-shadow: 0 0 0 3px var(--ink), 0 0 0 6px rgba(126, 230, 216, .35); } }
+.hud .mini .mm-keys { display: inline-flex; align-items: center; gap: 10px; }
 .hud .mini .mm-key { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--amber); }
 .hud .mini .mm-key i { width: 10px; height: 10px; border: 2px solid var(--amber); border-radius: 50%; }
+.hud .mini .mm-key.tank { color: var(--aqua); }
+.hud .mini .mm-key.tank i { border-color: var(--aqua); background: rgba(126, 230, 216, .35); border-radius: 3px; }
 .hud .mini .dot.fix { background: var(--coral); animation: blink 0.6s steps(1) infinite; }
 .hud .me-card .portrait { width: 88px; height: 125px; image-rendering: pixelated; margin: -10px 0 -10px; }
 
@@ -115,6 +130,15 @@ button:disabled { cursor: default; opacity: .55; transform: none !important; }
 .hud .res {right: 66px; top: 36px; width: 440px; padding: 18px 22px 18px; }
 .hud .res .m {display: grid; grid-template-columns: 112px 1fr 70px; gap: 12px; align-items: center; font-size: 30px; margin-top: 12px; }
 .hud .res .m span:last-child {text-align: right; }
+.hud .clock {right: 66px; top: 250px; width: 440px; padding: 14px 22px 12px; }
+.hud .clock .hud-ttl {justify-content: flex-start; gap: 12px; }
+.hud .clock .t {font-family: var(--logo); font-size: 56px; line-height: 1.3; text-align: center; color: var(--txt); }
+.hud .clock.low .t {color: var(--amber); }
+.hud .clock.low {box-shadow: -6px 0 0 0 var(--amber), 6px 0 0 0 var(--amber), 0 -6px 0 0 var(--amber), 0 6px 0 0 var(--amber); }
+.hud .clock.critical {background: #5a1822; animation: hud-flash 1s steps(1) infinite;
+  box-shadow: -6px 0 0 0 var(--coral), 6px 0 0 0 var(--coral), 0 -6px 0 0 var(--coral), 0 6px 0 0 var(--coral); }
+.hud .clock.critical .t {color: #fff; }
+@media (prefers-reduced-motion: reduce) { .hud .clock.critical {animation: none; } }
 .hud .me-card {left: 60px; bottom: 36px; width: 540px; padding: 14px 20px; }
 .hud .hot {left: 50%; margin-left: -330px !important; bottom: 36px; width: 660px; padding: 14px 20px; display: flex; gap: 20px; justify-content: center; }
 .hud .slotk {position: relative; width: 140px; height: 124px; display: grid; justify-items: center; align-content: center; gap: 6px; background: var(--bg2); border: 0; cursor: pointer; padding: 6px 0 0;
@@ -195,3 +219,13 @@ html[data-motion='reduced'] *::after {
 .room-chat .field {gap:12px;align-items:center}
 .room-chat .field input {flex:1;min-width:0;height:56px;font-size:30px}
 .room-row {font-size:30px}
+/* Aviso de emergencia: el icono se mueve según qué pasó y el reloj late. */
+@keyframes alert-wobble { 0%, 100% { transform: rotate(-9deg); } 50% { transform: rotate(9deg) scale(1.08); } }
+@keyframes alert-puff { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-5px) scale(1.1); } }
+@keyframes alert-tick { 50% { transform: scale(1.22); } }
+.hud .alert .px-icon { animation: alert-wobble .5s steps(4) infinite; transform-origin: 50% 70%; }
+.hud .alert.steam .px-icon { animation: alert-puff 1.2s ease-in-out infinite; }
+.hud .alert.calm .px-icon { animation: none; }
+.hud .alert .t { animation: alert-tick 1s steps(2) infinite; transform-origin: 100% 50%; }
+@keyframes slotk-ready { 50% { box-shadow: 0 0 0 3px var(--ink), 0 0 0 6px rgba(255, 107, 107, .35); } }
+.hud .slotk.danger:not(:disabled) { animation: slotk-ready 1.4s ease-in-out infinite; }

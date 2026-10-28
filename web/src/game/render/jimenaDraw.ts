@@ -16,6 +16,35 @@ import type { Pose } from './workPose';
 // píxeles), con margen para lo que sobresale del cuadro: se dibuja más
 // grande que el cuerpo suelto pero con los mismos pies y la misma pose. Si la
 // hoja todavía no cargó se usa el cuadro suelto.
+// drawJimenaGhost dibuja una celda (cell, de 0 a 7) de la hoja del
+// fantasma de Jimena: la misma celda y la misma escala que drawJimena.
+export function drawJimenaGhost(
+  ctx: CanvasRenderingContext2D,
+  sheet: HTMLImageElement,
+  box: SpriteBox,
+  pose: Pose,
+  cell: number,
+): void {
+  const layerBox: SpriteBox = {
+    x: box.x,
+    feetY: box.feetY,
+    w: (box.w * ACCESSORY_CELL_W) / SPRITE_W,
+    h: (box.h * ACCESSORY_CELL_H) / SPRITE_H,
+  };
+  const ref = {
+    unitW: box.w,
+    rows: SPRITE_H,
+    rowOffset: ACCESSORY_PAD_Y,
+  };
+  const src = {
+    sx: cell * ACCESSORY_CELL_W,
+    sy: 0,
+    sw: ACCESSORY_CELL_W,
+    sh: ACCESSORY_CELL_H,
+  };
+  drawPosedSprite(ctx, sheet, layerBox, pose, src, false, ref);
+}
+
 export function drawJimena(
   ctx: CanvasRenderingContext2D,
   body: HTMLImageElement,

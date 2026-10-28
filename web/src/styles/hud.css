@@ -224,6 +224,52 @@
 }
 
 /* =========================================================================
+   2b. RELOJ DE PARTIDA (Debajo del embalse)
+   ========================================================================= */
+.hud-clock {
+  right: 36px;
+  top: 202px;
+  width: 440px;
+  padding: 12px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hud-clock-lbl {
+  font-family: var(--head);
+  font-size: 15px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--mut);
+}
+
+.hud-clock-time {
+  font-family: var(--logo);
+  font-size: 28px;
+  letter-spacing: 2px;
+  color: #fff;
+}
+
+.hud-clock.low {
+  border-color: rgba(255, 210, 74, 0.55);
+}
+
+.hud-clock.low .hud-clock-time {
+  color: var(--amber);
+}
+
+.hud-clock.critical {
+  background: rgba(110, 28, 36, 0.92);
+  border-color: var(--coral);
+  box-shadow: 0 6px 24px rgba(255, 107, 107, 0.35);
+}
+
+.hud-clock.critical .hud-clock-time {
+  color: #fff;
+}
+
+/* =========================================================================
    3. BARRA DE ACCIONES (Abajo al centro)
    ========================================================================= */
 .hud-hotbar {
@@ -494,6 +540,24 @@
   z-index: 4;
 }
 
+.hud-minimap .dot.meet.ready {
+  border-color: var(--aqua);
+  box-shadow: 0 0 8px rgba(126, 230, 216, 0.7);
+}
+
+.hud-minimap .dot.tank {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--aqua);
+  border: 2px solid #04101f;
+  z-index: 4;
+}
+
+.hud-minimap .dot.tank.dead {
+  background: var(--coral);
+}
+
 .hud-minimap .dot.fix {
   width: 12px;
   height: 12px;
@@ -539,6 +603,13 @@
   background: rgba(35, 50, 71, 0.94);
   border-color: #9cc3d6;
   box-shadow: 0 8px 28px rgba(156, 195, 214, 0.3);
+  animation: none;
+}
+
+.hud-alert-banner.ghost {
+  background: rgba(58, 36, 98, 0.94);
+  border-color: #c4b5fd;
+  box-shadow: 0 8px 28px rgba(196, 181, 253, 0.3);
   animation: none;
 }
 

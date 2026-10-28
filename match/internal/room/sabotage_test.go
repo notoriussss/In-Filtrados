@@ -337,17 +337,8 @@ func TestActivityShowsWhatEachPlayerDoes(t *testing.T) {
 		Contaminate: true,
 		TankSlot:    target.slot,
 	})
-	cleaner := r.players["crew2"]
-	target.contamination = 10
-	cleaner.view.X, cleaner.view.Y = float32(target.x), float32(target.y)
-	r.handleAction(PlayerAction{
-		PlayerID: "crew2",
-		Clean:    true,
-		TankSlot: target.slot,
-	})
-	if r.activityOf(imp) != activityTank ||
-		r.activityOf(cleaner) != activityTank {
-		t.Error("contaminar y limpiar deben verse igual")
+	if r.activityOf(imp) != activityTank {
+		t.Error("contaminar: activity debe ser la del tanque")
 	}
 
 	sabotage(r, "imp", emergencySteam)

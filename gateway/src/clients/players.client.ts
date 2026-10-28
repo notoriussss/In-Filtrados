@@ -1,7 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
 import * as grpc from '@grpc/grpc-js';
-import { loadPackage, requireAddr, unary } from './grpc';
+import {
+  CHANNEL_OPTIONS,
+  loadPackage,
+  requireAddr,
+  unary,
+} from './grpc';
 import { createBreaker, guarded } from './resilience';
 
 // Clases (no types) para que Swagger lea el esquema de la respuesta.
@@ -48,6 +53,7 @@ export class RankingEntryReply {
   @ApiProperty() winsAsImpostor!: number;
   @ApiProperty() harvest!: number;
   @ApiProperty() coinsEarned!: number;
+  @ApiProperty() litersSaved!: number;
 }
 
 export class RankingReply {
@@ -64,6 +70,7 @@ export class PlayersClient {
     this.client = new pkg.players.v1.Players(
       requireAddr('PLAYERS_GRPC_ADDR'),
       grpc.credentials.createInsecure(),
+      CHANNEL_OPTIONS,
     );
   }
 

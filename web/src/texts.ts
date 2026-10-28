@@ -8,7 +8,6 @@ export const APP_TEXT = {
   REDUCE: 'Reducir',
   REUSE: 'Reutilizar',
   RECYCLE: 'Reciclar',
-  VERSION: 'Computación en la Nube · v1.0',
 } as const;
 
 export const BOOT_TEXT = {
@@ -127,8 +126,12 @@ export const LOBBY_TEXT = {
   OFFLINE: 'Desconectado',
   WAITING: 'Esperando jugador…',
   impostors: (n: number) => (n === 1 ? '1 infiltrado' : `${n} infiltrados`),
-  TASKS: '4 tareas',
-  DURATION: '8 min',
+  tasks: (n: number) => `${n} tareas`,
+  TASK_COUNT: 'Tareas por jugador',
+  taskCountOption: (n: number) => `${n} tareas`,
+  IMPOSTORS_LABEL: 'Infiltrados',
+  DURATION_LABEL: 'Duración',
+  minutes: (n: number) => `${n} min`,
   onlyHost: (name: string) => `Solo ${name} puede iniciar la partida.`,
   HOW_TO_WIN: 'Cómo se gana',
   WIN_CREW:
@@ -144,7 +147,7 @@ export const LOBBY_TEXT = {
 
 export const HELP_TEXT = {
   TITLE: 'Cómo jugar In-Filtrados',
-  DURATION: 'Una partida dura hasta 8 minutos',
+  DURATION: 'Quien crea la sala elige cuánto dura la partida',
   TASKS: 'Las 3R: tus tareas',
   REDUCE_SUB: 'Evita el desperdicio',
   REDUCE_1: 'Repara fugas y cierra válvulas de la estación.',
@@ -153,11 +156,13 @@ export const HELP_TEXT = {
   REUSE_1: 'Junta agua de lluvia y agua gris con la cubeta.',
   REUSE_2: 'Arrastra las cubetas al tanque para guardarla.',
   RECYCLE_SUB: 'Devuelve agua limpia',
-  RECYCLE_1: 'Filtra el agua sucia y clasifica los residuos.',
+  RECYCLE_1: 'Filtra, purifica y conecta el agua limpia.',
   RECYCLE_2: 'Toca la suciedad que flota hasta dejarla limpia.',
   ROLES: 'Roles',
   CREW: 'Cuidador',
-  CREW_TEXT: 'Haz tus 4 tareas, limpia los tanques y vota en las reuniones.',
+  CREW_TEXT:
+    'Haz tus tareas, vigila los tanques y vota en las reuniones. ' +
+    'Lo que se contamina no se limpia.',
   CREW_WIN: 'Ganan: embalse lleno o infiltrado expulsado',
   IMPOSTOR: 'Infiltrado',
   IMPOSTOR_TEXT:
@@ -166,7 +171,8 @@ export const HELP_TEXT = {
   MEETING_POINT: 'Reuniones',
   MEETING_POINT_TEXT:
     'Al reportar un tanque todos aparecen en la Mesa de reuniones ' +
-    '(mirador del centro); en el mapa es «Reunión».',
+    '(mirador del centro). Acércate y pulsa E para convocar una ' +
+    'reunión; la mesa tiene un número limitado de convocatorias.',
   CONTROLS: 'Controles',
   MOVE: 'Mover',
   USE: 'Usar',
@@ -187,7 +193,8 @@ export const ROLE_TEXT = {
   IMPOSTOR_SUB: 'Ensucia los tanques sin que te descubran.',
   MATES: 'En la estación',
   MEETING_NOTE:
-    'En una reunión todos van a la Mesa de reuniones, en el centro del mapa.',
+    'En una reunión todos van a la Mesa de reuniones, en el centro del ' +
+    'mapa. También puedes convocar desde la mesa con E.',
   startsIn: (s: number) => `La partida empieza en ${s}`,
 } as const;
 
@@ -202,20 +209,21 @@ export const HUD_TEXT = {
   CREW: 'Cuidador',
   IMPOSTOR: 'Infiltrado',
   GHOST: 'Fantasma',
+  TANK_EMPTY: 'Tu tanque llegó a 0',
+  TANK_EMPTY_HINT: 'Eres un fantasma: sigue con tus tareas',
   MY_TANK: 'Tanque',
   NO_TANK: 'sin tanque',
   MAP: 'Mapa',
   MEETING_POINT: 'Reunión',
+  MEETING: 'Llamar reunión',
   USE: 'Usar',
-  CLEAN: 'Limpiar',
   REPORT: 'Reportar',
   CONTAMINATE: 'Contaminar',
   FIX: 'Arreglar',
   PIPE: 'Tubería',
   STEAM: 'Vapor',
-  TANK_ALERT: '¡Tu tanque se está contaminando!',
-  TANK_ALERT_HINT: 'Ve a limpiarlo antes de que se arruine',
   PAUSED: 'Partida en pausa',
+  CLOCK: 'Tiempo',
   waiting: (names: string) => `Esperando a ${names}`,
   percent: (n: number) => `${n}%`,
 } as const;
@@ -229,6 +237,8 @@ export const PAUSE_TEXT = {
   SETTINGS: 'Ajustes',
   LEAVE: 'Salir de la sala',
   LEAVE_NOTE: 'Si sales en plena partida, quedarás como desconectado.',
+  LEAVE_NOTE_HOST:
+    'Eres quien creó la sala: si sales, la partida se cierra para todos.',
 } as const;
 
 export const CONNECTION_TEXT = {
@@ -257,6 +267,7 @@ export const MEETING_UI_TEXT = {
   GHOST: 'Fantasma',
   OFFLINE: 'Desconectado',
   REPORTER: 'Reportó',
+  CALLER: 'Convocó',
   VOTED: 'Votó',
   MY_VOTE: 'Tu voto',
   SKIP: 'Saltar voto',
@@ -287,6 +298,13 @@ export const RESULT_TEXT = {
   ENDED: 'Fin de la partida',
   CREW_SUB: 'El embalse se llenó o el infiltrado quedó fuera.',
   IMPOSTOR_SUB: 'Los tanques se contaminaron o se acabó el tiempo.',
+  CREW_RESERVOIR_SUB: 'El embalse se llenó con las tareas 3R.',
+  CREW_EJECTED_SUB: 'El infiltrado fue descubierto y expulsado.',
+  CREW_EJECTED_MULTI_SUB: 'Los infiltrados fueron expulsados.',
+  IMPOSTOR_TANKS_SUB: 'Los tanques se contaminaron.',
+  IMPOSTOR_TIMEOUT_SUB: 'Se acabó el tiempo.',
+  HOST_LEFT_SUB:
+    'Quien creó la sala salió, así que la partida se cerró para todos.',
   PLAYERS: 'Jugadores',
   room: (code: string) => `Sala ${code}`,
   PLAYER: 'Jugador',
@@ -389,7 +407,7 @@ export const RANKING_TEXT = {
   RATE: '% victorias',
   CREW: 'Cuidador',
   IMPOSTOR: 'Infiltrado',
-  HARVEST: 'Cosecha',
+  LITERS: 'Litros ahorrados',
   COINS: 'Monedas ganadas',
   YOU: '(tú)',
   SORT_BY: 'Ordenar por',

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Meeting, Snapshot } from '@in-filtrados/messages';
 import {
   coinsEarned,
+  endSubtitle,
   endTitle,
   meetingView,
   resultText,
@@ -37,13 +38,22 @@ function snap(meeting: Partial<Meeting>, tick = 100): Snapshot {
     tick,
     phase: 'MEETING',
     players,
-    tanks: [{ slot: 3, ownerId: 'd', contamination: 100, dead: true }],
+    tanks: [
+      {
+        slot: 3,
+        ownerId: 'd',
+        contamination: 100,
+        dead: true,
+        reported: true,
+      },
+    ],
     reservoir: 0,
     myRole: 'CREW',
     myTaskProgress: { completed: 0, total: 4 },
     meeting: {
       reporterId: 'a',
       tankSlot: 3,
+      reason: 'report',
       votesCast: [],
       endsAtTick: 1000,
       votingClosed: false,
@@ -59,6 +69,11 @@ function snap(meeting: Partial<Meeting>, tick = 100): Snapshot {
     myActiveTask: null,
     emergency: null,
     mySabotage: null,
+    myMeeting: null,
+    tasksPerPlayer: 6,
+    impostors: 1,
+    matchMinutes: 8,
+    matchEndsAtTick: 0,
   };
 }
 
@@ -77,9 +92,20 @@ describe('meetingView', () => {
 
   it('says who reported, and whose tank', () => {
     const v = meetingView(snap({}), 'a')!;
-    expect(v.reporterText).toBe('Ana reportó un tanque muerto');
+    expect(v.reporterText).toBe('Ana reportó un tanque contaminado');
     expect(v.tankText).toBe('Tanque de Dani');
     expect(v.countdownText).toBe('Votación: 45 s');
+  });
+
+  it('says who called an emergency meeting, without a tank', () => {
+    const v = meetingView(
+      snap({ reason: 'emergency', tankSlot: -1 }),
+      'a',
+    )!;
+    expect(v.reporterText).toBe(
+      'Ana convocó una reunión de emergencia',
+    );
+    expect(v.tankText).toBe('');
   });
 
   it('a living player can vote for the living, not for ghosts', () => {
@@ -147,6 +173,37 @@ describe('end of match', () => {
     expect(endTitle('crew')).toBe('¡Ganaron los cuidadores!');
     expect(endTitle('impostor')).toBe('¡Ganó el infiltrado!');
     expect(endTitle(null)).toBe('La partida terminó');
+  });
+
+  it('says the host left when the room closes without a winner', () => {
+    expect(endSubtitle(null, 'host_left')).toBe(
+      'Quien creó la sala salió, así que la partida se cerró para todos.',
+    );
+  });
+
+  it('distinguishes why crew or impostor won in subtitle', () => {
+    expect(endSubtitle('crew', 'reservoir_full')).toBe(
+      'El embalse se llenó con las tareas 3R.',
+    );
+    expect(endSubtitle('crew', 'impostors_ejected', 1)).toBe(
+      'El infiltrado fue descubierto y expulsado.',
+    );
+    expect(endSubtitle('crew', 'impostors_ejected', 2)).toBe(
+      'Los infiltrados fueron expulsados.',
+    );
+    expect(endSubtitle('crew', null)).toBe(
+      'El embalse se llenó o el infiltrado quedó fuera.',
+    );
+    expect(endSubtitle('impostor', 'tanks_contaminated')).toBe(
+      'Los tanques se contaminaron.',
+    );
+    expect(endSubtitle('impostor', 'timeout')).toBe(
+      'Se acabó el tiempo.',
+    );
+    expect(endSubtitle('impostor', null)).toBe(
+      'Los tanques se contaminaron o se acabó el tiempo.',
+    );
+    expect(endSubtitle(null)).toBe('');
   });
 
   it('coins appear only after players counted the match', () => {

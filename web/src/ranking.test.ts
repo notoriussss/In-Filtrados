@@ -15,8 +15,8 @@ function entry(name: string, extra: Partial<RankingEntry> = {}): RankingEntry {
     wins: 0,
     timesImpostor: 0,
     winsAsImpostor: 0,
-    harvest: 0,
     coinsEarned: 0,
+    litersSaved: 0,
     ...extra,
   };
 }
@@ -52,13 +52,13 @@ describe('crewStats', () => {
 
 describe('sortRanking', () => {
   const list = [
-    entry('ana', { matchesPlayed: 10, wins: 5, harvest: 50 }),
-    entry('beto', { matchesPlayed: 2, wins: 2, harvest: 90 }),
-    entry('caro', { matchesPlayed: 5, wins: 5, harvest: 10 }),
+    entry('ana', { matchesPlayed: 10, wins: 5, litersSaved: 500 }),
+    entry('beto', { matchesPlayed: 2, wins: 2, litersSaved: 900 }),
+    entry('caro', { matchesPlayed: 5, wins: 5, litersSaved: 100 }),
   ];
 
   it('orders by the chosen column, highest first', () => {
-    expect(sortRanking(list, 'harvest').map((e) => e.username)).toEqual([
+    expect(sortRanking(list, 'liters').map((e) => e.username)).toEqual([
       'beto',
       'ana',
       'caro',

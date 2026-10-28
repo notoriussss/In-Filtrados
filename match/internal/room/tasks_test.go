@@ -27,7 +27,7 @@ func playingRoomTasks(
 		mapWithStations(),
 		opts...,
 	)
-	for _, id := range []string{"crew1", "imp"} {
+	for _, id := range []string{"crew1", "crew2", "imp"} {
 		out := make(chan *matchv1.ServerEvent, 1)
 		r.addPlayer(Join{PlayerID: id, Out: out})
 	}
@@ -183,10 +183,13 @@ func TestCrewTaskSuccess(t *testing.T) {
 	if p.tasksCompleted != 1 {
 		t.Errorf("tasksCompleted debe ser 1, obtuvo %d", p.tasksCompleted)
 	}
+	if p.litersSaved != 300 {
+		t.Errorf("litersSaved debe ser 300, obtuvo %d", p.litersSaved)
+	}
 	// El embalse es el avance de la tripulación: leak-1 (reduce, 3) de
-	// leak-1 + rain-1 (3 + 4) es 3/7, o sea 42 %.
-	if r.reservoir != 42 {
-		t.Errorf("embalse debe ser 42, obtuvo %d", r.reservoir)
+	// las tareas de crew1 y crew2 (2 x (3 + 4)) es 3/14, o sea 21 %.
+	if r.reservoir != 21 {
+		t.Errorf("embalse debe ser 21, obtuvo %d", r.reservoir)
 	}
 
 	// Publish corre en goroutine: esperamos con timeout

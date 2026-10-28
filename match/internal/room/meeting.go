@@ -3,6 +3,7 @@ package room
 import (
 	"context"
 	"log"
+	"math"
 	"sort"
 	"unicode/utf8"
 
@@ -10,8 +11,59 @@ import (
 	"github.com/notoriussss/in-filtrados/match/internal/events"
 )
 
-// handleReport procesa la acción de reportar un tanque muerto (S2-05).
+// handleReport procesa el reporte de un tanque contaminado al 100 %
+// (S2-05). Un tanque a 100 es un tanque dead: lo reporta un jugador vivo
+// a reportRange o menos y abre la misma reunión que la mesa del mirador.
+// Cada rechazo le responde un Error al que reportó; el tanque sigue
+// contaminado después de la reunión, nadie lo limpia.
 func (r *Room) handleReport(playerID string, tankSlot int32) {
+	p, ok := r.players[playerID]
+	if !ok {
+		return
+	}
+	if r.phase == matchv1.Phase_MEETING {
+		r.sendError(p, ErrCodeMeetingInProgress, errMsgMeetingInProgress)
+		return
+	}
+	if r.phase != matchv1.Phase_PLAYING {
+		return
+	}
+	if !p.view.Alive {
+		r.sendError(p, ErrCodeReportNotAlive, errMsgReportNotAlive)
+		return
+	}
+	t := r.tankAt(tankSlot)
+	switch {
+	case t == nil:
+		r.sendError(p, ErrCodeUnknownTank, errMsgUnknownTank)
+		return
+	case !t.dead:
+		r.sendError(p, ErrCodeTankNotPolluted, errMsgTankNotPolluted)
+		return
+	case t.reported:
+		r.sendError(
+			p,
+			ErrCodeTankAlreadyReported,
+			errMsgTankAlreadyReported,
+		)
+		return
+	case !nearDeadTank(p, t):
+		r.sendError(p, ErrCodeReportTooFar, errMsgReportTooFar)
+		return
+	}
+
+	t.reported = true
+	r.startMeeting(
+		playerID,
+		matchv1.MeetingReason_MEETING_REASON_REPORT,
+		tankSlot,
+	)
+}
+
+// handleCallMeeting convoca una reunión desde la mesa del mirador.
+// Valida lo mismo que el servidor debe validar siempre: fase, vida,
+// cercanía, emergencia activa, gracia inicial, espera y usos.
+func (r *Room) handleCallMeeting(playerID string) {
 	if r.phase != matchv1.Phase_PLAYING {
 		return
 	}
@@ -19,39 +71,81 @@ func (r *Room) handleReport(playerID string, tankSlot int32) {
 	if !ok || !p.view.Alive {
 		return
 	}
-	t := r.tankAt(tankSlot)
-	if t == nil || !t.dead || t.reported {
+	if r.emergency != nil {
 		return
 	}
-	if !nearDeadTank(p, t) {
+	if r.tick < r.startTick+meetingCallGraceTicks {
+		return
+	}
+	if r.tick < r.meetingReadyAt {
+		return
+	}
+	if r.meetingCallsUsed >= meetingCallsMax {
+		return
+	}
+	center := r.m.MeetingPoint()
+	dx := float64(p.view.X) - center.X
+	dy := float64(p.view.Y) - center.Y
+	if dx*dx+dy*dy > meetingCallRange*meetingCallRange {
 		return
 	}
 
-	t.reported = true
+	r.meetingCallsUsed++
+	r.meetingReadyAt = r.tick + meetingCallCooldownTicks
+	r.startMeeting(
+		playerID,
+		matchv1.MeetingReason_MEETING_REASON_EMERGENCY,
+		-1,
+	)
+}
+
+// startMeeting abre la fase de reunión y coloca a todos alrededor de la
+// mesa. reason distingue un reporte de una convocatoria.
+func (r *Room) startMeeting(
+	reporterID string,
+	reason matchv1.MeetingReason,
+	tankSlot int32,
+) {
 	r.cancelPipeForMeeting()
 	r.phase = matchv1.Phase_MEETING
 	r.chat = nil
-	r.teleportToPlaza()
+	r.teleportToMeeting()
+
+	// Tras una reunión por reporte, la mesa espera un poco antes de
+	// permitir una convocatoria: no queremos dos reuniones seguidas.
+	if reason == matchv1.MeetingReason_MEETING_REASON_REPORT {
+		ready := r.tick +
+			meetingVotingTicks +
+			meetingResultTicks +
+			meetingCallAfterReportTicks
+		if ready > r.meetingReadyAt {
+			r.meetingReadyAt = ready
+		}
+	}
 
 	r.meeting = &meetingState{
-		reporterID:   playerID,
+		reporterID:   reporterID,
 		tankSlot:     tankSlot,
+		reason:       reason,
 		votes:        make(map[string]voteChoice),
 		votingEndsAt: r.tick + meetingVotingTicks,
 	}
 }
 
-// teleportToPlaza mueve a todos los jugadores a la plaza y frena su avance.
-func (r *Room) teleportToPlaza() {
+// teleportToMeeting mueve a todos alrededor de la mesa y frena su avance.
+// Los puntos forman un arco al sur de la mesa: el norte lo ocupa la
+// consola del mirador.
+func (r *Room) teleportToMeeting() {
 	ids := make([]string, 0, len(r.players))
 	for id := range r.players {
 		ids = append(ids, id)
 	}
 	sort.Strings(ids)
 
+	center := r.m.MeetingPoint()
 	for i, id := range ids {
 		p := r.players[id]
-		x, y := r.m.SpawnPoint(i)
+		x, y := r.meetingSpot(i, len(ids), center)
 		p.view.X = float32(x)
 		p.view.Y = float32(y)
 		p.dx = 0
@@ -60,6 +154,66 @@ func (r *Room) teleportToPlaza() {
 		p.taskStartTick = 0
 		p.taskStation = ""
 	}
+}
+
+// meetingSpot reparte a los jugadores en uno o dos arcos frente a la
+// mesa. Si un punto queda bloqueado, prueba un radio mayor y, como
+// último recurso, usa el spawn de siempre.
+func (r *Room) meetingSpot(
+	slot, total int,
+	center Point,
+) (float64, float64) {
+	const startDeg = 20.0
+	const endDeg = 160.0
+	radii := []float64{56, 80}
+
+	if total <= 5 {
+		angle := startDeg
+		if total > 1 {
+			angle += (endDeg - startDeg) *
+				float64(slot) / float64(total-1)
+		}
+		if point, ok := r.freeMeetingSpot(center, angle, radii); ok {
+			return point.X, point.Y
+		}
+	} else {
+		ring := slot % len(radii)
+		count := (total + len(radii) - 1) / len(radii)
+		index := slot / len(radii)
+		angle := startDeg
+		if count > 1 {
+			angle += (endDeg - startDeg) *
+				float64(index) / float64(count-1)
+		}
+		if point, ok := r.freeMeetingSpot(
+			center,
+			angle,
+			[]float64{radii[ring]},
+		); ok {
+			return point.X, point.Y
+		}
+	}
+
+	return r.m.SpawnPoint(slot)
+}
+
+// freeMeetingSpot busca un punto libre sobre un ángulo y varios radios.
+func (r *Room) freeMeetingSpot(
+	center Point,
+	angleDeg float64,
+	radii []float64,
+) (Point, bool) {
+	angle := angleDeg * math.Pi / 180
+	for _, radius := range radii {
+		point := Point{
+			X: center.X + math.Cos(angle)*radius,
+			Y: center.Y + math.Sin(angle)*radius,
+		}
+		if !r.m.blocked(point.X, point.Y) {
+			return point, true
+		}
+	}
+	return Point{}, false
 }
 
 func (r *Room) meetingView() *matchv1.Meeting {
@@ -90,6 +244,19 @@ func (r *Room) meetingView() *matchv1.Meeting {
 		VotingClosed: votingClosed,
 		EjectedId:    ejectedID,
 		WasImpostor:  wasImpostor,
+		Reason:       r.meeting.reason,
+	}
+}
+
+// meetingButtonView es el estado que ve el HUD: cuándo puede volver a
+// convocar y cuántas convocatorias quedan. null fuera de PLAYING.
+func (r *Room) meetingButtonView() *matchv1.MeetingButton {
+	if r.phase != matchv1.Phase_PLAYING {
+		return nil
+	}
+	return &matchv1.MeetingButton{
+		ReadyAtTick: r.meetingReadyAt,
+		CallsLeft:   int32(max(meetingCallsMax-r.meetingCallsUsed, 0)),
 	}
 }
 

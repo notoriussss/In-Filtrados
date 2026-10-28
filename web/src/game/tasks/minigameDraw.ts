@@ -4,18 +4,19 @@ import {
   BOARD,
   type Minigame,
   BucketsGame,
-  CompostGame,
+  JugFilterGame,
   FillGame,
   FirstRainGame,
   ParticlesGame,
   PressureGame,
   SealGame,
+  StreamGame,
   ValveGame,
-  WasteGame,
-  WateringGame,
+  PipesGame,
+  ShowerBucketGame,
 } from './minigames';
 import { BUCKETS_HERO_X, BucketsScene } from './draw/bucketsScene';
-import { COMPOST_HERO_X, CompostScene } from './draw/compostScene';
+import { JUG_HERO_X, JugScene } from './draw/jugScene';
 import { FILL_HERO_X, FillScene } from './draw/fillScene';
 import { drawDoneBanner, warmBannerFont } from './draw/hand';
 import { Hero } from './draw/hero';
@@ -23,11 +24,12 @@ import { PARTICLES_HERO_X, ParticlesScene } from './draw/particlesScene';
 import { PRESSURE_HERO_X, PressureScene } from './draw/pressureScene';
 import { RAIN_HERO_X, RainScene } from './draw/rainScene';
 import { SEAL_HERO_X, SealScene } from './draw/sealScene';
-import { SORTER_HERO_X, SorterScene } from './draw/sorterScene';
+import { STREAM_HERO_X, StreamScene } from './draw/streamScene';
+import { PIPES_HERO_X, PipesScene } from './draw/pipesScene';
 import { BOARD_SCALE } from './draw/pixel';
 import { HERO_FEET_Y, type Scene, type SceneEnv } from './draw/scene';
 import { VALVE_HERO_X, ValveScene } from './draw/valveScene';
-import { WATERING_HERO_X, WateringScene } from './draw/wateringScene';
+import { SHOWER_HERO_X, ShowerScene } from './draw/showerScene';
 
 // S2-11: dibujo de los minijuegos de las 3R en su tablero (BOARD). La
 // lógica está en minigames.ts y el panel en screens/game/Minigame.tsx;
@@ -98,9 +100,10 @@ function buildScene(
   if (game instanceof FillGame) return new FillScene(game, env);
   if (game instanceof SealGame) return new SealScene(game, env);
   if (game instanceof FirstRainGame) return new RainScene(game, env);
-  if (game instanceof WasteGame) return new SorterScene(game, env);
-  if (game instanceof WateringGame) return new WateringScene(game, env);
-  if (game instanceof CompostGame) return new CompostScene(game, env);
+  if (game instanceof PipesGame) return new PipesScene(game, env);
+  if (game instanceof StreamGame) return new StreamScene(game, env);
+  if (game instanceof ShowerBucketGame) return new ShowerScene(game, env);
+  if (game instanceof JugFilterGame) return new JugScene(game, env);
   throw new Error('minijuego sin escena');
 }
 
@@ -113,7 +116,8 @@ function heroXOf(game: Minigame): number {
   if (game instanceof FillGame) return FILL_HERO_X;
   if (game instanceof SealGame) return SEAL_HERO_X;
   if (game instanceof FirstRainGame) return RAIN_HERO_X;
-  if (game instanceof WasteGame) return SORTER_HERO_X;
-  if (game instanceof WateringGame) return WATERING_HERO_X;
-  return COMPOST_HERO_X;
+  if (game instanceof PipesGame) return PIPES_HERO_X;
+  if (game instanceof StreamGame) return STREAM_HERO_X;
+  if (game instanceof ShowerBucketGame) return SHOWER_HERO_X;
+  return JUG_HERO_X;
 }

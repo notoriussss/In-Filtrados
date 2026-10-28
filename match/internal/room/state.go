@@ -13,7 +13,7 @@ const (
 	actionBuffer = 256
 
 	// S1-11: empezar y terminar la partida.
-	minPlayersToStart = 2
+	minPlayersToStart = 3
 	depsTimeout       = 2 * time.Second
 
 	// S2-02: roles y tanques.
@@ -21,21 +21,22 @@ const (
 	noTank           = -1 // jugadores que llegaron después del último tanque
 
 	// S2-03: tanques (los tiempos van en ticks de 50 ms).
-	tankRange           = 56  // unidades para contaminar, limpiar o visitar
+	tankRange           = 56  // unidades para contaminar o visitar
 	maxContamination    = 100 // a 100 el tanque muere
 	contaminateTicks    = 60  // 3 s quieto
-	contaminateAmount   = 35
+	contaminateAmount   = 50  // dos contaminaciones matan un tanque
 	contaminateCooldown = 400 // 20 s entre contaminaciones
-	cleanTicks          = 40  // 2 s quieto
-	cleanAmount         = 15
 	impostorDriftTicks  = 100 // el tanque del impostor sube solo cada 5 s
 	impostorDriftAmount = 1
 
-	// S2-04: tareas 3R
-	tasksPerPlayer = 4
-	taskMinTicks   = 60 // 3 s
-	taskRadius     = 40
-	reservoirMax   = 100
+	// S2-04: tareas 3R. Cuántas hace cada jugador (cuidador o impostor)
+	// lo elige el creador en LOBBY, entre el mínimo y el máximo.
+	minTasksPerPlayer     = 4
+	maxTasksPerPlayer     = 8
+	defaultTasksPerPlayer = 6
+	taskMinTicks          = 60 // 3 s
+	taskRadius            = 40
+	reservoirMax          = 100
 
 	taskReduce     = "reduce"
 	taskReuse      = "reuse"
@@ -53,6 +54,14 @@ const (
 	chatCooldownTicks  = 20  // 1 s entre mensajes de chat
 	chatHistoryLimit   = 30  // mensajes guardados en snapshot
 
+	// Mesa: se puede usar dos veces por
+	// partida, con 60 s de espera y 30 s de gracia al empezar.
+	meetingCallRange            = 80   // unidades desde el marker "reunion"
+	meetingCallGraceTicks       = 600  // 30 s desde el inicio
+	meetingCallCooldownTicks    = 1200 // 60 s entre convocatorias
+	meetingCallAfterReportTicks = 200  // 10 s extra tras una reunión por reporte
+	meetingCallsMax             = 2    // convocatorias por partida
+
 	// S3-01: lugar reservado al jugador que se desconecta en partida.
 	// En el laboratorio se sube con RECONNECT_GRACE_SECONDS.
 	defaultGracePeriod = 90 * time.Second
@@ -60,9 +69,9 @@ const (
 	disconnectDebounce = time.Second
 
 	// S2-12: gotas de aceite tras contaminar.
-	oilTrailTicks     = 300 // 15 s soltando gotas
+	oilTrailTicks     = 100 // 5 s soltando gotas
 	oilDropEveryTicks = 20  // 1 gota por segundo
-	oilDropLifeTicks  = 300 // cada gota dura 15 s
+	oilDropLifeTicks  = 100 // cada gota dura 5 s
 
 	// S3-05: emergencias (sabotajes y eventos aleatorios).
 	emergencyPipe            = "pipe"
@@ -123,13 +132,12 @@ type Name struct {
 }
 
 // PlayerAction es la última acción que mandó un jugador: moverse, empezar,
-// contaminar, limpiar, hacer tarea, reportar, votar o chatear.
+// contaminar, hacer tarea, reportar, votar o chatear.
 type PlayerAction struct {
 	PlayerID     string
 	DX, DY       int32
 	Start        bool
 	Contaminate  bool
-	Clean        bool
 	TankSlot     int32
 	InteractTask bool
 	StationID    string
@@ -144,6 +152,9 @@ type PlayerAction struct {
 	ChatMessageID string
 	ChatText      string
 
+	// Mesa: convocar desde la mesa.
+	CallMeeting bool
+
 	// S3-05: sabotear (solo el impostor) y arreglar una emergencia.
 	Sabotage     bool
 	SabotageKind string
@@ -153,6 +164,17 @@ type PlayerAction struct {
 	// Elegir color en la sala de espera.
 	PickColor bool
 	Color     string
+
+	// Elegir cuántas tareas hace cada jugador (solo el creador, en LOBBY).
+	SetTaskCount bool
+	TaskCount    int32
+
+	// Elegir cuántos infiltrados hay y cuántos minutos dura la partida
+	// (solo el creador, en LOBBY).
+	SetImpostorCount bool
+	ImpostorCount    int32
+	SetMatchMinutes  bool
+	MatchMinutes     int32
 
 	// Elegir accesorio en la sala de espera.
 	PickAccessory bool
@@ -165,13 +187,19 @@ type PlayerAction struct {
 	// Reemplazar lo comprado (solo lo manda el gateway).
 	SetOwned bool
 	Owned    []string
+
+	// Salir a propósito de la sala (no es perder la conexión).
+	Leave bool
 }
 
 // isMove: la acción solo cambia la dirección (un Move).
 func (a PlayerAction) isMove() bool {
-	return !a.Start && !a.Contaminate && !a.Clean && !a.InteractTask &&
+	return !a.Start && !a.Contaminate && !a.InteractTask &&
 		!a.Report && !a.Vote && !a.Chat && !a.Sabotage && !a.Fix &&
-		!a.PickColor && !a.PickAccessory && !a.PickSkin && !a.SetOwned
+		!a.CallMeeting && !a.SetTaskCount &&
+		!a.SetImpostorCount && !a.SetMatchMinutes &&
+		!a.PickColor && !a.PickAccessory && !a.PickSkin && !a.SetOwned &&
+		!a.Leave
 }
 
 type player struct {
@@ -191,7 +219,9 @@ type player struct {
 
 	// S2-04: Tasks
 	tasksCompleted int
+	litersSaved    int // litros que sus tareas sumaron al embalse
 	assignedTasks  map[string]bool
+	taskOrder      []string // todas las asignadas, en el orden del sorteo
 	completedTasks []string // S2-11: para tacharlas en la lista
 	taskStartTick  int64
 	taskStation    string
@@ -218,6 +248,7 @@ type player struct {
 type meetingState struct {
 	reporterID   string
 	tankSlot     int32
+	reason       matchv1.MeetingReason
 	votes        map[string]voteChoice // voterID -> choice
 	votingEndsAt int64                 // tick donde vence la votación
 	resultEndsAt int64                 // tick donde termina resultado
@@ -241,7 +272,7 @@ type chatEntry struct {
 // tankAction es contaminar o limpiar: termina cuando pasan ticksLeft
 // ticks sin que el jugador se mueva.
 type tankAction struct {
-	kind      string // LogContaminate o LogClean
+	kind      string // LogContaminate
 	slot      int32
 	ticksLeft int
 }

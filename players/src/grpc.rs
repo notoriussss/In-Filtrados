@@ -155,6 +155,7 @@ impl Players for PlayersService {
                     wins_as_impostor: row.wins_as_impostor,
                     harvest: row.harvest,
                     coins_earned: row.coins_earned,
+                    liters_saved: row.liters_saved,
                 })
                 .collect(),
         }))
@@ -625,8 +626,9 @@ mod tests {
         for _ in 0..2 {
             sqlx::query(
                 "INSERT INTO results
-                   (match_id, player_id, role, won, harvest, coins_earned)
-                 VALUES ($1, $2, 'CREW', TRUE, 30, 50)",
+                   (match_id, player_id, role, won, harvest, coins_earned,
+                    liters_saved)
+                 VALUES ($1, $2, 'CREW', TRUE, 30, 50, 300)",
             )
             .bind(Uuid::new_v4())
             .bind(Uuid::parse_str(&top.player_id).unwrap())
@@ -644,8 +646,10 @@ mod tests {
         assert_eq!(ranking.entries[0].player_id, top.player_id);
         assert_eq!(ranking.entries[0].harvest, 60);
         assert_eq!(ranking.entries[0].coins_earned, 100);
+        assert_eq!(ranking.entries[0].liters_saved, 600);
         assert_eq!(ranking.entries[1].player_id, low.player_id);
         assert_eq!(ranking.entries[1].harvest, 0);
+        assert_eq!(ranking.entries[1].liters_saved, 0);
 
         let one = service
             .get_ranking(Request::new(RankingRequest { limit: 1 }))

@@ -38,9 +38,9 @@ func (f *fakeSaver) last() savedCall {
 	return f.saves[len(f.saves)-1]
 }
 
-func TestPauseFreezesTheRoomWhileSomeoneIsInGrace(t *testing.T) {
+func TestPauseFreezesTheRoomWhileTheHostIsInGrace(t *testing.T) {
 	r, clock, outs := graceRoom(t)
-	imp := r.players["a"]
+	imp := r.players["c"]
 	imp.role = matchv1.Role_IMPOSTOR
 	b := r.players["b"]
 	b.dx = 1 // b camina a la derecha
@@ -50,11 +50,11 @@ func TestPauseFreezesTheRoomWhileSomeoneIsInGrace(t *testing.T) {
 	tick := r.tick
 	x := b.view.X
 
-	disconnect(r, clock, "c", outs["c"])
+	disconnect(r, clock, "a", outs["a"]) // a es el host
 	if !r.paused() {
-		t.Fatal("con un jugador en gracia la sala debe pausarse")
+		t.Fatal("con el host en gracia la sala debe pausarse")
 	}
-	drain(outs["a"])
+	drain(outs["b"])
 	for i := 0; i < 200; i++ { // 10 s de pausa
 		r.onTick()
 	}
@@ -71,22 +71,22 @@ func TestPauseFreezesTheRoomWhileSomeoneIsInGrace(t *testing.T) {
 		t.Error("la dirección sí se guarda en pausa")
 	}
 	r.handleAction(PlayerAction{
-		PlayerID: "a", Contaminate: true, TankSlot: 1,
+		PlayerID: "c", Contaminate: true, TankSlot: 0,
 	})
 	if imp.pending != nil {
 		t.Error("contaminar debe ignorarse en pausa")
 	}
 
-	snap := waitSnapshot(t, outs["a"])
+	snap := waitSnapshot(t, outs["b"])
 	if !snap.Paused || len(snap.WaitingFor) != 1 ||
-		snap.WaitingFor[0] != "c" {
+		snap.WaitingFor[0] != "a" {
 		t.Errorf("el snapshot debe decir a quién se espera: %v %v",
 			snap.Paused, snap.WaitingFor)
 	}
 
-	r.addPlayer(Join{PlayerID: "c", Out: make(chan *matchv1.ServerEvent, 8)})
+	r.addPlayer(Join{PlayerID: "a", Out: make(chan *matchv1.ServerEvent, 8)})
 	if r.paused() {
-		t.Fatal("al volver c la sala sigue")
+		t.Fatal("al volver el host la sala sigue")
 	}
 	r.onTick()
 	if r.tick != tick+1 {
@@ -94,10 +94,42 @@ func TestPauseFreezesTheRoomWhileSomeoneIsInGrace(t *testing.T) {
 	}
 }
 
+func TestAPlayerWhoIsNotTheHostDoesNotPause(t *testing.T) {
+	r, clock, outs := graceRoom(t)
+	b := r.players["b"]
+	b.dx = 1
+	tick := r.tick
+	x := b.view.X
+
+	disconnect(r, clock, "c", outs["c"])
+	if r.paused() {
+		t.Fatal("si se va alguien que no es el host la partida sigue")
+	}
+	drain(outs["b"])
+	for i := 0; i < 20; i++ {
+		r.onTick()
+	}
+	if r.tick != tick+20 {
+		t.Errorf("el tick debe avanzar: %d → %d", tick, r.tick)
+	}
+	if b.view.X == x {
+		t.Error("los demás siguen moviéndose")
+	}
+	snap := waitSnapshot(t, outs["b"])
+	if snap.Paused || len(snap.WaitingFor) != 1 ||
+		snap.WaitingFor[0] != "c" {
+		t.Errorf("sin pausa, pero c sigue en gracia: %v %v",
+			snap.Paused, snap.WaitingFor)
+	}
+	if !r.players["c"].view.Alive {
+		t.Error("c conserva su lugar durante la gracia")
+	}
+}
+
 func TestPausedTimeDoesNotCountForTheMatchClock(t *testing.T) {
 	r, clock, outs := graceRoom(t)
 	r.matchDuration = 10 * tickInterval
-	disconnect(r, clock, "c", outs["c"])
+	disconnect(r, clock, "a", outs["a"]) // el host
 	for i := 0; i < 100; i++ {
 		r.onTick()
 	}
@@ -125,7 +157,7 @@ func TestSavesOnPhaseChangeAndEveryTwoSeconds(t *testing.T) {
 		WithCreator("a"),
 		WithSnapshots(saver),
 	)
-	for _, id := range []string{"a", "b"} {
+	for _, id := range []string{"a", "b", "c"} {
 		r.addPlayer(Join{
 			PlayerID: id,
 			Out:      make(chan *matchv1.ServerEvent, 64),
@@ -174,6 +206,7 @@ func TestRestoreBringsBackTheMatchPausedAndComplete(t *testing.T) {
 	a.completedTasks = []string{"filter-1", "leak-1"}
 	r.reservoir = 37
 	r.tick = 1234
+	r.meetingTicks = 42
 	r.tanks[0].contamination = 70
 	r.phase = matchv1.Phase_MEETING
 	r.meeting = &meetingState{
@@ -209,6 +242,9 @@ func TestRestoreBringsBackTheMatchPausedAndComplete(t *testing.T) {
 		got.reservoir != 37 {
 		t.Error("cambió la fase, el tick o el embalse")
 	}
+	if got.meetingTicks != 42 {
+		t.Error("se perdio el tiempo de reunion del reloj")
+	}
 	ra := got.players["a"]
 	if ra.view.X != 333 || ra.view.Y != 222 || ra.role != a.role ||
 		ra.tasksCompleted != 2 ||
@@ -235,14 +271,19 @@ func TestRestoreBringsBackTheMatchPausedAndComplete(t *testing.T) {
 	if !got.paused() || len(got.waitingFor()) != 3 {
 		t.Fatalf("debe arrancar en pausa esperando a los 3")
 	}
-	for _, id := range []string{"a", "b", "c"} {
+	// Solo espera al host: b y c vuelven y sigue en pausa hasta que
+	// vuelve a.
+	for _, id := range []string{"b", "c", "a"} {
+		if !got.paused() {
+			t.Fatalf("sin el host (a) debe seguir en pausa; volvió %s", id)
+		}
 		got.addPlayer(Join{
 			PlayerID: id,
 			Out:      make(chan *matchv1.ServerEvent, 8),
 		})
 	}
 	if got.paused() {
-		t.Error("con los 3 de vuelta la sala sigue")
+		t.Error("con el host de vuelta la sala sigue")
 	}
 	if len(got.players) != 3 {
 		t.Error("se duplicaron jugadores al volver")

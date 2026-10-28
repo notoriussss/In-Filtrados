@@ -12,6 +12,11 @@ import { emergencyBanner, sabotageButtons } from '../../game/emergency';
 import type { Action } from '../../game/actions';
 import type { GameSession, GameState } from '../../game/session';
 import { pauseMessage } from '../../game/pause';
+import {
+  clockLevel,
+  formatClock,
+  matchSecondsLeft,
+} from '../../game/matchClock';
 import { session } from '../../session';
 import { APP_TEXT, HUD_TEXT } from '../../texts';
 import { Gota } from '../../ui/Gota';
@@ -26,10 +31,10 @@ const TYPE_NAMES = {
 
 const ACTION_SLOT: Record<Action['kind'], { label: string }> = {
   task: { label: HUD_TEXT.USE },
-  clean: { label: HUD_TEXT.CLEAN },
   report: { label: HUD_TEXT.REPORT },
   contaminate: { label: HUD_TEXT.CONTAMINATE },
   fix: { label: HUD_TEXT.FIX },
+  meeting: { label: HUD_TEXT.MEETING },
 };
 
 const SABOTAGE_KEYS: Record<string, EmergencyKind> = {
@@ -71,6 +76,7 @@ export function Hud(props: { game: GameSession; state: GameState }) {
       <TasksPanel snap={snap} />
       <AlertPanel state={state} now={now} />
       <ReservoirPanel snap={snap} />
+      <ClockPanel snap={snap} />
       <PlayerCard snap={snap} me={me} />
 
       <nav className="hud-panel hud-hotbar" aria-label="Acciones">
@@ -152,6 +158,8 @@ function TasksPanel(props: { snap: Snapshot }) {
   );
 }
 
+// AlertPanel: emergencia (sabotaje o mala suerte, se ven igual), la
+// pausa por alguien desconectado o el aviso de que mi tanque llegó a 0.
 function AlertPanel(props: { state: GameState; now: number }) {
   const { state, now } = props;
   const snap = state.snapshot!;
@@ -172,9 +180,10 @@ function AlertPanel(props: { state: GameState; now: number }) {
     cls = 'calm';
     title = HUD_TEXT.PAUSED;
     text = paused;
-  } else if (state.tankAlertUntil > now) {
-    title = HUD_TEXT.TANK_ALERT;
-    text = HUD_TEXT.TANK_ALERT_HINT;
+  } else if (state.tankEmptyUntil > now) {
+    cls = 'ghost';
+    title = HUD_TEXT.TANK_EMPTY;
+    text = HUD_TEXT.TANK_EMPTY_HINT;
   } else {
     return null;
   }
@@ -205,7 +214,10 @@ function ReservoirPanel(props: { snap: Snapshot }) {
   const code = session.loadSession()?.roomCode;
 
   return (
-    <section className="hud-panel hud-reservoir" aria-label={HUD_TEXT.RESERVOIR}>
+    <section
+      className="hud-panel hud-reservoir"
+      aria-label={HUD_TEXT.RESERVOIR}
+    >
       <header className="hud-panel-header">
         <div className="hud-header-title res">
           <span>{HUD_TEXT.RESERVOIR}</span>
@@ -226,6 +238,25 @@ function ReservoirPanel(props: { snap: Snapshot }) {
         <Gauge value={purity / 100} tone="leaf" />
         <span className="hud-gauge-num">{HUD_TEXT.percent(purity)}</span>
       </div>
+    </section>
+  );
+}
+
+// ClockPanel: lo que falta para que se acabe el tiempo y ganen los
+// infiltrados; lo manda match en el snapshot.
+function ClockPanel(props: { snap: Snapshot }) {
+  const seconds = matchSecondsLeft(props.snap);
+  if (seconds === null) return null;
+  const level = clockLevel(seconds);
+  return (
+    <section
+      className={`hud-panel hud-clock ${level}`}
+      aria-label={HUD_TEXT.CLOCK}
+    >
+      <span className="hud-clock-lbl">{HUD_TEXT.CLOCK}</span>
+      <span className="hud-clock-time" role="timer">
+        {formatClock(seconds)}
+      </span>
     </section>
   );
 }
@@ -310,6 +341,14 @@ function Minimap(props: { snap: Snapshot; meId: string; now: number }) {
 
   const pending = (snap.myTasks ?? []).filter((t) => !t.done);
   const meeting = meetingMarker(gameMap);
+  const meetingReady =
+    !!snap.myMeeting &&
+    snap.myMeeting.callsLeft > 0 &&
+    snap.tick >= snap.myMeeting.readyAtTick;
+  const myTank = snap.tanks.find((t) => t.ownerId === meId);
+  const tankSpot = myTank
+    ? gameMap.tanks.find((t) => t.slot === myTank.slot)
+    : undefined;
 
   return (
     <section className="hud-panel hud-minimap" aria-label={HUD_TEXT.MAP}>
@@ -346,9 +385,16 @@ function Minimap(props: { snap: Snapshot; meId: string; now: number }) {
             ))}
         {meeting && (
           <span
-            className="dot meet"
+            className={`dot meet ${meetingReady ? 'ready' : ''}`}
             title={meeting.name}
             style={pos(meeting.x, meeting.y)}
+          />
+        )}
+        {myTank && tankSpot && (
+          <span
+            className={`dot tank ${myTank.dead ? 'dead' : ''}`}
+            title={HUD_TEXT.MY_TANK}
+            style={pos(tankSpot.x, tankSpot.y)}
           />
         )}
         {me && <span className="dot me" style={pos(me.x, me.y)} />}

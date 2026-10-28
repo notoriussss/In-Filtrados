@@ -76,6 +76,16 @@ test('unknown types and invalid JSON are rejected', () => {
   assert.equal(parseClientMessage('{ no es json'), null);
 });
 
+test('Mesa: callMeeting is a message with no payload', () => {
+  assert.deepEqual(parse({ type: 'callMeeting' }), {
+    type: 'callMeeting',
+  });
+  assert.deepEqual(
+    toGrpcAction(parse({ type: 'callMeeting' })!),
+    { callMeeting: {} },
+  );
+});
+
 test('S3-05: sabotage only with a known kind', () => {
   assert.deepEqual(toGrpcAction(parse({ type: 'sabotage', kind: 'pipe' })!), {
     sabotage: { kind: 'pipe' },
@@ -98,6 +108,10 @@ test('S3-05: fix needs a point id', () => {
   assert.equal(parse({ type: 'fix', pointId: 'x'.repeat(65) }), null);
 });
 
+test('leave goes to match as the creator leaving on purpose', () => {
+  assert.deepEqual(toGrpcAction(parse({ type: 'leave' })!), { leave: {} });
+});
+
 test('pickColor needs a short color', () => {
   assert.deepEqual(
     toGrpcAction(parse({ type: 'pickColor', color: '#4363d8' })!),
@@ -110,6 +124,39 @@ test('pickColor needs a short color', () => {
     parse({ type: 'pickColor', color: 'x'.repeat(17) }),
     null,
   );
+});
+
+test('setTaskCount needs an integer; match checks the range', () => {
+  for (const n of [4, 6, 8]) {
+    assert.deepEqual(
+      toGrpcAction(parse({ type: 'setTaskCount', tasksPerPlayer: n })!),
+      { setTaskCount: { tasksPerPlayer: n } },
+    );
+  }
+  assert.equal(parse({ type: 'setTaskCount' }), null);
+  assert.equal(parse({ type: 'setTaskCount', tasksPerPlayer: 5.5 }), null);
+  assert.equal(parse({ type: 'setTaskCount', tasksPerPlayer: '6' }), null);
+  assert.equal(parse({ type: 'setTaskCount', tasksPerPlayer: null }), null);
+});
+
+test('setImpostorCount needs an integer; match checks the range', () => {
+  assert.deepEqual(
+    toGrpcAction(parse({ type: 'setImpostorCount', impostors: 2 })!),
+    { setImpostorCount: { impostors: 2 } },
+  );
+  assert.equal(parse({ type: 'setImpostorCount' }), null);
+  assert.equal(parse({ type: 'setImpostorCount', impostors: 1.5 }), null);
+  assert.equal(parse({ type: 'setImpostorCount', impostors: '2' }), null);
+});
+
+test('setMatchDuration needs an integer; match checks the range', () => {
+  assert.deepEqual(
+    toGrpcAction(parse({ type: 'setMatchDuration', minutes: 10 })!),
+    { setMatchDuration: { minutes: 10 } },
+  );
+  assert.equal(parse({ type: 'setMatchDuration' }), null);
+  assert.equal(parse({ type: 'setMatchDuration', minutes: 7.5 }), null);
+  assert.equal(parse({ type: 'setMatchDuration', minutes: null }), null);
 });
 
 test('pickAccessory needs a short accessory string', () => {
@@ -147,4 +194,9 @@ test('the browser cannot forge what it owns', () => {
   assert.deepEqual(parse({ type: 'refreshShop', items: ['cap'] }), {
     type: 'refreshShop',
   });
+});
+
+test('ping is accepted but never goes to match', () => {
+  assert.deepEqual(parse({ type: 'ping' }), { type: 'ping' });
+  assert.equal(toGrpcAction({ type: 'ping' }), null);
 });

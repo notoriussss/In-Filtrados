@@ -39,15 +39,24 @@ func TestContaminateDropsOilWithImpostorColor(t *testing.T) {
 	}
 }
 
-func TestOilTrailLastsFifteenSeconds(t *testing.T) {
+// Cuántas gotas suelta un rastro entero: una por oilDropEveryTicks.
+const trailDrops = oilTrailTicks / oilDropEveryTicks
+
+func TestOilTrailIsShort(t *testing.T) {
+	if oilTrailTicks > 100 || oilDropLifeTicks > 100 {
+		t.Fatalf("el rastro y cada gota deben durar 5 s o menos")
+	}
+}
+
+func TestOilTrailStopsAfterItsTime(t *testing.T) {
 	r, _ := playingRoom(t)
 	contaminateDone(t, r)
 	move(r, "imp", -1, 0)
 
-	// Quedan oilTrailTicks-1 ticks del rastro: caen las 14 gotas restantes.
+	// Quedan oilTrailTicks-1 ticks del rastro: caen las gotas restantes.
 	tickN(r, oilTrailTicks-1)
-	if got := len(r.oilDrops); got != 15 {
-		t.Fatalf("want 15 gotas en 15 s, got %d", got)
+	if got := len(r.oilDrops); got != trailDrops {
+		t.Fatalf("want %d gotas en el rastro, got %d", trailDrops, got)
 	}
 	if r.oilDrops[0].x == r.oilDrops[1].x {
 		t.Errorf("las gotas deben seguir al impostor")
@@ -55,43 +64,28 @@ func TestOilTrailLastsFifteenSeconds(t *testing.T) {
 
 	// Pasado el rastro no caen más; las viejas empiezan a vencer.
 	tickN(r, oilDropEveryTicks)
-	if got := len(r.oilDrops); got >= 15 {
-		t.Fatalf("después de 15 s no deben caer gotas: %d", got)
+	if got := len(r.oilDrops); got >= trailDrops {
+		t.Fatalf("pasado el rastro no deben caer gotas: %d", got)
 	}
 }
 
-func TestOilDropsExpireAfterFifteenSeconds(t *testing.T) {
+func TestOilDropsExpireWithTheirLife(t *testing.T) {
 	r, _ := playingRoom(t)
 	contaminateDone(t, r)
 
 	// La primera gota cayó en el tick T = r.tick-1 y se borra en el step
-	// del tick T+300.
+	// del tick T+oilDropLifeTicks.
 	tickN(r, oilDropLifeTicks-1)
-	if got := len(r.oilDrops); got != 15 {
+	if got := len(r.oilDrops); got != trailDrops {
 		t.Fatalf("la primera gota venció antes de tiempo: %d", got)
 	}
 	tickN(r, 1)
-	if got := len(r.oilDrops); got != 14 {
-		t.Fatalf("la primera gota debía vencer a los 15 s: %d", got)
+	if got := len(r.oilDrops); got != trailDrops-1 {
+		t.Fatalf("la primera gota debía vencer a tiempo: %d", got)
 	}
 	tickN(r, oilTrailTicks)
 	if got := len(r.oilDrops); got != 0 {
-		t.Fatalf("a los 30 s no debe quedar ninguna gota: %d", got)
-	}
-}
-
-func TestCleaningDropsNoOil(t *testing.T) {
-	r, _ := playingRoom(t)
-	r.tankAt(2).contamination = contaminateAmount
-	placeAt(r, "crew1", 2)
-	clean(r, "crew1", 2)
-	tickN(r, cleanTicks+1)
-
-	if level(r, 2) == contaminateAmount {
-		t.Fatalf("la limpieza no terminó")
-	}
-	if len(r.oilDrops) != 0 {
-		t.Fatalf("limpiar no deja gotas: %d", len(r.oilDrops))
+		t.Fatalf("al acabar el rastro no debe quedar ninguna gota: %d", got)
 	}
 }
 

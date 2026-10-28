@@ -5,7 +5,6 @@ import {
   actionMessage,
   contextAction,
   holdDuration,
-  tankRose,
 } from './actions';
 import type { GameMap } from '../map';
 import { ACTION_TEXT, GAME_RULES, HUD_TEXT } from '../constants';
@@ -22,7 +21,7 @@ const map: GameMap = {
     { slot: 1, x: 400, y: 100 },
   ],
   fixPoints: [],
-  markers: [],
+  markers: [{ id: 'reunion', name: 'Mesa de reuniones', x: 900, y: 900 }],
 };
 
 const player = (
@@ -46,7 +45,8 @@ const tank = (
   ownerId: string,
   contamination = 0,
   dead = false,
-): TankView => ({ slot, ownerId, contamination, dead });
+  reported = false,
+): TankView => ({ slot, ownerId, contamination, dead, reported });
 
 const tanks = [tank(0, 'impostor'), tank(1, 'crew')];
 
@@ -64,7 +64,15 @@ describe('contextAction', () => {
     const me = player('other', 410, 100);
     expect(contextAction(me, 'CREW', tanks, map, 0, 0)).toBeNull();
     const dirty = [tank(0, 'impostor'), tank(1, 'crew', 35)];
-    expect(contextAction(me, 'CREW', dirty, map, 0, 0)?.kind).toBe('clean');
+    expect(contextAction(me, 'CREW', dirty, map, 0, 0)).toBeNull();
+  });
+
+  it('never offers to clean a tank: the damage is permanent', () => {
+    const dirty = [tank(0, 'impostor', 20), tank(1, 'crew', 50)];
+    const crew = player('crew', 410, 100);
+    expect(contextAction(crew, 'CREW', dirty, map, 0, 0)).toBeNull();
+    const imp = player('impostor', 100, 110);
+    expect(contextAction(imp, 'IMPOSTOR', dirty, map, 0, 0)).toBeNull();
   });
 
   it('does not let the impostor contaminate their own tank', () => {
@@ -92,6 +100,18 @@ describe('contextAction', () => {
     const me = player('x', 450, 100);
     const reported = new Set([1]);
     expect(contextAction(me, 'CREW', dead, map, 0, 0, reported)).toBeNull();
+  });
+
+  it('does not offer Reportar for a tank the server marks reported', () => {
+    const dead = [tank(0, 'impostor'), tank(1, 'crew', 100, true, true)];
+    const me = player('x', 450, 100);
+    expect(contextAction(me, 'CREW', dead, map, 0, 0)).toBeNull();
+  });
+
+  it('does not offer Reportar for a tank below one hundred', () => {
+    const almost = [tank(0, 'impostor'), tank(1, 'crew', 99)];
+    const me = player('x', 450, 100);
+    expect(contextAction(me, 'CREW', almost, map, 0, 0)).toBeNull();
   });
 
   it('lets the impostor contaminate near a reported dead tank', () => {
@@ -146,6 +166,105 @@ describe('contextAction', () => {
     const me = player('x', 600, 600);
     expect(contextAction(me, 'IMPOSTOR', tanks, map, 0, 0)).toBeNull();
   });
+
+  it('offers Llamar reunión at the table while it is available', () => {
+    const me = player('x', 900, 900);
+    const meeting = { readyAtTick: 0, callsLeft: 2 };
+    const a = contextAction(
+      me,
+      'CREW',
+      tanks,
+      map,
+      0,
+      0,
+      new Set(),
+      [],
+      null,
+      meeting,
+      100,
+    );
+    expect(a?.kind).toBe('meeting');
+    expect(a?.label).toBe(ACTION_TEXT.CALL_MEETING);
+    expect(a?.enabled).toBe(true);
+    expect(actionMessage(a!)).toEqual({ type: 'callMeeting' });
+  });
+
+  it('shows the meeting cooldown and the remaining uses', () => {
+    const me = player('x', 900, 900);
+    const waiting = contextAction(
+      me,
+      'CREW',
+      tanks,
+      map,
+      0,
+      0,
+      new Set(),
+      [],
+      null,
+      { readyAtTick: 1200, callsLeft: 2 },
+      1000,
+    );
+    expect(waiting?.enabled).toBe(false);
+    expect(waiting?.label).toBe(ACTION_TEXT.meetingWait(10));
+
+    const none = contextAction(
+      me,
+      'CREW',
+      tanks,
+      map,
+      0,
+      0,
+      new Set(),
+      [],
+      null,
+      { readyAtTick: 0, callsLeft: 0 },
+      1000,
+    );
+    expect(none?.enabled).toBe(false);
+    expect(none?.label).toBe(ACTION_TEXT.NO_MEETINGS);
+  });
+
+  it('does not offer the meeting to ghosts or during an emergency', () => {
+    const ghost = player('x', 900, 900, false);
+    const meeting = { readyAtTick: 0, callsLeft: 2 };
+    expect(
+      contextAction(
+        ghost,
+        'CREW',
+        tanks,
+        map,
+        0,
+        0,
+        new Set(),
+        [],
+        null,
+        meeting,
+        0,
+      ),
+    ).toBeNull();
+
+    const alive = player('x', 900, 900);
+    const emergency = {
+      kind: 'steam' as const,
+      endsAtTick: 1000,
+      heldPoints: [],
+    };
+    expect(
+      contextAction(
+        alive,
+        'CREW',
+        tanks,
+        map,
+        0,
+        0,
+        new Set(),
+        [],
+        emergency,
+        meeting,
+        0,
+      ),
+    ).toBeNull();
+  });
 });
 
 describe('HoldAction', () => {
@@ -162,39 +281,9 @@ describe('HoldAction', () => {
   });
 });
 
-describe('tankRose', () => {
-  it('warns when the tank is contaminated', () => {
-    const next = [tank(0, 'impostor'), tank(1, 'crew', 35)];
-    expect(tankRose(tanks, next, 'crew')).toBe(true);
-    expect(tankRose(tanks, next, 'impostor')).toBe(false);
-  });
-
-  it('ignores the 1-point drift of the impostor tank', () => {
-    const next = [tank(0, 'impostor', 1), tank(1, 'crew')];
-    expect(tankRose(tanks, next, 'impostor')).toBe(false);
-  });
-
-  it('never warns when player is IMPOSTOR even if contamination rises', () => {
-    const next = [tank(0, 'impostor', 35), tank(1, 'crew')];
-    expect(tankRose(tanks, next, 'impostor', 'IMPOSTOR')).toBe(false);
-  });
-
-  it('returns false when tank is missing in previous or next', () => {
-    expect(tankRose([], tanks, 'crew')).toBe(false);
-    expect(tankRose(tanks, [], 'crew')).toBe(false);
-  });
-
-  it('ignores cleaning', () => {
-    const before = [tank(1, 'crew', 35)];
-    const after = [tank(1, 'crew', 20)];
-    expect(tankRose(before, after, 'crew')).toBe(false);
-  });
-});
-
 describe('holdDuration', () => {
   it('returns correct durations for each kind', () => {
     expect(holdDuration('contaminate')).toBe(GAME_RULES.CONTAMINATE_MS);
-    expect(holdDuration('clean')).toBe(GAME_RULES.CLEAN_MS);
     expect(holdDuration('task')).toBe(GAME_RULES.TASK_MS);
     expect(holdDuration('report')).toBe(0);
   });

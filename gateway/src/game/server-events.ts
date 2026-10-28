@@ -3,8 +3,10 @@ import type {
   ChatMessage,
   Emergency,
   EmergencyKind,
+  EndReason,
   ErrorCode,
   Meeting,
+  MeetingButton,
   MyTask,
   OilDrop,
   PlayerView,
@@ -12,12 +14,14 @@ import type {
   ServerMessage,
   Snapshot,
   TankView,
+  Winner,
 } from '@in-filtrados/messages';
 
 // Shapes of the gRPC ServerEvent as @grpc/proto-loader decodes it
 // (camelCase, enums as strings, longs as numbers, defaults on).
-type GrpcMeeting = Omit<Meeting, 'ejectedId'> & {
+type GrpcMeeting = Omit<Meeting, 'ejectedId' | 'reason'> & {
   ejectedId?: string | null;
+  reason?: string;
 };
 
 type GrpcPlayerView = Omit<PlayerView, 'activity' | 'accessory' | 'skin'> & {
@@ -37,6 +41,7 @@ type GrpcSnapshot = Omit<
   | 'myActiveTask'
   | 'emergency'
   | 'mySabotage'
+  | 'myMeeting'
 > & {
   players?: GrpcPlayerView[];
   meeting: GrpcMeeting | null;
@@ -44,6 +49,7 @@ type GrpcSnapshot = Omit<
   myActiveTask?: string;
   emergency?: GrpcEmergency | null;
   mySabotage?: SabotageStatus | null;
+  myMeeting?: MeetingButton | null;
 };
 
 const ACTIVITIES: readonly string[] = [
@@ -54,8 +60,26 @@ const ACTIVITIES: readonly string[] = [
   'fix',
 ];
 const EMERGENCY_KINDS: readonly string[] = ['pipe', 'steam'];
+const VALID_END_REASONS: readonly EndReason[] = [
+  'reservoir_full',
+  'impostors_ejected',
+  'tanks_contaminated',
+  'timeout',
+  'host_left',
+];
 
-type GrpcMatchEnded = { winner: string; impostorIds: string[] };
+function normalizeEndReason(raw?: string): EndReason | undefined {
+  if (!raw) return undefined;
+  return VALID_END_REASONS.includes(raw as EndReason)
+    ? (raw as EndReason)
+    : undefined;
+}
+
+type GrpcMatchEnded = {
+  winner: string;
+  impostorIds: string[];
+  reason?: string;
+};
 
 export type GrpcServerEvent =
   | { event: 'snapshot'; snapshot: GrpcSnapshot }
@@ -69,12 +93,17 @@ export function toServerMessage(ev: GrpcServerEvent): ServerMessage | null {
     return toSnapshot(ev.snapshot);
   }
   if (ev.event === 'matchEnded') {
-    const winner = ev.matchEnded.winner;
-    if (winner !== 'crew' && winner !== 'impostor') return null;
+    const raw = ev.matchEnded.winner;
+    const reason = normalizeEndReason(ev.matchEnded.reason);
+    // Sin ganador solo vale cuando el host cerró la sala; otro valor no.
+    const noWinner = !raw && reason === 'host_left';
+    if (!noWinner && raw !== 'crew' && raw !== 'impostor') return null;
+    const winner = noWinner ? null : (raw as Winner);
     return {
       type: 'matchEnded',
       winner,
       impostorIds: [...(ev.matchEnded.impostorIds ?? [])],
+      ...(reason ? { reason } : {}),
     };
   }
   if (ev.event === 'error') {
@@ -117,6 +146,16 @@ function toSnapshot(s: GrpcSnapshot): Snapshot {
           pipesLeft: s.mySabotage.pipesLeft,
         }
       : null,
+    myMeeting: s.myMeeting
+      ? {
+          readyAtTick: s.myMeeting.readyAtTick,
+          callsLeft: s.myMeeting.callsLeft,
+        }
+      : null,
+    tasksPerPlayer: s.tasksPerPlayer ?? 0,
+    impostors: s.impostors ?? 0,
+    matchMinutes: s.matchMinutes ?? 0,
+    matchEndsAtTick: s.matchEndsAtTick ?? 0,
   };
 }
 
@@ -154,6 +193,7 @@ function toTank(t: TankView): TankView {
     ownerId: t.ownerId,
     contamination: t.contamination,
     dead: t.dead,
+    reported: t.reported ?? false,
   };
 }
 
@@ -161,6 +201,8 @@ function toMeeting(m: GrpcMeeting): Meeting {
   return {
     reporterId: m.reporterId,
     tankSlot: m.tankSlot,
+    reason:
+      m.reason === 'MEETING_REASON_EMERGENCY' ? 'emergency' : 'report',
     votesCast: [...(m.votesCast ?? [])],
     endsAtTick: m.endsAtTick,
     votingClosed: Boolean(m.votingClosed),

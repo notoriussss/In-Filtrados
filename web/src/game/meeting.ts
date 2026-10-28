@@ -1,5 +1,11 @@
-import type { PlayerView, Snapshot, Winner } from '@in-filtrados/messages';
+import type {
+  EndReason,
+  PlayerView,
+  Snapshot,
+  Winner,
+} from '@in-filtrados/messages';
 import { END_TEXT, MEETING_TEXT } from '../constants';
+import { RESULT_TEXT } from '../texts';
 import { TICK_MS } from '../net/interpolation';
 
 // S2-10: qué muestra el panel de la reunión. Todo sale del snapshot que
@@ -52,7 +58,10 @@ export function meetingView(snap: Snapshot, meId: string): MeetingView | null {
   const voting = !meeting.votingClosed;
   const canVote = voting && iAmAlive && !iVoted;
 
-  const tank = snap.tanks.find((t) => t.slot === meeting.tankSlot);
+  const emergency = meeting.reason === 'emergency';
+  const tank = emergency
+    ? undefined
+    : snap.tanks.find((t) => t.slot === meeting.tankSlot);
   const tankOwner = tank ? nameOf(snap.players, tank.ownerId) : '';
 
   const players = snap.players.map((p) => ({
@@ -77,11 +86,12 @@ export function meetingView(snap: Snapshot, meId: string): MeetingView | null {
     snap.players,
   );
 
+  const reporter = nameOf(snap.players, meeting.reporterId);
   return {
     stage: voting ? 'voting' : 'result',
-    reporterText: MEETING_TEXT.REPORTED_BY(
-      nameOf(snap.players, meeting.reporterId),
-    ),
+    reporterText: emergency
+      ? MEETING_TEXT.EMERGENCY_BY(reporter)
+      : MEETING_TEXT.REPORTED_BY(reporter),
     tankText: tank ? MEETING_TEXT.TANK_OF(tankOwner) : '',
     countdownText: voting
       ? MEETING_TEXT.VOTING_ENDS_IN(seconds)
@@ -118,6 +128,37 @@ export function endTitle(winner: Winner | null): string {
   if (winner === 'crew') return END_TEXT.CREW_WON;
   if (winner === 'impostor') return END_TEXT.IMPOSTOR_WON;
   return END_TEXT.ENDED;
+}
+
+// endSubtitle: motivo específico por el cual terminó la partida (S2-06).
+export function endSubtitle(
+  winner: Winner | null,
+  reason?: EndReason | null,
+  impostorCount = 1,
+): string {
+  if (reason === 'host_left') return RESULT_TEXT.HOST_LEFT_SUB;
+  if (!winner) return '';
+  if (winner === 'crew') {
+    if (reason === 'reservoir_full') {
+      return RESULT_TEXT.CREW_RESERVOIR_SUB;
+    }
+    if (reason === 'impostors_ejected') {
+      return impostorCount > 1
+        ? RESULT_TEXT.CREW_EJECTED_MULTI_SUB
+        : RESULT_TEXT.CREW_EJECTED_SUB;
+    }
+    return RESULT_TEXT.CREW_SUB;
+  }
+  if (winner === 'impostor') {
+    if (reason === 'tanks_contaminated') {
+      return RESULT_TEXT.IMPOSTOR_TANKS_SUB;
+    }
+    if (reason === 'timeout') {
+      return RESULT_TEXT.IMPOSTOR_TIMEOUT_SUB;
+    }
+    return RESULT_TEXT.IMPOSTOR_SUB;
+  }
+  return '';
 }
 
 // coinsEarned compara el perfil antes y después de la partida; null

@@ -139,6 +139,19 @@ func TestStartThroughStream(t *testing.T) {
 	_, err = streamB.Recv()
 	require.NoError(t, err)
 
+	streamC, err := client.Play(ctx)
+	require.NoError(t, err)
+	require.NoError(t, streamC.Send(&matchv1.ClientAction{
+		Action: &matchv1.ClientAction_Join{
+			Join: &matchv1.Join{
+				MatchId:  created.MatchId,
+				PlayerId: "third",
+			},
+		},
+	}))
+	_, err = streamC.Recv()
+	require.NoError(t, err)
+
 	require.NoError(t, streamA.Send(&matchv1.ClientAction{
 		Action: &matchv1.ClientAction_Start{Start: &matchv1.Start{}},
 	}))

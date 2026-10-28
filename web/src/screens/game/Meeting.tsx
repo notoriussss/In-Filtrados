@@ -23,9 +23,6 @@ export function Meeting(props: {
   const [myVote, setMyVote] = useState<string | null | undefined>(undefined);
   const [text, setText] = useState('');
   const chatEnd = useRef<HTMLDivElement>(null);
-  const tank = snap.tanks.find((t) => t.slot === m.tankSlot);
-  const reporter = nameOf(snap.players, m.reporterId);
-  const owner = tank ? nameOf(snap.players, tank.ownerId) : '';
   const seconds = secondsLeft(m.endsAtTick, snap.tick);
 
   const count = view.players.length;
@@ -88,7 +85,7 @@ export function Meeting(props: {
               <div className="meeting-panel-header">
                 <h2 className="meeting-panel-title">{T.CHOOSE}</h2>
                 <span className="meeting-reporter-chip">
-                  {T.reported(reporter, owner)}
+                  {view.reporterText}
                 </span>
               </div>
 
@@ -104,6 +101,9 @@ export function Meeting(props: {
                     isMe={p.isMe}
                     voted={p.voted}
                     reporter={p.id === m.reporterId}
+                    reporterLabel={
+                      m.reason === 'emergency' ? T.CALLER : T.REPORTER
+                    }
                     mine={myVote === p.id}
                     votable={p.votable}
                     onVote={() => vote(p.id)}
@@ -141,7 +141,7 @@ export function Meeting(props: {
 
               <div className="meeting-chat-list">
                 <div className="meeting-chat-sys-msg">
-                  {T.reported(reporter, owner)}
+                  {view.reporterText}
                 </div>
                 {snap.chat.map((c) => (
                   <MeetingChatLine
@@ -196,6 +196,7 @@ function MeetingPlayerCard(props: {
   isMe: boolean;
   voted: boolean;
   reporter: boolean;
+  reporterLabel: string;
   mine: boolean;
   votable: boolean;
   onVote: () => void;
@@ -212,7 +213,7 @@ function MeetingPlayerCard(props: {
     statusLabel = T.OFFLINE;
     statusTone = 'offline';
   } else if (props.reporter) {
-    statusLabel = T.REPORTER;
+    statusLabel = props.reporterLabel;
     statusTone = 'reporter';
   }
 

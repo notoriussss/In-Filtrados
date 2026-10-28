@@ -33,6 +33,7 @@ ERROR_UNEXPECTED_HEALTH_RESPONSE = "Unexpected health response"
 # Descripciones de eventos del juego para el panel (S1-22)
 EVENT_MATCH_STARTED = "Empezó la partida {room} con {players} jugadores"
 EVENT_MATCH_FINISHED = "Terminó una partida: ganó {winner}"
+EVENT_MATCH_CLOSED_BY_HOST = "Se cerró una partida: el host salió de la sala"
 EVENT_TASK_COMPLETED = "Tarea de {kind} completada ({liters} L ahorrados)"
 EVENT_PLAYER_EJECTED_IMPOSTOR = "Expulsaron a un jugador: era el impostor"
 EVENT_PLAYER_EJECTED_CREW = "Expulsaron a un jugador: era de la tripulación"

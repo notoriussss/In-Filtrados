@@ -76,8 +76,8 @@ message Shop {
 message RankingRequest {
   int32 limit = 1;
 }
-// RankingEntry: un jugador del ranking. harvest y coins_earned suman todas
-// sus partidas (tabla results); las monedas ganadas no bajan al gastar.
+// RankingEntry: un jugador del ranking. harvest (puntos de cosecha, no
+// litros) y coins_earned suman todas sus partidas (tabla results); las monedas ganadas no bajan al gastar.
 message RankingEntry {
   string player_id        = 1;
   string username         = 2;
@@ -87,6 +87,9 @@ message RankingEntry {
   int32  wins_as_impostor = 6;
   int32  harvest          = 7;
   int32  coins_earned     = 8;
+  // Litros que sus tareas sumaron al embalse en todas sus partidas. Las
+  // partidas anteriores a este campo cuentan 0.
+  int32  liters_saved     = 9;
 }
 // Ranking: lo devuelve GetRanking, ya ordenado (victorias, luego menos
 // partidas jugadas, luego nombre).

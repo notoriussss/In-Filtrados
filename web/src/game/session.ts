@@ -1,6 +1,7 @@
 import type {
   ClientMessage,
   EmergencyKind,
+  EndReason,
   PlayerView,
   Snapshot,
   Winner,
@@ -21,8 +22,8 @@ import {
   actionMessage,
   contextAction,
   holdDuration,
-  tankRose,
 } from './actions';
+import { ownTankEmptied } from './ghost';
 import { DirectionInput, isTyping } from './input';
 import { TaskSession } from './tasks/taskSession';
 import {
@@ -54,13 +55,14 @@ export type OpenMinigame = {
 export type GameState = {
   snapshot: Snapshot | null;
   status: SocketStatus;
+  tankEmptyUntil: number; // ms; aviso "tu tanque llegó a 0"
   matchDown: boolean; // el gateway avisó que match no responde
   winner: Winner | null;
+  reason: EndReason | null;
   impostorIds: string[];
   action: Action | null; // botón USAR del HUD
   holding: boolean;
   minigame: OpenMinigame | null;
-  tankAlertUntil: number; // ms; aviso "tu tanque se está contaminando"
   pendingChat: string[]; // textos que esperan conexión
   notFound: boolean; // la partida ya no existe (volver al menú)
   unauthorized: boolean;
@@ -82,11 +84,12 @@ export class GameSession {
     status: { state: 'connected' },
     matchDown: false,
     winner: null,
+    reason: null,
     impostorIds: [],
     action: null,
     holding: false,
     minigame: null,
-    tankAlertUntil: 0,
+    tankEmptyUntil: 0,
     pendingChat: [],
     notFound: false,
     unauthorized: false,
@@ -150,7 +153,11 @@ export class GameSession {
     this.socket.onMessage((msg) => {
       if (msg.type === 'snapshot') this.onSnapshot(msg);
       else if (msg.type === 'matchEnded') {
-        this.set({ winner: msg.winner, impostorIds: msg.impostorIds });
+        this.set({
+          winner: msg.winner,
+          reason: msg.reason ?? null,
+          impostorIds: msg.impostorIds,
+        });
       } else if (msg.type === 'error') {
         if (msg.code === 'SERVICE_UNAVAILABLE') {
           this.chatQueue.offline();
@@ -270,6 +277,9 @@ export class GameSession {
 
   closeMinigame = (): void => this.tasks.close();
 
+  // leave: salir a propósito; si es el creador, match cierra la sala.
+  leave = (): void => this.send({ type: 'leave' });
+
   setPaused(paused: boolean): void {
     this.paused = paused;
     if (paused) {
@@ -300,10 +310,9 @@ export class GameSession {
   private onSnapshot(msg: Snapshot): void {
     const now = performance.now();
     this.interpolator.push(msg.tick, msg.players, now);
-    const prev = this.state.snapshot;
     const patch: Partial<GameState> = { snapshot: msg };
-    if (prev && tankRose(prev.tanks, msg.tanks, this.opts.meId, msg.myRole)) {
-      patch.tankAlertUntil = now + GAME_RULES.TANK_ALERT_MS;
+    if (ownTankEmptied(this.state.snapshot, msg, this.opts.meId)) {
+      patch.tankEmptyUntil = now + GAME_RULES.TANK_EMPTY_NOTICE_MS;
     }
     if (msg.meeting) this.reportedTanks.add(msg.meeting.tankSlot);
     if (this.state.matchDown) {
@@ -311,7 +320,6 @@ export class GameSession {
       const { dx, dy } = this.input.current();
       if (dx !== 0 || dy !== 0) this.send({ type: 'move', dx, dy });
     }
-    if (msg.phase !== 'PLAYING') patch.tankAlertUntil = 0;
     this.chatQueue.onSnapshot(msg, now);
     patch.pendingChat = this.chatQueue.waiting().map((c) => c.text);
     this.set(patch);
@@ -360,6 +368,7 @@ export class GameSession {
       tanks: snap?.tanks ?? [],
       oilDrops: snap?.oilDrops ?? [],
       emergency: playing ? (snap?.emergency ?? null) : null,
+      meeting: playing ? (snap?.myMeeting ?? null) : null,
       marks: playing && snap ? stationMarks(snap) : null,
       visionRadius: shown,
       visible: (p) => visiblePlayer(me, p, shown),
@@ -400,6 +409,8 @@ export class GameSession {
             this.reportedTanks,
             snap.myTasks ?? [],
             snap.emergency,
+            snap.myMeeting,
+            snap.tick,
           )
         : null;
     if (!sameAction(action, this.state.action)) this.set({ action });

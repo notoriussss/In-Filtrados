@@ -23,6 +23,11 @@ function snap(extra: Partial<Snapshot>): Snapshot {
     myActiveTask: null,
     emergency: null,
     mySabotage: { readyAtTick: 0, pipesLeft: 2 },
+    myMeeting: null,
+    tasksPerPlayer: 6,
+    impostors: 1,
+    matchMinutes: 8,
+    matchEndsAtTick: 0,
     ...extra,
   };
 }

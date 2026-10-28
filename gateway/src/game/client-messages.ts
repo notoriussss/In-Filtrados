@@ -59,10 +59,27 @@ export function parseClientMessage(raw: string): ClientMessage | null {
         return null;
       }
       return { type: 'fix', pointId: msg.pointId };
+    case 'callMeeting':
+      return { type: 'callMeeting' };
     case 'pickColor':
       // match revisa la fase y que el color esté libre.
       if (!isShortString(msg.color, MAX_COLOR_LENGTH)) return null;
       return { type: 'pickColor', color: msg.color };
+    case 'setTaskCount':
+      // match revisa el rango (4 a 8), la fase y que sea el creador.
+      if (!Number.isInteger(msg.tasksPerPlayer)) return null;
+      return {
+        type: 'setTaskCount',
+        tasksPerPlayer: msg.tasksPerPlayer,
+      };
+    case 'setImpostorCount':
+      // match revisa el rango (1 a (jugadores - 1) / 2), la fase y el creador.
+      if (!Number.isInteger(msg.impostors)) return null;
+      return { type: 'setImpostorCount', impostors: msg.impostors };
+    case 'setMatchDuration':
+      // match revisa el rango (4 a 12), la fase y que sea el creador.
+      if (!Number.isInteger(msg.minutes)) return null;
+      return { type: 'setMatchDuration', minutes: msg.minutes };
     case 'pickAccessory':
       if (!isShortString(msg.accessory, MAX_ACCESSORY_LENGTH)) {
         return null;
@@ -74,6 +91,10 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       return { type: 'pickSkin', skin: msg.skin };
     case 'refreshShop':
       return { type: 'refreshShop' };
+    case 'leave':
+      return { type: 'leave' };
+    case 'ping':
+      return { type: 'ping' };
     default:
       return null;
   }
@@ -81,7 +102,8 @@ export function parseClientMessage(raw: string): ClientMessage | null {
 
 // toGrpcAction turns a game message into the ClientAction of
 // proto/match.proto. join is not here: the gateway builds it with the
-// playerId of the token, never one sent by the browser.
+// playerId of the token, never one sent by the browser. ping is not
+// here either: the gateway answers it and match never sees it.
 export function toGrpcAction(msg: ClientMessage): object | null {
   switch (msg.type) {
     case 'move':
@@ -109,12 +131,24 @@ export function toGrpcAction(msg: ClientMessage): object | null {
       return { sabotage: { kind: msg.kind } };
     case 'fix':
       return { fix: { pointId: msg.pointId } };
+    case 'callMeeting':
+      return { callMeeting: {} };
     case 'pickColor':
       return { pickColor: { color: msg.color } };
+    case 'setTaskCount':
+      return {
+        setTaskCount: { tasksPerPlayer: msg.tasksPerPlayer },
+      };
+    case 'setImpostorCount':
+      return { setImpostorCount: { impostors: msg.impostors } };
+    case 'setMatchDuration':
+      return { setMatchDuration: { minutes: msg.minutes } };
     case 'pickAccessory':
       return { pickAccessory: { accessory: msg.accessory } };
     case 'pickSkin':
       return { pickSkin: { skin: msg.skin } };
+    case 'leave':
+      return { leave: {} };
     // refreshShop no es de match: el gateway lo atiende solo.
     default:
       return null;

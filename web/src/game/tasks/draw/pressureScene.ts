@@ -7,13 +7,22 @@ import {
 } from '../minigames';
 import { drawHand, drawTapRing } from './hand';
 import { swingPose } from './particlesScene';
-import { type Scene, type SceneEnv, celebrateK } from './scene';
+import {
+  HERO_FEET_Y,
+  type Scene,
+  type SceneEnv,
+  celebrateK,
+} from './scene';
 import { C, PX, bakeBoard, clamp01, px, pxDisc, pxRing } from './pixel';
 import { roomLayer } from './room';
 
 // Reducir (valve-1): regular la presión. Un acumulador de agua con la
 // aguja barriendo su carátula; hay que presionar el botón cuando el
-// nivel pasa por la franja verde, que se encoge con cada acierto.
+// nivel pasa por la franja verde, que se encoge con cada acierto. Una
+// presión mal regulada desperdicia agua: cada error revienta la junta de
+// la tubería y deja un charco en el piso que crece. Cada acierto, en
+// cambio, abre la boquilla de riego: el agua sale normal, cae a la maceta
+// y la planta crece.
 
 const INNER = {
   top: PRESSURE_TUBE.y + 10,
@@ -27,6 +36,19 @@ const BUTTON_DOME = {
   h: 18,
 };
 const LAMPS = { x: 26, y: 30, gap: 20 };
+// La junta de la tubería, por donde se escapa el agua, y el charco.
+const JOINT = { x: 61, y: 58 };
+const PUDDLE = { x: 52, y: HERO_FEET_Y };
+const LEAK_MAX = 4;
+const SPRAY_MS = 650;
+const GRAVITY = 420;
+
+// La boquilla de riego a la derecha del acumulador y la maceta que riega.
+const NOZZLE = { x: 233, y: 114 };
+const POT = { x: 223, y: 226, w: 20, h: 18 };
+const FLOW_MS = 900;
+
+type Bit = { x: number; y: number; vx: number; vy: number };
 
 // Piezas fijas: acumulador, tubería de entrada, caja del botón y luces.
 function drawFixtures(c: CanvasRenderingContext2D): void {
@@ -60,6 +82,17 @@ function drawFixtures(c: CanvasRenderingContext2D): void {
   ]) {
     px(c, b.x + rx, b.y + ry, PX, PX, C.metalHi);
   }
+  // Boquilla de riego: sale del acumulador y apunta a la maceta.
+  px(c, t.x + t.w + 6, 96, 22, 10, C.metalInk);
+  px(c, t.x + t.w + 6, 98, 22, 6, C.metalMid);
+  px(c, t.x + t.w + 6, 98, 22, PX, C.metalHi);
+  px(c, NOZZLE.x - 6, 100, 12, 14, C.metalInk);
+  px(c, NOZZLE.x - 4, 102, 8, 12, C.metalDark);
+  // Maceta con tierra.
+  px(c, POT.x - 2, POT.y - 2, POT.w + 4, POT.h + 2, C.metalInk);
+  px(c, POT.x, POT.y, POT.w, POT.h, C.coralLo);
+  px(c, POT.x, POT.y, POT.w, 4, C.dirt);
+  px(c, POT.x, POT.y + 4, POT.w, PX, C.coral);
   // Marco de las luces de acierto.
   px(c, LAMPS.x - 6, LAMPS.y - 6, 62, 22, C.metalInk);
   px(c, LAMPS.x - 4, LAMPS.y - 4, 58, 18, C.metalDeep);
@@ -73,6 +106,10 @@ export class PressureScene implements Scene {
   private levelShown = 0;
   private tapAt = -1e9;
   private missAt = -1e9;
+  private sprayAt = -1e9;
+  private flowAt = -1e9; // cuando se abrió la boquilla de riego
+  private leaks = 0; // errores de presión: tamaño del charco
+  private readonly bits: Bit[] = [];
   private doneAt: number | null = null;
   readonly settleMs = 1100;
 
@@ -94,14 +131,19 @@ export class PressureScene implements Scene {
       (g.level - this.levelShown) * (1 - Math.exp((-dt / 1000) * 18));
     if (g.done && this.doneAt === null) this.doneAt = now;
 
+    this.updateSpray(now, dt);
     ctx.drawImage(this.back, 0, 0, BOARD.w, BOARD.h);
+    this.drawPuddle(ctx);
+    this.drawPlant(ctx, now);
     this.drawWater(ctx, now);
+    this.drawStream(ctx, now);
     this.drawLamps(ctx, now);
     this.driveHero(now, dt);
     this.env.hero.draw(ctx, now, {
       calm: this.env.calm,
       celebrate: celebrateK(this.doneAt, now),
     });
+    this.drawSpray(ctx);
     this.drawButton(ctx, now);
     this.drawHint(ctx, now);
   }
@@ -110,10 +152,101 @@ export class PressureScene implements Scene {
     for (const e of this.game.drainEvents()) {
       if (e.type === 'pop') {
         this.tapAt = now;
+        this.flowAt = now;
       } else if (e.type === 'miss') {
         this.missAt = now;
+        // Un clic fuera del botón no es un error de presión.
+        if (this.onButton(e.x, e.y)) {
+          this.sprayAt = now;
+          this.leaks = Math.min(LEAK_MAX, this.leaks + 1);
+        }
       }
     }
+  }
+
+  // El agua sale normal: un chorro limpio y parejo de la boquilla a la
+  // maceta, con gotas al caer.
+  private drawStream(ctx: CanvasRenderingContext2D, now: number): void {
+    const k = now - this.flowAt;
+    if (k < 0 || k >= FLOW_MS) return;
+    const fade = Math.min(1, k / 120, (FLOW_MS - k) / 220);
+    const h = POT.y - NOZZLE.y;
+    ctx.globalAlpha = fade;
+    px(ctx, NOZZLE.x - 2, NOZZLE.y, 4, h, C.water);
+    px(ctx, NOZZLE.x - 2, NOZZLE.y, PX, h, C.waterHi);
+    if (!this.env.calm) {
+      const off = (now / 30) % 12;
+      for (let y = NOZZLE.y + off; y < POT.y - 4; y += 12) {
+        px(ctx, NOZZLE.x, y, PX, 5, C.white);
+      }
+      for (let i = 0; i < 4; i++) {
+        const a = (now / 90 + i * 1.6) % 3;
+        const dx = (i % 2 ? 1 : -1) * (3 + a * 5);
+        const dy = POT.y - 2 - Math.sin(a * 1.05) * 8;
+        px(ctx, NOZZLE.x + dx, dy, PX, PX, C.waterHi);
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // La planta de la maceta crece con cada acierto.
+  private drawPlant(ctx: CanvasRenderingContext2D, now: number): void {
+    const hits = this.game.hits;
+    if (hits === 0) return;
+    const x = POT.x + POT.w / 2;
+    const base = POT.y;
+    const sway = this.env.calm ? 0 : Math.round(Math.sin(now / 500)) * PX;
+    const stem = 4 + hits * 6;
+    px(ctx, x - 1, base - stem, PX, stem, C.leafLo);
+    px(ctx, x - 7 + sway, base - stem + 2, 7, 4, C.leaf);
+    px(ctx, x + sway, base - stem - 2, 7, 4, C.leaf);
+    if (hits >= 2) px(ctx, x - 9, base - stem / 2, 8, 4, C.leaf);
+    if (hits >= 3) {
+      px(ctx, x - 3 + sway, base - stem - 8, 8, 6, C.amber);
+      px(ctx, x - 1 + sway, base - stem - 6, 4, 2, C.amberHi);
+    }
+  }
+
+  private onButton(x: number, y: number): boolean {
+    const b = PRESSURE_BUTTON;
+    return x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h;
+  }
+
+  // Un chorro sale de la junta mientras dura el error y cae al piso.
+  private updateSpray(now: number, dt: number): void {
+    if (!this.env.calm && now - this.sprayAt < SPRAY_MS) {
+      for (let i = 0; i < 2; i++) {
+        this.bits.push({
+          x: JOINT.x,
+          y: JOINT.y,
+          vx: -20 - Math.random() * 60,
+          vy: -90 - Math.random() * 50,
+        });
+      }
+    }
+    for (let i = this.bits.length - 1; i >= 0; i--) {
+      const bit = this.bits[i];
+      bit.x += (bit.vx * dt) / 1000;
+      bit.y += (bit.vy * dt) / 1000;
+      bit.vy += (GRAVITY * dt) / 1000;
+      if (bit.y >= PUDDLE.y) this.bits.splice(i, 1);
+    }
+  }
+
+  private drawSpray(ctx: CanvasRenderingContext2D): void {
+    for (const bit of this.bits) {
+      px(ctx, bit.x, bit.y, PX, PX * 2, bit.vy > 0 ? C.waterHi : C.water);
+    }
+  }
+
+  // El agua que se perdió: un charco en el piso que crece con cada error.
+  private drawPuddle(ctx: CanvasRenderingContext2D): void {
+    if (this.leaks === 0) return;
+    const w = 12 + this.leaks * 10;
+    const x = PUDDLE.x - w / 2;
+    px(ctx, x, PUDDLE.y, w, 4, C.waterDeep);
+    px(ctx, x + 4, PUDDLE.y - 2, w - 8, 2, C.water);
+    px(ctx, x + w / 4, PUDDLE.y - 2, w / 4, PX, C.waterHi);
   }
 
   private driveHero(now: number, dt: number): void {

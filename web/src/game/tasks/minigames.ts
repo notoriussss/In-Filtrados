@@ -56,9 +56,10 @@ const STATION_GAMES: Record<string, () => Minigame> = {
   'leak-2': () => new SealGame(),
   'rain-1': () => new FirstRainGame(),
   'rain-2': () => new FirstRainGame(),
-  'greywater-2': () => new WateringGame(),
-  'compost-1': () => new CompostGame(),
-  'sorter-1': () => new WasteGame(),
+  'greywater-2': () => new ShowerBucketGame(),
+  'filter-2': () => new StreamGame(),
+  'compost-1': () => new JugFilterGame(),
+  'sorter-1': () => new PipesGame(),
 };
 
 // Dos números a partir de uno, para repartir al azar sin guardar nada:
@@ -66,6 +67,17 @@ const STATION_GAMES: Record<string, () => Minigame> = {
 export function hash01(i: number): number {
   const s = Math.sin(i * 127.1 + 311.7) * 43758.5453;
   return s - Math.floor(s);
+}
+
+// shuffle baraja una lista con el generador que le pasen, sin tocar la
+// original. Así cada partida sale distinta y las pruebas fijan la secuencia.
+function shuffle<T>(list: readonly T[], rnd: () => number): T[] {
+  const out = [...list];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
 }
 
 // match rechaza las tareas de menos de 3 s (taskMinTicks): ningún juego
@@ -304,124 +316,286 @@ export class ParticlesGame extends BaseGame implements Minigame {
 // eventos con los tres juegos de arriba. Los que se agarran y se
 // arrastran siguen el mismo esqueleto de BucketsGame.
 
-// Reciclar (sorter-1, Mesa clasificadora): clasificar 4 residuos en los
-// cajones de la mesa. Cada residuo va con su color; errar de cajón
-// devuelve el residuo a su lugar.
-export const WASTE_COUNT = 4;
-export const WASTE_SIZE = 34;
-export type WasteKind = 'plastic' | 'glass' | 'organic' | 'other';
-export const WASTE_KINDS: readonly WasteKind[] = [
-  'plastic',
-  'glass',
-  'organic',
-  'other',
-];
-export type WasteBin = {
-  kind: WasteKind;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-};
-export const WASTE_BINS: readonly WasteBin[] = [
-  { kind: 'plastic', x: 196, y: 56, w: 72, h: 50 },
-  { kind: 'glass', x: 278, y: 56, w: 72, h: 50 },
-  { kind: 'organic', x: 196, y: 122, w: 72, h: 50 },
-  { kind: 'other', x: 278, y: 122, w: 72, h: 50 },
-];
-const WASTE_HOME_Y = 136; // sobre la mesa
+// Reciclar (sorter-1, Tuberías del ecopunto): conectar las tuberías. El
+// agua ya limpia sale de la fuente de la izquierda y hay que llevarla al
+// tanque de la derecha: cada clic gira un tramo un cuarto de vuelta y el
+// agua corre cuando todos quedan en su sitio. El recorrido cambia en cada
+// partida.
+export const PIPES_COLS = 4;
+export const PIPES_ROWS = 3;
+export const PIPES_TILE = 56;
+export const PIPES_GRID = { x: 68, y: 36 }; // esquina de la cuadrícula
 
-export type WasteItem = {
-  kind: WasteKind;
-  x: number; // esquina superior izquierda
-  y: number;
-  homeX: number;
-  homeY: number;
-  placed: boolean;
+// Lados de un tramo, en el sentido de las agujas del reloj.
+export type PipeSide = 0 | 1 | 2 | 3; // arriba, derecha, abajo, izquierda
+const opposite = (s: number): PipeSide => ((s + 2) % 4) as PipeSide;
+
+export type PipeKind = 'straight' | 'elbow';
+
+type PathCell = { col: number; row: number; exit: PipeSide };
+
+export type PipeTile = {
+  col: number;
+  row: number;
+  kind: PipeKind;
+  rot: number; // 0 a 3, cuartos de vuelta
+  solution: number;
 };
 
-export class WasteGame extends BaseGame implements Minigame {
-  readonly items: WasteItem[] = [];
-  dragging: number | null = null;
+// pipeSides: los dos lados que une un tramo con esa vuelta. Recto de
+// izquierda a derecha y codo de arriba a la derecha, girados rot veces.
+export function pipeSides(kind: PipeKind, rot: number): [PipeSide, PipeSide] {
+  const base: [number, number] = kind === 'straight' ? [3, 1] : [0, 1];
+  return [
+    ((base[0] + rot) % 4) as PipeSide,
+    ((base[1] + rot) % 4) as PipeSide,
+  ];
+}
+
+// sameSides: dos vueltas del mismo tramo que unen los mismos lados.
+function sameSides(kind: PipeKind, r1: number, r2: number): boolean {
+  const [a, b] = pipeSides(kind, r1);
+  const [x, y] = pipeSides(kind, r2);
+  return (a === x && b === y) || (a === y && b === x);
+}
+
+// La vuelta con la que un tramo une los lados a y b.
+function rotFor(kind: PipeKind, a: number, b: number): number {
+  for (let rot = 0; rot < 4; rot++) {
+    const [x, y] = pipeSides(kind, rot);
+    if ((x === a && y === b) || (x === b && y === a)) return rot;
+  }
+  return 0;
+}
+
+export class PipesGame extends BaseGame implements Minigame {
+  readonly tiles: PipeTile[] = []; // en el orden del recorrido
+  readonly startRow: number;
+  readonly endRow: number;
   elapsed = 0;
-  private grabDx = 0;
-  private grabDy = 0;
 
-  constructor() {
+  constructor(rnd: () => number = Math.random) {
     super();
-    WASTE_KINDS.forEach((kind, i) => {
-      const x = 24 + i * 42;
-      this.items.push({
-        kind,
-        x,
-        y: WASTE_HOME_Y,
-        homeX: x,
-        homeY: WASTE_HOME_Y,
-        placed: false,
-      });
+    const path = this.walk(rnd);
+    this.startRow = path[0].row;
+    this.endRow = path[path.length - 1].row;
+    path.forEach((cell, i) => {
+      const from: number = i === 0 ? 3 : opposite(path[i - 1].exit);
+      const straight = opposite(cell.exit) === from;
+      const kind: PipeKind = straight ? 'straight' : 'elbow';
+      const solution = rotFor(kind, from, cell.exit);
+      // Nunca empieza en su sitio: elige entre las vueltas que unen otros
+      // lados (un recto girado media vuelta queda igual, no cuenta).
+      const wrong = [1, 2, 3]
+        .map((d) => (solution + d) % 4)
+        .filter((r) => !sameSides(kind, r, solution));
+      const rot = wrong[Math.floor(rnd() * wrong.length)];
+      this.tiles.push({ col: cell.col, row: cell.row, kind, rot, solution });
     });
   }
 
-  get placed(): number {
-    return this.items.filter((i) => i.placed).length;
+  // El recorrido: de la columna 0 a la última. Dos o tres columnas, al
+  // azar, suben o bajan una fila antes de salir hacia la derecha: nunca
+  // es una línea recta, y no se alarga (6 o 7 tramos).
+  private walk(rnd: () => number): PathCell[] {
+    const columns = Array.from({ length: PIPES_COLS }, (_, i) => i);
+    const bends = shuffle(columns, rnd).slice(0, 2 + Math.floor(rnd() * 2));
+    const cells: PathCell[] = [];
+    let row = Math.floor(rnd() * PIPES_ROWS);
+    for (let col = 0; col < PIPES_COLS; col++) {
+      if (bends.includes(col)) {
+        const canUp = row > 0;
+        const canDown = row < PIPES_ROWS - 1;
+        const down = canUp && canDown ? rnd() < 0.5 : canDown;
+        cells.push({ col, row, exit: down ? 2 : 0 });
+        row += down ? 1 : -1;
+      }
+      cells.push({ col, row, exit: 1 });
+    }
+    return cells;
+  }
+
+  // Hacia dónde tiene que salir el agua del tramo i: hacia el siguiente
+  // del recorrido o, en el último, hacia el tanque (a la derecha).
+  private exitOf(i: number): PipeSide {
+    const t = this.tiles[i];
+    const next = this.tiles[i + 1];
+    if (!next || next.col > t.col) return 1;
+    return next.row > t.row ? 2 : 0;
+  }
+
+  // El agua entra por la izquierda del primer tramo y sigue mientras cada
+  // tramo una el lado por el que entra con el que lleva al siguiente:
+  // cuántos tramos recorre.
+  get flow(): number {
+    let n = 0;
+    let from: PipeSide = 3;
+    for (const [i, t] of this.tiles.entries()) {
+      const [a, b] = pipeSides(t.kind, t.rot);
+      if (a !== from && b !== from) break;
+      const out = a === from ? b : a;
+      if (out !== this.exitOf(i)) break;
+      from = opposite(out);
+      n += 1;
+    }
+    return n;
+  }
+
+  get connected(): boolean {
+    return this.flow === this.tiles.length;
   }
 
   get done(): boolean {
-    return this.placed === WASTE_COUNT && this.elapsed >= MIN_GAME_MS;
+    return this.connected && this.elapsed >= MIN_GAME_MS;
   }
 
   progress(): number {
-    return this.placed / WASTE_COUNT;
+    return this.flow / this.tiles.length;
   }
 
+  // Un clic en un tramo del recorrido lo gira; en otro lado, no pasa nada.
   pointerDown(p: Point): void {
-    const i = this.items.findIndex(
-      (it) =>
-        !it.placed &&
-        p.x >= it.x &&
-        p.x <= it.x + WASTE_SIZE &&
-        p.y >= it.y &&
-        p.y <= it.y + WASTE_SIZE,
-    );
-    if (i < 0) return;
-    this.dragging = i;
-    this.grabDx = p.x - this.items[i].x;
-    this.grabDy = p.y - this.items[i].y;
-    this.events.push({ type: 'grab', x: p.x, y: p.y, index: i });
-  }
-
-  pointerMove(p: Point): void {
-    if (this.dragging === null) return;
-    const it = this.items[this.dragging];
-    it.x = p.x - this.grabDx;
-    it.y = p.y - this.grabDy;
-  }
-
-  // Al soltar: si el centro cae en su cajón, cuenta; en otro cajón o en
-  // la mesa, vuelve a su lugar.
-  pointerUp(): void {
-    if (this.dragging === null) return;
-    const i = this.dragging;
-    const it = this.items[i];
-    this.dragging = null;
-    const cx = it.x + WASTE_SIZE / 2;
-    const cy = it.y + WASTE_SIZE / 2;
-    const bin = WASTE_BINS.find(
-      (b) =>
-        cx >= b.x && cx <= b.x + b.w && cy >= b.y && cy <= b.y + b.h,
-    );
-    it.x = it.homeX;
-    it.y = it.homeY;
-    if (bin && bin.kind === it.kind) {
-      it.placed = true;
-      this.events.push({ type: 'drop-in', x: cx, y: cy, index: i });
+    if (this.connected) return;
+    const col = Math.floor((p.x - PIPES_GRID.x) / PIPES_TILE);
+    const row = Math.floor((p.y - PIPES_GRID.y) / PIPES_TILE);
+    const t = this.tiles.find((x) => x.col === col && x.row === row);
+    if (!t) {
+      this.events.push({ type: 'miss', x: p.x, y: p.y });
       return;
     }
-    this.events.push({ type: 'drop-out', x: it.x, y: it.y, index: i });
+    t.rot = (t.rot + 1) % 4;
+    this.events.push({
+      type: 'pop',
+      x: PIPES_GRID.x + (col + 0.5) * PIPES_TILE,
+      y: PIPES_GRID.y + (row + 0.5) * PIPES_TILE,
+      index: this.tiles.indexOf(t),
+    });
   }
+
+  pointerMove(): void {}
+
+  pointerUp(): void {}
 
   step(dtMs: number): void {
     this.elapsed += dtMs;
+  }
+}
+
+// Reciclar (filter-2, Arroyo del ecopunto): limpiar el arroyo. La basura
+// baja flotando por el arroyo hacia la toma de agua del tanque: hay que
+// sacarla con un clic antes de que llegue. La que se cuela no resta, pero
+// el agua sigue sucia hasta juntar la cantidad pedida.
+export const STREAM_GOAL = 6;
+export const STREAM_GAP_MS = 650; // entre una basura y la siguiente
+export const STREAM_SPEED = 70; // unidades por segundo
+export const STREAM_START_X = -14; // por donde entra al arroyo
+export const STREAM_END_X = 300; // la toma de agua: de aquí no se saca
+export const STREAM_HIT = 20; // qué tan cerca hay que hacer clic
+export const STREAM_LANES: readonly number[] = [112, 140, 168];
+export type StreamKind = 'bottle' | 'bag' | 'can' | 'boot';
+export const STREAM_KINDS: readonly StreamKind[] = [
+  'bottle',
+  'bag',
+  'can',
+  'boot',
+];
+
+export type StreamItem = {
+  index: number;
+  kind: StreamKind;
+  x: number; // centro
+  y: number;
+  gone: boolean; // ya se sacó o ya se coló
+};
+
+export class StreamGame extends BaseGame implements Minigame {
+  readonly items: StreamItem[] = [];
+  caught = 0;
+  escaped = 0;
+  elapsed = 0;
+  private spawned = 0;
+
+  constructor(private readonly rnd: () => number = Math.random) {
+    super();
+  }
+
+  get done(): boolean {
+    return this.caught >= STREAM_GOAL && this.elapsed >= MIN_GAME_MS;
+  }
+
+  progress(): number {
+    return clamp01(this.caught / STREAM_GOAL);
+  }
+
+  // Un clic sobre una basura la saca; la más cercana si hay varias; en
+  // otro lado no pasa nada.
+  pointerDown(p: Point): void {
+    let best: StreamItem | null = null;
+    let bestD = STREAM_HIT;
+    for (const it of this.items) {
+      if (it.gone) continue;
+      const d = Math.hypot(p.x - it.x, p.y - it.y);
+      if (d <= bestD) {
+        best = it;
+        bestD = d;
+      }
+    }
+    if (!best) {
+      this.events.push({ type: 'miss', x: p.x, y: p.y });
+      return;
+    }
+    this.items.splice(this.items.indexOf(best), 1);
+    this.caught += 1;
+    this.events.push({
+      type: 'pop',
+      x: best.x,
+      y: best.y,
+      index: best.index,
+    });
+  }
+
+  pointerMove(): void {}
+
+  pointerUp(): void {}
+
+  step(dtMs: number): void {
+    this.elapsed += dtMs;
+    while (
+      this.spawned * STREAM_GAP_MS <= this.elapsed &&
+      this.caught < STREAM_GOAL
+    ) {
+      this.spawn();
+    }
+    for (const it of this.items) {
+      if (it.gone) continue;
+      it.x += (STREAM_SPEED * dtMs) / 1000;
+      if (it.x < STREAM_END_X) continue;
+      it.gone = true;
+      this.escaped += 1;
+      this.events.push({
+        type: 'spill',
+        x: it.x,
+        y: it.y,
+        index: it.index,
+      });
+    }
+    // La basura ya sacada o colada deja la lista.
+    for (let i = this.items.length - 1; i >= 0; i--) {
+      if (this.items[i].gone) this.items.splice(i, 1);
+    }
+  }
+
+  private spawn(): void {
+    const kind = STREAM_KINDS[Math.floor(this.rnd() * STREAM_KINDS.length)];
+    const y = STREAM_LANES[Math.floor(this.rnd() * STREAM_LANES.length)];
+    this.items.push({
+      index: this.spawned,
+      kind,
+      x: STREAM_START_X,
+      y,
+      gone: false,
+    });
+    this.spawned += 1;
   }
 }
 
@@ -749,118 +923,109 @@ export class FirstRainGame extends BaseGame implements Minigame {
   }
 }
 
-// Reutilizar (greywater-2, Agua gris del laboratorio): ¿sirve para
-// regar? Aparece un recipiente con el dibujo de su origen y se arrastra
-// a Regar o a Tratar. Errar lo devuelve a la mesa. Cuatro aciertos.
-export const WATERING_COUNT = 4;
-export const WATERING_SIZE = 36;
-export type WaterKind = 'water' | 'treat';
-// Origen de cada recipiente: el agua de lavar verduras y de enjuagar
-// ropa sirve para regar; con aceite o cloro, hay que tratarla.
-export const WATERING_KINDS: readonly WaterKind[] = [
-  'water',
-  'water',
-  'treat',
-  'treat',
-];
-export const WATERING_HOME = { x: 162, y: 130 }; // sobre la mesa del centro
-export const WATERING_PLOT = { x: 20, y: 140, w: 92, h: 88 }; // regar
-export const WATERING_TREAT = { x: 248, y: 140, w: 92, h: 88 }; // tratar
+// Reutilizar (greywater-2, Ducha del laboratorio): agua de la ducha. La
+// ducha sale mientras se calienta y esa agua se pierde por el desagüe: se
+// pone el balde debajo, se llena y se lleva a regar la planta marchita.
+// Dos baldes. El balde se llena mientras esté bajo la ducha, lo suelten o
+// no; en cualquier otro lado se queda en el piso.
+export const SHOWER_ROUNDS = 2;
+export const SHOWER_FILL_MS = 1800; // lo que tarda en llenarse
+export const SHOWER_BUCKET = { w: 44, h: 40 };
+export const SHOWER_FLOOR_Y = 188; // y del balde apoyado en el piso
+export const SHOWER_BUCKET_HOME = { x: 120, y: SHOWER_FLOOR_Y };
+export const SHOWER_X = 84; // por dónde cae el chorro
+export const SHOWER_ZONE = { x: 56, y: 150, w: 56, h: 78 }; // bajo el chorro
+export const SHOWER_PLANT = { x: 262, y: 120, w: 84, h: 108 }; // la planta
 
-export type WaterItem = {
-  index: number;
-  x: number; // esquina superior izquierda
-  y: number;
-  homeX: number;
-  homeY: number;
-  placed: boolean;
-};
-
-export class WateringGame extends BaseGame implements Minigame {
-  readonly items: WaterItem[] = [];
-  dragging: number | null = null;
+export class ShowerBucketGame extends BaseGame implements Minigame {
+  bucket = { x: SHOWER_BUCKET_HOME.x, y: SHOWER_BUCKET_HOME.y };
+  fill = 0; // 0 vacío, 1 lleno
+  poured = 0; // baldes ya regados
+  dragging = false;
   elapsed = 0;
   private grabDx = 0;
   private grabDy = 0;
 
-  constructor() {
-    super();
-    for (let i = 0; i < WATERING_COUNT; i++) {
-      this.items.push({
-        index: i,
-        x: WATERING_HOME.x,
-        y: WATERING_HOME.y,
-        homeX: WATERING_HOME.x,
-        homeY: WATERING_HOME.y,
-        placed: false,
-      });
-    }
-  }
-
-  get placed(): number {
-    return this.items.filter((i) => i.placed).length;
-  }
-
   get done(): boolean {
-    return this.placed === WATERING_COUNT && this.elapsed >= MIN_GAME_MS;
+    return this.poured === SHOWER_ROUNDS && this.elapsed >= MIN_GAME_MS;
+  }
+
+  get full(): boolean {
+    return this.fill >= 1;
+  }
+
+  // El balde está bajo la ducha: su centro cae dentro de la zona.
+  get underShower(): boolean {
+    return inRect(
+      this.bucket.x + SHOWER_BUCKET.w / 2,
+      this.bucket.y + SHOWER_BUCKET.h / 2,
+      SHOWER_ZONE,
+    );
   }
 
   progress(): number {
-    return this.placed / WATERING_COUNT;
-  }
-
-  // Solo se puede agarrar el recipiente que toca: aparecen de a uno.
-  get current(): number {
-    return this.items.findIndex((i) => !i.placed);
+    return Math.min(1, (this.poured + this.fill) / SHOWER_ROUNDS);
   }
 
   pointerDown(p: Point): void {
-    const i = this.current;
-    if (i < 0) return;
-    const it = this.items[i];
+    const B = this.bucket;
     const inside =
-      p.x >= it.x &&
-      p.x <= it.x + WATERING_SIZE &&
-      p.y >= it.y &&
-      p.y <= it.y + WATERING_SIZE;
+      p.x >= B.x &&
+      p.x <= B.x + SHOWER_BUCKET.w &&
+      p.y >= B.y &&
+      p.y <= B.y + SHOWER_BUCKET.h;
     if (!inside) return;
-    this.dragging = i;
-    this.grabDx = p.x - it.x;
-    this.grabDy = p.y - it.y;
-    this.events.push({ type: 'grab', x: p.x, y: p.y, index: i });
+    this.dragging = true;
+    this.grabDx = p.x - B.x;
+    this.grabDy = p.y - B.y;
+    this.events.push({ type: 'grab', x: p.x, y: p.y });
   }
 
   pointerMove(p: Point): void {
-    if (this.dragging === null) return;
-    const it = this.items[this.dragging];
-    it.x = p.x - this.grabDx;
-    it.y = p.y - this.grabDy;
+    if (!this.dragging) return;
+    this.bucket.x = Math.min(
+      Math.max(p.x - this.grabDx, 0),
+      BOARD.w - SHOWER_BUCKET.w,
+    );
+    this.bucket.y = Math.min(
+      Math.max(p.y - this.grabDy, 40),
+      SHOWER_FLOOR_Y,
+    );
   }
 
-  // Al soltar: en el recipiente correcto cuenta; en el otro, o fuera,
-  // vuelve a la mesa.
+  // Al soltar: lleno y sobre la planta, se riega y el balde vuelve vacío a
+  // su sitio; en cualquier otro lado el balde cae al piso y ahí se queda.
   pointerUp(): void {
-    if (this.dragging === null) return;
-    const i = this.dragging;
-    const it = this.items[i];
-    this.dragging = null;
-    const cx = it.x + WATERING_SIZE / 2;
-    const cy = it.y + WATERING_SIZE / 2;
-    const inPlot = inRect(cx, cy, WATERING_PLOT);
-    const inTreat = inRect(cx, cy, WATERING_TREAT);
-    it.x = it.homeX;
-    it.y = it.homeY;
-    const kind: WaterKind = inPlot ? 'water' : inTreat ? 'treat' : 'water';
-    if ((inPlot || inTreat) && WATERING_KINDS[i] === kind) {
-      it.placed = true;
-      this.events.push({ type: 'drop-in', x: cx, y: cy, index: i });
+    if (!this.dragging) return;
+    this.dragging = false;
+    const cx = this.bucket.x + SHOWER_BUCKET.w / 2;
+    const cy = this.bucket.y + SHOWER_BUCKET.h / 2;
+    if (this.full && inRect(cx, cy, SHOWER_PLANT)) {
+      this.poured += 1;
+      this.fill = 0;
+      this.bucket = { ...SHOWER_BUCKET_HOME };
+      this.events.push({
+        type: 'drop-in',
+        x: cx,
+        y: cy,
+        index: this.poured - 1,
+      });
       return;
     }
-    this.events.push({ type: 'drop-out', x: it.x, y: it.y, index: i });
+    this.bucket.y = SHOWER_FLOOR_Y;
+    if (inRect(cx, cy, SHOWER_PLANT)) {
+      // Sobre la planta pero vacío: todavía no hay nada que regar.
+      this.events.push({ type: 'drop-out', x: cx, y: cy, index: this.poured });
+      return;
+    }
+    this.events.push({ type: 'release' });
   }
 
   step(dtMs: number): void {
     this.elapsed += dtMs;
+    if (this.underShower && !this.full) {
+      this.fill = Math.min(1, this.fill + dtMs / SHOWER_FILL_MS);
+    }
   }
 }
 
@@ -957,110 +1122,112 @@ export class SealGame extends BaseGame implements Minigame {
   }
 }
 
-// Reciclar (compost-1, Compostera): capas del compost. Arrastrar los
-// sacos a la compostera en el orden que señala la mano: seco, húmedo,
-// tierra. Equivocarse de saco lo devuelve sacudiéndose. Dos rondas.
-export const COMPOST_ROUNDS = 2;
-// El orden de cada ronda: seco, húmedo y tierra.
-export const COMPOST_ORDER: readonly number[] = [0, 1, 2];
-export const COMPOST_STEPS = COMPOST_ROUNDS * COMPOST_ORDER.length;
-export const COMPOST_BIN = { x: 238, y: 128, w: 106, h: 100 };
-export const COMPOST_SIZE = 40;
-export const COMPOST_HOME_X: readonly number[] = [22, 90, 158];
+// Reciclar (compost-1, Purificador): jarra filtrante. Se arrastra el balde
+// de agua turbia a la jarra; el agua baja por el filtro y abajo queda
+// clara; entonces se hace clic en la llave para llenar el vaso. Dos
+// vasos. Soltar el balde fuera de la jarra lo devuelve a su lugar.
+export const JUG_ROUNDS = 2;
+export const JUG_FILTER_MS = 1500; // lo que tarda el agua en pasar
+export const JUG_SIZE = 48; // zona de agarre del balde
+export const JUG_BUCKET_HOME = { x: 28, y: 152 };
+export const JUG_BODY = { x: 146, y: 92, w: 88, h: 108 };
+export const JUG_TOP = { x: 146, y: 92, w: 88, h: 46 }; // donde se vierte
+export const JUG_TAP = { x: 236, y: 150, w: 36, h: 34 }; // clic: la llave
+export const JUG_GLASS = { x: 246, y: 168, w: 30, h: 32 };
 
-export type CompostSack = {
-  index: number;
-  x: number; // esquina superior izquierda
-  y: number;
-  homeX: number;
-  homeY: number;
-  inBin: number; // veces que entró
-};
+// pour: falta verter el balde; filter: el agua baja por el filtro;
+// tap: el agua ya está clara y falta abrir la llave.
+export type JugPhase = 'pour' | 'filter' | 'tap';
 
-export class CompostGame extends BaseGame implements Minigame {
-  readonly sacks: CompostSack[] = [];
-  dragging: number | null = null;
+export class JugFilterGame extends BaseGame implements Minigame {
+  phase: JugPhase = 'pour';
+  glasses = 0; // vasos ya llenos
+  filterMs = 0; // lo que lleva bajando el agua por el filtro
+  dragging = false;
   elapsed = 0;
+  bucket = { x: JUG_BUCKET_HOME.x, y: JUG_BUCKET_HOME.y };
   private grabDx = 0;
   private grabDy = 0;
 
-  constructor() {
-    super();
-    const y = FLOOR_Y - COMPOST_SIZE;
-    COMPOST_HOME_X.forEach((x, i) => {
-      this.sacks.push({
-        index: i,
-        x,
-        y,
-        homeX: x,
-        homeY: y,
-        inBin: 0,
-      });
-    });
-  }
-
-  get steps(): number {
-    return this.sacks.reduce((n, s) => n + s.inBin, 0);
-  }
-
-  // El saco que toca ahora: la mano lo señala.
-  get required(): number {
-    return COMPOST_ORDER[this.steps % COMPOST_ORDER.length];
-  }
-
   get done(): boolean {
-    return this.steps === COMPOST_STEPS && this.elapsed >= MIN_GAME_MS;
+    return this.glasses === JUG_ROUNDS && this.elapsed >= MIN_GAME_MS;
   }
 
+  // Cada vaso tiene tres pasos: verter, esperar el filtro y abrir la llave.
   progress(): number {
-    return this.steps / COMPOST_STEPS;
+    const step = this.phase === 'pour' ? 0 : this.phase === 'filter' ? 1 : 2;
+    return Math.min(1, (this.glasses * 3 + step) / (JUG_ROUNDS * 3));
   }
 
   pointerDown(p: Point): void {
-    const i = this.sacks.findIndex(
-      (s) =>
-        p.x >= s.x &&
-        p.x <= s.x + COMPOST_SIZE &&
-        p.y >= s.y &&
-        p.y <= s.y + COMPOST_SIZE,
-    );
-    if (i < 0) return;
-    this.dragging = i;
-    this.grabDx = p.x - this.sacks[i].x;
-    this.grabDy = p.y - this.sacks[i].y;
-    this.events.push({ type: 'grab', x: p.x, y: p.y, index: i });
+    if (this.phase === 'tap') {
+      if (inRect(p.x, p.y, JUG_TAP)) {
+        this.glasses += 1;
+        this.phase = 'pour';
+        this.events.push({
+          type: 'pop',
+          x: p.x,
+          y: p.y,
+          index: this.glasses - 1,
+        });
+        return;
+      }
+      this.events.push({ type: 'miss', x: p.x, y: p.y });
+      return;
+    }
+    const B = this.bucket;
+    const inside =
+      this.phase === 'pour' &&
+      p.x >= B.x &&
+      p.x <= B.x + JUG_SIZE &&
+      p.y >= B.y &&
+      p.y <= B.y + JUG_SIZE;
+    if (!inside) return;
+    this.dragging = true;
+    this.grabDx = p.x - B.x;
+    this.grabDy = p.y - B.y;
+    this.events.push({ type: 'grab', x: p.x, y: p.y });
   }
 
   pointerMove(p: Point): void {
-    if (this.dragging === null) return;
-    const s = this.sacks[this.dragging];
-    s.x = p.x - this.grabDx;
-    s.y = p.y - this.grabDy;
+    if (!this.dragging) return;
+    this.bucket.x = p.x - this.grabDx;
+    this.bucket.y = p.y - this.grabDy;
   }
 
-  // Al soltar: el saco correcto dentro de la compostera cuenta y vuelve
-  // a su lugar (se reusa en la siguiente ronda); cualquier otra cosa,
-  // el saco se sacude y vuelve.
+  // Al soltar: sobre la jarra se vierte y empieza el filtro; en
+  // cualquier otro lado el balde vuelve a su lugar.
   pointerUp(): void {
-    if (this.dragging === null) return;
-    const i = this.dragging;
-    const s = this.sacks[i];
-    this.dragging = null;
-    const cx = s.x + COMPOST_SIZE / 2;
-    const cy = s.y + COMPOST_SIZE / 2;
-    const inBin = inRect(cx, cy, COMPOST_BIN) && i === this.required;
-    s.x = s.homeX;
-    s.y = s.homeY;
-    if (inBin) {
-      s.inBin += 1;
-      this.events.push({ type: 'drop-in', x: cx, y: cy, index: i });
+    if (!this.dragging) return;
+    this.dragging = false;
+    const cx = this.bucket.x + JUG_SIZE / 2;
+    const cy = this.bucket.y + JUG_SIZE / 2;
+    this.bucket.x = JUG_BUCKET_HOME.x;
+    this.bucket.y = JUG_BUCKET_HOME.y;
+    if (inRect(cx, cy, JUG_TOP)) {
+      this.phase = 'filter';
+      this.filterMs = 0;
+      this.events.push({
+        type: 'drop-in',
+        x: cx,
+        y: cy,
+        index: this.glasses,
+      });
       return;
     }
-    this.events.push({ type: 'drop-out', x: s.x, y: s.y, index: i });
+    this.events.push({
+      type: 'drop-out',
+      x: cx,
+      y: cy,
+      index: this.glasses,
+    });
   }
 
   step(dtMs: number): void {
     this.elapsed += dtMs;
+    if (this.phase !== 'filter') return;
+    this.filterMs += dtMs;
+    if (this.filterMs >= JUG_FILTER_MS) this.phase = 'tap';
   }
 }
 

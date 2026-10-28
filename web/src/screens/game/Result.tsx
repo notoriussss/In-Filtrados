@@ -1,13 +1,13 @@
 import { skinOf } from '../../shop';
 import { useEffect, useState } from 'react';
-import type { Snapshot, Winner } from '@in-filtrados/messages';
+import type { EndReason, Snapshot, Winner } from '@in-filtrados/messages';
 import { Stage } from '../../ui/Stage';
 import { Gota } from '../../ui/Gota';
 import { Gauge } from '../../ui/kit';
 import { api, type MeResponse } from '../../api';
 import { session } from '../../session';
 import { gameMap, type StationType } from '../../map';
-import { coinsEarned } from '../../game/meeting';
+import { coinsEarned, endSubtitle } from '../../game/meeting';
 import { APP_TEXT, RESULT_TEXT as T } from '../../texts';
 import { BACKGROUNDS } from '../backgrounds';
 import '../../styles/result.css';
@@ -49,6 +49,7 @@ export function Result(props: {
   snap: Snapshot;
   meId: string;
   winner: Winner | null;
+  reason?: EndReason | null;
   impostorIds: string[];
   before: MeResponse | null;
   onExit: () => void;
@@ -57,11 +58,18 @@ export function Result(props: {
   const [coins, setCoins] = useState<number | null>(null);
   const crewWon = winner === 'crew';
   const roomCode = session.loadSession()?.roomCode ?? '';
+  // Sala cerrada por el host: no hay ganador y players no suma monedas.
+  const hostLeft = props.reason === 'host_left';
+  const subtitle = endSubtitle(
+    winner,
+    props.reason,
+    props.impostorIds.length,
+  );
 
   useEffect(() => {
     const data = session.loadSession();
     const before = props.before;
-    if (!data || !before) return;
+    if (!data || !before || hostLeft) return;
     let tries = 0;
     let alive = true;
     const poll = async () => {
@@ -82,13 +90,12 @@ export function Result(props: {
     return () => {
       alive = false;
     };
-  }, [props.before]);
+  }, [props.before, hostLeft]);
 
   const impact = myImpact(snap);
   const cleanTanks = snap.tanks.filter((t) => !t.dead).length;
   const title =
     winner === null ? T.ENDED : crewWon ? T.CREW_WON : T.IMPOSTOR_WON;
-  const sub = winner ? (crewWon ? T.CREW_SUB : T.IMPOSTOR_SUB) : '';
 
   return (
     <div className="overlay-stage solid">
@@ -108,7 +115,7 @@ export function Result(props: {
           >
             {title}
           </h1>
-          {sub && <span className="result-sub">{sub}</span>}
+          {subtitle && <span className="result-sub">{subtitle}</span>}
         </header>
 
         {/* PANELES PRINCIPALES */}
@@ -219,14 +226,14 @@ export function Result(props: {
               </div>
               <div className="result-stat-box">
                 <strong className="result-stat-val">
-                  {coins === null ? '…' : `+${coins}`}
+                  {hostLeft ? '+0' : coins === null ? '…' : `+${coins}`}
                 </strong>
                 <span className="result-stat-lbl">{T.COINS}</span>
               </div>
             </div>
 
             <p className="result-fact-note">
-              {coins === null ? T.COINS_PENDING : T.FACT}
+              {coins === null && !hostLeft ? T.COINS_PENDING : T.FACT}
             </p>
           </section>
         </div>

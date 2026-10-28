@@ -22,10 +22,10 @@ const MATCHES: Column = { key: 'matches', label: T.MATCHES };
 const WINS: Column = { key: 'wins', label: T.WINS };
 const RATE: Column = { key: 'rate', label: T.RATE };
 const IMPOSTOR: Column = { key: 'impostor', label: T.IMPOSTOR };
-const HARVEST: Column = { key: 'harvest', label: T.HARVEST };
+const LITERS: Column = { key: 'liters', label: T.LITERS };
 const COINS: Column = { key: 'coins', label: T.COINS };
 
-const SORT_COLUMNS: Column[] = [WINS, RATE, MATCHES, IMPOSTOR, HARVEST, COINS];
+const SORT_COLUMNS: Column[] = [WINS, RATE, MATCHES, IMPOSTOR, COINS, LITERS];
 
 // Ranking: escenario abierto con barra de ordenamiento rápido y filas tipo
 // tarjeta, siguiendo el mismo lenguaje visual unificado de la tienda y sala.
@@ -150,8 +150,8 @@ export function Ranking(props: {
                   {head(RATE)}
                   <th className="num">{T.CREW}</th>
                   {head(IMPOSTOR)}
-                  {head(HARVEST)}
                   {head(COINS)}
+                  {head(LITERS)}
                 </tr>
               </thead>
               <tbody>
@@ -184,10 +184,10 @@ export function Ranking(props: {
                       <td className={colCls('impostor')}>
                         {T.ratio(r.winsAsImpostor, r.timesImpostor)}
                       </td>
-                      <td className={colCls('harvest')}>
-                        {T.liters(r.harvest)}
-                      </td>
                       <td className={colCls('coins')}>{r.coinsEarned}</td>
+                      <td className={colCls('liters')}>
+                        {T.liters(r.litersSaved)}
+                      </td>
                     </tr>
                   );
                 })}

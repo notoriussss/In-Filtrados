@@ -29,7 +29,8 @@ export const CONNECTION_MESSAGES = {
 // Textos de la reunión, la votación y el fin de partida (S2-10).
 export const MEETING_TEXT = {
   TITLE: 'Reunión de emergencia',
-  REPORTED_BY: (name: string) => `${name} reportó un tanque muerto`,
+  REPORTED_BY: (name: string) => `${name} reportó un tanque contaminado`,
+  EMERGENCY_BY: (name: string) => `${name} convocó una reunión de emergencia`,
   TANK_OF: (name: string) => `Tanque de ${name}`,
   VOTING_ENDS_IN: (seconds: number) => `Votación: ${seconds} s`,
   RESULT_ENDS_IN: (seconds: number) => `Volvemos al huerto en ${seconds} s`,
@@ -68,22 +69,24 @@ export const END_TEXT = {
   BACK_TO_LOBBY: 'Volver a la sala',
 } as const;
 
-// S2-09: botón de acción contextual, embalse y aviso del tanque.
+// S2-09: botón de acción contextual y embalse.
 export const ACTION_TEXT = {
   TASK: 'Hacer tarea',
-  CLEAN: 'Limpiar',
   REPORT: 'Reportar',
   CONTAMINATE: 'Contaminar',
   // S3-05: arreglar una emergencia.
   FIX_STEAM: 'Cerrar válvula',
   FIX_PIPE: 'Sostener tubería',
   contaminateWait: (seconds: number) => `Contaminar (${seconds} s)`,
+  // Mesa: convocar desde la mesa.
+  CALL_MEETING: 'Llamar reunión',
+  NO_MEETINGS: 'Sin reuniones',
+  meetingWait: (seconds: number) => `Reunión en ${seconds} s`,
   KEY_HINT: 'E',
 } as const;
 
 export const HUD_TEXT = {
   reservoir: (pct: number) => `Embalse ${pct} %`,
-  TANK_ALERT: '¡Tu tanque se está contaminando!',
 } as const;
 
 // Espejo de las reglas de match/internal/room/state.go (S2-03, S2-04).
@@ -94,19 +97,21 @@ export const GAME_RULES = {
   TASK_RANGE: 40,
   REPORT_RANGE: 80,
   CONTAMINATE_MS: 3000,
-  CLEAN_MS: 2000,
   // match exige 60 ticks desde que recibe el inicio; con latencia
   // irregular 3000 ms justos a veces le llegan como 59 y la rechaza.
   TASK_MS: 3000 + 150,
   CONTAMINATE_COOLDOWN_MS: 20000,
+  // Cuánto se queda el aviso de que mi tanque llegó a 0.
+  TANK_EMPTY_NOTICE_MS: 7000,
   // El tanque del impostor sube 1 punto solo cada 5 s: eso no es una
   // contaminación y no debe avisar.
-  TANK_ALERT_MIN_RISE: 2,
-  TANK_ALERT_MS: 3000,
   // S3-05: emergencias y visión limitada.
   FIX_RANGE: 48,
   STEAM_FIX_MS: 2000 + 150,
   SABOTAGE_COOLDOWN_TICKS: 800,
+  // Mesa: la mesa del mirador.
+  MEETING_RANGE: 80,
+  MEETING_CALL_COOLDOWN_TICKS: 1200,
   TICKS_PER_SECOND: 20,
   VISION_RADIUS: 220, // la cámara muestra 960 × 540 unidades
   STEAM_VISION_FACTOR: 0.5,
@@ -159,11 +164,11 @@ export const TASK_TEXT = {
     'rain-1': 'Reutilizar: primera lluvia',
     'rain-2': 'Reutilizar: primera lluvia',
     'greywater-1': 'Reutilizar: guarda el agua gris',
-    'greywater-2': 'Reutilizar: ¿sirve para regar?',
+    'greywater-2': 'Reutilizar: agua de la ducha',
     'filter-1': 'Reciclar: filtra el agua',
-    'filter-2': 'Reciclar: filtra el agua',
-    'compost-1': 'Reciclar: capas del compost',
-    'sorter-1': 'Reciclar: clasifica los residuos',
+    'filter-2': 'Reciclar: limpia el arroyo',
+    'compost-1': 'Reciclar: jarra filtrante',
+    'sorter-1': 'Reciclar: conecta las tuberías',
   } as Record<string, string>,
   ROW: (type: string, zone: string) => `${type} · ${zone}`,
   UNKNOWN_ZONE: 'Zona desconocida',

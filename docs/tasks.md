@@ -69,7 +69,7 @@ El mapa vive en **`shared/map.json`** (carpeta nueva en la raíz). Lo usan `matc
 - `tanks[].draw`: esquina del sprite del tanque; `x, y` siguen siendo el punto de interacción.
 - Un tanque por sala (10 salas, 10 tanques) y cada uno lleva su pared de 72×44 en `(x-36, y-24)` dentro de `walls`; si lo mueves, mueve también esa pared y la base de concreto de `ground.png`.
 - `fixPoints`: `{ id, kind: 'pipe' | 'steam', room, x, y }`, los puntos donde se arreglan los sabotajes (2 extremos de tubería y 1 válvula de vapor).
-- `zones[].kind/theme`, `doors` y `markers`: solo para dibujar y nombrar salas; `match` no los usa.
+- `zones[].kind/theme`, `doors` y `markers`: casi todos son solo para dibujar y nombrar salas; `match` usa el marker `reunion` para validar la mesa de reuniones.
 - Las imágenes del mapa (suelo, props, tanques, luz nocturna y minimapa) viven en `web/public/assets/map/manglar-verde/`; `walls` sigue siendo la única fuente de colisiones.
 
 ### 0.4 Reglas de movimiento
@@ -108,28 +108,57 @@ En la semana 2 se agregan mensajes; se agregan aquí, nunca se duplican en `web`
 ```ts
 // Navegador → gateway (además de join, move y start)
   | { type: 'interact'; stationId: string; completed?: boolean } // tarea
-  | { type: 'interact'; tankSlot: number }                        // limpiar tanque
+  | { type: 'interact'; tankSlot: number }                        // ya no hace nada: los tanques no se limpian
   | { type: 'contaminate'; tankSlot: number }                     // solo el impostor
-  | { type: 'report'; tankSlot: number }                          // tanque muerto
+  | { type: 'report'; tankSlot: number }                          // tanque contaminado al 100 %
   | { type: 'vote'; targetPlayerId: string | null }               // null = saltar
   | { type: 'chat'; clientMsgId: string; text: string }           // solo en MEETING
+  | { type: 'callMeeting' }                                       // mesa de reuniones
 
 // Gateway → navegador
-  | { type: 'matchEnded'; winner: 'crew' | 'impostor'; impostorIds: string[] }
+  | {
+      type: 'matchEnded';
+      winner: 'crew' | 'impostor' | null; // null: sala cerrada sin ganador
+      impostorIds: string[];
+      reason?:
+        | 'reservoir_full'
+        | 'impostors_ejected'
+        | 'tanks_contaminated'
+        | 'timeout'
+        | 'host_left'; // el creador salió a propósito: la sala se cierra para todos
+    }
 
 // Campos nuevos del snapshot
-tanks: { slot, ownerId, contamination /* 0 a 100 */, dead }[];
+tanks: { slot, ownerId, contamination /* 0 a 100 */, dead, reported }[];
 reservoir: number;                 // 0 a 100
 myRole: 'NO_ROLE' | 'CREW' | 'IMPOSTOR'; // solo el del destinatario
 myTaskProgress: { completed, total };
-meeting: { reporterId, tankSlot, votesCast[], endsAtTick, votingClosed, ejectedId, wasImpostor } | null;
+meeting: {
+  reporterId,
+  tankSlot,                        // -1 si fue una convocatoria
+  reason: 'report' | 'emergency',
+  votesCast[], endsAtTick, votingClosed, ejectedId, wasImpostor,
+} | null;
 chat: { id, playerId, text, tick }[]; // últimos 30
 oilDrops: { x, y, color, expiresAtTick }[]; // S2-12: rastro del impostor
-paused: boolean;                   // S3-02: alguien está en su periodo de gracia
+paused: boolean;                   // S3-02: el host está en su periodo de gracia
 waitingFor: string[];              // S3-02: ids de quienes se esperan
 myTasks: { stationId, done }[];    // S2-11: solo las del destinatario
 myActiveTask: string | null;       // S2-11: tarea iniciada por el servidor
+myMeeting: { readyAtTick, callsLeft } | null; // mesa, solo en PLAYING
 ```
+
+**Heartbeat (`deployment-lab.md`, 9.1).** Solo entre el navegador y el gateway; nunca llega a `match`:
+
+```ts
+// Navegador → gateway, cada 2 s
+  | { type: 'ping' }
+// Gateway → navegador, en cuanto llega el ping
+  | { type: 'pong' }
+```
+
+- El navegador da la conexión por caída si pasan 5 s sin recibir nada (ni `pong` ni snapshots) y reconecta con la espera de siempre; también si el WebSocket no abre en 5 s.
+- El gateway corta (`terminate`) el WebSocket que pasa 5 s sin mandar nada: así `match` se entera de que el jugador se fue aunque la conexión TCP quede abierta a medias.
 
 - `myRole`, `myTasks` y `myActiveTask` viajan **solo en el snapshot de su dueño**: `match` arma un snapshot por jugador y el gateway nunca recibe el rol ni las tareas de otro.
 - `votesCast` dice quién ya votó, nunca por quién.
@@ -160,6 +189,42 @@ players[].activity: 'reduce' | 'reuse' | 'recycle' | 'tank' | 'fix' | null; // p
 
 - `match` sigue asignando un color al entrar. Acepta el cambio solo si es uno de los 8 colores y ningún otro jugador **conectado** lo tiene; si no, lo ignora. El color nuevo llega a todos en el siguiente snapshot.
 
+**Tareas por jugador.** También se suma sin romper lo anterior (en gRPC, `SetTaskCount set_task_count = 16` dentro de `ClientAction` y `tasks_per_player = 18` en `Snapshot`):
+
+```ts
+// Navegador → gateway
+  | { type: 'setTaskCount'; tasksPerPlayer: number } // solo el creador, en LOBBY
+// Gateway → navegador: Snapshot.tasksPerPlayer
+```
+
+- Cada jugador, cuidador o impostor, recibe `tasksPerPlayer` tareas. El rango es de 4 a 8 y el valor por defecto es 6; `match` lo define (`minTasksPerPlayer`, `maxTasksPerPlayer`, `defaultTasksPerPlayer` en `match/internal/room/state.go`) y el navegador solo lo dibuja (`web/src/game/taskCount.ts`).
+- Fuera de rango, `match` no cambia nada y responde un error `INVALID_TASK_COUNT` ("La cantidad de tareas debe estar entre 4 y 8"). Un invitado o una fase distinta de LOBBY se ignoran.
+
+**Infiltrados y duración de la partida.** También se suman sin romper lo anterior (en gRPC, `SetImpostorCount set_impostor_count = 18` y `SetMatchDuration set_match_duration = 19` dentro de `ClientAction`, y `impostors = 19` y `match_minutes = 20` en `Snapshot`):
+
+```ts
+// Navegador → gateway
+  | { type: 'setImpostorCount'; impostors: number } // solo el creador, en LOBBY
+  | { type: 'setMatchDuration'; minutes: number }   // solo el creador, en LOBBY
+// Gateway → navegador: Snapshot.impostors y Snapshot.matchMinutes
+```
+
+**Reloj de la partida.** `match` ya termina la partida por tiempo (gana el infiltrado, motivo `timeout`). Para que el HUD dibuje el reloj se suma, sin romper lo anterior, `match_ends_at_tick = 21` en `Snapshot` (gRPC) y `matchEndsAtTick` en el mensaje al navegador:
+
+```ts
+// Gateway → navegador: Snapshot.matchEndsAtTick
+//   tick en que se acaba el tiempo; 0 en LOBBY y ENDED.
+//   Lo que falta = (matchEndsAtTick - tick) / 20 s.
+```
+
+- El reloj no corre durante las reuniones: `match` cuenta los ticks en `MEETING` (`meetingTicks`) y corre `matchEndsAtTick` ese mismo número, así que lo que ve el jugador queda congelado y retoma al volver a `PLAYING`. Tampoco corre en la pausa por desconexión, porque el tick de `match` no avanza. `meetingTicks` se guarda con la sala (`meeting_ticks`).
+- Si el tiempo ya está en 0 cuando empieza una reunión, la reunión se juega completa y, al volver a `PLAYING`, ganan los infiltrados con el motivo `timeout` (salvo que la votación expulse al último infiltrado, que gana el equipo).
+- El navegador solo resta ticks y dibuja (`web/src/game/matchClock.ts`); no usa su propio reloj para decidir nada.
+
+- Infiltrados: de 1 a (jugadores − 1) / 2, redondeado hacia abajo y nunca menos de 1 (`maxImpostors` en `match/internal/room/roles.go`). Si el creador no elige, vale la regla de siempre: 1, o 2 con 7 jugadores o más. Si salen jugadores y el valor elegido ya no cabe, `Snapshot.impostors` y la partida usan el tope. Fuera de rango, `match` responde `INVALID_IMPOSTOR_COUNT`.
+- Duración: de 4 a 12 minutos enteros, 8 por defecto (`minMatchMinutes` y `maxMatchMinutes` en `match/internal/room/matchconfig.go`). Fuera de rango, `match` responde `INVALID_MATCH_DURATION`. El navegador ofrece 4, 6, 8, 10 y 12 (`web/src/game/matchConfig.ts`).
+- Un invitado o una fase distinta de LOBBY se ignoran, igual que con las tareas.
+
 **Tienda: personaje y accesorio.** También se suma sin romper lo anterior (en gRPC, `PickSkin pick_skin = 13` y `SetOwned set_owned = 14` dentro de `ClientAction`, `repeated string owned = 4` en `Join` y `string skin = 10` en `PlayerView`):
 
 ```ts
@@ -167,10 +232,13 @@ players[].activity: 'reduce' | 'reuse' | 'recycle' | 'tank' | 'fix' | null; // p
   | { type: 'pickSkin'; skin: string }   // 'jimena' o 'gota', solo en LOBBY
   | { type: 'pickAccessory'; accessory: string } // 'none' lo quita
   | { type: 'refreshShop' }              // tras comprar en otra pestaña
+  | { type: 'leave' }                    // tocó «Salir»; si es el creador, match cierra la sala (host_left)
 
 // Campo nuevo del snapshot
 players[].skin: 'jimena' | 'gota';       // 'jimena' es el personaje de inicio
 ```
+
+- **Salir a propósito vs. perder la conexión:** `leave` es la única señal de que el jugador se fue por su gusto. Si lo manda el creador, `match` cierra la sala para todos (en LOBBY y en partida) con `matchEnded { winner: null, reason: 'host_left' }`, guarda la partida sin ganador y publica `match.finished` con `winner` vacío (`players` lo ignora y `monitor` lo muestra como sala cerrada). Perder la conexión no manda `leave`: se guarda el lugar durante la gracia y, si es el creador, la sala se pausa. Si lo manda otro jugador, no cambia nada.
 
 - Los personajes de **Jimena** son gratis y vienen de inicio. Las **gotas** (una por color, id `gota-<color sin #>`, como `gota-e6194b`) y los **accesorios** (id como `cap`) solo se usan si el jugador los compró en la tienda.
 - `match` no se fía del navegador: el **gateway** le pregunta a `players` qué tiene comprado y se lo pasa en `Join.owned` (y en `SetOwned` tras un `refreshShop`). `match` acepta `pickSkin: 'gota'` solo si el jugador tiene la gota de su color actual, y `pickAccessory` solo si tiene ese accesorio. Si cambia a un color cuya gota no compró, vuelve a Jimena.
@@ -185,7 +253,7 @@ players[].skin: 'jimena' | 'gota';       // 'jimena' es el personaje de inicio
 | `GET /api/me` | — (header `Authorization: Bearer <token>`) | `200 { playerId, username, coins, matchesPlayed, wins, timesImpostor, winsAsImpostor }` (las dos últimas desde S2-07) |
 | `GET /api/shop` | — | `200 { coins, items: [{ id, kind: 'character' \| 'accessory', price, owned }] }` (tienda: lo que se compra con monedas) |
 | `POST /api/shop/buy` | `{ itemId }` | `200` igual que `GET /api/shop`, con la compra hecha. `404` si el artículo no existe, `409` si ya lo tiene o no le alcanzan las monedas |
-| `GET /api/ranking` | — | `200 { entries: [{ playerId, username, matchesPlayed, wins, timesImpostor, winsAsImpostor, harvest, coinsEarned }] }`: todos los jugadores (hasta 100), de más a menos victorias; a igualdad, menos partidas y luego el nombre. `harvest` y `coinsEarned` suman todas sus partidas |
+| `GET /api/ranking` | — | `200 { entries: [{ playerId, username, matchesPlayed, wins, timesImpostor, winsAsImpostor, harvest, coinsEarned, litersSaved }] }`: todos los jugadores (hasta 100), de más a menos victorias; a igualdad, menos partidas y luego el nombre. `harvest` (puntos de cosecha), `coinsEarned` y `litersSaved` (litros que sus tareas sumaron al embalse) suman todas sus partidas; las partidas de antes de `litersSaved` cuentan 0 |
 | `POST /api/rooms` | — | `201 { roomCode, matchId }` |
 | `POST /api/rooms/:roomCode/join` | — | `200 { roomCode, matchId }` |
 
@@ -199,7 +267,7 @@ El WebSocket se abre en `/ws?token=<token>`.
 | Routing key | Lo publica | Contenido |
 |---|---|---|
 | `match.started` | `match` | `{ event_id, match_id, room_code, started_at, player_ids[] }` |
-| `match.finished` | `match` | `{ event_id, match_id, finished_at, winner: "crew" \| "impostor", players: [{ player_id, role, ejected, harvest }] }` |
+| `match.finished` | `match` | `{ event_id, match_id, finished_at, winner: "crew" \| "impostor", players: [{ player_id, role, ejected, harvest, liters_saved }] }` (`liters_saved` es opcional: los eventos anteriores no lo traen y cuentan 0) |
 | `task.completed` | `match` (semana 2) | `{ event_id, match_id, player_id, task_type, liters_saved }` |
 | `player.ejected` | `match` (semana 2) | `{ event_id, match_id, player_id, was_impostor }` |
 | `player.disconnected` | `match` (S3-04) | `{ event_id, match_id, player_id, display_name, grace_seconds, grace_ends_at, at }` |
@@ -467,7 +535,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
    ```
    Se aplica al arrancar con `golang-migrate`.
 2. `publisher.go`: conexión a RabbitMQ con `amqp091-go`, declara el exchange `game.events` (sección 0.7) y expone `Publish(ctx, routingKey string, payload any) error`, con mensajes persistentes y **publisher confirms**. Si RabbitMQ no está, reintenta conectar cada 2 segundos sin tumbar el servicio.
-3. La sala pasa de `LOBBY` a `PLAYING` cuando el creador manda una acción `Start` (agregarla al proto) con al menos 2 jugadores. En ese momento inserta en `matches` y `participants` y publica `match.started`.
+3. La sala pasa de `LOBBY` a `PLAYING` cuando el creador manda una acción `Start` (agregarla al proto) con al menos 3 jugadores. En ese momento inserta en `matches` y `participants` y publica `match.started`.
 4. **Regla temporal de la semana 1:** la partida termina sola a los 3 minutos con `winner: "crew"` y `harvest: 0`. Se guarda `ended_at` y se publica `match.finished`. Es solo para que `players` y `monitor` tengan eventos reales; en la semana 2 se reemplaza.
 
 **Criterio de verificación:** jugar una partida de 3 minutos con 2 jugadores. Al terminar, `SELECT * FROM matches` en `match-db` muestra la fila con `ended_at` y `winner`, y en la consola de RabbitMQ la cola `monitor.all` recibió exactamente 1 `match.started` y 1 `match.finished` con el formato de la sección 0.7. Con RabbitMQ apagado, el servicio sigue funcionando y el `/health` dice `"rabbitmq": "fail: ..."`.
@@ -699,7 +767,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 #### S2-01 — Contrato v1 del juego (`proto/` y `messages/`)
 
 **Pasos:**
-1. Nuevas acciones en `ClientAction` y `ClientMessage`: `Start`, `Interact { station_id }` (hacer tarea o limpiar tanque), `Contaminate { tank_slot }`, `Report { tank_slot }`, `Vote { target_player_id | skip }` y `Chat { client_msg_id, text }`.
+1. Nuevas acciones en `ClientAction` y `ClientMessage`: `Start`, `Interact { station_id }` (hacer tarea; sobre un tanque ya no hace nada), `Contaminate { tank_slot }`, `Report { tank_slot }`, `Vote { target_player_id | skip }` y `Chat { client_msg_id, text }`.
 2. Nuevos campos en `Snapshot`: `tanks[] { slot, owner_id, contamination (0 a 100), dead }`, `reservoir` (0 a 100), `my_role` (solo el del destinatario), `my_task_progress`, `meeting { reporter_id, tank_slot, votes_cast, ends_at_tick }` y `chat[]` (últimos 30 mensajes).
 3. Nuevo evento `MatchEnded { winner, impostor_id }`.
 4. Ver el rol del impostor **solo en su propio snapshot**: el gateway jamás debe recibir el rol de otros.
@@ -720,17 +788,17 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S2-03 — Tanques, contaminación y limpieza (`match/`)
+#### S2-03 — Tanques y contaminación (`match/`)
 
 **Pasos:**
 1. Cada tanque tiene `contamination` de 0 a 100.
-2. `Contaminate`: solo el impostor, a 40 unidades o menos del tanque. Requiere quedarse quieto **3 segundos** (60 ticks); si se mueve, se cancela. Al terminar, suma 35 puntos de contaminación. Tiempo de espera de 20 s entre contaminaciones.
-3. El tanque del impostor sube solo 1 punto cada 5 segundos, para que no se vea siempre limpio.
-4. Limpiar (`Interact` sobre un tanque ajeno o propio): resta 15 puntos, requiere 2 segundos quieto.
+2. `Contaminate`: solo el impostor, a 40 unidades o menos del tanque. Requiere quedarse quieto **3 segundos** (60 ticks); si se mueve, se cancela. Al terminar, suma 50 puntos de contaminación: dos contaminaciones matan un tanque. Tiempo de espera de 20 s entre contaminaciones.
+3. El tanque del impostor sube solo 1 punto cada 5 segundos, para que no se vea siempre limpio. Nunca pasa de 99 (ni por esa subida ni por la tubería): el impostor no puede quedar fuera por su propio tanque.
+4. **Nadie limpia tanques, ni los tripulantes ni el impostor:** la contaminación nunca baja, el daño es permanente. Un `Interact` sobre un tanque (lo que mandaban los clientes viejos para limpiar) se ignora; el campo `tank_slot` sigue en el contrato para no romper a nadie.
 5. Si un tanque llega a 100: `dead = true`, su dueño queda `alive = false` (fantasma: sigue moviéndose y haciendo tareas, pero no vota ni habla en la reunión).
-6. Cada contaminación, limpieza o paso a 40 unidades de un tanque se anota en `event_log (match_id, tick, player_id, kind, tank_slot)`.
+6. Cada contaminación o paso a 40 unidades de un tanque se anota en `event_log (match_id, tick, player_id, kind, tank_slot)`.
 
-**Criterio de verificación:** tests que comprueban: (a) un tripulante no puede contaminar, (b) moverse a mitad de los 3 segundos cancela, (c) el tiempo de espera de 20 s se respeta, (d) 3 contaminaciones sin limpiar matan el tanque y convierten al dueño en fantasma. En el juego, el impostor contamina un tanque y todos ven subir la barra.
+**Criterio de verificación:** tests que comprueban: (a) un tripulante no puede contaminar, (b) moverse a mitad de los 3 segundos cancela, (c) el tiempo de espera de 20 s se respeta, (d) 2 contaminaciones matan el tanque, y (e) la contaminación nunca baja y convierten al dueño en fantasma. En el juego, el impostor contamina un tanque y todos ven subir la barra.
 
 ---
 
@@ -739,7 +807,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 **Pasos:**
 1. Las estaciones de `map.json` tienen tipo `reduce` (cerrar fuga), `reuse` (recoger agua gris o de lluvia) o `recycle` (filtrar en la planta).
 2. `Interact` sobre una estación a 40 unidades o menos inicia la tarea: el servidor registra que empezó y el navegador muestra el minijuego (S2-11). Al terminar, el navegador manda `Interact` otra vez con `completed: true`, y el servidor la acepta solo si pasaron al menos 3 segundos desde el inicio y el jugador sigue cerca.
-3. Cada tarea completa suma al embalse: `reduce` +3, `reuse` +4, `recycle` +5. Cada jugador tiene 4 tareas asignadas al azar por partida.
+3. Cada tarea completa suma al embalse: `reduce` +3, `reuse` +4, `recycle` +5. Cada jugador tiene `tasksPerPlayer` tareas (4 a 8, por defecto 6) asignadas al azar por partida.
 4. Publicar `task.completed` con `liters_saved` (100 por cada punto de embalse).
 5. El impostor puede "fingir" una tarea: se le muestra el minijuego, pero no suma nada.
 
@@ -750,7 +818,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 #### S2-05 — Reportar, reunión y votación (`match/`)
 
 **Pasos:**
-1. `Report { tank_slot }`: solo sobre un tanque `dead`, a 60 unidades o menos, y por un jugador vivo. Pasa a fase `MEETING` y teletransporta a todos a la plaza.
+1. `Report { tank_slot }`: solo sobre un tanque `dead` (contaminación 100; `reported` indica que ya tuvo su reunión), a 80 unidades o menos (`reportRange`), por un jugador vivo y fuera de una reunión. Pasa a fase `MEETING` y teletransporta a todos a la plaza, igual que `CallMeeting`. Cada rechazo responde un error: `MEETING_IN_PROGRESS`, `REPORT_NOT_ALIVE`, `UNKNOWN_TANK`, `TANK_NOT_POLLUTED`, `TANK_ALREADY_REPORTED` o `REPORT_TOO_FAR`. El tanque **sigue contaminado** tras la reunión (nadie limpia tanques); `reported` evita reportarlo otra vez. El tanque del impostor se queda en 99, así que nunca se reporta.
 2. ~~`meeting.last_visitors`~~ (quitado: la reunión ya no dice quiénes pasaron por el tanque; el campo 3 de `Meeting` quedó `reserved` en `proto/match.proto`).
 3. La reunión dura 50 segundos: 45 para discutir por chat y votar (se cierra antes si todos los vivos ya votaron), y 5 de pantalla de resultado.
 4. **Chat (C):** `Chat` solo en `MEETING` y de jugadores vivos, máximo 200 caracteres, máximo 1 mensaje por segundo por jugador. Se guarda en el estado de la sala y va en los snapshots.
@@ -813,13 +881,14 @@ para el mismo usuario responde 429.
 #### S2-09 — Barras de tanques y acción de contaminar (`web/`)
 
 **Pasos:**
-1. Dibujar cada tanque del huerto con una barra de contaminación (verde a café según el valor) y el nombre del dueño. Muerto: gris con una planta marchita.
+1. Dibujar cada tanque del huerto con una barra de contaminación (verde a café según el valor) y el nombre del dueño. Contaminado al 100 % (`dead`): agua turbia y verdosa con burbujas y la última mancha de aceite, sin cartel ni texto; así se distingue a simple vista de uno al 90 %, pero la pista la tiene que ver quien pase.
 2. Indicador del embalse arriba de la pantalla, de 0 a 100 %.
-3. Botón de acción contextual (tecla `E`) que cambia según lo que haya cerca: "Hacer tarea", "Limpiar", "Reportar" o, si eres impostor, "Contaminar".
+3. Botón de acción contextual (tecla `E`) que cambia según lo que haya cerca: "Hacer tarea", "Reportar" o, si eres impostor, "Contaminar".
 4. Barra de progreso circular durante las acciones que requieren quedarse quieto.
-5. Aviso al dueño: "¡Tu tanque se está contaminando!" cuando su tanque sube, sin decir quién.
+5. ~~Aviso al dueño "¡Tu tanque se está contaminando!"~~ (quitado: el dueño no recibe aviso cuando su tanque sube; descubrir un tanque contaminado es la pista del juego).
 
-**Criterio de verificación:** en una partida de 3, el impostor ve "Contaminar" junto a un tanque ajeno y los tripulantes no. Al contaminar, el dueño recibe el aviso y todos ven la barra subir.
+6. Fantasmas: **solo hacen sus tareas**; no reportan, no convocan, no votan, no escriben y no dañan tanques (`match` rechaza reportar y convocar con `REPORT_NOT_ALIVE` y el botón E no aparece para un jugador muerto). Cada fantasma es su mismo personaje (la Jimena o la gota de su color, con su accesorio) con una cola de fantasma que se curva en lugar de las piernas, flotando y con la cola ondeando en 4 cuadros. Son sprites dibujados a mano y horneados con `web/tools/gen_ghost_sprites.py` en `public/assets/characters/jimena/ghost` y `gota/ghost`; el navegador solo elige la celda. Cuando el tanque propio llega a 0 y el jugador pasa a fantasma, el HUD muestra un aviso "Tu tanque llegó a 0".
+**Criterio de verificación:** en una partida de 3, el impostor ve "Contaminar" junto a un tanque ajeno y los tripulantes no. Al contaminar, todos ven la barra subir; el dueño no recibe aviso.
 
 ---
 
@@ -865,13 +934,14 @@ Sin esta tarea tampoco se puede verificar S2-13 jugando (completar 3 tareas y ve
     1. **Reducir (cerrar fuga, `leak-1`):** girar una válvula manteniendo presionado el clic hasta llenar una barra.
     2. **Reutilizar (agua gris, `greywater-1`):** arrastrar 3 cubetas al tanque.
     3. **Reciclar (filtrar, `filter-1` y `filter-2`):** hacer clic en 4 partículas de suciedad que flotan en el agua.
-    4. **Reducir (regular la presión, `valve-1`):** presionar el botón cuando la aguja pasa por la franja verde; 3 aciertos y la franja se encoge.
+    4. **Reducir (regular la presión, `valve-1`):** presionar el botón cuando la aguja pasa por la franja verde; 3 aciertos y la franja se encoge. Cada error revienta la junta de la tubería y deja un charco que crece (el agua que se desperdicia).
     5. **Reducir (llenar sin derramar, `valve-2`):** sostener el grifo y soltar cuando el agua pase la marca; cruzar el borde derrama y el vaso vuelve a empezar. 3 vasos.
     6. **Reutilizar (primera lluvia, `rain-1` y `rain-2`):** las gotas sucias de la primera lluvia (de 1 a 3, al azar por semilla) van al desvío y las limpias al barril; un clic cambia la compuerta de lado. 6 gotas limpias.
-    7. **Reciclar (clasificar residuos, `sorter-1`):** arrastrar 4 residuos al cajón de su color.
-    8. **Reutilizar (¿sirve para regar?, `greywater-2`):** arrastrar 4 recipientes a Regar o a Tratar según su origen.
+    7. **Reciclar (conectar las tuberías, `sorter-1`, Tuberías del ecopunto):** girar con clic los tramos de tubería para llevar el agua limpia de la fuente al tanque; el recorrido cambia en cada partida.
+    8. **Reutilizar (agua de la ducha, `greywater-2`, Ducha del laboratorio):** la ducha sale mientras se calienta y el agua se pierde por el desagüe: arrastrar el balde debajo, esperar a que se llene y llevarlo a regar la planta marchita; dos baldes.
     9. **Reducir (sellar la fuga, `leak-2`):** clic en las grietas que se abren solas para ponerles cinta; se sellan 5.
-    10. **Reciclar (capas del compost, `compost-1`):** arrastrar los sacos en orden (seco, húmedo, tierra), dos rondas.
+    10. **Reciclar (jarra filtrante, `compost-1`, Purificador de agua):** arrastrar el balde de agua turbia a la jarra, esperar a que baje por el filtro y hacer clic en la llave para llenar el vaso; dos vasos.
+    11. **Reciclar (limpiar el arroyo, `filter-2`, Arroyo del ecopunto):** sacar con un clic la basura que baja flotando antes de que llegue a la reja de la toma; 6 basuras.
     Todos los juegos nuevos respetan un mínimo de 3 s (`MIN_GAME_MS`): match rechaza tareas más rápidas (`taskMinTicks`).
 13. **Terminar:** al completar el minijuego, mandar `interact { stationId, completed: true }`. Si se completó antes de 3 s desde el inicio, esperar a que pasen antes de mandarlo (el servidor rechaza los menores de 3 s). Se cierra con `Esc`, al empezar una reunión o si `myActiveTask` deja de ser esa estación (el jugador se alejó).
 14. El impostor ve sus tareas y los minijuegos igual que un tripulante (las "finge"; `match` no suma nada).
@@ -886,10 +956,10 @@ Sin esta tarea tampoco se puede verificar S2-13 jugando (completar 3 tareas y ve
 #### S2-12 — Gotas de aceite (`web/` y `match/`)
 
 **Pasos:**
-1. **`match`:** durante 15 segundos después de contaminar, el impostor deja una gota cada 1 segundo en su posición. Las gotas van en el snapshot (`oil_drops[] { x, y, color, expires_at_tick }`).
+1. **`match`:** durante 5 segundos después de contaminar, el impostor deja una gota cada 1 segundo en su posición; cada gota dura 5 segundos. Las gotas van en el snapshot (`oil_drops[] { x, y, color, expires_at_tick }`).
 2. **`web`:** dibujar las gotas con el color del impostor, desvaneciéndose a medida que se acercan a su vencimiento.
 
-**Criterio de verificación:** tras contaminar, todos ven un rastro de gotas del color del impostor que desaparece a los 15 segundos.
+**Criterio de verificación:** tras contaminar, todos ven un rastro de gotas del color del impostor que desaparece en pocos segundos (cada gota dura 5).
 
 ---
 
@@ -924,7 +994,7 @@ Sin esta tarea tampoco se puede verificar S2-13 jugando (completar 3 tareas y ve
 1. Tabla `snapshots (match_id UUID PRIMARY KEY, tick BIGINT, state JSONB, updated_at TIMESTAMPTZ)`.
 2. Cada 2 segundos y en cada cambio de fase, la goroutine de la sala serializa su estado y hace `INSERT ... ON CONFLICT (match_id) DO UPDATE`. La escritura va en **otra goroutine**, para que la base de datos lenta no frene el ticker.
 3. Al arrancar `match`: buscar partidas con `ended_at IS NULL` y snapshot, recrear su sala en pausa y esperar a que los jugadores se reconecten.
-4. Si no queda ningún jugador conectado, la sala se pausa: el ticker sigue, pero no suma contaminación ni tiempo. **Implementado como en `deployment-lab.md`, sección 9:** la sala se pausa mientras **cualquier** jugador esté en su periodo de gracia; el snapshot lleva `paused` y `waitingFor` y el navegador muestra "Partida en pausa: esperando a X". Un corte de menos de 1 s (la página cambia el socket de la sala de espera por el de la partida, o recarga) no abre el periodo de gracia ni pausa.
+4. Si no queda ningún jugador conectado, la sala se pausa: el ticker sigue, pero no suma contaminación ni tiempo. **Implementado como en `deployment-lab.md`, sección 9:** la sala se pausa solo mientras el **host** (el creador) esté en su periodo de gracia; si se va otro jugador la partida sigue y él conserva su lugar. El snapshot lleva `paused` y `waitingFor` (todos los que están en gracia) y, en pausa, el navegador muestra "Partida en pausa: esperando a X". Un corte de menos de 1 s (la página cambia el socket de la sala de espera por el de la partida, o recarga) no abre el periodo de gracia ni pausa.
 5. **`gateway`:** el gateway, al reconectar un jugador, reabre el stream `Play` y reintenta con espera creciente si `match` todavía está arrancando. Si el stream se cae, el WebSocket sigue abierto: el navegador recibe `SERVICE_UNAVAILABLE` y el gateway reabre `Play` (0,5 s, 1 s, 2 s, 4 s, 8 s y luego cada 10 s).
 
 **Criterio de verificación:** en plena partida, `docker compose restart match`: en menos de 15 segundos todos los navegadores vuelven a la misma partida, con a lo sumo 2 segundos de movimiento perdidos, y el tiempo restante de la partida no avanzó mientras `match` estaba caído.
@@ -970,6 +1040,19 @@ Sin esta tarea tampoco se puede verificar S2-13 jugando (completar 3 tareas y ve
 - Emergencias aleatorias cada 60 a 120 s (no antes de 60 s tras un sabotaje), con el mismo aspecto que un sabotaje.
 - Visión: radio de **220 unidades** en lugar de 300, porque la cámara del mapa v3 muestra 960 × 540 unidades y con 300 casi no se notaba. El vapor la reduce a la mitad.
 - `web`: botones de sabotaje del impostor (teclas 1 y 2), aviso de emergencia, flechas hacia los puntos de arreglo y animaciones de cada actividad.
+
+---
+
+#### Mesa de reuniones (extra, después del plan)
+
+**Pasos:**
+1. Cualquier jugador vivo, a 80 unidades del marker `reunion`, puede pulsar `E` para convocar una reunión.
+2. La mesa tiene **2 convocatorias por partida** y **60 s de espera** entre una y otra; no se puede usar en los primeros **30 s**, durante una emergencia ni en una reunión.
+3. `CallMeeting` abre la misma fase `MEETING` que un reporte, pero `Meeting.reason = 'emergency'` y `tankSlot = -1`. El HUD muestra quién convocó.
+4. El servidor teletransporta a todos en dos arcos frente a la mesa, no en una rejilla debajo.
+5. La mesa muestra el estado en `Snapshot.myMeeting`; el cliente solo dibuja y manda la intención.
+
+**Criterio de verificación:** con 4 personas, acercarse a la mesa muestra `E Llamar reunión`; convocar abre la reunión correctamente, gasta una convocatoria y respeta la espera. Un fantasma, una emergencia activa o un jugador lejano no pueden convocar.
 
 ---
 

@@ -4,15 +4,21 @@ import type {
   ClientMessage,
   Emergency,
   EmergencyKind,
+  MeetingButton,
   MyTask,
   PlayerView,
   Role,
   TankView,
 } from '@in-filtrados/messages';
-import type { GameMap } from '../map';
+import { type GameMap, meetingMarker } from '../map';
 import { ACTION_TEXT, GAME_RULES } from '../constants';
 
-export type ActionKind = 'task' | 'clean' | 'report' | 'contaminate' | 'fix';
+export type ActionKind =
+  | 'task'
+  | 'report'
+  | 'contaminate'
+  | 'fix'
+  | 'meeting';
 
 export type Action = {
   kind: ActionKind;
@@ -28,7 +34,8 @@ export type Action = {
 // contextAction devuelve la acción para lo que tiene cerca el jugador, con
 // esta prioridad: arreglar la emergencia activa (S3-05), reportar un
 // tanque muerto, contaminar (solo el impostor junto a un tanque ajeno),
-// limpiar y hacer tarea. null si no hay nada.
+// y hacer tarea. Nadie limpia tanques: el daño es permanente. null si no
+// hay nada.
 // reported son los tanques que ya tuvieron reunión: no se reportan otra
 // vez y no deben tapar lo que haya cerca.
 export function contextAction(
@@ -41,6 +48,8 @@ export function contextAction(
   reported: ReadonlySet<number> = new Set(),
   myTasks?: readonly MyTask[],
   emergency: Emergency | null = null,
+  meeting: MeetingButton | null = null,
+  tick = 0,
 ): Action | null {
   const tankPos = (slot: number) => map.tanks.find((t) => t.slot === slot);
   const nearestTank = (
@@ -82,7 +91,7 @@ export function contextAction(
   if (me.alive) {
     const dead = nearestTank(
       GAME_RULES.REPORT_RANGE,
-      (t) => t.dead && !reported.has(t.slot),
+      (t) => t.dead && !t.reported && !reported.has(t.slot),
     );
     if (dead) {
       return {
@@ -90,6 +99,37 @@ export function contextAction(
         label: ACTION_TEXT.REPORT,
         enabled: true,
         tankSlot: dead.slot,
+      };
+    }
+
+    const table = meetingMarker(map);
+    if (
+      meeting &&
+      table &&
+      emergency === null &&
+      distance(me.x, me.y, table.x, table.y) <= GAME_RULES.MEETING_RANGE
+    ) {
+      if (meeting.callsLeft <= 0) {
+        return {
+          kind: 'meeting',
+          label: ACTION_TEXT.NO_MEETINGS,
+          enabled: false,
+        };
+      }
+      if (tick < meeting.readyAtTick) {
+        const wait = Math.ceil(
+          (meeting.readyAtTick - tick) / GAME_RULES.TICKS_PER_SECOND,
+        );
+        return {
+          kind: 'meeting',
+          label: ACTION_TEXT.meetingWait(wait),
+          enabled: false,
+        };
+      }
+      return {
+        kind: 'meeting',
+        label: ACTION_TEXT.CALL_MEETING,
+        enabled: true,
       };
     }
 
@@ -110,19 +150,6 @@ export function contextAction(
           tankSlot: target.slot,
         };
       }
-    }
-
-    const dirty = nearestTank(
-      GAME_RULES.TANK_RANGE,
-      (t) => !t.dead && t.contamination > 0,
-    );
-    if (dirty) {
-      return {
-        kind: 'clean',
-        label: ACTION_TEXT.CLEAN,
-        enabled: true,
-        tankSlot: dirty.slot,
-      };
     }
   }
 
@@ -158,12 +185,12 @@ export function actionMessage(action: Action): ClientMessage {
       return { type: 'report', tankSlot: action.tankSlot! };
     case 'contaminate':
       return { type: 'contaminate', tankSlot: action.tankSlot! };
-    case 'clean':
-      return { type: 'interact', tankSlot: action.tankSlot! };
     case 'task':
       return { type: 'interact', stationId: action.stationId! };
     case 'fix':
       return { type: 'fix', pointId: action.pointId! };
+    case 'meeting':
+      return { type: 'callMeeting' };
   }
 }
 
@@ -172,13 +199,12 @@ export function holdDuration(kind: ActionKind): number {
   switch (kind) {
     case 'contaminate':
       return GAME_RULES.CONTAMINATE_MS;
-    case 'clean':
-      return GAME_RULES.CLEAN_MS;
     case 'task':
       return GAME_RULES.TASK_MS;
     case 'fix':
       return GAME_RULES.STEAM_FIX_MS;
     case 'report':
+    case 'meeting':
       return 0;
   }
 }
@@ -224,23 +250,6 @@ export class HoldAction {
       other.pointId === this.action.pointId
     );
   }
-}
-
-// tankRose: el tanque del dueño subió lo bastante para avisarle. No dice
-// quién lo contaminó; el snapshot tampoco lo sabe. Al impostor nunca le
-// avisa porque su tanque sube solo (driftImpostorTanks en match).
-export function tankRose(
-  prev: TankView[],
-  next: TankView[],
-  ownerId: string,
-  role?: Role,
-): boolean {
-  if (role === 'IMPOSTOR') return false;
-  const before = prev.find((t) => t.ownerId === ownerId);
-  const after = next.find((t) => t.ownerId === ownerId);
-  if (!before || !after) return false;
-  const rise = after.contamination - before.contamination;
-  return rise >= GAME_RULES.TANK_ALERT_MIN_RISE;
 }
 
 function distance(ax: number, ay: number, bx: number, by: number): number {
