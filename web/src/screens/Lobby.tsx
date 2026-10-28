@@ -29,12 +29,17 @@ import { BACKGROUNDS } from './backgrounds';
 import { useGame } from './game/useGame';
 import { FEATURES } from '../features';
 import { shownTaskCount, taskCountOptions } from '../game/taskCount';
+import {
+  MATCH_MINUTES_OPTIONS,
+  impostorOptions,
+  shownImpostors,
+  shownMatchMinutes,
+} from '../game/matchConfig';
 import '../styles/lobby.css';
 
 const NO_ACCESSORY = 'none';
 const MAX_SLOTS = 10;
 const MIN_PLAYERS = 2;
-const TWO_IMPOSTORS_FROM = 7;
 
 function equippedSummary(
   skin: string,
@@ -46,6 +51,48 @@ function equippedSummary(
       ? LOBBY_TEXT.NO_ACCESSORY
       : accessoryName(accessory);
   return `${skin}  |  ${colorName(color)}  |  ${acc}`;
+}
+
+// Una fila de ajuste de la partida: el creador elige entre las opciones y
+// los demás solo ven lo elegido.
+function ConfigRow(props: {
+  label: string;
+  editable: boolean;
+  options: number[];
+  value: number;
+  pill: (n: number) => string;
+  summary: (n: number) => string;
+  onPick: (n: number) => void;
+}) {
+  return (
+    <div className="lobby-config-row">
+      <span className="lobby-control-title">{props.label}</span>
+      {props.editable ? (
+        <div
+          className="lobby-config-options"
+          role="radiogroup"
+          aria-label={props.label}
+        >
+          {props.options.map((n) => (
+            <button
+              key={n}
+              type="button"
+              role="radio"
+              aria-checked={n === props.value}
+              className={`lobby-pill-opt ${
+                n === props.value ? 'active' : ''
+              }`}
+              onClick={() => n !== props.value && props.onPick(n)}
+            >
+              {props.pill(n)}
+            </button>
+          ))}
+        </div>
+      ) : (
+        <span className="lobby-config-value">{props.summary(props.value)}</span>
+      )}
+    </div>
+  );
 }
 
 // Lobby: sala de espera unificada con distribución balanceada y separadores.
@@ -101,6 +148,8 @@ export function Lobby(props: {
   const host = players[0];
   const isHost = Boolean(data?.isCreator);
   const tasksPerPlayer = shownTaskCount(snap?.tasksPerPlayer);
+  const impostors = shownImpostors(snap?.impostors);
+  const matchMinutes = shownMatchMinutes(snap?.matchMinutes);
   const connected = players.filter((p) => p.connected).length;
 
   const myColor =
@@ -171,7 +220,6 @@ export function Lobby(props: {
   };
 
   const code = data?.roomCode ?? '----';
-  const impostors = players.length >= TWO_IMPOSTORS_FROM ? 2 : 1;
   const skinDisplay =
     mySkin === SKIN_GOTA
       ? LOBBY_TEXT.CHARACTER_GOTA
@@ -453,58 +501,41 @@ export function Lobby(props: {
           </div>
 
           <div className="lobby-action-footer">
-            <div className="lobby-match-badges">
-              <span className="lobby-match-badge-item">
-                {gameMap.name}
-              </span>
-              <span className="lobby-match-badge-sep">|</span>
-              <span className="lobby-match-badge-item">
-                {LOBBY_TEXT.impostors(impostors)}
-              </span>
-              <span className="lobby-match-badge-sep">|</span>
-              <span className="lobby-match-badge-item">
-                {LOBBY_TEXT.tasks(tasksPerPlayer)}
-              </span>
-              <span className="lobby-match-badge-sep">|</span>
-              <span className="lobby-match-badge-item">
-                {LOBBY_TEXT.DURATION}
-              </span>
+            <div className="lobby-config">
+              <ConfigRow
+                label={LOBBY_TEXT.IMPOSTORS_LABEL}
+                editable={isHost}
+                options={impostorOptions(players.length)}
+                value={impostors}
+                pill={(n) => String(n)}
+                summary={LOBBY_TEXT.impostors}
+                onPick={(n) =>
+                  props.game.send({ type: 'setImpostorCount', impostors: n })
+                }
+              />
+              <ConfigRow
+                label={LOBBY_TEXT.TASK_COUNT}
+                editable={isHost}
+                options={taskCountOptions()}
+                value={tasksPerPlayer}
+                pill={(n) => String(n)}
+                summary={LOBBY_TEXT.tasks}
+                onPick={(n) =>
+                  props.game.send({ type: 'setTaskCount', tasksPerPlayer: n })
+                }
+              />
+              <ConfigRow
+                label={LOBBY_TEXT.DURATION_LABEL}
+                editable={isHost}
+                options={[...MATCH_MINUTES_OPTIONS]}
+                value={matchMinutes}
+                pill={LOBBY_TEXT.minutes}
+                summary={LOBBY_TEXT.minutes}
+                onPick={(n) =>
+                  props.game.send({ type: 'setMatchDuration', minutes: n })
+                }
+              />
             </div>
-
-            {isHost && (
-              <div className="lobby-task-count">
-                <span className="lobby-control-title">
-                  {LOBBY_TEXT.TASK_COUNT}
-                </span>
-                <div
-                  className="lobby-skin-options"
-                  role="radiogroup"
-                  aria-label={LOBBY_TEXT.TASK_COUNT}
-                >
-                  {taskCountOptions().map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      role="radio"
-                      aria-checked={n === tasksPerPlayer}
-                      className={`lobby-pill-opt ${
-                        n === tasksPerPlayer ? 'active' : ''
-                      }`}
-                      onClick={() => {
-                        if (n !== tasksPerPlayer) {
-                          props.game.send({
-                            type: 'setTaskCount',
-                            tasksPerPlayer: n,
-                          });
-                        }
-                      }}
-                    >
-                      {n}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {isHost && connected < MIN_PLAYERS && (
               <div className="lobby-min-players-alert">

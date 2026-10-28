@@ -25,6 +25,8 @@ type savedRoom struct {
 	MatchID        string            `json:"match_id"`
 	CreatorID      string            `json:"creator_id"`
 	TasksPerPlayer int               `json:"tasks_per_player,omitempty"`
+	Impostors      int               `json:"impostors,omitempty"`
+	MatchMinutes   int               `json:"match_minutes,omitempty"`
 	Phase          matchv1.Phase     `json:"phase"`
 	Tick           int64             `json:"tick"`
 	StartTick      int64             `json:"start_tick"`
@@ -158,6 +160,8 @@ func (r *Room) toSaved() savedRoom {
 		MatchID:        r.MatchID,
 		CreatorID:      r.creatorID,
 		TasksPerPlayer: r.tasksPerPlayer,
+		Impostors:      r.impostors,
+		MatchMinutes:   int(r.matchDuration / time.Minute),
 		Phase:          r.phase,
 		Tick:           r.tick,
 		StartTick:      r.startTick,
@@ -270,6 +274,12 @@ func Restore(state []byte, m *Map, opts ...Option) (*Room, error) {
 	r.creatorID = s.CreatorID
 	if validTaskCount(s.TasksPerPlayer) {
 		r.tasksPerPlayer = s.TasksPerPlayer
+	}
+	if s.Impostors >= 1 {
+		r.impostors = s.Impostors
+	}
+	if validMatchMinutes(s.MatchMinutes) {
+		r.matchDuration = time.Duration(s.MatchMinutes) * time.Minute
 	}
 	r.phase = s.Phase
 	if r.phase == matchv1.Phase_ENDED {

@@ -153,6 +153,8 @@ function toSnapshot(s: GrpcSnapshot): Snapshot {
         }
       : null,
     tasksPerPlayer: s.tasksPerPlayer ?? 0,
+    impostors: s.impostors ?? 0,
+    matchMinutes: s.matchMinutes ?? 0,
   };
 }
 

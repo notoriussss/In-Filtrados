@@ -31,6 +31,7 @@ type Room struct {
 
 	creatorID      string
 	tasksPerPlayer int // 4 a 8; lo elige el creador en LOBBY
+	impostors      int // 0 = sin elegir: impostorCount(jugadores)
 	publisher      events.Publisher
 	store          MatchStore
 	matchDuration  time.Duration
@@ -238,6 +239,10 @@ func (r *Room) handleAction(a PlayerAction) {
 		r.pickColor(p, a.Color)
 	case a.SetTaskCount:
 		r.setTaskCount(a.PlayerID, p, a.TaskCount)
+	case a.SetImpostorCount:
+		r.setImpostorCount(a.PlayerID, p, a.ImpostorCount)
+	case a.SetMatchMinutes:
+		r.setMatchMinutes(a.PlayerID, p, a.MatchMinutes)
 	case a.PickAccessory:
 		r.pickAccessory(p, a.Accessory)
 	case a.PickSkin:
@@ -770,7 +775,7 @@ func (r *Room) assignRoles() error {
 		ids = append(ids, id)
 	}
 	sort.Strings(ids)
-	impostors, err := pickImpostors(ids, r.rnd)
+	impostors, err := pickImpostors(ids, r.impostorsNow(), r.rnd)
 	if err != nil {
 		return err
 	}
@@ -954,6 +959,8 @@ func (r *Room) sendTo(p *player, s sharedState) {
 		MyMeeting:    r.meetingButtonView(),
 
 		TasksPerPlayer: int32(r.tasksPerPlayer),
+		Impostors:      int32(r.impostorsNow()),
+		MatchMinutes:   int32(r.matchDuration / time.Minute),
 	}
 	ev := &matchv1.ServerEvent{
 		Event: &matchv1.ServerEvent_Snapshot{

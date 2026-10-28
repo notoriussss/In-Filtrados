@@ -139,6 +139,26 @@ test('setTaskCount needs an integer; match checks the range', () => {
   assert.equal(parse({ type: 'setTaskCount', tasksPerPlayer: null }), null);
 });
 
+test('setImpostorCount needs an integer; match checks the range', () => {
+  assert.deepEqual(
+    toGrpcAction(parse({ type: 'setImpostorCount', impostors: 2 })!),
+    { setImpostorCount: { impostors: 2 } },
+  );
+  assert.equal(parse({ type: 'setImpostorCount' }), null);
+  assert.equal(parse({ type: 'setImpostorCount', impostors: 1.5 }), null);
+  assert.equal(parse({ type: 'setImpostorCount', impostors: '2' }), null);
+});
+
+test('setMatchDuration needs an integer; match checks the range', () => {
+  assert.deepEqual(
+    toGrpcAction(parse({ type: 'setMatchDuration', minutes: 10 })!),
+    { setMatchDuration: { minutes: 10 } },
+  );
+  assert.equal(parse({ type: 'setMatchDuration' }), null);
+  assert.equal(parse({ type: 'setMatchDuration', minutes: 7.5 }), null);
+  assert.equal(parse({ type: 'setMatchDuration', minutes: null }), null);
+});
+
 test('pickAccessory needs a short accessory string', () => {
   assert.deepEqual(
     toGrpcAction(parse({ type: 'pickAccessory', accessory: 'straw-hat' })!),

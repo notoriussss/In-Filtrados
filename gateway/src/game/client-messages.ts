@@ -72,6 +72,14 @@ export function parseClientMessage(raw: string): ClientMessage | null {
         type: 'setTaskCount',
         tasksPerPlayer: msg.tasksPerPlayer,
       };
+    case 'setImpostorCount':
+      // match revisa el rango (1 a (jugadores - 1) / 2), la fase y el creador.
+      if (!Number.isInteger(msg.impostors)) return null;
+      return { type: 'setImpostorCount', impostors: msg.impostors };
+    case 'setMatchDuration':
+      // match revisa el rango (4 a 12), la fase y que sea el creador.
+      if (!Number.isInteger(msg.minutes)) return null;
+      return { type: 'setMatchDuration', minutes: msg.minutes };
     case 'pickAccessory':
       if (!isShortString(msg.accessory, MAX_ACCESSORY_LENGTH)) {
         return null;
@@ -131,6 +139,10 @@ export function toGrpcAction(msg: ClientMessage): object | null {
       return {
         setTaskCount: { tasksPerPlayer: msg.tasksPerPlayer },
       };
+    case 'setImpostorCount':
+      return { setImpostorCount: { impostors: msg.impostors } };
+    case 'setMatchDuration':
+      return { setMatchDuration: { minutes: msg.minutes } };
     case 'pickAccessory':
       return { pickAccessory: { accessory: msg.accessory } };
     case 'pickSkin':

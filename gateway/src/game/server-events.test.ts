@@ -75,6 +75,8 @@ test('snapshot keeps only the fields of the contract', () => {
     mySabotage: null,
     myMeeting: null,
     tasksPerPlayer: 0,
+    impostors: 0,
+    matchMinutes: 0,
   });
 });
 
@@ -132,6 +134,8 @@ test('snapshot with meeting result maps ejectedId', () => {
     mySabotage: null,
     myMeeting: null,
     tasksPerPlayer: 0,
+    impostors: 0,
+    matchMinutes: 0,
   });
 });
 
@@ -373,6 +377,16 @@ test('S3-05: an unknown emergency kind is dropped', () => {
   assert.ok(msg && msg.type === 'snapshot');
   assert.equal(msg.emergency, null);
   assert.equal(msg.mySabotage, null);
+});
+
+test('snapshot carries the chosen impostors and matchMinutes', () => {
+  const ev = {
+    event: 'snapshot',
+    snapshot: { tick: 1, phase: 'LOBBY', impostors: 3, matchMinutes: 10 },
+  } as unknown as GrpcServerEvent;
+  const msg = toServerMessage(ev);
+  assert.equal(msg?.type === 'snapshot' && msg.impostors, 3);
+  assert.equal(msg?.type === 'snapshot' && msg.matchMinutes, 10);
 });
 
 test('snapshot carries the chosen tasksPerPlayer', () => {

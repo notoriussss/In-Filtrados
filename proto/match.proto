@@ -48,6 +48,10 @@ message ClientAction {
     CallMeeting   call_meeting   = 15;
     // Elegir cuántas tareas hace cada jugador (solo el creador, en LOBBY).
     SetTaskCount  set_task_count = 16;
+    // Elegir cuántos infiltrados hay (solo el creador, en LOBBY).
+    SetImpostorCount set_impostor_count = 18;
+    // Elegir cuántos minutos dura la partida (solo el creador, en LOBBY).
+    SetMatchDuration set_match_duration = 19;
     // Salir a propósito de la sala (distinto de perder la conexión).
     Leave         leave          = 17;
   }
@@ -134,6 +138,19 @@ message PickSkin {
 message SetTaskCount {
   int32 tasks_per_player = 1;
 }
+// SetImpostorCount: solo el creador y solo en LOBBY. impostors va de 1 a
+// (jugadores - 1) / 2, con 1 como mínimo; fuera de ese rango match responde un
+// Error INVALID_IMPOSTOR_COUNT y deja el valor como estaba. Sin elegir, son 2
+// con 7 jugadores o más y 1 con menos.
+message SetImpostorCount {
+  int32 impostors = 1;
+}
+// SetMatchDuration: solo el creador y solo en LOBBY. minutes debe estar entre
+// 4 y 12; fuera de ese rango match responde un Error INVALID_MATCH_DURATION y
+// deja el valor como estaba. Sin elegir, son 8.
+message SetMatchDuration {
+  int32 minutes = 1;
+}
 // SetOwned: reemplaza lo comprado de quien lo manda (tras una compra).
 message SetOwned {
   repeated string items = 1;
@@ -190,6 +207,10 @@ message Snapshot {
   // Tareas que hace cada jugador (cuidador o impostor); 4 a 8, por
   // defecto 6. Se ve en LOBBY para que todos sepan qué eligió el creador.
   int32          tasks_per_player = 18;
+  // Infiltrados de la partida (ya recortados al máximo de los jugadores que
+  // hay) y minutos que dura. Se ven en LOBBY.
+  int32          impostors     = 19;
+  int32          match_minutes = 20;
 }
 // Emergency: tubería rota o vapor en la planta (S3-05).
 message Emergency {

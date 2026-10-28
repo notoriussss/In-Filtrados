@@ -17,7 +17,7 @@ func TestPickImpostorsIsFair(t *testing.T) {
 	ids := []string{"a", "b", "c", "d", "e"}
 	times := make(map[string]int)
 	for i := 0; i < 1000; i++ {
-		picked, err := pickImpostors(ids, rand.Reader)
+		picked, err := pickImpostors(ids, 1, rand.Reader)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -44,7 +44,11 @@ func TestImpostorCount(t *testing.T) {
 		for i := range ids {
 			ids[i] = fmt.Sprintf("p%d", i)
 		}
-		picked, err := pickImpostors(ids, rand.Reader)
+		picked, err := pickImpostors(
+			ids,
+			impostorCount(len(ids)),
+			rand.Reader,
+		)
 		if err != nil {
 			t.Fatal(err)
 		}

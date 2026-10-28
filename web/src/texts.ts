@@ -129,7 +129,9 @@ export const LOBBY_TEXT = {
   tasks: (n: number) => `${n} tareas`,
   TASK_COUNT: 'Tareas por jugador',
   taskCountOption: (n: number) => `${n} tareas`,
-  DURATION: '8 min',
+  IMPOSTORS_LABEL: 'Infiltrados',
+  DURATION_LABEL: 'Duración',
+  minutes: (n: number) => `${n} min`,
   onlyHost: (name: string) => `Solo ${name} puede iniciar la partida.`,
   HOW_TO_WIN: 'Cómo se gana',
   WIN_CREW:
@@ -145,7 +147,7 @@ export const LOBBY_TEXT = {
 
 export const HELP_TEXT = {
   TITLE: 'Cómo jugar In-Filtrados',
-  DURATION: 'Una partida dura hasta 8 minutos',
+  DURATION: 'Quien crea la sala elige cuánto dura la partida',
   TASKS: 'Las 3R: tus tareas',
   REDUCE_SUB: 'Evita el desperdicio',
   REDUCE_1: 'Repara fugas y cierra válvulas de la estación.',

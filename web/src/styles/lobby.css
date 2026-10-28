@@ -505,50 +505,49 @@
 .scr-lobby .lobby-action-footer {
   display: flex;
   flex-direction: column;
-  margin-top: 36px;
-  padding-top: 26px;
+  margin-top: 22px;
+  padding-top: 18px;
   border-top: 1.5px solid rgba(126, 230, 216, 0.2);
 }
 
-/* Barra de metadatos de partida: holgada y separada de los slots */
-.scr-lobby .lobby-match-badges {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-  width: 100%;
-  padding: 12px 20px;
-  background: rgba(4, 16, 31, 0.7);
-  border: 1px solid rgba(126, 230, 216, 0.22);
-  border-radius: 8px;
-}
-
-.scr-lobby .lobby-match-badge-item {
-  font-family: var(--head);
-  font-size: 15px;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: #fff;
-  white-space: nowrap;
-}
-
-.scr-lobby .lobby-match-badge-sep {
-  color: rgba(126, 230, 216, 0.4);
-  font-size: 15px;
-}
-
-/* Selector de tareas por jugador (solo el anfitrión) */
-.scr-lobby .lobby-task-count {
+/* Ajustes de la partida: una fila por ajuste, etiqueta + opciones */
+.scr-lobby .lobby-config {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-top: 22px;
+}
+
+.scr-lobby .lobby-config-row {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  align-items: center;
+  gap: 16px;
+}
+
+.scr-lobby .lobby-config-row .lobby-control-title {
+  margin: 0;
+}
+
+.scr-lobby .lobby-config-options {
+  display: flex;
+  gap: 10px;
+}
+
+.scr-lobby .lobby-config-options .lobby-pill-opt {
+  height: 42px;
+}
+
+.scr-lobby .lobby-config-value {
+  font-family: var(--head);
+  font-size: 18px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #fff;
 }
 
 /* Aviso de mínimo de jugadores con margen holgado arriba y abajo */
 .scr-lobby .lobby-min-players-alert {
-  margin-top: 34px;
-  margin-bottom: 10px;
+  margin-top: 14px;
   font-family: var(--head);
   font-size: 15px;
   letter-spacing: 2px;
@@ -560,7 +559,7 @@
 
 /* Botón principal de Iniciar Partida ubicado más abajo y separado del texto */
 .scr-lobby .lobby-main-cta {
-  margin-top: 84px;
+  margin-top: 18px;
   height: 68px;
   font-family: var(--logo);
   font-size: 24px;
@@ -589,7 +588,7 @@
 }
 
 .scr-lobby .lobby-guest-notice {
-  margin-top: 84px;
+  margin-top: 18px;
   height: 68px;
   display: flex;
   align-items: center;

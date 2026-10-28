@@ -25,6 +25,13 @@ export type ClientMessage =
   // creador y solo en LOBBY; fuera de rango match responde un error
   // INVALID_TASK_COUNT.
   | { type: 'setTaskCount'; tasksPerPlayer: number }
+  // Cuántos infiltrados hay: de 1 a (jugadores - 1) / 2. Solo el creador y
+  // solo en LOBBY; fuera de rango match responde INVALID_IMPOSTOR_COUNT.
+  | { type: 'setImpostorCount'; impostors: number }
+  // Cuántos minutos dura la partida (4 a 12, por defecto 8). Solo el
+  // creador y solo en LOBBY; fuera de rango match responde
+  // INVALID_MATCH_DURATION.
+  | { type: 'setMatchDuration'; minutes: number }
   // Elegir accesorio en LOBBY.
   | { type: 'pickAccessory'; accessory: string }
   // Personaje en LOBBY: 'jimena' (de inicio) o 'gota' (comprada, de tu color).
@@ -89,6 +96,10 @@ export type Snapshot = {
   myMeeting: MeetingButton | null;
   // Tareas que hace cada jugador (cuidador o impostor); 4 a 8.
   tasksPerPlayer: number;
+  // Infiltrados de la partida (ya recortados al tope de los jugadores que
+  // hay) y minutos que dura; se ven en LOBBY.
+  impostors: number;
+  matchMinutes: number;
 };
 
 export type MeetingButton = {
@@ -192,4 +203,6 @@ export type ErrorCode =
   | 'MATCH_NOT_FOUND'
   | 'SERVICE_UNAVAILABLE'
   | 'BAD_MESSAGE'
-  | 'INVALID_TASK_COUNT';
+  | 'INVALID_TASK_COUNT'
+  | 'INVALID_IMPOSTOR_COUNT'
+  | 'INVALID_MATCH_DURATION';

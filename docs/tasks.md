@@ -200,6 +200,19 @@ players[].activity: 'reduce' | 'reuse' | 'recycle' | 'tank' | 'fix' | null; // p
 - Cada jugador, cuidador o impostor, recibe `tasksPerPlayer` tareas. El rango es de 4 a 8 y el valor por defecto es 6; `match` lo define (`minTasksPerPlayer`, `maxTasksPerPlayer`, `defaultTasksPerPlayer` en `match/internal/room/state.go`) y el navegador solo lo dibuja (`web/src/game/taskCount.ts`).
 - Fuera de rango, `match` no cambia nada y responde un error `INVALID_TASK_COUNT` ("La cantidad de tareas debe estar entre 4 y 8"). Un invitado o una fase distinta de LOBBY se ignoran.
 
+**Infiltrados y duración de la partida.** También se suman sin romper lo anterior (en gRPC, `SetImpostorCount set_impostor_count = 18` y `SetMatchDuration set_match_duration = 19` dentro de `ClientAction`, y `impostors = 19` y `match_minutes = 20` en `Snapshot`):
+
+```ts
+// Navegador → gateway
+  | { type: 'setImpostorCount'; impostors: number } // solo el creador, en LOBBY
+  | { type: 'setMatchDuration'; minutes: number }   // solo el creador, en LOBBY
+// Gateway → navegador: Snapshot.impostors y Snapshot.matchMinutes
+```
+
+- Infiltrados: de 1 a (jugadores − 1) / 2, redondeado hacia abajo y nunca menos de 1 (`maxImpostors` en `match/internal/room/roles.go`). Si el creador no elige, vale la regla de siempre: 1, o 2 con 7 jugadores o más. Si salen jugadores y el valor elegido ya no cabe, `Snapshot.impostors` y la partida usan el tope. Fuera de rango, `match` responde `INVALID_IMPOSTOR_COUNT`.
+- Duración: de 4 a 12 minutos enteros, 8 por defecto (`minMatchMinutes` y `maxMatchMinutes` en `match/internal/room/matchconfig.go`). Fuera de rango, `match` responde `INVALID_MATCH_DURATION`. El navegador ofrece 4, 6, 8, 10 y 12 (`web/src/game/matchConfig.ts`).
+- Un invitado o una fase distinta de LOBBY se ignoran, igual que con las tareas.
+
 **Tienda: personaje y accesorio.** También se suma sin romper lo anterior (en gRPC, `PickSkin pick_skin = 13` y `SetOwned set_owned = 14` dentro de `ClientAction`, `repeated string owned = 4` en `Join` y `string skin = 10` en `PlayerView`):
 
 ```ts

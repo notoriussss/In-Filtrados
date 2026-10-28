@@ -33,6 +33,8 @@ function snap(paused: boolean, waitingFor: string[]): Snapshot {
     mySabotage: null,
     myMeeting: null,
     tasksPerPlayer: 6,
+    impostors: 1,
+    matchMinutes: 8,
   };
 }
 

@@ -347,6 +347,20 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 					SetTaskCount: true,
 					TaskCount:    msg.GetSetTaskCount().GetTasksPerPlayer(),
 				})
+			case msg.GetSetImpostorCount() != nil:
+				r.Act(room.PlayerAction{
+					PlayerID:         playerID,
+					SetImpostorCount: true,
+					ImpostorCount: msg.GetSetImpostorCount().
+						GetImpostors(),
+				})
+			case msg.GetSetMatchDuration() != nil:
+				r.Act(room.PlayerAction{
+					PlayerID:        playerID,
+					SetMatchMinutes: true,
+					MatchMinutes: msg.GetSetMatchDuration().
+						GetMinutes(),
+				})
 			case msg.GetPickAccessory() != nil:
 				r.Act(room.PlayerAction{
 					PlayerID:      playerID,

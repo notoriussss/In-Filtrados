@@ -169,6 +169,13 @@ type PlayerAction struct {
 	SetTaskCount bool
 	TaskCount    int32
 
+	// Elegir cuántos infiltrados hay y cuántos minutos dura la partida
+	// (solo el creador, en LOBBY).
+	SetImpostorCount bool
+	ImpostorCount    int32
+	SetMatchMinutes  bool
+	MatchMinutes     int32
+
 	// Elegir accesorio en la sala de espera.
 	PickAccessory bool
 	Accessory     string
@@ -190,6 +197,7 @@ func (a PlayerAction) isMove() bool {
 	return !a.Start && !a.Contaminate && !a.InteractTask &&
 		!a.Report && !a.Vote && !a.Chat && !a.Sabotage && !a.Fix &&
 		!a.CallMeeting && !a.SetTaskCount &&
+		!a.SetImpostorCount && !a.SetMatchMinutes &&
 		!a.PickColor && !a.PickAccessory && !a.PickSkin && !a.SetOwned &&
 		!a.Leave
 }
