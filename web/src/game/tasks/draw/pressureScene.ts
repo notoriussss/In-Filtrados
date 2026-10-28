@@ -20,7 +20,9 @@ import { roomLayer } from './room';
 // aguja barriendo su carátula; hay que presionar el botón cuando el
 // nivel pasa por la franja verde, que se encoge con cada acierto. Una
 // presión mal regulada desperdicia agua: cada error revienta la junta de
-// la tubería y deja un charco en el piso que crece.
+// la tubería y deja un charco en el piso que crece. Cada acierto, en
+// cambio, abre la boquilla de riego: el agua sale normal, cae a la maceta
+// y la planta crece.
 
 const INNER = {
   top: PRESSURE_TUBE.y + 10,
@@ -40,6 +42,11 @@ const PUDDLE = { x: 52, y: HERO_FEET_Y };
 const LEAK_MAX = 4;
 const SPRAY_MS = 650;
 const GRAVITY = 420;
+
+// La boquilla de riego a la derecha del acumulador y la maceta que riega.
+const NOZZLE = { x: 233, y: 114 };
+const POT = { x: 223, y: 226, w: 20, h: 18 };
+const FLOW_MS = 900;
 
 type Bit = { x: number; y: number; vx: number; vy: number };
 
@@ -75,6 +82,17 @@ function drawFixtures(c: CanvasRenderingContext2D): void {
   ]) {
     px(c, b.x + rx, b.y + ry, PX, PX, C.metalHi);
   }
+  // Boquilla de riego: sale del acumulador y apunta a la maceta.
+  px(c, t.x + t.w + 6, 96, 22, 10, C.metalInk);
+  px(c, t.x + t.w + 6, 98, 22, 6, C.metalMid);
+  px(c, t.x + t.w + 6, 98, 22, PX, C.metalHi);
+  px(c, NOZZLE.x - 6, 100, 12, 14, C.metalInk);
+  px(c, NOZZLE.x - 4, 102, 8, 12, C.metalDark);
+  // Maceta con tierra.
+  px(c, POT.x - 2, POT.y - 2, POT.w + 4, POT.h + 2, C.metalInk);
+  px(c, POT.x, POT.y, POT.w, POT.h, C.coralLo);
+  px(c, POT.x, POT.y, POT.w, 4, C.dirt);
+  px(c, POT.x, POT.y + 4, POT.w, PX, C.coral);
   // Marco de las luces de acierto.
   px(c, LAMPS.x - 6, LAMPS.y - 6, 62, 22, C.metalInk);
   px(c, LAMPS.x - 4, LAMPS.y - 4, 58, 18, C.metalDeep);
@@ -89,6 +107,7 @@ export class PressureScene implements Scene {
   private tapAt = -1e9;
   private missAt = -1e9;
   private sprayAt = -1e9;
+  private flowAt = -1e9; // cuando se abrió la boquilla de riego
   private leaks = 0; // errores de presión: tamaño del charco
   private readonly bits: Bit[] = [];
   private doneAt: number | null = null;
@@ -115,7 +134,9 @@ export class PressureScene implements Scene {
     this.updateSpray(now, dt);
     ctx.drawImage(this.back, 0, 0, BOARD.w, BOARD.h);
     this.drawPuddle(ctx);
+    this.drawPlant(ctx, now);
     this.drawWater(ctx, now);
+    this.drawStream(ctx, now);
     this.drawLamps(ctx, now);
     this.driveHero(now, dt);
     this.env.hero.draw(ctx, now, {
@@ -131,6 +152,7 @@ export class PressureScene implements Scene {
     for (const e of this.game.drainEvents()) {
       if (e.type === 'pop') {
         this.tapAt = now;
+        this.flowAt = now;
       } else if (e.type === 'miss') {
         this.missAt = now;
         // Un clic fuera del botón no es un error de presión.
@@ -139,6 +161,49 @@ export class PressureScene implements Scene {
           this.leaks = Math.min(LEAK_MAX, this.leaks + 1);
         }
       }
+    }
+  }
+
+  // El agua sale normal: un chorro limpio y parejo de la boquilla a la
+  // maceta, con gotas al caer.
+  private drawStream(ctx: CanvasRenderingContext2D, now: number): void {
+    const k = now - this.flowAt;
+    if (k < 0 || k >= FLOW_MS) return;
+    const fade = Math.min(1, k / 120, (FLOW_MS - k) / 220);
+    const h = POT.y - NOZZLE.y;
+    ctx.globalAlpha = fade;
+    px(ctx, NOZZLE.x - 2, NOZZLE.y, 4, h, C.water);
+    px(ctx, NOZZLE.x - 2, NOZZLE.y, PX, h, C.waterHi);
+    if (!this.env.calm) {
+      const off = (now / 30) % 12;
+      for (let y = NOZZLE.y + off; y < POT.y - 4; y += 12) {
+        px(ctx, NOZZLE.x, y, PX, 5, C.white);
+      }
+      for (let i = 0; i < 4; i++) {
+        const a = (now / 90 + i * 1.6) % 3;
+        const dx = (i % 2 ? 1 : -1) * (3 + a * 5);
+        const dy = POT.y - 2 - Math.sin(a * 1.05) * 8;
+        px(ctx, NOZZLE.x + dx, dy, PX, PX, C.waterHi);
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // La planta de la maceta crece con cada acierto.
+  private drawPlant(ctx: CanvasRenderingContext2D, now: number): void {
+    const hits = this.game.hits;
+    if (hits === 0) return;
+    const x = POT.x + POT.w / 2;
+    const base = POT.y;
+    const sway = this.env.calm ? 0 : Math.round(Math.sin(now / 500)) * PX;
+    const stem = 4 + hits * 6;
+    px(ctx, x - 1, base - stem, PX, stem, C.leafLo);
+    px(ctx, x - 7 + sway, base - stem + 2, 7, 4, C.leaf);
+    px(ctx, x + sway, base - stem - 2, 7, 4, C.leaf);
+    if (hits >= 2) px(ctx, x - 9, base - stem / 2, 8, 4, C.leaf);
+    if (hits >= 3) {
+      px(ctx, x - 3 + sway, base - stem - 8, 8, 6, C.amber);
+      px(ctx, x - 1 + sway, base - stem - 6, 4, 2, C.amberHi);
     }
   }
 
