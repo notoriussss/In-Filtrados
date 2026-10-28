@@ -19,7 +19,6 @@ import {
   type StationMarks,
   drawBar,
   drawFixArrows,
-  drawFixPoints,
   drawHoldProgress,
   drawMeetingBeacon,
   drawMeetingFloor,
@@ -29,6 +28,8 @@ import {
   drawTankGrime,
 } from './effects';
 import { renderActivities } from './activityFx';
+import { FixEffects } from './fixFx';
+import { motionIsReduced } from '../../settings';
 import type { PlayerAnimator } from './playerAnim';
 import { depthOf, drawPlayer, topOf } from './players';
 import { renderDarkness } from './vision';
@@ -67,6 +68,8 @@ export function tankLevel(t: Pick<TankView, 'contamination' | 'dead'>) {
 type Drawable = { depth: number; draw: () => void };
 
 export class WorldRenderer {
+  private readonly fixFx = new FixEffects();
+
   constructor(
     private readonly assets: MapAssets,
     private readonly map: GameMap,
@@ -83,6 +86,8 @@ export class WorldRenderer {
     applyWorldTransform(ctx, camera, dpr);
     ctx.imageSmoothingEnabled = false;
     const view = visibleRect(camera);
+    this.fixFx.update(f.emergency, f.tick, now);
+    this.animator.setEmergency(f.emergency?.kind ?? null);
     this.drawLayer(ctx, this.assets.ground, view);
     if (f.tick !== null) {
       drawOilDrops(
@@ -91,32 +96,22 @@ export class WorldRenderer {
         f.tick,
       );
     }
-    drawMeetingFloor(
-      ctx,
-      meetingMarker(this.map),
-      now,
-      this.meetingState(f),
-    );
+    drawMeetingFloor(ctx, meetingMarker(this.map), now, this.meetingState(f));
     this.drawDepthSorted(ctx, f, view);
     // La luz de noche del paquete se multiplica sobre todo el mundo.
     ctx.globalCompositeOperation = 'multiply';
     this.drawLayer(ctx, this.assets.nightLight, view);
     ctx.globalCompositeOperation = 'source-over';
 
-    drawFixPoints(ctx, this.map.fixPoints, f.emergency, now);
-    renderActivities(ctx, f.players, now, f.visible);
+    this.fixFx.drawAir(ctx, this.map.fixPoints, now, motionIsReduced());
+    renderActivities(ctx, f.players, now, f.visible, f.emergency?.kind ?? null);
     this.drawLabels(ctx, f);
-    drawMeetingBeacon(
-      ctx,
-      meetingMarker(this.map),
-      now,
-      this.meetingState(f),
-    );
+    drawMeetingBeacon(ctx, meetingMarker(this.map), now, this.meetingState(f));
     renderDarkness(ctx, view, this.me(f), f.visionRadius);
     if (f.marks) drawStationMarks(ctx, this.map.stations, f.marks, now);
     const me = this.me(f);
     if (f.hold && me) {
-      drawHoldProgress(ctx, me.x, me.y, f.hold.progress, f.hold.spin);
+      drawHoldProgress(ctx, me.x, me.y, f.hold.progress, f.hold.spin, now);
     }
 
     // Lo que va en coordenadas de pantalla.
@@ -128,6 +123,7 @@ export class WorldRenderer {
       f.emergency,
       me,
       f.visionRadius ?? Math.min(view.w, view.h) / 2,
+      now,
     );
   }
 
@@ -146,8 +142,7 @@ export class WorldRenderer {
     const marker = meetingMarker(this.map);
     if (!f.meeting || !me || !marker) return null;
     const near =
-      Math.hypot(me.x - marker.x, me.y - marker.y) <=
-      GAME_RULES.MEETING_RANGE;
+      Math.hypot(me.x - marker.x, me.y - marker.y) <= GAME_RULES.MEETING_RANGE;
     return {
       button: f.meeting,
       tick: f.tick ?? 0,
@@ -219,6 +214,14 @@ export class WorldRenderer {
         draw: () => drawPlayer(ctx, p, this.animator, f.now),
       });
     }
+    items.push(
+      ...this.fixFx.drawables(
+        ctx,
+        this.map.fixPoints,
+        f.now,
+        motionIsReduced(),
+      ),
+    );
     items.sort((a, b) => a.depth - b.depth);
     for (const it of items) it.draw();
   }

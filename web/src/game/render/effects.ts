@@ -1,8 +1,4 @@
-import type {
-  Emergency,
-  MeetingButton,
-  OilDrop,
-} from '@in-filtrados/messages';
+import type { Emergency, MeetingButton, OilDrop } from '@in-filtrados/messages';
 import type { FixPoint, Marker, Station } from '../../map';
 import { ACTION_TEXT, GAME_RULES } from '../../constants';
 import { HUD_TEXT } from '../../texts';
@@ -20,7 +16,6 @@ const AMBER = '#ffd24a';
 const CORAL = '#ff6b6b';
 const LEAF = '#5fe08a';
 const TEXT = '#e8f8ff';
-const WATER = '#7cc4ff';
 export const TAG_FONT = '13px VT323, ui-monospace, monospace';
 
 // Igual que oilDropLifeTicks en match: cada gota dura 5 s (S2-12).
@@ -181,7 +176,13 @@ export function drawStationMarks(
       const bounce = Math.abs(Math.sin(now / 250)) * 4;
       drawBang(ctx, s.x, s.y - 52 - bounce);
     } else if (marks.done.has(s.id)) {
-      drawCheck(ctx, s.x, s.y - 44);
+      const shine = Math.max(0, Math.sin(now / 700 + s.x));
+      drawCheck(ctx, s.x, s.y - 44 - Math.round(shine * 2));
+      if (shine > 0.85) {
+        ctx.fillStyle = TEXT;
+        ctx.fillRect(s.x + 5, s.y - 56, 2, 2);
+        ctx.fillRect(s.x + 4, s.y - 55, 4, 0.5);
+      }
     }
   }
 }
@@ -210,37 +211,6 @@ function drawCheck(ctx: CanvasRenderingContext2D, x: number, y: number) {
   for (const [dx, dy] of px) ctx.fillRect(x + dx - 1, y + dy - 2, 3, 3);
 }
 
-// drawFixPoints: con una emergencia activa, el punto suelta agua (la
-// tubería) o vapor (la válvula) y un anillo rojo late; verde si ya hay
-// alguien sosteniéndolo (S3-05).
-export function drawFixPoints(
-  ctx: CanvasRenderingContext2D,
-  points: FixPoint[],
-  emergency: Emergency | null,
-  now: number,
-): void {
-  if (!emergency) return;
-  for (const fp of points) {
-    if (fp.kind !== emergency.kind) continue;
-    const held = emergency.heldPoints.includes(fp.id);
-    const t = (now % 700) / 700;
-    ctx.globalAlpha = 1 - t;
-    ctx.strokeStyle = held ? LEAF : CORAL;
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.ellipse(fp.x, fp.y + 6, 22 + t * 14, 9 + t * 6, 0, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.globalAlpha = 1;
-    if (fp.kind === 'pipe') {
-      drawPipe(ctx, fp.x, fp.y);
-      if (!held) drawSpray(ctx, fp.x + 8, fp.y - 8, now);
-    } else {
-      drawValve(ctx, fp.x, fp.y);
-      drawSteam(ctx, fp.x, fp.y - 18, now);
-    }
-  }
-}
-
 // Mesa: estado visual. button llega del snapshot; near lo
 // calcula el renderer con la posición del jugador.
 export type MeetingPointState = {
@@ -259,10 +229,7 @@ function meetingAvailable(state: MeetingPointState | null): boolean {
   );
 }
 
-function meetingColor(
-  state: MeetingPointState | null,
-  near: boolean,
-): string {
+function meetingColor(state: MeetingPointState | null, near: boolean): string {
   if (!meetingAvailable(state)) return COOLDOWN_COLOR;
   return near ? AQUA : AMBER;
 }
@@ -365,12 +332,7 @@ export function drawMeetingBeacon(
   ctx.fillStyle = color;
   for (let i = 0; i < 3; i++) {
     ctx.globalAlpha = 0.07 - i * 0.018;
-    ctx.fillRect(
-      marker.x - 20 + i * 7,
-      marker.y - 78,
-      40 - i * 14,
-      70,
-    );
+    ctx.fillRect(marker.x - 20 + i * 7, marker.y - 78, 40 - i * 14, 70);
   }
 
   // Base del holograma sobre la mesa.
@@ -392,8 +354,7 @@ export function drawMeetingBeacon(
       label = ACTION_TEXT.NO_MEETINGS;
     } else if (state.tick < state.button.readyAtTick) {
       const wait = Math.ceil(
-        (state.button.readyAtTick - state.tick) /
-          GAME_RULES.TICKS_PER_SECOND,
+        (state.button.readyAtTick - state.tick) / GAME_RULES.TICKS_PER_SECOND,
       );
       label = ACTION_TEXT.meetingWait(wait);
     }
@@ -484,77 +445,6 @@ function drawKeycap(
   ctx.fillText(label, x + 7, y + 8);
 }
 
-function drawPipe(ctx: CanvasRenderingContext2D, x: number, y: number) {
-  ctx.fillStyle = INK;
-  ctx.fillRect(x - 24, y - 6, 48, 12);
-  ctx.fillStyle = '#8fa3b2';
-  ctx.fillRect(x - 23, y - 5, 46, 10);
-  ctx.fillStyle = '#c5d3dc';
-  ctx.fillRect(x - 23, y - 5, 46, 3);
-  ctx.fillStyle = '#58636d';
-  ctx.fillRect(x - 6, y - 8, 12, 16);
-}
-
-function drawValve(ctx: CanvasRenderingContext2D, x: number, y: number) {
-  ctx.fillStyle = '#58636d';
-  ctx.fillRect(x - 4, y - 6, 8, 16);
-  ctx.strokeStyle = CORAL;
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.arc(x, y - 10, 9, 0, Math.PI * 2);
-  ctx.moveTo(x - 9, y - 10);
-  ctx.lineTo(x + 9, y - 10);
-  ctx.moveTo(x, y - 19);
-  ctx.lineTo(x, y - 1);
-  ctx.stroke();
-}
-
-// Chorro de agua de la tubería rota.
-function drawSpray(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  now: number,
-): void {
-  ctx.fillStyle = WATER;
-  for (let i = 0; i < 12; i++) {
-    const k = (now / 300 + i / 12) % 1;
-    const ang = -Math.PI / 2 + Math.sin(i * 1.3) * 0.8;
-    ctx.globalAlpha = 1 - k;
-    ctx.fillRect(
-      x + Math.cos(ang) * k * 34,
-      y + Math.sin(ang) * k * 34 + k * k * 22,
-      3,
-      3,
-    );
-  }
-  ctx.globalAlpha = 1;
-}
-
-// Nubes de vapor que suben de la válvula.
-function drawSteam(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  now: number,
-): void {
-  ctx.fillStyle = '#e6eef5';
-  for (let i = 0; i < 7; i++) {
-    const k = (now / 1100 + i / 7) % 1;
-    ctx.globalAlpha = (1 - k) * 0.6;
-    ctx.beginPath();
-    ctx.arc(
-      x + Math.sin(k * 6 + i) * 10,
-      y - k * 56,
-      6 + k * 14,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-  }
-  ctx.globalAlpha = 1;
-}
-
 // drawHoldProgress: círculo de progreso de las acciones que exigen
 // quedarse quieto; con spin gira (la tubería espera al otro extremo).
 export function drawHoldProgress(
@@ -563,6 +453,7 @@ export function drawHoldProgress(
   y: number,
   progress: number,
   spin = 0,
+  now = 0,
 ): void {
   const r = 26;
   ctx.lineWidth = 4;
@@ -575,6 +466,18 @@ export function drawHoldProgress(
   ctx.beginPath();
   ctx.arc(x, y - 18, r, start, start + progress * Math.PI * 2);
   ctx.stroke();
+  // Punta brillante que va al frente del arco y un aro que late afuera.
+  const head = start + progress * Math.PI * 2;
+  ctx.fillStyle = TEXT;
+  ctx.beginPath();
+  ctx.arc(x + Math.cos(head) * r, y - 18 + Math.sin(head) * r, 4, 0, 6.3);
+  ctx.fill();
+  ctx.globalAlpha = 0.35 + 0.25 * Math.sin(now / 160);
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(x, y - 18, r + 6 + Math.sin(now / 160) * 2, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
 }
 
 // drawFixArrows: flechas rojas en el borde de la pantalla hacia los
@@ -587,6 +490,7 @@ export function drawFixArrows(
   emergency: Emergency | null,
   me: { x: number; y: number } | undefined,
   near: number,
+  now = 0,
 ): void {
   if (!emergency || !me) return;
   const margin = 40;
@@ -598,11 +502,15 @@ export function drawFixArrows(
     const s = worldToScreen(camera, fp.x, fp.y);
     const m = worldToScreen(camera, me.x, me.y);
     const ang = Math.atan2(s.y - m.y, s.x - m.x);
-    const x = cx + Math.cos(ang) * (cx - margin);
-    const y = cy + Math.sin(ang) * (cy - margin);
+    // La flecha se mece hacia el borde y late, para que no pase inadvertida.
+    const bob = Math.sin(now / 170) * 4;
+    const x = cx + Math.cos(ang) * (cx - margin + bob);
+    const y = cy + Math.sin(ang) * (cy - margin + bob);
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(ang);
+    const pulse = 1 + 0.12 * Math.sin(now / 170);
+    ctx.scale(pulse, pulse);
     ctx.beginPath();
     ctx.moveTo(18, 0);
     ctx.lineTo(-12, -13);

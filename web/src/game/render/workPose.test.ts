@@ -93,4 +93,22 @@ describe('IDLE_POSE', () => {
     expect(IDLE_POSE.dy).toBe(0);
     expect(IDLE_POSE.dust).toBeNull();
   });
+
+  it('turns the valve by alternating arms, and braces the pipe still', () => {
+    const frames = new Set<string>();
+    for (let t = 0; t < 900; t += 20) {
+      frames.add(workPose('fix', t, 1, 'steam').frame);
+    }
+    expect(frames.size).toBeGreaterThan(1);
+    for (let t = 0; t < 900; t += 20) {
+      const p = workPose('fix', t, 1, 'pipe');
+      expect(p.frame).toBe('right-walking1');
+      expect(p.lean).toBeGreaterThan(3);
+    }
+  });
+
+  it('keeps the hammer for a fix with no known emergency', () => {
+    expect(workPose('fix', 405, 1, null)).toEqual(workPose('fix', 405, 1));
+    expect(workPose('fix', 405, 1, null).hit).toBe(true);
+  });
 });

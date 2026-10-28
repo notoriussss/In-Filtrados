@@ -1,4 +1,8 @@
-import type { Activity, PlayerView } from '@in-filtrados/messages';
+import type {
+  Activity,
+  EmergencyKind,
+  PlayerView,
+} from '@in-filtrados/messages';
 import { phaseOf } from './activityFx';
 import type { SpriteFrame } from './sprites';
 import {
@@ -162,6 +166,12 @@ function headingOf(dx: number, dy: number): Heading {
 
 export class PlayerAnimator {
   private states = new Map<string, State>();
+  // Qué emergencia hay: arreglar la válvula y la tubería se mueven distinto.
+  private fix: EmergencyKind | null = null;
+
+  setEmergency(kind: EmergencyKind | null): void {
+    this.fix = kind;
+  }
 
   // pose actualiza el estado del jugador con su posición dibujada en
   // now y devuelve el cuadro que le toca.
@@ -211,8 +221,7 @@ export class PlayerAnimator {
     const vertical = s.heading === 'up' || s.heading === 'down';
     const stepMs = vertical ? VERTICAL_STEP_MS : STEP_MS;
     const cycle = CYCLES[s.heading];
-    const stepIndex =
-      Math.floor((now - s.walkStart) / stepMs) % cycle.length;
+    const stepIndex = Math.floor((now - s.walkStart) / stepMs) % cycle.length;
     const frame = cycle[stepIndex];
     return {
       frame,
@@ -224,7 +233,6 @@ export class PlayerAnimator {
       stepIndex,
     };
   }
-
 
   // trackWork lleva cuándo empezó y terminó la tarea, para entrar al
   // ritmo poco a poco y celebrar al acabar.
@@ -262,7 +270,7 @@ export class PlayerAnimator {
     if (!w) return IDLE_POSE;
     // Cada jugador con su fase, igual que sus efectos (activityFx.ts).
     const t = now + phaseOf(p.id);
-    return workPose(w.activity, t, (now - w.since) / RAMP_MS);
+    return workPose(w.activity, t, (now - w.since) / RAMP_MS, this.fix);
   }
 
   // forget borra a quien ya no está en el snapshot.
