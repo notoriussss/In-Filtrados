@@ -225,11 +225,29 @@
 
 /* =========================================================================
    2b. RELOJ DE PARTIDA (Debajo del embalse)
+   El embalse y el reloj van en una columna: el reloj siempre queda
+   debajo, sin importar cuánto crezca el embalse.
    ========================================================================= */
-.hud-clock {
+.hud-right-stack {
+  position: absolute;
   right: 36px;
-  top: 202px;
+  top: 32px;
   width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.hud-right-stack .hud-panel {
+  position: relative;
+  right: auto;
+  top: auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.hud-clock {
   padding: 12px 22px;
   display: flex;
   align-items: center;

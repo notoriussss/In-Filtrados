@@ -75,8 +75,10 @@ export function Hud(props: { game: GameSession; state: GameState }) {
     <div className="hud">
       <TasksPanel snap={snap} />
       <AlertPanel state={state} now={now} />
-      <ReservoirPanel snap={snap} />
-      <ClockPanel snap={snap} />
+      <div className="hud-right-stack">
+        <ReservoirPanel snap={snap} />
+        <ClockPanel snap={snap} />
+      </div>
       <PlayerCard snap={snap} me={me} />
 
       <nav className="hud-panel hud-hotbar" aria-label="Acciones">
