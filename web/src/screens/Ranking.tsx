@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Stage } from '../ui/Stage';
-import { Button, Chip } from '../ui/kit';
+import { HintBar } from '../ui/kit';
 import { api } from '../api';
 import { session } from '../session';
 import {
@@ -14,6 +14,7 @@ import {
 import { ERROR_MESSAGES } from '../constants';
 import { RANKING_TEXT as T } from '../texts';
 import { BACKGROUNDS } from './backgrounds';
+import '../styles/ranking.css';
 
 type Column = { key: SortKey; label: string };
 
@@ -24,8 +25,10 @@ const IMPOSTOR: Column = { key: 'impostor', label: T.IMPOSTOR };
 const HARVEST: Column = { key: 'harvest', label: T.HARVEST };
 const COINS: Column = { key: 'coins', label: T.COINS };
 
-// Ranking: todos los jugadores con sus estadísticas. Por defecto de más a
-// menos victorias; tocar el título de otra columna reordena la tabla.
+const SORT_COLUMNS: Column[] = [WINS, RATE, MATCHES, IMPOSTOR, HARVEST, COINS];
+
+// Ranking: escenario abierto con barra de ordenamiento rápido y filas tipo
+// tarjeta, siguiendo el mismo lenguaje visual unificado de la tienda y sala.
 export function Ranking(props: {
   onClose: () => void;
   onUnauthorized: () => void;
@@ -63,6 +66,9 @@ export function Ranking(props: {
 
   const rows = entries ? sortRanking(entries, sort) : [];
   const mine = rows.findIndex((r) => r.playerId === data?.playerId);
+  const activeSortLabel =
+    SORT_COLUMNS.find((c) => c.key === sort)?.label ?? T.WINS;
+
   const head = (col: Column) => (
     <SortHead
       key={col.key}
@@ -74,81 +80,126 @@ export function Ranking(props: {
 
   return (
     <Stage className="scr-ranking" background={BACKGROUNDS.mapBlur}>
-      <div className="shade dim" />
-      <div className="rk-top">
-        <div className="row">
-          <Button variant="sec" small icon="left" onClick={props.onClose}>
-            {T.BACK}
-          </Button>
-          <span className="h2 screen-title">{T.TITLE}</span>
-        </div>
-        <div className="row">
+      <div className="rk-vignette" />
+
+      {/* BARRA SUPERIOR */}
+      <header className="rk-header">
+        <button
+          type="button"
+          className="rk-back-btn"
+          onClick={props.onClose}
+        >
+          {T.BACK}
+        </button>
+
+        <div className="rk-header-right">
           {error && (
-            <Chip tone="bad" big icon="cross">
+            <div className="rk-alert-pill" role="alert">
               {error}
-            </Chip>
+            </div>
           )}
           {mine >= 0 && (
-            <Chip tone="info" big icon="drop">
+            <div className="rk-pos-pill">
               {T.position(mine + 1, rows.length)}
-            </Chip>
+            </div>
           )}
         </div>
-      </div>
+      </header>
 
-      <section className="panel rk-panel">
-        {rows.length === 0 ? (
-          <p className="muted rk-empty">
-            {entries === null ? (error ? '' : T.LOADING) : T.EMPTY}
-          </p>
-        ) : (
-          <table className="rk-table">
-            <thead>
-              <tr>
-                <th className="pos">{T.POS}</th>
-                <th className="name">{T.PLAYER}</th>
-                {head(MATCHES)}
-                {head(WINS)}
-                {head(RATE)}
-                <th className="num">{T.CREW}</th>
-                {head(IMPOSTOR)}
-                {head(HARVEST)}
-                {head(COINS)}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r, i) => {
-                const crew = crewStats(r);
-                const place = i < 3 ? `rk-p${i + 1}` : '';
-                return (
-                  <tr
-                    key={r.playerId}
-                    className={`${place} ${i === mine ? 'rk-self' : ''}`}
-                  >
-                    <td className="pos">
-                      <span className="rk-medal">{i + 1}</span>
-                    </td>
-                    <td className="name">
-                      {r.username}
-                      {i === mine && <small> {T.YOU}</small>}
-                    </td>
-                    <td className="num">{r.matchesPlayed}</td>
-                    <td className="num strong">{r.wins}</td>
-                    <td className="num">{percent(winRate(r))}</td>
-                    <td className="num">{T.ratio(crew.wins, crew.played)}</td>
-                    <td className="num">
-                      {T.ratio(r.winsAsImpostor, r.timesImpostor)}
-                    </td>
-                    <td className="num">{T.liters(r.harvest)}</td>
-                    <td className="num">{r.coinsEarned}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        )}
+      {/* CUERPO PRINCIPAL ABIERTO */}
+      <section className="rk-main">
+        <header className="rk-toolbar">
+          <div className="rk-toolbar-title">
+            <span className="rk-title-main">{T.TITLE}</span>
+            <span className="rk-title-dot">·</span>
+            <span className="rk-title-sub">{activeSortLabel}</span>
+          </div>
+
+          <div className="rk-sort-bar" role="group" aria-label={T.SORT_BY}>
+            <span className="rk-sort-lbl">{T.SORT_BY}</span>
+            {SORT_COLUMNS.map((c) => {
+              const isActive = sort === c.key;
+              return (
+                <button
+                  key={c.key}
+                  type="button"
+                  className={`rk-sort-pill ${isActive ? 'active' : ''}`}
+                  aria-pressed={isActive}
+                  onClick={() => setSort(c.key)}
+                >
+                  {c.label}
+                </button>
+              );
+            })}
+          </div>
+        </header>
+
+        <div className="rk-scroll">
+          {rows.length === 0 ? (
+            <p className="rk-empty">
+              {entries === null ? (error ? '' : T.LOADING) : T.EMPTY}
+            </p>
+          ) : (
+            <table className="rk-table">
+              <thead>
+                <tr>
+                  <th className="pos">{T.POS}</th>
+                  <th className="name">{T.PLAYER}</th>
+                  {head(MATCHES)}
+                  {head(WINS)}
+                  {head(RATE)}
+                  <th className="num">{T.CREW}</th>
+                  {head(IMPOSTOR)}
+                  {head(HARVEST)}
+                  {head(COINS)}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r, i) => {
+                  const crew = crewStats(r);
+                  const place = i < 3 ? `rk-p${i + 1}` : '';
+                  const rowCls = [place, i === mine ? 'rk-self' : '']
+                    .filter(Boolean)
+                    .join(' ');
+                  const colCls = (key: SortKey) =>
+                    `num ${sort === key ? 'active-col' : ''}`.trim();
+
+                  return (
+                    <tr key={r.playerId} className={rowCls}>
+                      <td className="pos">
+                        <span className="rk-medal">{i + 1}</span>
+                      </td>
+                      <td className="name">
+                        {r.username}
+                        {i === mine && (
+                          <span className="rk-you-tag">{T.YOU}</span>
+                        )}
+                      </td>
+                      <td className={colCls('matches')}>{r.matchesPlayed}</td>
+                      <td className={colCls('wins')}>{r.wins}</td>
+                      <td className={colCls('rate')}>
+                        {percent(winRate(r))}
+                      </td>
+                      <td className="num">{T.ratio(crew.wins, crew.played)}</td>
+                      <td className={colCls('impostor')}>
+                        {T.ratio(r.winsAsImpostor, r.timesImpostor)}
+                      </td>
+                      <td className={colCls('harvest')}>
+                        {T.liters(r.harvest)}
+                      </td>
+                      <td className={colCls('coins')}>{r.coinsEarned}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        <p className="rk-foot-note">{T.HINT}</p>
       </section>
-      <p className="muted rk-foot">{T.HINT}</p>
+
+      <HintBar hints={[['Esc', T.BACK]]} />
     </Stage>
   );
 }
