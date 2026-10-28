@@ -74,6 +74,8 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       return { type: 'pickSkin', skin: msg.skin };
     case 'refreshShop':
       return { type: 'refreshShop' };
+    case 'ping':
+      return { type: 'ping' };
     default:
       return null;
   }
@@ -81,7 +83,8 @@ export function parseClientMessage(raw: string): ClientMessage | null {
 
 // toGrpcAction turns a game message into the ClientAction of
 // proto/match.proto. join is not here: the gateway builds it with the
-// playerId of the token, never one sent by the browser.
+// playerId of the token, never one sent by the browser. ping is not
+// here either: the gateway answers it and match never sees it.
 export function toGrpcAction(msg: ClientMessage): object | null {
   switch (msg.type) {
     case 'move':

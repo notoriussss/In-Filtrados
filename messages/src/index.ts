@@ -25,7 +25,10 @@ export type ClientMessage =
   | { type: 'pickSkin'; skin: string }
   // Después de comprar en la tienda: el gateway vuelve a preguntarle a
   // players qué tienes y se lo pasa a match.
-  | { type: 'refreshShop' };
+  | { type: 'refreshShop' }
+  // Heartbeat (deployment-lab.md, 9.1): cada 2 s; el gateway responde
+  // pong y nunca lo reenvía a match.
+  | { type: 'ping' };
 
 // interact: hacer una tarea en una estación. Con tankSlot (lo que mandaban
 // los clientes viejos para limpiar un tanque) el servidor lo ignora: los
@@ -39,7 +42,8 @@ export type InteractMessage =
 export type ServerMessage =
   | Snapshot
   | { type: 'matchEnded'; winner: Winner; impostorIds: string[] }
-  | { type: 'error'; code: ErrorCode; message: string };
+  | { type: 'error'; code: ErrorCode; message: string }
+  | { type: 'pong' }; // respuesta al ping del navegador
 
 export type Snapshot = {
   type: 'snapshot';
@@ -54,8 +58,8 @@ export type Snapshot = {
   meeting: Meeting | null; // solo en MEETING
   chat: ChatMessage[]; // últimos 30 mensajes
   oilDrops: OilDrop[]; // S2-12: rastro del impostor
-  // S3-02: en pausa mientras alguien está en su periodo de gracia;
-  // waitingFor son los ids de esos jugadores.
+  // S3-02: en pausa solo mientras el host está en su periodo de gracia;
+  // waitingFor son los ids de todos los que están en gracia.
   paused: boolean;
   waitingFor: string[];
   // S2-11: las tareas propias (nunca las de otro) y la estación cuya
