@@ -28,6 +28,27 @@ const (
 		"%d minutos"
 )
 
+// Errors sent to the player whose report of a polluted tank is rejected.
+const (
+	ErrCodeMeetingInProgress = "MEETING_IN_PROGRESS"
+	errMsgMeetingInProgress  = "Ya hay una reunión en curso"
+
+	ErrCodeReportNotAlive = "REPORT_NOT_ALIVE"
+	errMsgReportNotAlive  = "Los fantasmas no pueden reportar"
+
+	ErrCodeUnknownTank = "UNKNOWN_TANK"
+	errMsgUnknownTank  = "Ese tanque no existe"
+
+	ErrCodeTankNotPolluted = "TANK_NOT_POLLUTED"
+	errMsgTankNotPolluted  = "El tanque no está contaminado al 100 %"
+
+	ErrCodeTankAlreadyReported = "TANK_ALREADY_REPORTED"
+	errMsgTankAlreadyReported  = "Ese tanque ya se reportó"
+
+	ErrCodeReportTooFar = "REPORT_TOO_FAR"
+	errMsgReportTooFar  = "Acércate más al tanque para reportarlo"
+)
+
 // Prefixes that wrap the read and parse errors of LoadMap.
 const (
 	msgReadMap  = "read map"

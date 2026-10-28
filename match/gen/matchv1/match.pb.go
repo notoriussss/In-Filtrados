@@ -2219,6 +2219,7 @@ type TankView struct {
 	OwnerId       string                 `protobuf:"bytes,2,opt,name=owner_id,json=ownerId,proto3" json:"owner_id,omitempty"`
 	Contamination int32                  `protobuf:"varint,3,opt,name=contamination,proto3" json:"contamination,omitempty"` // 0 a 100
 	Dead          bool                   `protobuf:"varint,4,opt,name=dead,proto3" json:"dead,omitempty"`
+	Reported      bool                   `protobuf:"varint,5,opt,name=reported,proto3" json:"reported,omitempty"` // dead que ya tuvo su reunión
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2277,6 +2278,13 @@ func (x *TankView) GetContamination() int32 {
 func (x *TankView) GetDead() bool {
 	if x != nil {
 		return x.Dead
+	}
+	return false
+}
+
+func (x *TankView) GetReported() bool {
+	if x != nil {
+		return x.Reported
 	}
 	return false
 }
@@ -2923,12 +2931,13 @@ const file_match_proto_rawDesc = "" +
 	"\x01x\x18\x01 \x01(\x02R\x01x\x12\f\n" +
 	"\x01y\x18\x02 \x01(\x02R\x01y\x12\x14\n" +
 	"\x05color\x18\x03 \x01(\tR\x05color\x12&\n" +
-	"\x0fexpires_at_tick\x18\x04 \x01(\x03R\rexpiresAtTick\"s\n" +
+	"\x0fexpires_at_tick\x18\x04 \x01(\x03R\rexpiresAtTick\"\x8f\x01\n" +
 	"\bTankView\x12\x12\n" +
 	"\x04slot\x18\x01 \x01(\x05R\x04slot\x12\x19\n" +
 	"\bowner_id\x18\x02 \x01(\tR\aownerId\x12$\n" +
 	"\rcontamination\x18\x03 \x01(\x05R\rcontamination\x12\x12\n" +
-	"\x04dead\x18\x04 \x01(\bR\x04dead\";\n" +
+	"\x04dead\x18\x04 \x01(\bR\x04dead\x12\x1a\n" +
+	"\breported\x18\x05 \x01(\bR\breported\";\n" +
 	"\x06MyTask\x12\x1d\n" +
 	"\n" +
 	"station_id\x18\x01 \x01(\tR\tstationId\x12\x12\n" +

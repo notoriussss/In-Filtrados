@@ -981,6 +981,7 @@ func (r *Room) tankViews() []*matchv1.TankView {
 			OwnerId:       t.ownerID,
 			Contamination: t.contamination,
 			Dead:          t.dead,
+			Reported:      t.reported,
 		})
 	}
 	return views

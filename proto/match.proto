@@ -240,6 +240,7 @@ message TankView {
   string owner_id      = 2;
   int32  contamination = 3; // 0 a 100
   bool   dead          = 4;
+  bool   reported      = 5; // dead que ya tuvo su reunión
 }
 // MyTask: una estación asignada al jugador y si ya la completó (S2-11).
 message MyTask {

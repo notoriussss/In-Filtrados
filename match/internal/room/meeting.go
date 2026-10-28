@@ -11,20 +11,44 @@ import (
 	"github.com/notoriussss/in-filtrados/match/internal/events"
 )
 
-// handleReport procesa la acción de reportar un tanque muerto (S2-05).
+// handleReport procesa el reporte de un tanque contaminado al 100 %
+// (S2-05). Un tanque a 100 es un tanque dead: lo reporta un jugador vivo
+// a reportRange o menos y abre la misma reunión que la mesa del mirador.
+// Cada rechazo le responde un Error al que reportó; el tanque sigue
+// contaminado después de la reunión, nadie lo limpia.
 func (r *Room) handleReport(playerID string, tankSlot int32) {
+	p, ok := r.players[playerID]
+	if !ok {
+		return
+	}
+	if r.phase == matchv1.Phase_MEETING {
+		r.sendError(p, ErrCodeMeetingInProgress, errMsgMeetingInProgress)
+		return
+	}
 	if r.phase != matchv1.Phase_PLAYING {
 		return
 	}
-	p, ok := r.players[playerID]
-	if !ok || !p.view.Alive {
+	if !p.view.Alive {
+		r.sendError(p, ErrCodeReportNotAlive, errMsgReportNotAlive)
 		return
 	}
 	t := r.tankAt(tankSlot)
-	if t == nil || !t.dead || t.reported {
+	switch {
+	case t == nil:
+		r.sendError(p, ErrCodeUnknownTank, errMsgUnknownTank)
 		return
-	}
-	if !nearDeadTank(p, t) {
+	case !t.dead:
+		r.sendError(p, ErrCodeTankNotPolluted, errMsgTankNotPolluted)
+		return
+	case t.reported:
+		r.sendError(
+			p,
+			ErrCodeTankAlreadyReported,
+			errMsgTankAlreadyReported,
+		)
+		return
+	case !nearDeadTank(p, t):
+		r.sendError(p, ErrCodeReportTooFar, errMsgReportTooFar)
 		return
 	}
 
