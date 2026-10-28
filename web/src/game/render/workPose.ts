@@ -1,4 +1,4 @@
-import type { Activity } from '@in-filtrados/messages';
+import type { Activity, EmergencyKind } from '@in-filtrados/messages';
 import type { SpriteFrame } from './sprites';
 
 // Poses de trabajo: qué hace el cuerpo del jugador mientras cumple una
@@ -81,12 +81,21 @@ function mixPose(a: Pose, b: Pose, k: number): Pose {
 
 // workPose devuelve la pose de la actividad en el instante t (ms) con
 // ramp de 0 a 1 (cuánto lleva entrando al ritmo).
-export function workPose(activity: Activity, t: number, ramp: number): Pose {
-  const raw = rawPose(activity, t);
+export function workPose(
+  activity: Activity,
+  t: number,
+  ramp: number,
+  fix: EmergencyKind | null = null,
+): Pose {
+  const raw = rawPose(activity, t, fix);
   return mixPose(IDLE_POSE, raw, easeOut(ramp));
 }
 
-function rawPose(activity: Activity, t: number): Pose {
+function rawPose(
+  activity: Activity,
+  t: number,
+  fix: EmergencyKind | null,
+): Pose {
   switch (activity) {
     case 'reduce':
       return crankPose(t);
@@ -97,6 +106,8 @@ function rawPose(activity: Activity, t: number): Pose {
     case 'tank':
       return stirPose(t);
     case 'fix':
+      if (fix === 'steam') return valvePose(t);
+      if (fix === 'pipe') return bracePose(t);
       return hammerPose(t);
   }
 }
@@ -221,6 +232,43 @@ function hammerPose(t: number): Pose {
     sy: 0.86 + 0.14 * w,
     strain: 0.6,
     dust: w,
+  };
+}
+
+// Vapor: gira el volante de la válvula con las dos manos. Cada media
+// vuelta cambia de brazo y se apoya con todo el peso; al ritmo de las
+// agarraderas que giran en fixFx.ts.
+export const VALVE_TURN_MS = 130; // ms por radián
+function valvePose(t: number): Pose {
+  const a = t / VALVE_TURN_MS;
+  const s = Math.sin(a);
+  const pull = Math.max(0, s);
+  return {
+    ...IDLE_POSE,
+    frame: s > 0 ? REACH : WIND,
+    dx: 1.2 * Math.cos(a),
+    dy: -0.7 * Math.abs(s),
+    lean: 1.4 + 3.2 * s,
+    sx: 1 + 0.03 * pull,
+    sy: 1 - 0.05 * pull,
+    strain: 0.55 + 0.45 * pull,
+  };
+}
+
+// Tubería: sostiene el tubo contra la presión del agua. Se planta con los
+// brazos estirados, se inclina hacia adelante y tiembla con cada empujón.
+function bracePose(t: number): Pose {
+  const shake = Math.sin(t / 37) + 0.6 * Math.sin(t / 23);
+  const push = 0.5 + 0.5 * Math.sin(t / 420);
+  return {
+    ...IDLE_POSE,
+    frame: REACH,
+    dx: 0.5 * shake,
+    dy: 0.4 * Math.sin(t / 61),
+    lean: 4.2 + 0.8 * push,
+    sx: 1 + 0.04 * push,
+    sy: 1 - 0.06 * push,
+    strain: 0.8 + 0.2 * push,
   };
 }
 

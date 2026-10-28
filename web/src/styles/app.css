@@ -320,3 +320,14 @@ html[data-motion='reduced'] *::after {
 .scr-ranking .rk-table tr.rk-p1 .rk-medal { color: var(--ink); background: #ffd24a; box-shadow: -3px 0 0 0 #fff0a8, 3px 0 0 0 #fff0a8, 0 -3px 0 0 #fff0a8, 0 3px 0 0 #fff0a8; }
 .scr-ranking .rk-table tr.rk-p2 .rk-medal { color: var(--ink); background: #cfd8e3; box-shadow: -3px 0 0 0 #f3f7fb, 3px 0 0 0 #f3f7fb, 0 -3px 0 0 #f3f7fb, 0 3px 0 0 #f3f7fb; }
 .scr-ranking .rk-table tr.rk-p3 .rk-medal { color: var(--ink); background: #d9964f; box-shadow: -3px 0 0 0 #f0c391, 3px 0 0 0 #f0c391, 0 -3px 0 0 #f0c391, 0 3px 0 0 #f0c391; }
+
+/* Aviso de emergencia: el icono se mueve según qué pasó y el reloj late. */
+@keyframes alert-wobble { 0%, 100% { transform: rotate(-9deg); } 50% { transform: rotate(9deg) scale(1.08); } }
+@keyframes alert-puff { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-5px) scale(1.1); } }
+@keyframes alert-tick { 50% { transform: scale(1.22); } }
+.hud .alert .px-icon { animation: alert-wobble .5s steps(4) infinite; transform-origin: 50% 70%; }
+.hud .alert.steam .px-icon { animation: alert-puff 1.2s ease-in-out infinite; }
+.hud .alert.calm .px-icon { animation: none; }
+.hud .alert .t { animation: alert-tick 1s steps(2) infinite; transform-origin: 100% 50%; }
+@keyframes slotk-ready { 50% { box-shadow: 0 0 0 3px var(--ink), 0 0 0 6px rgba(255, 107, 107, .35); } }
+.hud .slotk.danger:not(:disabled) { animation: slotk-ready 1.4s ease-in-out infinite; }
