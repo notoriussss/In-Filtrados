@@ -5,13 +5,7 @@ import type {
   PlayerView,
   Snapshot,
 } from '@in-filtrados/messages';
-import {
-  Icon,
-  type IconName,
-  type IconPalette,
-  TASK_ICONS,
-} from '../../ui/Icon';
-import { Chip, Gauge } from '../../ui/kit';
+import { Gauge } from '../../ui/kit';
 import { gameMap, meetingMarker } from '../../map';
 import { roomName } from '../../game/tasks/tasks';
 import { emergencyBanner, sabotageButtons } from '../../game/emergency';
@@ -27,6 +21,7 @@ import { session } from '../../session';
 import { APP_TEXT, HUD_TEXT } from '../../texts';
 import { Gota } from '../../ui/Gota';
 import { useNow } from './useNow';
+import '../../styles/hud.css';
 
 const TYPE_NAMES = {
   reduce: APP_TEXT.REDUCE,
@@ -34,15 +29,12 @@ const TYPE_NAMES = {
   recycle: APP_TEXT.RECYCLE,
 } as const;
 
-const ACTION_SLOT: Record<
-  Action['kind'],
-  { label: string; icon: IconName; palette: IconPalette }
-> = {
-  task: { label: HUD_TEXT.USE, icon: 'tap', palette: 'ink' },
-  report: { label: HUD_TEXT.REPORT, icon: 'eye', palette: 'amber' },
-  contaminate: { label: HUD_TEXT.CONTAMINATE, icon: 'oil', palette: 'coral' },
-  fix: { label: HUD_TEXT.FIX, icon: 'gear', palette: 'amber' },
-  meeting: { label: HUD_TEXT.MEETING, icon: 'speaker', palette: 'amber' },
+const ACTION_SLOT: Record<Action['kind'], { label: string }> = {
+  task: { label: HUD_TEXT.USE },
+  report: { label: HUD_TEXT.REPORT },
+  contaminate: { label: HUD_TEXT.CONTAMINATE },
+  fix: { label: HUD_TEXT.FIX },
+  meeting: { label: HUD_TEXT.MEETING },
 };
 
 const SABOTAGE_KEYS: Record<string, EmergencyKind> = {
@@ -50,9 +42,8 @@ const SABOTAGE_KEYS: Record<string, EmergencyKind> = {
   Digit2: 'steam',
 };
 
-// Hud (maqueta 16-hud-eco): tareas arriba a la izquierda, aviso al
-// centro, embalse a la derecha; abajo tu jugador, la barra de acciones y
-// el minimapa. Todo sale del snapshot: el HUD no decide nada.
+// Hud: diseño unificado de consola de monitoreo sin íconos pixelados ni
+// marcos toscos. La posición y el estado del juego vienen del snapshot.
 export function Hud(props: { game: GameSession; state: GameState }) {
   const { game, state } = props;
   const snap = state.snapshot;
@@ -61,7 +52,7 @@ export function Hud(props: { game: GameSession; state: GameState }) {
   const me = snap?.players.find((p) => p.id === meId);
   const sabotage = snap ? sabotageButtons(snap, snap.tick) : null;
 
-  // Teclas 1 y 2: sabotajes del impostor.
+  // Teclas 1 y 2: sabotajes del infiltrado.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const kind = SABOTAGE_KEYS[e.code];
@@ -79,6 +70,7 @@ export function Hud(props: { game: GameSession; state: GameState }) {
   }, [game]);
 
   if (!snap || snap.phase !== 'PLAYING') return null;
+
   return (
     <div className="hud">
       <TasksPanel snap={snap} />
@@ -86,26 +78,26 @@ export function Hud(props: { game: GameSession; state: GameState }) {
       <ReservoirPanel snap={snap} />
       <ClockPanel snap={snap} />
       <PlayerCard snap={snap} me={me} />
-      <nav className="panel glass hot" aria-label="Acciones">
+
+      <nav className="hud-panel hud-hotbar" aria-label="Acciones">
         <ActionSlot action={state.action} onUse={game.triggerAction} />
         {sabotage?.map((b, i) => (
           <button
             key={b.kind}
-            className="slotk danger"
+            type="button"
+            className="hud-action-slot danger"
             disabled={!b.enabled}
             onClick={() => game.sabotage(b.kind)}
           >
-            <span className="key">{i + 1}</span>
-            <Icon
-              name={b.kind === 'pipe' ? 'tap' : 'warning'}
-              palette="coral"
-              size={44}
-            />
-            <span>{b.kind === 'pipe' ? HUD_TEXT.PIPE : HUD_TEXT.STEAM}</span>
-            {b.detail && <span className="cd">{b.detail}</span>}
+            <span className="hud-slot-key">{i + 1}</span>
+            <span className="hud-slot-label">
+              {b.kind === 'pipe' ? HUD_TEXT.PIPE : HUD_TEXT.STEAM}
+            </span>
+            {b.detail && <span className="hud-slot-cd">{b.detail}</span>}
           </button>
         ))}
       </nav>
+
       <Minimap snap={snap} meId={meId} now={now} />
     </div>
   );
@@ -115,46 +107,52 @@ function TasksPanel(props: { snap: Snapshot }) {
   const { snap } = props;
   const myTasks = snap.myTasks ?? [];
   const done = myTasks.filter((t) => t.done).length;
+
   return (
-    <section className="panel glass tasks" aria-label={HUD_TEXT.TASKS}>
-      <div className="ttl hud-ttl">
-        <Icon name="check" palette="leaf" />
-        <span style={{ flex: 1 }}>{HUD_TEXT.TASKS.toUpperCase()}</span>
-        <span className="tg ok num">
+    <section className="hud-panel hud-tasks" aria-label={HUD_TEXT.TASKS}>
+      <header className="hud-panel-header">
+        <div className="hud-header-title tasks">
+          <span>{HUD_TEXT.TASKS}</span>
+        </div>
+        <span className="hud-counter-pill">
           {done}/{myTasks.length}
         </span>
-      </div>
-      {myTasks.map((t) => {
-        const st = gameMap.stations.find((s) => s.id === t.stationId);
-        if (!st) return null;
-        const ic = TASK_ICONS[st.type];
-        return (
-          <div className={`task ${t.done ? 'done' : ''}`} key={t.stationId}>
-            <Icon name={ic.name} palette={ic.palette} size={40} />
-            <div>
-              <b>{TYPE_NAMES[st.type].toUpperCase()}</b>
-              <span className="d">
-                {st.name ?? roomName(st, gameMap.zones)}
+      </header>
+
+      <div className="hud-task-list">
+        {myTasks.map((t) => {
+          const st = gameMap.stations.find((s) => s.id === t.stationId);
+          if (!st) return null;
+          const typeName = TYPE_NAMES[st.type];
+          const taskName = st.name ?? roomName(st, gameMap.zones);
+
+          return (
+            <div
+              key={t.stationId}
+              className={`hud-task-item ${t.done ? 'done' : ''}`}
+            >
+              <div className="hud-task-meta">
+                <span className="hud-task-type-badge">{typeName}</span>
+                <span className="hud-task-name">{taskName}</span>
+              </div>
+              <span
+                className={`hud-task-status-pill ${
+                  t.done ? 'done' : 'missing'
+                }`}
+              >
+                {t.done ? HUD_TEXT.DONE : HUD_TEXT.MISSING}
               </span>
             </div>
-            {t.done ? (
-              <span className="tg ok">
-                <Icon name="check" palette="leaf" size={20} />
-                {HUD_TEXT.DONE.toUpperCase()}
-              </span>
-            ) : (
-              <span className="tg warn">
-                <Icon name="clock" palette="amber" size={20} />
-                {HUD_TEXT.MISSING.toUpperCase()}
-              </span>
-            )}
-          </div>
-        );
-      })}
-      <div className="team">
-        <span>{HUD_TEXT.TEAM.toUpperCase()}</span>
+          );
+        })}
+      </div>
+
+      <div className="hud-team-gauge-row">
+        <span className="hud-gauge-lbl">{HUD_TEXT.TEAM}</span>
         <Gauge value={snap.reservoir / 100} tone="leaf" />
-        <span className="num">{HUD_TEXT.percent(snap.reservoir)}</span>
+        <span className="hud-gauge-num">
+          {HUD_TEXT.percent(snap.reservoir)}
+        </span>
       </div>
     </section>
   );
@@ -167,11 +165,12 @@ function AlertPanel(props: { state: GameState; now: number }) {
   const snap = state.snapshot!;
   const banner = emergencyBanner(snap, gameMap, snap.tick);
   const paused = pauseMessage(snap, state.matchDown);
+
   let cls = '';
-  let icon: IconName = 'warning';
   let title = '';
   let text = '';
   let time: string | null = null;
+
   if (banner) {
     cls = banner.kind === 'steam' ? 'steam' : '';
     title = banner.title;
@@ -179,26 +178,27 @@ function AlertPanel(props: { state: GameState; now: number }) {
     time = banner.time;
   } else if (paused) {
     cls = 'calm';
-    icon = 'clock';
     title = HUD_TEXT.PAUSED;
     text = paused;
   } else if (state.tankEmptyUntil > now) {
     cls = 'ghost';
-    icon = 'drop';
     title = HUD_TEXT.TANK_EMPTY;
     text = HUD_TEXT.TANK_EMPTY_HINT;
   } else {
     return null;
   }
+
   return (
-    <div className={`panel alert ${cls}`} role="alert">
-      <Icon name={icon} palette="amber" size={52} />
-      <div className="tx">
-        <b>{title.toUpperCase()}</b>
-        <span>{text}</span>
+    <aside
+      className={`hud-panel hud-alert-banner ${cls}`}
+      role="alert"
+    >
+      <div className="hud-alert-tx">
+        <strong className="hud-alert-title">{title}</strong>
+        <span className="hud-alert-hint">{text}</span>
       </div>
-      {time && <div className="t num">{time}</div>}
-    </div>
+      {time && <span className="hud-alert-time">{time}</span>}
+    </aside>
   );
 }
 
@@ -212,46 +212,51 @@ function ReservoirPanel(props: { snap: Snapshot }) {
       )
     : 0;
   const code = session.loadSession()?.roomCode;
+
   return (
-    <section className="panel glass res" aria-label={HUD_TEXT.RESERVOIR}>
-      <div className="ttl hud-ttl">
-        <Icon name="drop" palette="water" />
-        <span style={{ flex: 1 }}>{HUD_TEXT.RESERVOIR.toUpperCase()}</span>
-        {code && <span className="tg warn">{code}</span>}
-      </div>
-      <div className="m">
-        <span>{HUD_TEXT.LEVEL}</span>
+    <section
+      className="hud-panel hud-reservoir"
+      aria-label={HUD_TEXT.RESERVOIR}
+    >
+      <header className="hud-panel-header">
+        <div className="hud-header-title res">
+          <span>{HUD_TEXT.RESERVOIR}</span>
+        </div>
+        {code && <span className="hud-code-pill">{code}</span>}
+      </header>
+
+      <div className="hud-metric-row">
+        <span className="hud-metric-lbl">{HUD_TEXT.LEVEL}</span>
         <Gauge value={snap.reservoir / 100} />
-        <span className="num">{HUD_TEXT.percent(snap.reservoir)}</span>
+        <span className="hud-gauge-num">
+          {HUD_TEXT.percent(snap.reservoir)}
+        </span>
       </div>
-      <div className="m">
-        <span>{HUD_TEXT.PURITY}</span>
+
+      <div className="hud-metric-row">
+        <span className="hud-metric-lbl">{HUD_TEXT.PURITY}</span>
         <Gauge value={purity / 100} tone="leaf" />
-        <span className="num">{HUD_TEXT.percent(purity)}</span>
+        <span className="hud-gauge-num">{HUD_TEXT.percent(purity)}</span>
       </div>
     </section>
   );
 }
 
 // ClockPanel: lo que falta para que se acabe el tiempo y ganen los
-// infiltrados; lo manda match en el snapshot, que ya lo congela en las
-// reuniones y en la pausa.
+// infiltrados; lo manda match en el snapshot.
 function ClockPanel(props: { snap: Snapshot }) {
   const seconds = matchSecondsLeft(props.snap);
   if (seconds === null) return null;
   const level = clockLevel(seconds);
   return (
     <section
-      className={`panel glass clock ${level}`}
+      className={`hud-panel hud-clock ${level}`}
       aria-label={HUD_TEXT.CLOCK}
     >
-      <div className="ttl hud-ttl">
-        <Icon name="clock" palette="amber" />
-        <span>{HUD_TEXT.CLOCK.toUpperCase()}</span>
-      </div>
-      <div className="t num" role="timer">
+      <span className="hud-clock-lbl">{HUD_TEXT.CLOCK}</span>
+      <span className="hud-clock-time" role="timer">
         {formatClock(seconds)}
-      </div>
+      </span>
     </section>
   );
 }
@@ -259,44 +264,47 @@ function ClockPanel(props: { snap: Snapshot }) {
 function PlayerCard(props: { snap: Snapshot; me?: PlayerView }) {
   const { snap, me } = props;
   if (!me) return null;
+
   const tank = snap.tanks.find((t) => t.ownerId === me.id);
   const role = !me.alive
     ? { tone: 'warn' as const, text: HUD_TEXT.GHOST }
     : snap.myRole === 'IMPOSTOR'
       ? { tone: 'bad' as const, text: HUD_TEXT.IMPOSTOR }
       : { tone: 'ok' as const, text: HUD_TEXT.CREW };
+
   const clean = tank ? 100 - tank.contamination : 0;
+
   return (
-    <section className="panel glass me-card" aria-label={me.name}>
-      <div className="row" style={{ gap: 18 }}>
+    <section className="hud-panel hud-me-card" aria-label={me.name}>
+      <div className="hud-me-portrait">
         <Gota
           color={me.color}
           accessory={me.accessory}
           skin={skinOf(me.skin)}
           portrait
-          scale={2.5}
-          className="portrait"
+          scale={2.2}
         />
+      </div>
 
-        <div className="who-box">
-          <div className="who">
-            <b className="hud-name" title={me.name}>
-              {me.name.toUpperCase()}
-            </b>
-            <Chip tone={role.tone} icon="drop">
-              {role.text.toUpperCase()}
-            </Chip>
-          </div>
-          <div className="m card-meter">
-            <span>{HUD_TEXT.MY_TANK}</span>
-            <Gauge
-              value={clean / 100}
-              tone={clean < 40 ? 'bad' : clean < 70 ? 'amber' : 'leaf'}
-            />
-            <span className="num" style={{ textAlign: 'right' }}>
-              {tank ? HUD_TEXT.percent(clean) : HUD_TEXT.NO_TANK}
-            </span>
-          </div>
+      <div className="hud-me-info">
+        <div className="hud-me-top">
+          <strong className="hud-me-name" title={me.name}>
+            {me.name}
+          </strong>
+          <span className={`hud-role-pill ${role.tone}`}>
+            {role.text}
+          </span>
+        </div>
+
+        <div className="hud-tank-meter-row">
+          <span className="hud-metric-lbl">{HUD_TEXT.MY_TANK}</span>
+          <Gauge
+            value={clean / 100}
+            tone={clean < 40 ? 'bad' : clean < 70 ? 'amber' : 'leaf'}
+          />
+          <span className="hud-gauge-num">
+            {tank ? HUD_TEXT.percent(clean) : HUD_TEXT.NO_TANK}
+          </span>
         </div>
       </div>
     </section>
@@ -306,21 +314,23 @@ function PlayerCard(props: { snap: Snapshot; me?: PlayerView }) {
 function ActionSlot(props: { action: Action | null; onUse: () => void }) {
   const a = props.action;
   const slot = a ? ACTION_SLOT[a.kind] : ACTION_SLOT.task;
+  const isEnabled = Boolean(a?.enabled);
+
   return (
     <button
-      className={`slotk ${a?.enabled ? 'on' : ''}`}
-      disabled={!a || !a.enabled}
+      type="button"
+      className={`hud-action-slot ${isEnabled ? 'active' : ''}`}
+      disabled={!isEnabled}
       onClick={props.onUse}
     >
-      <span className="key">E</span>
-      <Icon name={slot.icon} palette={slot.palette} size={44} />
-      <span>{(a ? a.label : slot.label).toUpperCase()}</span>
+      <span className="hud-slot-key">E</span>
+      <span className="hud-slot-label">
+        {a ? a.label : slot.label}
+      </span>
     </button>
   );
 }
 
-// Minimap: la miniatura del mapa con tu posición, tus tareas pendientes
-// y, si hay una emergencia, dónde se arregla. Nunca muestra a los demás.
 function Minimap(props: { snap: Snapshot; meId: string; now: number }) {
   const { snap, meId } = props;
   const me = snap.players.find((p) => p.id === meId);
@@ -328,6 +338,7 @@ function Minimap(props: { snap: Snapshot; meId: string; now: number }) {
     left: `${(x / gameMap.width) * 100}%`,
     top: `${(y / gameMap.height) * 100}%`,
   });
+
   const pending = (snap.myTasks ?? []).filter((t) => !t.done);
   const meeting = meetingMarker(gameMap);
   const meetingReady =
@@ -338,27 +349,24 @@ function Minimap(props: { snap: Snapshot; meId: string; now: number }) {
   const tankSpot = myTank
     ? gameMap.tanks.find((t) => t.slot === myTank.slot)
     : undefined;
+
   return (
-    <section className="panel glass mini" aria-label={HUD_TEXT.MAP}>
-      <div className="lab">
-        <span>{HUD_TEXT.MAP.toUpperCase()}</span>
-        <span className="mm-keys">
-          {myTank && tankSpot && (
-            <span className="mm-key tank">
-              <i />
-              {HUD_TEXT.MY_TANK.toUpperCase()}
-            </span>
-          )}
-          {meeting && (
-            <span className="mm-key">
-              <i />
-              {HUD_TEXT.MEETING_POINT.toUpperCase()}
-            </span>
-          )}
-        </span>
-      </div>
-      <div className="map-box">
-        <img src="/assets/map/manglar-verde/minimap.png" alt="" />
+    <section className="hud-panel hud-minimap" aria-label={HUD_TEXT.MAP}>
+      <header className="hud-map-top">
+        <span className="hud-map-lbl">{HUD_TEXT.MAP}</span>
+        {meeting && (
+          <span className="hud-map-legend">
+            {HUD_TEXT.MEETING_POINT}
+          </span>
+        )}
+      </header>
+
+      <div className="hud-map-box">
+        <img
+          className="hud-map-img"
+          src="/assets/map/manglar-verde/minimap.png"
+          alt=""
+        />
         {pending.map((t) => {
           const st = gameMap.stations.find((s) => s.id === t.stationId);
           return st ? (

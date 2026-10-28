@@ -1,0 +1,566 @@
+/* meeting.css: rediseño elegante de la mesa de reuniones y votación */
+
+.stage.scr-meeting {
+  position: relative;
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 50px 28px;
+  box-sizing: border-box;
+  justify-content: space-between;
+}
+
+/* Viñeta de emergencia con tono cálido sutil */
+.scr-meeting .meeting-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% 20%,
+    rgba(38, 18, 12, 0.35) 0%,
+    rgba(4, 18, 36, 0.75) 60%,
+    rgba(2, 9, 18, 0.95) 100%
+  );
+  z-index: 1;
+}
+
+/* Contenido en capa superior */
+.scr-meeting .meeting-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* Encabezado superior */
+.scr-meeting .meeting-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 94px;
+}
+
+.scr-meeting .meeting-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.scr-meeting .meeting-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.scr-meeting .meeting-badge-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: rgba(255, 77, 109, 0.16);
+  border: 1.5px solid rgba(255, 77, 109, 0.5);
+  color: #ff5470;
+  font-family: var(--head);
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  box-shadow: 0 0 12px rgba(255, 77, 109, 0.25);
+}
+
+.scr-meeting .meeting-badge-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: rgba(126, 230, 216, 0.12);
+  border: 1px solid rgba(126, 230, 216, 0.3);
+  color: #7ee6d8;
+  font-family: var(--head);
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+
+.scr-meeting .meeting-title {
+  margin: 0;
+  font-family: var(--head);
+  font-size: 40px;
+  color: #f4fffb;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+}
+
+.scr-meeting .meeting-header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.scr-meeting .meeting-phase-pill {
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-family: var(--head);
+  font-size: 14px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.scr-meeting .meeting-phase-pill.active {
+  background: rgba(38, 208, 170, 0.16);
+  border: 1.5px solid #38efbd;
+  color: #38efbd;
+  box-shadow: 0 0 12px rgba(56, 239, 189, 0.3);
+}
+
+.scr-meeting .meeting-phase-pill.muted {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.scr-meeting .meeting-timer-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 22px;
+  border-radius: 14px;
+  background: rgba(7, 25, 46, 0.85);
+  border: 1.5px solid rgba(232, 177, 58, 0.45);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.scr-meeting .meeting-timer-digits {
+  font-family: var(--head);
+  font-size: 28px;
+  color: #f6c867;
+  text-shadow: 0 0 12px rgba(246, 200, 103, 0.4);
+}
+
+.scr-meeting .meeting-timer-digits.urgent {
+  color: #ff5470;
+  text-shadow: 0 0 12px rgba(255, 84, 112, 0.5);
+  animation: timer-pulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes timer-pulse {
+  from { opacity: 0.8; }
+  to { opacity: 1; transform: scale(1.04); }
+}
+
+/* Grilla principal: votación y chat */
+.scr-meeting .meeting-grid {
+  display: grid;
+  grid-template-columns: 1fr 540px;
+  gap: 24px;
+  height: 890px;
+  min-height: 0;
+}
+
+/* Panel de votación (izquierda) */
+.scr-meeting .meeting-panel-voting {
+  background: rgba(7, 25, 46, 0.84);
+  border: 1.5px solid rgba(126, 230, 216, 0.28);
+  border-radius: 18px;
+  backdrop-filter: blur(14px);
+  padding: 22px 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+  min-height: 0;
+}
+
+.scr-meeting .meeting-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(126, 230, 216, 0.15);
+}
+
+.scr-meeting .meeting-panel-title {
+  margin: 0;
+  font-family: var(--head);
+  font-size: 19px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #7ee6d8;
+}
+
+.scr-meeting .meeting-reporter-chip {
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: rgba(232, 177, 58, 0.15);
+  border: 1px solid rgba(232, 177, 58, 0.4);
+  color: #f6c867;
+  font-family: var(--body);
+  font-size: 15px;
+  max-width: 620px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Grilla de tarjetas de jugadores */
+.scr-meeting .meeting-players-grid {
+  display: grid;
+  gap: 16px;
+  flex: 1;
+  align-content: center;
+  min-height: 0;
+  padding: 16px 0;
+}
+
+/* Tarjeta individual de jugador */
+.scr-meeting .meeting-player-card {
+  position: relative;
+  background: rgba(11, 32, 58, 0.65);
+  border: 1.5px solid rgba(126, 230, 216, 0.22);
+  border-radius: 14px;
+  padding: 16px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 140ms ease;
+  color: inherit;
+  font: inherit;
+  outline: none;
+}
+
+.scr-meeting .meeting-player-card:hover:not(:disabled) {
+  background: rgba(18, 48, 84, 0.85);
+  border-color: #38efbd;
+  box-shadow: 0 0 16px rgba(56, 239, 189, 0.3);
+  transform: translateY(-2px);
+}
+
+.scr-meeting .meeting-player-card:disabled {
+  cursor: default;
+}
+
+.scr-meeting .meeting-player-card.ghost {
+  opacity: 0.6;
+  filter: grayscale(0.3);
+}
+
+.scr-meeting .meeting-player-card.selected-vote {
+  background: rgba(16, 52, 78, 0.95);
+  border-color: #38efbd;
+  box-shadow: 0 0 20px rgba(56, 239, 189, 0.4);
+}
+
+.scr-meeting .meeting-vote-badge {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-family: var(--head);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.scr-meeting .meeting-vote-badge.mine {
+  background: rgba(38, 208, 170, 0.25);
+  border: 1px solid #38efbd;
+  color: #38efbd;
+}
+
+.scr-meeting .meeting-vote-badge.other {
+  background: rgba(126, 230, 216, 0.15);
+  border: 1px solid rgba(126, 230, 216, 0.3);
+  color: #7ee6d8;
+}
+
+.scr-meeting .meeting-player-portrait {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 90px;
+}
+
+.scr-meeting .meeting-player-name {
+  font-family: var(--head);
+  font-size: 18px;
+  color: #ffffff;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: 1px;
+}
+
+.scr-meeting .meeting-status-chip {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-family: var(--body);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.scr-meeting .meeting-status-chip.alive {
+  background: rgba(38, 208, 170, 0.14);
+  color: #38efbd;
+  border: 1px solid rgba(38, 208, 170, 0.35);
+}
+
+.scr-meeting .meeting-status-chip.ghost {
+  background: rgba(160, 140, 210, 0.16);
+  color: #c4b5fd;
+  border: 1px solid rgba(160, 140, 210, 0.35);
+}
+
+.scr-meeting .meeting-status-chip.offline {
+  background: rgba(255, 77, 109, 0.16);
+  color: #ff5470;
+  border: 1px solid rgba(255, 77, 109, 0.35);
+}
+
+.scr-meeting .meeting-status-chip.reporter {
+  background: rgba(232, 177, 58, 0.2);
+  color: #f6c867;
+  border: 1px solid rgba(232, 177, 58, 0.45);
+}
+
+/* Pie del panel de votación */
+.scr-meeting .meeting-voting-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 14px;
+  border-top: 1px solid rgba(126, 230, 216, 0.15);
+}
+
+.scr-meeting .meeting-skip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 22px;
+  border-radius: 999px;
+  background: rgba(11, 32, 58, 0.8);
+  border: 1.5px solid rgba(232, 177, 58, 0.4);
+  color: #f6c867;
+  font-family: var(--head);
+  font-size: 14px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+
+.scr-meeting .meeting-skip-btn:hover:not(:disabled) {
+  background: rgba(232, 177, 58, 0.2);
+  border-color: #f6c867;
+  box-shadow: 0 0 14px rgba(246, 200, 103, 0.3);
+}
+
+.scr-meeting .meeting-skip-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.scr-meeting .meeting-voting-hint {
+  font-family: var(--body);
+  font-size: 16px;
+  color: rgba(205, 231, 238, 0.75);
+}
+
+/* Panel de chat (derecha) */
+.scr-meeting .meeting-panel-chat {
+  background: rgba(7, 25, 46, 0.84);
+  border: 1.5px solid rgba(126, 230, 216, 0.28);
+  border-radius: 18px;
+  backdrop-filter: blur(14px);
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
+  min-height: 0;
+}
+
+.scr-meeting .meeting-chat-status {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-family: var(--head);
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.scr-meeting .meeting-chat-status.can-chat {
+  background: rgba(38, 208, 170, 0.16);
+  color: #38efbd;
+  border: 1px solid rgba(38, 208, 170, 0.35);
+}
+
+.scr-meeting .meeting-chat-status.read-only {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* Lista de mensajes */
+.scr-meeting .meeting-chat-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.scr-meeting .meeting-chat-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scr-meeting .meeting-chat-list::-webkit-scrollbar-track {
+  background: rgba(3, 14, 26, 0.5);
+  border-radius: 8px;
+}
+
+.scr-meeting .meeting-chat-list::-webkit-scrollbar-thumb {
+  background: rgba(126, 230, 216, 0.25);
+  border-radius: 8px;
+}
+
+.scr-meeting .meeting-chat-sys-msg {
+  background: rgba(232, 177, 58, 0.12);
+  border: 1px solid rgba(232, 177, 58, 0.3);
+  border-radius: 10px;
+  padding: 8px 14px;
+  color: #f6c867;
+  font-family: var(--body);
+  font-size: 15px;
+  font-style: italic;
+  text-align: center;
+}
+
+.scr-meeting .meeting-chat-msg {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.scr-meeting .meeting-chat-msg.pending {
+  opacity: 0.6;
+}
+
+.scr-meeting .meeting-chat-avatar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+.scr-meeting .meeting-chat-bubble {
+  background: rgba(11, 32, 58, 0.7);
+  border: 1px solid rgba(126, 230, 216, 0.18);
+  border-radius: 12px;
+  padding: 8px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.scr-meeting .meeting-chat-author {
+  font-family: var(--head);
+  font-size: 13px;
+  color: #7ee6d8;
+  letter-spacing: 0.8px;
+}
+
+.scr-meeting .meeting-chat-text {
+  font-family: var(--body);
+  font-size: 16px;
+  color: #e6f3f8;
+  word-break: break-word;
+  line-height: 1.35;
+}
+
+.scr-meeting .meeting-chat-pending-label {
+  font-family: var(--body);
+  font-size: 13px;
+  color: rgba(214, 232, 238, 0.6);
+  font-style: italic;
+  margin-left: 6px;
+}
+
+/* Formulario de envío */
+.scr-meeting .meeting-chat-form {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.scr-meeting .meeting-chat-input {
+  flex: 1;
+  height: 48px;
+  background: rgba(4, 15, 30, 0.85);
+  border: 1.5px solid rgba(126, 230, 216, 0.28);
+  border-radius: 12px;
+  padding: 0 16px;
+  font-family: var(--body);
+  font-size: 16px;
+  color: #ffffff;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 140ms ease;
+}
+
+.scr-meeting .meeting-chat-input:focus {
+  border-color: #38efbd;
+  box-shadow: 0 0 12px rgba(56, 239, 189, 0.25);
+}
+
+.scr-meeting .meeting-chat-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.scr-meeting .meeting-chat-send-btn {
+  height: 48px;
+  padding: 0 24px;
+  background: rgba(38, 208, 170, 0.2);
+  border: 1.5px solid #38efbd;
+  border-radius: 12px;
+  color: #ffffff;
+  font-family: var(--head);
+  font-size: 14px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+
+.scr-meeting .meeting-chat-send-btn:hover:not(:disabled) {
+  background: rgba(38, 208, 170, 0.35);
+  box-shadow: 0 0 14px rgba(56, 239, 189, 0.4);
+  transform: translateY(-1px);
+}
+
+.scr-meeting .meeting-chat-send-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  border-color: rgba(126, 230, 216, 0.2);
+  background: transparent;
+}
+

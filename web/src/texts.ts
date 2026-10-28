@@ -315,6 +315,7 @@ export const RESULT_TEXT = {
   ALIVE: 'Vivo',
   GHOST: 'Fantasma',
   OFFLINE: 'Desconectado',
+  YOU: '(tú)',
   IMPACT: 'Tu impacto 3R',
   tasksOf: (done: number, total: number) => `${done} de ${total} tareas`,
   liters: (l: number) => `${l} L`,

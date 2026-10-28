@@ -1,19 +1,21 @@
-/* Pantalla de carga (rediseño minimalista, místico y uniforme con el menú principal). */
+/* boot.css: pantalla de carga minimalista y atmosférica */
 
 .stage.scr-boot {
   position: relative;
   overflow: hidden;
+  width: 1920px;
+  height: 1080px;
 }
 
-/* Viñeta mística suave */
+/* Viñeta sutil */
 .scr-boot .boot-vignette {
   position: absolute;
   inset: 0;
   pointer-events: none;
   background: radial-gradient(
     ellipse at 50% 50%,
-    rgba(4, 20, 42, 0.55) 0%,
-    rgba(3, 10, 24, 0.92) 100%
+    rgba(4, 20, 42, 0.45) 0%,
+    rgba(3, 10, 24, 0.9) 100%
   );
   z-index: 1;
 }
@@ -28,7 +30,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 36px;
+  gap: 32px;
   z-index: 2;
 }
 
@@ -40,28 +42,50 @@
   text-align: center;
 }
 
+.scr-boot .water-drop-badge {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.scr-boot .boot-drop-halo {
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(78, 242, 187, 0.22) 0%,
+    rgba(56, 189, 248, 0.1) 50%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
 .scr-boot .boot-logo h1 {
   display: flex;
   justify-content: center;
   align-items: center;
   font-family: var(--logo);
   font-weight: 400;
-  font-size: 88px;
+  font-size: 84px;
   line-height: 1.1;
   white-space: nowrap;
   color: var(--txt);
   text-shadow:
-    6px 6px 0 #0b5a8a,
-    12px 12px 0 var(--ink);
+    0 0 32px rgba(56, 189, 248, 0.35),
+    0 4px 16px rgba(0, 0, 0, 0.8);
   margin: 0;
 }
 
 .scr-boot .boot-logo h1 .a {
-  color: var(--leaf);
+  color: #38efbd;
 }
 
 .scr-boot .boot-logo h1 .b {
-  color: var(--aqua);
+  color: #38bdf8;
 }
 
 /* Barra divisoria */
@@ -70,19 +94,19 @@
   align-items: center;
   justify-content: center;
   gap: 16px;
-  margin: 12px auto 0;
-  width: 620px;
+  margin: 14px auto 0;
+  width: 580px;
 }
 
 .scr-boot .boot-rule::before,
 .scr-boot .boot-rule::after {
   content: '';
   flex: 1;
-  height: 3px;
+  height: 2px;
   background: linear-gradient(
     90deg,
     transparent,
-    var(--aqua)
+    rgba(126, 230, 216, 0.6)
   );
 }
 
@@ -91,49 +115,78 @@
 }
 
 .scr-boot .boot-rule i {
-  width: 12px;
-  height: 12px;
-  background: var(--aqua);
+  width: 10px;
+  height: 10px;
+  background: #7ee6d8;
   transform: rotate(45deg);
+  box-shadow: 0 0 8px rgba(126, 230, 216, 0.6);
 }
 
 /* Subtítulo 3R */
 .scr-boot .boot-sub {
-  margin: 12px 0 0 0;
+  margin: 14px 0 0 0;
   font-family: var(--head);
-  font-size: 24px;
-  letter-spacing: 5px;
+  font-size: 20px;
+  letter-spacing: 6px;
   text-transform: uppercase;
-  color: var(--mut);
-  text-shadow: 2px 2px 0 var(--ink);
+  color: rgba(214, 232, 238, 0.8);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
   text-align: center;
 }
 
 .scr-boot .boot-sub b {
-  color: var(--aqua);
+  color: #7ee6d8;
   font-weight: 400;
   margin: 0 12px;
 }
 
-/* Bloque del loader minimalista */
-.scr-boot .boot-loader {
+/* Tarjeta del loader */
+.scr-boot .boot-loader-card {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  width: 540px;
+  width: 580px;
   gap: 14px;
-  margin-top: 10px;
+  padding: 20px 28px;
+  background: rgba(7, 25, 46, 0.85);
+  border: 1.5px solid rgba(126, 230, 216, 0.28);
+  border-radius: 18px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
+  box-sizing: border-box;
+}
+
+/* Estado de carga: etiqueta y porcentaje */
+.scr-boot .boot-status {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.scr-boot .boot-label {
+  font-family: var(--head);
+  font-size: 15px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #c5dbe4;
+}
+
+.scr-boot .boot-pct {
+  font-family: var(--head);
+  font-size: 16px;
+  letter-spacing: 1px;
+  color: #38efbd;
+  text-shadow: 0 0 10px rgba(56, 239, 189, 0.4);
 }
 
 /* Pista de la barra de carga */
 .scr-boot .boot-bar-track {
   width: 100%;
-  height: 14px;
-  background: #040e1b;
-  border: 2px solid var(--line-d);
-  border-radius: 8px;
+  height: 12px;
+  background: #030e1a;
+  border: 1px solid rgba(126, 230, 216, 0.2);
+  border-radius: 999px;
   padding: 2px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -143,64 +196,46 @@
   height: 100%;
   background: linear-gradient(
     90deg,
-    #1b7a43 0%,
-    var(--leaf) 35%,
-    var(--aqua) 100%
+    #136237 0%,
+    #21b069 45%,
+    #38efbd 100%
   );
-  border-radius: 4px;
-  transition: width 180ms ease-out;
+  border-radius: 999px;
+  box-shadow: 0 0 10px rgba(56, 239, 189, 0.35);
+  transition: width 160ms ease-out;
 }
 
 .scr-boot .boot-bar-fill.bad {
-  background: #e74c3c;
-}
-
-/* Estado de carga: etiqueta y porcentaje */
-.scr-boot .boot-status {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 4px;
-}
-
-.scr-boot .boot-label {
-  font-family: var(--head);
-  font-size: 19px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--mut);
-  text-shadow: 1px 1px 0 var(--ink);
-}
-
-.scr-boot .boot-pct {
-  font-family: var(--head);
-  font-size: 20px;
-  letter-spacing: 1px;
-  color: var(--aqua);
-  text-shadow: 1px 1px 0 var(--ink);
+  background: linear-gradient(
+    90deg,
+    #7a1829 0%,
+    #d62846 45%,
+    #ff5470 100%
+  );
+  box-shadow: 0 0 10px rgba(255, 84, 112, 0.35);
 }
 
 /* Botón de reintento si falla */
 .scr-boot .boot-retry-btn {
-  margin-top: 8px;
+  margin-top: 4px;
   padding: 8px 24px;
   font-family: var(--head);
-  font-size: 18px;
+  font-size: 14px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: #fff;
-  background: #145a32;
-  border: 2px solid #27ae60;
-  border-radius: 8px;
+  color: #ffffff;
+  background: rgba(38, 208, 170, 0.2);
+  border: 1.5px solid #38efbd;
+  border-radius: 999px;
   cursor: pointer;
-  transition: all 120ms steps(3);
+  align-self: center;
+  transition: all 140ms ease;
 }
 
 .scr-boot .boot-retry-btn:hover {
-  background: #196f3d;
-  border-color: var(--leaf);
-  transform: translateY(-2px);
+  background: rgba(38, 208, 170, 0.35);
+  box-shadow: 0 0 14px rgba(56, 239, 189, 0.4);
+  transform: translateY(-1px);
 }
 
 /* Versión en pie de pantalla */
@@ -209,10 +244,8 @@
   right: 50px;
   bottom: 30px;
   font-family: var(--head);
-  font-size: 18px;
+  font-size: 14px;
   letter-spacing: 1px;
-  color: var(--mut);
-  opacity: 0.7;
-  text-shadow: 1px 1px 0 var(--ink);
+  color: rgba(214, 232, 238, 0.5);
   z-index: 2;
 }
