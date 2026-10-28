@@ -83,8 +83,8 @@ func TestOilDropsExpireAfterFifteenSeconds(t *testing.T) {
 func TestCleaningDropsNoOil(t *testing.T) {
 	r, _ := playingRoom(t)
 	r.tankAt(2).contamination = contaminateAmount
-	placeAt(r, "crew1", 2)
-	clean(r, "crew1", 2)
+	placeAt(r, "imp", 2)
+	clean(r, "imp", 2)
 	tickN(r, cleanTicks+1)
 
 	if level(r, 2) == contaminateAmount {

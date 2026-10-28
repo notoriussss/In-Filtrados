@@ -108,7 +108,7 @@ En la semana 2 se agregan mensajes; se agregan aquí, nunca se duplican en `web`
 ```ts
 // Navegador → gateway (además de join, move y start)
   | { type: 'interact'; stationId: string; completed?: boolean } // tarea
-  | { type: 'interact'; tankSlot: number }                        // limpiar tanque
+  | { type: 'interact'; tankSlot: number }                        // limpiar tanque (solo el impostor)
   | { type: 'contaminate'; tankSlot: number }                     // solo el impostor
   | { type: 'report'; tankSlot: number }                          // tanque muerto
   | { type: 'vote'; targetPlayerId: string | null }               // null = saltar
@@ -725,8 +725,8 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 **Pasos:**
 1. Cada tanque tiene `contamination` de 0 a 100.
 2. `Contaminate`: solo el impostor, a 40 unidades o menos del tanque. Requiere quedarse quieto **3 segundos** (60 ticks); si se mueve, se cancela. Al terminar, suma 35 puntos de contaminación. Tiempo de espera de 20 s entre contaminaciones.
-3. El tanque del impostor sube solo 1 punto cada 5 segundos, para que no se vea siempre limpio.
-4. Limpiar (`Interact` sobre un tanque ajeno o propio): resta 15 puntos, requiere 2 segundos quieto.
+3. El tanque del impostor sube solo 1 punto cada 5 segundos, para que no se vea siempre limpio. Nunca pasa de 99 (ni por esa subida ni por la tubería): el impostor no puede quedar fuera por su propio tanque.
+4. Limpiar (`Interact` sobre un tanque ajeno o propio): solo el impostor, para fingir que ayuda; los tripulantes no pueden limpiar ningún tanque. Resta 15 puntos, requiere 2 segundos quieto.
 5. Si un tanque llega a 100: `dead = true`, su dueño queda `alive = false` (fantasma: sigue moviéndose y haciendo tareas, pero no vota ni habla en la reunión).
 6. Cada contaminación, limpieza o paso a 40 unidades de un tanque se anota en `event_log (match_id, tick, player_id, kind, tank_slot)`.
 
@@ -815,7 +815,7 @@ para el mismo usuario responde 429.
 **Pasos:**
 1. Dibujar cada tanque del huerto con una barra de contaminación (verde a café según el valor) y el nombre del dueño. Muerto: gris con una planta marchita.
 2. Indicador del embalse arriba de la pantalla, de 0 a 100 %.
-3. Botón de acción contextual (tecla `E`) que cambia según lo que haya cerca: "Hacer tarea", "Limpiar", "Reportar" o, si eres impostor, "Contaminar".
+3. Botón de acción contextual (tecla `E`) que cambia según lo que haya cerca: "Hacer tarea", "Reportar" o, si eres impostor, "Contaminar" y "Limpiar".
 4. Barra de progreso circular durante las acciones que requieren quedarse quieto.
 5. Aviso al dueño: "¡Tu tanque se está contaminando!" cuando su tanque sube, sin decir quién.
 
