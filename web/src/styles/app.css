@@ -79,31 +79,7 @@ button:disabled { cursor: default; opacity: .55; transform: none !important; }
 .scr-access .stand .plank {bottom:26px;height:20px}
 .scr-access .stand canvas {bottom:21px}
 .scr-access .prev {height:410px}
-/* 06-lobby */
-.scr-lobby .stand {height:280px}
-.scr-lobby .stand .plank {width:300px}
-.scr-lobby .stand canvas {position:absolute;left:50%;transform:translateX(-50%)}
-.scr-lobby .stand .plank {bottom:6px;height:20px}
-.scr-lobby .stand canvas {bottom:7px}
-.scr-lobby .slot {height:80px;grid-template-columns:84px 1fr auto;margin-bottom:8px}
-.scr-lobby .slot .av {height:72px;width:72px}
-.scr-lobby .swatches {grid-template-columns:repeat(8,1fr);gap:8px}
-.scr-lobby .sw .px-icon {width:24px!important;height:24px!important}
-.scr-lobby .acg {display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
-.scr-lobby .acg .ac {aspect-ratio:auto;height:78px}
-.scr-lobby .fcg {display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
-.scr-lobby .fcg .ac {aspect-ratio:auto;height:50px}
-.scr-lobby .msg {display:grid;grid-template-columns:44px 1fr;gap:10px;margin-bottom:10px;font-size:.86em}
-.scr-lobby .msg b {display:block}
-.scr-lobby .prev {height:280px}
-.scr-lobby .taken {opacity:.35}
-.scr-lobby .ac.locked {opacity:.55;cursor:not-allowed}
-.scr-lobby .ac.locked::after {content:'\1F512';position:absolute;right:4px;bottom:2px;font-size:20px;line-height:1}
-.scr-lobby .chars .acg {display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:10px}
-.scr-lobby .chars .ac {aspect-ratio:auto;height:96px}
-.scr-lobby .acc-note {font-size:18px;opacity:.75;margin:0 0 8px}
-.scr-lobby .sw.me {outline:3px solid #fff;outline-offset:2px}
-.scr-lobby .sw:disabled {cursor:not-allowed;transform:none}
+/* 06-lobby: estilos encapsulados en styles/lobby.css */
 /* 07-ayuda: estilos encapsulados en styles/help.css */
 /* 09-rol */
 .scr-role .chr {position:absolute;left:800px;top:350px}
@@ -170,9 +146,6 @@ button:disabled { cursor: default; opacity: .55; transform: none !important; }
 .hud .mini .lab {font-family: var(--head); font-size: 18px; color: var(--mut); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
 .justify-start { justify-self: start; }
 .screen-title { color: #f4fffb; font-size: 44px; text-shadow: 3px 3px 0 rgba(4, 28, 38, .8); }
-.scr-lobby .sw { display: block; }
-.scr-lobby .sw .px-icon { position: absolute; inset: 0; margin: auto; }
-.scr-lobby .stand canvas { position: absolute; left: 50%; transform: translateX(-50%); bottom: 7px; }
 .scr-access .stand canvas { position: absolute; left: 50%; transform: translateX(-50%); bottom: 21px; }
 .hud .hud-ttl { font-size: 24px; padding-bottom: 10px; margin-bottom: 6px; }
 .hud .hud-name { font-family: var(--head); font-weight: 400; font-size: 24px; }

@@ -40,8 +40,35 @@ export const GOTA_ROSTER: Record<string, { name: string; accessory: string }> =
 
 export const SERVER_COLORS = Object.keys(GOTA_ROSTER);
 
+export function normalizeColor(raw?: string): string {
+  if (!raw) return SERVER_COLORS[0];
+  const c = raw.trim().toLowerCase();
+  if (c.startsWith('#')) return c;
+  if (/^[0-9a-f]{6}$/i.test(c)) return `#${c}`;
+  const map: Record<string, string> = {
+    red: '#e6194b',
+    rojo: '#e6194b',
+    green: '#3cb44b',
+    verde: '#3cb44b',
+    yellow: '#ffe119',
+    amarillo: '#ffe119',
+    blue: '#4363d8',
+    azul: '#4363d8',
+    orange: '#f58231',
+    naranja: '#f58231',
+    purple: '#911eb4',
+    morado: '#911eb4',
+    cyan: '#46f0f0',
+    cian: '#46f0f0',
+    magenta: '#f032e6',
+    rosa: '#f032e6',
+    pink: '#f032e6',
+  };
+  return map[c] ?? SERVER_COLORS[0];
+}
+
 export function colorName(color: string): string {
-  return GOTA_ROSTER[color.toLowerCase()]?.name ?? '';
+  return GOTA_ROSTER[normalizeColor(color)]?.name ?? '';
 }
 
 export const ACCESSORIES: { id: string; name: string }[] = [
@@ -113,7 +140,7 @@ export function Gota(props: GotaProps) {
   const crop = props.portrait
     ? PORTRAIT
     : { x: 0, y: 0, w: CELL_W, h: CELL_H };
-  const color = props.color.toLowerCase();
+  const color = normalizeColor(props.color);
   const jimena = props.skin === SKIN_JIMENA;
   const rawAccessory =
     props.accessory !== undefined && props.accessory !== ''

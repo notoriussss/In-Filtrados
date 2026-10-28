@@ -1,16 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
-import type { PlayerView } from '@in-filtrados/messages';
 import { Stage } from '../ui/Stage';
 import {
   Gota,
   SERVER_COLORS,
   colorName,
+  normalizeColor,
   ACCESSORIES,
   accessoryName,
 } from '../ui/Gota';
-import { Icon } from '../ui/Icon';
-import { Button, Chip, Pill, TitleBar } from '../ui/kit';
-import { api, type MeResponse } from '../api';
+import { HintBar } from '../ui/kit';
+import { api } from '../api';
 import {
   SKIN_GOTA,
   SKIN_JIMENA,
@@ -25,26 +24,30 @@ import {
 import { session } from '../session';
 import { gameMap } from '../map';
 import type { GameSession } from '../game/session';
-import { LOBBY_TEXT } from '../texts';
+import { LOBBY_TEXT, MENU_TEXT } from '../texts';
 import { BACKGROUNDS } from './backgrounds';
 import { useGame } from './game/useGame';
-import { ChoiceGrid } from './pending/ChoiceGrid';
 import { FEATURES } from '../features';
+import '../styles/lobby.css';
 
-const NO_ACCESSORY = 'none'; // pickAccessory: quitar el accesorio
-const MAP_THUMB = '/assets/map/manglar-verde/thumbnail.jpg';
-const MAX_SLOTS = 10; // match acepta hasta 10 jugadores por sala
+const NO_ACCESSORY = 'none';
+const MAX_SLOTS = 10;
 const MIN_PLAYERS = 2;
-const TWO_IMPOSTORS_FROM = 7; // twoImpostorsFrom en match
+const TWO_IMPOSTORS_FROM = 7;
 
-function accessoryLabel(id: string): string {
-  return id === NO_ACCESSORY ? LOBBY_TEXT.NO_ACCESSORY : accessoryName(id);
+function equippedSummary(
+  skin: string,
+  color: string,
+  accessory: string,
+): string {
+  const acc =
+    accessory === NO_ACCESSORY
+      ? LOBBY_TEXT.NO_ACCESSORY
+      : accessoryName(accessory);
+  return `${skin}  |  ${colorName(color)}  |  ${acc}`;
 }
 
-// Lobby (maqueta 06-lobby): tu gota con tu color, los jugadores de la
-// sala, el mapa y el botón de empezar (solo quien creó la sala). La
-// elección de accesorio y el chat de sala de la maqueta no existen en
-// el servidor, así que en su lugar van tu perfil y cómo se gana.
+// Lobby: sala de espera unificada con distribución balanceada y separadores.
 export function Lobby(props: {
   game: GameSession;
   onLeave: () => void;
@@ -52,12 +55,14 @@ export function Lobby(props: {
 }) {
   const state = useGame(props.game);
   const data = session.loadSession();
-  const [me, setMe] = useState<MeResponse | null>(null);
   const [copied, setCopied] = useState(false);
-  const [showAccessoryMenu, setShowAccessoryMenu] = useState(false);
   const [shop, setShop] = useState<ShopResponse | null>(null);
   const prefsApplied = useRef(false);
   const snap = state.snapshot;
+
+  const [pickedColor, setPickedColor] = useState<string | null>(null);
+  const [pickedSkin, setPickedSkin] = useState<Skin | null>(null);
+  const [pickedAccessory, setPickedAccessory] = useState<string | null>(null);
 
   useEffect(() => {
     if (snap && snap.phase !== 'LOBBY') props.onStarted();
@@ -65,13 +70,13 @@ export function Lobby(props: {
   }, [snap?.phase]);
 
   useEffect(() => {
-    if (!data) return;
-    api.getMe(data.token).then(setMe, () => setMe(null));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code === 'Escape') props.onLeave();
+    };
+    addEventListener('keydown', onKey);
+    return () => removeEventListener('keydown', onKey);
+  }, [props]);
 
-  // Lo comprado: se lee al entrar y al volver a esta pestaña (por si se
-  // compró en otra); en ese caso también se le avisa al servidor de juego.
   useEffect(() => {
     if (!data) return;
     const load = (notify: boolean) => {
@@ -92,26 +97,41 @@ export function Lobby(props: {
 
   const players = snap?.players ?? [];
   const meView = players.find((p) => p.id === data?.playerId);
-  const host = players[0]; // match pone primero a quien creó la sala
+  const host = players[0];
   const isHost = Boolean(data?.isCreator);
   const connected = players.filter((p) => p.connected).length;
-  const myColor = meView?.color ?? SERVER_COLORS[1];
-  const mySkin = skinOf(meView?.skin);
-  const myAccessory = meView?.accessory || NO_ACCESSORY;
+
+  const myColor =
+    pickedColor ??
+    (meView?.color ? normalizeColor(meView.color) : null) ??
+    (loadCosmetics().color ? normalizeColor(loadCosmetics().color) : null) ??
+    SERVER_COLORS[1];
+
+  const mySkin =
+    pickedSkin ??
+    (meView?.skin ? skinOf(meView.skin) : null) ??
+    loadCosmetics().skin ??
+    SKIN_JIMENA;
+
+  const myAccessory =
+    pickedAccessory ??
+    (meView?.accessory !== undefined ? meView.accessory : null) ??
+    loadCosmetics().accessory ??
+    NO_ACCESSORY;
+
   const owned = ownedIds(shop);
   const gotaOwned = owned.has(gotaItemId(myColor));
 
-  // Al entrar se vuelve a poner lo último que se eligió; match revisa que
-  // de verdad esté comprado.
   useEffect(() => {
     if (prefsApplied.current || !meView || !shop) return;
     prefsApplied.current = true;
     const prefs = loadCosmetics();
-    // match ignora el color si otro jugador ya lo tiene; entonces la gota
-    // que vale es la del color que quedó.
     const wanted = prefs.color.toLowerCase();
     const taken = players.some(
-      (p) => p.id !== meView.id && p.connected && p.color.toLowerCase() === wanted,
+      (p) =>
+        p.id !== meView.id &&
+        p.connected &&
+        p.color.toLowerCase() === wanted,
     );
     const color = wanted && !taken ? wanted : myColor.toLowerCase();
     if (color !== myColor.toLowerCase()) {
@@ -127,22 +147,33 @@ export function Lobby(props: {
   }, [meView?.id, shop]);
 
   const pickSkin = (skin: Skin) => {
-    if (skin !== mySkin) props.game.send({ type: 'pickSkin', skin });
+    setPickedSkin(skin);
+    props.game.send({ type: 'pickSkin', skin });
     saveCosmetics({ ...loadCosmetics(), skin });
   };
+
   const pickAccessory = (id: string) => {
-    if (id !== myAccessory) {
-      props.game.send({ type: 'pickAccessory', accessory: id });
-    }
+    setPickedAccessory(id);
+    props.game.send({ type: 'pickAccessory', accessory: id });
     saveCosmetics({
       ...loadCosmetics(),
       accessory: id === NO_ACCESSORY ? '' : id,
     });
-    setShowAccessoryMenu(false);
   };
+
+  const pickColor = (color: string) => {
+    const norm = normalizeColor(color);
+    setPickedColor(norm);
+    props.game.send({ type: 'pickColor', color: norm });
+    saveCosmetics({ ...loadCosmetics(), color: norm });
+  };
+
   const code = data?.roomCode ?? '----';
   const impostors = players.length >= TWO_IMPOSTORS_FROM ? 2 : 1;
-  const compact = players.length > 8;
+  const skinDisplay =
+    mySkin === SKIN_GOTA
+      ? LOBBY_TEXT.CHARACTER_GOTA
+      : LOBBY_TEXT.CHARACTER_JIMENA;
 
   const copy = async () => {
     try {
@@ -150,436 +181,327 @@ export function Lobby(props: {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      // Sin permiso: el código se ve en grande igual.
+      // Sin permiso de portapapeles
     }
   };
 
   return (
     <Stage className="scr-lobby" background={BACKGROUNDS.mapBlur}>
-      <div className="shade dim" />
-      <div
-        className="row"
-        style={{
-          position: 'absolute',
-          left: 60,
-          right: 60,
-          top: 20,
-          height: 80,
-          justifyContent: 'space-between',
-        }}
-      >
-        <div className="row">
-          <Button variant="sec" small icon="left" onClick={props.onLeave}>
-            {LOBBY_TEXT.LEAVE}
-          </Button>
-          <span className="h2 screen-title">{LOBBY_TEXT.TITLE}</span>
-        </div>
-        <div className="row">
-          <Chip tone="info" big icon="map">
-            {gameMap.name}
-          </Chip>
-          <Chip big icon="user">
-            {players.length} / {MAX_SLOTS}
-          </Chip>
-          <span className="code">{code}</span>
-          <Button small icon={copied ? 'check' : 'copy'} onClick={copy}>
-            {copied ? LOBBY_TEXT.COPIED : LOBBY_TEXT.COPY}
-          </Button>
-        </div>
-      </div>
+      <div className="lobby-vignette" />
 
-      <section
-        className="panel"
-        style={{
-          left: 60,
-          top: 120,
-          width: 620,
-          height: 840,
-          padding: '26px 30px',
-        }}
-      >
-        <TitleBar icon="user" title={LOBBY_TEXT.YOUR_GOTA} size={34}>
-          <Chip tone="ok" className="name-chip">
-            <span className="fit" title={data?.username}>
-              {data?.username}
-            </span>
-          </Chip>
-        </TitleBar>
-        <div className="prev stand" style={{ position: 'relative' }}>
-          <div className="plank" />
-          <Gota
-            color={myColor}
-            accessory={meView?.accessory}
-            skin={mySkin}
-            scale={4}
-            animate
-          />
-          {FEATURES.accessoryPicker && (
-            <Button
-              variant="sec"
-              small
-              style={{
-                position: 'absolute',
-                top: 6,
-                right: 8,
-                zIndex: 5,
-                fontSize: 18,
-                minHeight: 34,
-                padding: '4px 12px 2px',
-                maxWidth: 300,
-                gap: 6,
-              }}
-              onClick={() => setShowAccessoryMenu((open) => !open)}
-            >
-              <span
-                style={{
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-                title={accessoryLabel(myAccessory)}
-              >
-                {accessoryLabel(myAccessory)}
-              </span>
-              <span style={{ fontSize: 13, opacity: 0.8 }}>▾</span>
-            </Button>
-          )}
-          {showAccessoryMenu && (
-            <>
-              <div
-                style={{
-                  position: 'fixed',
-                  inset: 0,
-                  zIndex: 15,
-                }}
-                onClick={() => setShowAccessoryMenu(false)}
+      {/* BARRA SUPERIOR INTEGRADA */}
+      <header className="lobby-header">
+        <button
+          type="button"
+          className="lobby-exit-btn"
+          onClick={props.onLeave}
+        >
+          {LOBBY_TEXT.LEAVE}
+        </button>
+
+        <div
+          className="lobby-code-badge"
+          onClick={copy}
+          role="button"
+          tabIndex={0}
+          title={copied ? LOBBY_TEXT.COPIED : LOBBY_TEXT.COPY}
+        >
+          <span className="lobby-code-lbl">{LOBBY_TEXT.ROOM_CODE}:</span>
+          <span className="lobby-code-val">{code}</span>
+          <span className="lobby-code-action">
+            {copied ? LOBBY_TEXT.COPIED : LOBBY_TEXT.COPY}
+          </span>
+        </div>
+
+        <div className="lobby-header-meta">
+          <span>{gameMap.name}</span>
+          <span className="lobby-meta-dot">·</span>
+          <span>{connected} / {MAX_SLOTS}</span>
+        </div>
+      </header>
+
+      {/* CUERPO UNIFICADO DE LA PANTALLA */}
+      <main className="lobby-stage-content">
+        {/* COLUMNA IZQUIERDA: TU PERSONAJE */}
+        <section className="lobby-hero-col">
+          <div className="lobby-char-pedestal">
+            <div className="lobby-char-shadow" />
+            <div className="lobby-char-figure">
+              <Gota
+                color={myColor}
+                accessory={myAccessory}
+                skin={mySkin}
+                scale={3.0}
+                animate
               />
-              <div
-                className="panel"
-                style={{
-                  position: 'absolute',
-                  top: 46,
-                  right: 8,
-                  left: 8,
-                  zIndex: 20,
-                  padding: '14px 16px',
-                  boxShadow: '0 12px 28px rgba(0,0,0,0.7)',
-                }}
-              >
-                <div
-                  className="row"
-                  style={{
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: 10,
-                  }}
+            </div>
+            <div className="lobby-char-name-tag">
+              {data?.username} {LOBBY_TEXT.YOU}
+            </div>
+            <div className="lobby-char-desc">
+              {equippedSummary(skinDisplay, myColor, myAccessory)}
+            </div>
+          </div>
+
+          <div className="lobby-section-sep" />
+
+          <div className="lobby-controls-flow">
+            {/* Selector de personaje */}
+            <div className="lobby-control-group">
+              <span className="lobby-control-title">
+                {LOBBY_TEXT.CHARACTER}
+              </span>
+              <div className="lobby-skin-options">
+                <button
+                  type="button"
+                  className={`lobby-pill-opt ${
+                    mySkin === SKIN_JIMENA ? 'active' : ''
+                  }`}
+                  onClick={() => pickSkin(SKIN_JIMENA)}
                 >
-                  <span className="lab" style={{ margin: 0 }}>
-                    {LOBBY_TEXT.CHOOSE_ACCESSORY}
-                  </span>
-                  <Button
-                    variant="sec"
-                    small
-                    icon="cross"
-                    style={{
-                      fontSize: 18,
-                      minHeight: 34,
-                      padding: '4px 12px 2px',
-                      gap: 6,
-                    }}
-                    onClick={() => setShowAccessoryMenu(false)}
+                  {LOBBY_TEXT.CHARACTER_JIMENA}
+                </button>
+                <button
+                  type="button"
+                  className={`lobby-pill-opt ${
+                    mySkin === SKIN_GOTA ? 'active' : ''
+                  }`}
+                  disabled={!gotaOwned}
+                  title={
+                    gotaOwned
+                      ? LOBBY_TEXT.CHARACTER_GOTA
+                      : LOBBY_TEXT.lockedHint(LOBBY_TEXT.CHARACTER_GOTA)
+                  }
+                  onClick={() => pickSkin(SKIN_GOTA)}
+                >
+                  {LOBBY_TEXT.CHARACTER_GOTA}
+                  {!gotaOwned ? ' (Tienda)' : ''}
+                </button>
+              </div>
+            </div>
+
+            <div className="lobby-section-sep" />
+
+            {/* Selector de colores */}
+            <div className="lobby-control-group">
+              <span className="lobby-control-title">
+                {LOBBY_TEXT.COLOR} · {colorName(myColor)}
+              </span>
+              <div className="lobby-color-row">
+                {SERVER_COLORS.map((c) => {
+                  const isMine = c === myColor.toLowerCase();
+                  const isTaken = players.some(
+                    (p) =>
+                      p.id !== meView?.id &&
+                      p.connected &&
+                      p.color.toLowerCase() === c,
+                  );
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      className={`lobby-color-dot ${
+                        isMine ? 'active' : ''
+                      } ${isTaken ? 'taken' : ''}`}
+                      style={{ background: c }}
+                      disabled={isTaken && !isMine}
+                      title={colorName(c)}
+                      onClick={() => pickColor(c)}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="lobby-section-sep" />
+
+            {/* Selector de accesorios */}
+            {FEATURES.accessoryPicker && (
+              <div className="lobby-control-group">
+                <span className="lobby-control-title">
+                  {LOBBY_TEXT.ACCESSORY}
+                </span>
+                <div className="lobby-acc-row">
+                  <button
+                    type="button"
+                    className={`lobby-acc-item no-acc ${
+                      myAccessory === NO_ACCESSORY ? 'active' : ''
+                    }`}
+                    title={LOBBY_TEXT.NO_ACCESSORY}
+                    onClick={() => pickAccessory(NO_ACCESSORY)}
                   >
-                    {LOBBY_TEXT.CLOSE}
-                  </Button>
-                </div>
-                <ChoiceGrid
-                  kind="accessory"
-                  label={LOBBY_TEXT.ACCESSORY}
-                  value={myAccessory}
-                  choices={[
-                    {
-                      id: NO_ACCESSORY,
-                      label: LOBBY_TEXT.NO_ACCESSORY,
-                      preview: <Icon name="cross" size={28} />,
-                    },
-                    ...ACCESSORIES.map((a) => ({
-                      id: a.id,
-                      label: owned.has(a.id)
-                        ? a.name
-                        : LOBBY_TEXT.lockedHint(a.name),
-                      locked: !owned.has(a.id),
-                      preview: (
+                    <span className="lobby-no-acc-glyph">✕</span>
+                  </button>
+                  {ACCESSORIES.map((a) => {
+                    const isOwned = owned.has(a.id);
+                    const isActive = myAccessory === a.id;
+                    return (
+                      <button
+                        key={a.id}
+                        type="button"
+                        className={`lobby-acc-item ${
+                          isActive ? 'active' : ''
+                        } ${!isOwned ? 'locked' : ''}`}
+                        disabled={!isOwned}
+                        title={
+                          isOwned
+                            ? a.name
+                            : LOBBY_TEXT.lockedHint(a.name)
+                        }
+                        onClick={() => pickAccessory(a.id)}
+                      >
                         <Gota
                           color={myColor}
                           accessory={a.id}
                           skin={mySkin}
-                          scale={1.4}
+                          scale={1.25}
                           portrait
                         />
-                      ),
-                    })),
-                  ]}
-                  onPick={pickAccessory}
-                />
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </>
-          )}
-        </div>
-        <div className="lab">{LOBBY_TEXT.CHARACTER}</div>
-        <div className="chars">
-          <ChoiceGrid
-            kind="accessory"
-            label={LOBBY_TEXT.CHARACTER}
-            value={mySkin}
-            choices={[
-              {
-                id: SKIN_JIMENA,
-                label: LOBBY_TEXT.CHARACTER_JIMENA,
-                preview: (
-                  <Gota
-                    color={myColor}
-                    skin={SKIN_JIMENA}
-                    scale={1.6}
-                    portrait
-                  />
-                ),
-              },
-              {
-                id: SKIN_GOTA,
-                label: gotaOwned
-                  ? LOBBY_TEXT.CHARACTER_GOTA
-                  : LOBBY_TEXT.lockedHint(LOBBY_TEXT.CHARACTER_GOTA),
-                locked: !gotaOwned,
-                preview: (
-                  <Gota
-                    color={myColor}
-                    skin={SKIN_GOTA}
-                    scale={1.6}
-                    portrait
-                  />
-                ),
-              },
-            ]}
-            onPick={(id) => pickSkin(id as Skin)}
-          />
-        </div>
-        <div className="lab" style={{ marginTop: 14 }}>
-          {LOBBY_TEXT.COLOR}{' '}
-          <span className="muted">· {colorName(myColor)}</span>
-        </div>
-        {FEATURES.colorPicker ? (
-          <ChoiceGrid
-            kind="color"
-            label={LOBBY_TEXT.COLOR}
-            value={myColor.toLowerCase()}
-            choices={SERVER_COLORS.map((c) => ({
-              id: c,
-              label: colorName(c),
-              swatch: c,
-              // Solo otro jugador conectado bloquea el color, igual que
-              // en match.
-              taken: players.some(
-                (p) =>
-                  p.id !== meView?.id &&
-                  p.connected &&
-                  p.color.toLowerCase() === c,
-              ),
-            }))}
-            onPick={(c) => {
-              if (c !== myColor.toLowerCase()) {
-                props.game.send({ type: 'pickColor', color: c });
-                saveCosmetics({ ...loadCosmetics(), color: c });
-              }
-            }}
-          />
-        ) : (
-          <div className="swatches" role="radiogroup">
-            {SERVER_COLORS.map((c) => {
-              const mine = c === myColor.toLowerCase();
-              const taken = players.some((p) => p.color.toLowerCase() === c);
-              return (
-                <span
-                  key={c}
-                  className={`sw ${mine ? 'me' : taken ? 'taken' : ''}`}
-                  style={{ background: c }}
-                  role="radio"
-                  aria-checked={mine}
-                  aria-label={colorName(c)}
-                >
-                  {mine && <Icon name="check" palette="dark" size={24} />}
-                </span>
-              );
-            })}
+            )}
           </div>
-        )}
-        <div className="lab" style={{ marginTop: 22 }}>
-          {LOBBY_TEXT.PROFILE}
-        </div>
-        <div className="well stat-grid">
-          <span>{LOBBY_TEXT.COINS}</span>
-          <b>{me?.coins ?? '—'}</b>
-          <span>{LOBBY_TEXT.MATCHES}</span>
-          <b>{me?.matchesPlayed ?? '—'}</b>
-          <span>{LOBBY_TEXT.WINS}</span>
-          <b>{me?.wins ?? '—'}</b>
-          <span>{LOBBY_TEXT.TIMES_IMPOSTOR}</span>
-          <b>{me?.timesImpostor ?? '—'}</b>
-          <span>{LOBBY_TEXT.WINS_IMPOSTOR}</span>
-          <b>{me?.winsAsImpostor ?? '—'}</b>
-        </div>
-      </section>
+        </section>
 
-      <section
-        className="panel"
-        style={{
-          left: 700,
-          top: 120,
-          width: 620,
-          height: 840,
-          padding: '26px 30px',
-        }}
-      >
-        <TitleBar icon="user" title={LOBBY_TEXT.PLAYERS} size={34}>
-          <Chip tone={connected >= MIN_PLAYERS ? 'ok' : 'warn'}>
-            {LOBBY_TEXT.connected(connected)}
-          </Chip>
-        </TitleBar>
-        {Array.from({
-          length: Math.max(compact ? MAX_SLOTS : 8, players.length),
-        })
-          .slice(0, MAX_SLOTS)
-          .map((_, i) => (
-            <PlayerSlot
-              key={players[i]?.id ?? `empty-${i}`}
-              player={players[i]}
-              isMe={players[i]?.id === data?.playerId}
-              isHost={players[i] !== undefined && players[i] === host}
-              compact={compact}
-            />
-          ))}
-      </section>
+        {/* DIVISOR VERTICAL CENTRAL */}
+        <div className="lobby-v-divider" />
 
-      <section
-        className="panel"
-        style={{
-          left: 1340,
-          top: 120,
-          width: 520,
-          height: 840,
-          padding: '26px 28px',
-        }}
-      >
-        <div className="imgbox" style={{ height: 190 }}>
-          <img src={MAP_THUMB} alt={gameMap.name} />
-        </div>
-        <div className="row" style={{ marginTop: 12 }}>
-          <b style={{ fontSize: 28 }}>{gameMap.name}</b>
-        </div>
-        <div className="row" style={{ marginTop: 8, gap: 8, flexWrap: 'wrap' }}>
-          <Chip>{LOBBY_TEXT.impostors(impostors)}</Chip>
-          <Chip>{LOBBY_TEXT.TASKS}</Chip>
-          <Chip>{LOBBY_TEXT.DURATION}</Chip>
-        </div>
-        {host && (
-          <p className="small muted" style={{ marginTop: 8 }}>
-            {LOBBY_TEXT.onlyHost(host.name)}
-          </p>
-        )}
-        <div className="lab" style={{ marginTop: 18 }}>
-          {LOBBY_TEXT.HOW_TO_WIN}
-        </div>
-        <div className="well" style={{ padding: 16 }}>
-          <div className="row" style={{ alignItems: 'flex-start' }}>
-            <Icon name="drop" palette="leaf" size={30} />
-            <span className="small">{LOBBY_TEXT.WIN_CREW}</span>
+        {/* COLUMNA DERECHA: SALA Y JUGADORES */}
+        <section className="lobby-players-col">
+          <div>
+            <div className="lobby-players-title">
+              <span>{LOBBY_TEXT.PLAYERS}</span>
+              <span className="lobby-players-count">
+                {LOBBY_TEXT.connected(connected)}
+              </span>
+            </div>
+
+            <div className="lobby-roster-grid">
+              {Array.from({ length: MAX_SLOTS }).map((_, i) => {
+                const p = players[i];
+                if (!p) {
+                  return (
+                    <div key={`empty-${i}`} className="lobby-player-card is-empty">
+                      <span className="lobby-player-sub">
+                        {LOBBY_TEXT.WAITING}
+                      </span>
+                    </div>
+                  );
+                }
+
+                const isMe = p.id === data?.playerId;
+                const isRoomHost = p === host;
+                const displayColor =
+                  isMe && pickedColor ? pickedColor : p.color;
+                const displaySkin =
+                  isMe && pickedSkin ? pickedSkin : skinOf(p.skin);
+                const displayAcc =
+                  isMe && pickedAccessory !== null
+                    ? pickedAccessory
+                    : p.accessory;
+
+                return (
+                  <div
+                    key={p.id}
+                    className={`lobby-player-card ${isMe ? 'is-me' : ''}`}
+                  >
+                    <div className="lobby-player-avatar">
+                      <Gota
+                        color={displayColor}
+                        accessory={displayAcc}
+                        skin={displaySkin}
+                        scale={1.45}
+                        portrait
+                      />
+                    </div>
+                    <div className="lobby-player-card-sep" />
+                    <div className="lobby-player-info">
+                      <div className="lobby-player-name-row">
+                        <span className="lobby-player-name" title={p.name}>
+                          {p.name}
+                        </span>
+                        {isMe && (
+                          <span className="lobby-player-tag">
+                            {LOBBY_TEXT.YOU}
+                          </span>
+                        )}
+                      </div>
+                      <span className="lobby-player-sub">
+                        {colorName(displayColor)}
+                      </span>
+                    </div>
+                    <span
+                      className={`lobby-player-badge ${
+                        isRoomHost ? 'host' : ''
+                      }`}
+                    >
+                      {isRoomHost
+                        ? LOBBY_TEXT.HOST
+                        : p.connected
+                          ? LOBBY_TEXT.READY
+                          : LOBBY_TEXT.OFFLINE}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          <div
-            className="row"
-            style={{ alignItems: 'flex-start', marginTop: 12 }}
-          >
-            <Icon name="oil" palette="coral" size={30} />
-            <span className="small">{LOBBY_TEXT.WIN_IMPOSTOR}</span>
-          </div>
-        </div>
-      </section>
 
-      <div
-        className="row"
-        style={{
-          position: 'absolute',
-          left: 60,
-          right: 60,
-          top: 985,
-          justifyContent: 'space-between',
-        }}
-      >
-        <Pill icon="clock">{LOBBY_TEXT.MIN_PLAYERS}</Pill>
-        {isHost ? (
-          <Button
-            variant={connected >= MIN_PLAYERS ? 'pri' : ''}
-            icon="play"
-            disabled={connected < MIN_PLAYERS}
-            onClick={() => props.game.send({ type: 'start' })}
-          >
-            {LOBBY_TEXT.START}
-          </Button>
-        ) : (
-          host && (
-            <Chip tone="warn" big icon="clock">
-              {LOBBY_TEXT.waitingFor(host.name)}
-            </Chip>
-          )
-        )}
-      </div>
+          <div className="lobby-action-footer">
+            <div className="lobby-match-badges">
+              <span className="lobby-match-badge-item">
+                {gameMap.name}
+              </span>
+              <span className="lobby-match-badge-sep">|</span>
+              <span className="lobby-match-badge-item">
+                {LOBBY_TEXT.impostors(impostors)}
+              </span>
+              <span className="lobby-match-badge-sep">|</span>
+              <span className="lobby-match-badge-item">
+                {LOBBY_TEXT.TASKS}
+              </span>
+              <span className="lobby-match-badge-sep">|</span>
+              <span className="lobby-match-badge-item">
+                {LOBBY_TEXT.DURATION}
+              </span>
+            </div>
+
+            {isHost && connected < MIN_PLAYERS && (
+              <div className="lobby-min-players-alert">
+                {LOBBY_TEXT.MIN_PLAYERS}
+              </div>
+            )}
+
+            {isHost ? (
+              <button
+                type="button"
+                className="lobby-main-cta"
+                disabled={connected < MIN_PLAYERS}
+                onClick={() => props.game.send({ type: 'start' })}
+              >
+                {LOBBY_TEXT.START}
+              </button>
+            ) : (
+              host && (
+                <div className="lobby-guest-notice">
+                  {LOBBY_TEXT.waitingFor(host.name)}
+                </div>
+              )
+            )}
+          </div>
+        </section>
+      </main>
+
+      <HintBar
+        hints={[
+          ['Tab', MENU_TEXT.HINT_CHOOSE],
+          ['Enter', MENU_TEXT.HINT_ACCEPT],
+          ['Esc', LOBBY_TEXT.LEAVE],
+        ]}
+      />
     </Stage>
-  );
-}
-
-function PlayerSlot(props: {
-  player?: PlayerView;
-  isMe: boolean;
-  isHost: boolean;
-  compact: boolean;
-}) {
-  const p = props.player;
-  const style = props.compact ? { height: 64, marginBottom: 6 } : undefined;
-  if (!p) {
-    return (
-      <div className="slot empty" style={style}>
-        <span className="av" />
-        <span className="nm">{LOBBY_TEXT.WAITING}</span>
-        <span />
-      </div>
-    );
-  }
-  return (
-    <div className={`slot ${props.isMe ? 'me' : ''}`} style={style}>
-      <span className="av">
-        <Gota
-          color={p.color}
-          accessory={p.accessory}
-          skin={skinOf(p.skin)}
-          scale={props.compact ? 1.6 : 2}
-          portrait
-        />
-      </span>
-      <span className="nm">
-        <span className="fit" title={p.name}>
-          {p.name}
-        </span>
-        {props.isMe && <span>{LOBBY_TEXT.YOU}</span>}
-        {props.isHost && <Icon name="crown" palette="amber" size={24} />}
-        <small className="muted" style={{ fontSize: '.7em' }}>
-          {colorName(p.color)}
-        </small>
-      </span>
-      {props.isHost ? (
-        <Chip tone="info">{LOBBY_TEXT.HOST}</Chip>
-      ) : p.connected ? (
-        <Chip tone="ok">{LOBBY_TEXT.READY}</Chip>
-      ) : (
-        <Chip tone="bad">{LOBBY_TEXT.OFFLINE}</Chip>
-      )}
-    </div>
   );
 }

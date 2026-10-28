@@ -98,6 +98,7 @@ export const JOIN_TEXT = {
 
 export const LOBBY_TEXT = {
   TITLE: 'Sala de espera',
+  ROOM_CODE: 'Código de sala',
   LEAVE: 'Salir',
   COPY: 'Copiar',
   COPIED: 'Copiado',
