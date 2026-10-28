@@ -127,7 +127,7 @@ const originSprites = ORIGINS.map((o) =>
   spriteFromRows(o.rows, o.palette),
 );
 // El objeto se dibuja más grande que su arte: es la pieza que se arrastra.
-const ITEM_SCALE = 1.5;
+const ITEM_SCALE = 2;
 
 // Iconos de las dos cajas: una planta que se riega y un embudo que trata.
 const SPROUT_ROWS = [
@@ -429,6 +429,11 @@ export class WateringScene implements Scene {
     if (g.dragging !== null || g.done || this.game.current < 0) return;
     const press = this.env.calm ? 1 : 0.5 + 0.5 * Math.sin(now / 240);
     // La mano queda debajo del objeto y solo lo señala: nunca lo tapa.
-    drawHand(ctx, this.shown.x + 30, this.shown.y + 42, press);
+    drawHand(
+      ctx,
+      this.shown.x + WATERING_SIZE / 2 + 16,
+      this.shown.y + WATERING_SIZE / 2 + 28,
+      press,
+    );
   }
 }

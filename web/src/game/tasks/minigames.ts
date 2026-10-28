@@ -765,7 +765,7 @@ export class FirstRainGame extends BaseGame implements Minigame {
 // regar? Aparece un recipiente con el dibujo de su origen y se arrastra
 // a Regar o a Tratar. Errar lo devuelve a la mesa. Cuatro aciertos.
 export const WATERING_COUNT = 4;
-export const WATERING_SIZE = 36;
+export const WATERING_SIZE = 48;
 export type WaterKind = 'water' | 'treat';
 // Origen de cada recipiente: el agua de lavar verduras y de enjuagar
 // ropa sirve para regar; con aceite o cloro, hay que tratarla.
@@ -775,7 +775,7 @@ export const WATERING_KINDS: readonly WaterKind[] = [
   'treat',
   'treat',
 ];
-export const WATERING_HOME = { x: 162, y: 130 }; // sobre la mesa del centro
+export const WATERING_HOME = { x: 156, y: 116 }; // sobre la mesa del centro
 export const WATERING_PLOT = { x: 20, y: 140, w: 92, h: 88 }; // regar
 export const WATERING_TREAT = { x: 248, y: 140, w: 92, h: 88 }; // tratar
 
