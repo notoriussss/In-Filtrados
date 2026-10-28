@@ -58,7 +58,7 @@ const STATION_GAMES: Record<string, () => Minigame> = {
   'rain-2': () => new FirstRainGame(),
   'greywater-2': () => new WateringGame(),
   'compost-1': () => new JugFilterGame(),
-  'sorter-1': () => new TreatmentGame(),
+  'sorter-1': () => new PipesGame(),
 };
 
 // Dos números a partir de uno, para repartir al azar sin guardar nada:
@@ -66,6 +66,17 @@ const STATION_GAMES: Record<string, () => Minigame> = {
 export function hash01(i: number): number {
   const s = Math.sin(i * 127.1 + 311.7) * 43758.5453;
   return s - Math.floor(s);
+}
+
+// shuffle baraja una lista con el generador que le pasen, sin tocar la
+// original. Así cada partida sale distinta y las pruebas fijan la secuencia.
+function shuffle<T>(list: readonly T[], rnd: () => number): T[] {
+  const out = [...list];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
 }
 
 // match rechaza las tareas de menos de 3 s (taskMinTicks): ningún juego
@@ -304,139 +315,162 @@ export class ParticlesGame extends BaseGame implements Minigame {
 // eventos con los tres juegos de arriba. Los que se agarran y se
 // arrastran siguen el mismo esqueleto de BucketsGame.
 
-// Reciclar (sorter-1, Mesa de tratamiento): tratar 4 muestras de agua
-// sucia. Cada frasco trae algo distinto (sólidos flotantes, lodo, aceite
-// o espuma de detergente) y va a la etapa que lo trata: rejilla,
-// decantador, trampa de grasa o biofiltro. Cada etapa lleva el dibujo de
-// lo que trata. Errar de etapa devuelve el frasco a su lugar.
-export const TREATMENT_COUNT = 4;
-export const TREATMENT_SIZE = 40;
-export type TreatmentKind = 'solids' | 'mud' | 'oil' | 'soap';
-export const TREATMENT_KINDS: readonly TreatmentKind[] = [
-  'solids',
-  'mud',
-  'oil',
-  'soap',
-];
-export type TreatmentBin = {
-  kind: TreatmentKind;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-};
-export const TREATMENT_BINS: readonly TreatmentBin[] = [
-  { kind: 'solids', x: 196, y: 56, w: 72, h: 50 },
-  { kind: 'mud', x: 278, y: 56, w: 72, h: 50 },
-  { kind: 'oil', x: 196, y: 122, w: 72, h: 50 },
-  { kind: 'soap', x: 278, y: 122, w: 72, h: 50 },
-];
-const TREATMENT_HOME_Y = 130; // sobre la mesa
+// Reciclar (sorter-1, Tuberías del ecopunto): conectar las tuberías. El
+// agua ya limpia sale de la fuente de la izquierda y hay que llevarla al
+// tanque de la derecha: cada clic gira un tramo un cuarto de vuelta y el
+// agua corre cuando todos quedan en su sitio. El recorrido cambia en cada
+// partida.
+export const PIPES_COLS = 4;
+export const PIPES_ROWS = 3;
+export const PIPES_TILE = 56;
+export const PIPES_GRID = { x: 68, y: 36 }; // esquina de la cuadrícula
 
-export type TreatmentItem = {
-  kind: TreatmentKind;
-  x: number; // esquina superior izquierda
-  y: number;
-  homeX: number;
-  homeY: number;
-  placed: boolean;
+// Lados de un tramo, en el sentido de las agujas del reloj.
+export type PipeSide = 0 | 1 | 2 | 3; // arriba, derecha, abajo, izquierda
+const opposite = (s: number): PipeSide => ((s + 2) % 4) as PipeSide;
+
+export type PipeKind = 'straight' | 'elbow';
+
+type PathCell = { col: number; row: number; exit: PipeSide };
+
+export type PipeTile = {
+  col: number;
+  row: number;
+  kind: PipeKind;
+  rot: number; // 0 a 3, cuartos de vuelta
+  solution: number;
 };
 
-// Baraja los cuatro frascos con el generador que le pasen. Así cada
-// partida empieza con otro orden, pero las pruebas pueden fijar la
-// secuencia.
-function shuffle<T>(list: readonly T[], rnd: () => number): T[] {
-  const out = [...list];
-  for (let i = out.length - 1; i > 0; i--) {
-    const j = Math.floor(rnd() * (i + 1));
-    [out[i], out[j]] = [out[j], out[i]];
+// pipeSides: los dos lados que une un tramo con esa vuelta. Recto de
+// izquierda a derecha y codo de arriba a la derecha, girados rot veces.
+export function pipeSides(kind: PipeKind, rot: number): [PipeSide, PipeSide] {
+  const base: [number, number] = kind === 'straight' ? [3, 1] : [0, 1];
+  return [
+    ((base[0] + rot) % 4) as PipeSide,
+    ((base[1] + rot) % 4) as PipeSide,
+  ];
+}
+
+// sameSides: dos vueltas del mismo tramo que unen los mismos lados.
+function sameSides(kind: PipeKind, r1: number, r2: number): boolean {
+  const [a, b] = pipeSides(kind, r1);
+  const [x, y] = pipeSides(kind, r2);
+  return (a === x && b === y) || (a === y && b === x);
+}
+
+// La vuelta con la que un tramo une los lados a y b.
+function rotFor(kind: PipeKind, a: number, b: number): number {
+  for (let rot = 0; rot < 4; rot++) {
+    const [x, y] = pipeSides(kind, rot);
+    if ((x === a && y === b) || (x === b && y === a)) return rot;
   }
-  return out;
+  return 0;
 }
 
-function shuffleKinds(rnd: () => number): TreatmentKind[] {
-  return shuffle(TREATMENT_KINDS, rnd);
-}
-
-export class TreatmentGame extends BaseGame implements Minigame {
-  readonly items: TreatmentItem[] = [];
-  dragging: number | null = null;
+export class PipesGame extends BaseGame implements Minigame {
+  readonly tiles: PipeTile[] = []; // en el orden del recorrido
+  readonly startRow: number;
+  readonly endRow: number;
   elapsed = 0;
-  private grabDx = 0;
-  private grabDy = 0;
 
   constructor(rnd: () => number = Math.random) {
     super();
-    shuffleKinds(rnd).forEach((kind, i) => {
-      const x = 18 + i * 42;
-      this.items.push({
-        kind,
-        x,
-        y: TREATMENT_HOME_Y,
-        homeX: x,
-        homeY: TREATMENT_HOME_Y,
-        placed: false,
-      });
+    const path = this.walk(rnd);
+    this.startRow = path[0].row;
+    this.endRow = path[path.length - 1].row;
+    path.forEach((cell, i) => {
+      const from: number = i === 0 ? 3 : opposite(path[i - 1].exit);
+      const straight = opposite(cell.exit) === from;
+      const kind: PipeKind = straight ? 'straight' : 'elbow';
+      const solution = rotFor(kind, from, cell.exit);
+      // Nunca empieza en su sitio: elige entre las vueltas que unen otros
+      // lados (un recto girado media vuelta queda igual, no cuenta).
+      const wrong = [1, 2, 3]
+        .map((d) => (solution + d) % 4)
+        .filter((r) => !sameSides(kind, r, solution));
+      const rot = wrong[Math.floor(rnd() * wrong.length)];
+      this.tiles.push({ col: cell.col, row: cell.row, kind, rot, solution });
     });
   }
 
-  get placed(): number {
-    return this.items.filter((i) => i.placed).length;
+  // El recorrido: de la columna 0 a la última; en cada columna puede
+  // subir o bajar una fila antes de salir hacia la derecha, así el camino
+  // no se alarga demasiado.
+  private walk(rnd: () => number): PathCell[] {
+    const cells: PathCell[] = [];
+    let row = Math.floor(rnd() * PIPES_ROWS);
+    for (let col = 0; col < PIPES_COLS; col++) {
+      const step = Math.floor(rnd() * 3) - 1;
+      const target = Math.min(Math.max(row + step, 0), PIPES_ROWS - 1);
+      if (target !== row) {
+        cells.push({ col, row, exit: target > row ? 2 : 0 });
+        row = target;
+      }
+      cells.push({ col, row, exit: 1 });
+    }
+    return cells;
+  }
+
+  // Hacia dónde tiene que salir el agua del tramo i: hacia el siguiente
+  // del recorrido o, en el último, hacia el tanque (a la derecha).
+  private exitOf(i: number): PipeSide {
+    const t = this.tiles[i];
+    const next = this.tiles[i + 1];
+    if (!next || next.col > t.col) return 1;
+    return next.row > t.row ? 2 : 0;
+  }
+
+  // El agua entra por la izquierda del primer tramo y sigue mientras cada
+  // tramo una el lado por el que entra con el que lleva al siguiente:
+  // cuántos tramos recorre.
+  get flow(): number {
+    let n = 0;
+    let from: PipeSide = 3;
+    for (const [i, t] of this.tiles.entries()) {
+      const [a, b] = pipeSides(t.kind, t.rot);
+      if (a !== from && b !== from) break;
+      const out = a === from ? b : a;
+      if (out !== this.exitOf(i)) break;
+      from = opposite(out);
+      n += 1;
+    }
+    return n;
+  }
+
+  get connected(): boolean {
+    return this.flow === this.tiles.length;
   }
 
   get done(): boolean {
-    return this.placed === TREATMENT_COUNT && this.elapsed >= MIN_GAME_MS;
+    return this.connected && this.elapsed >= MIN_GAME_MS;
   }
 
   progress(): number {
-    return this.placed / TREATMENT_COUNT;
+    return this.flow / this.tiles.length;
   }
 
+  // Un clic en un tramo del recorrido lo gira; en otro lado, no pasa nada.
   pointerDown(p: Point): void {
-    const i = this.items.findIndex(
-      (it) =>
-        !it.placed &&
-        p.x >= it.x &&
-        p.x <= it.x + TREATMENT_SIZE &&
-        p.y >= it.y &&
-        p.y <= it.y + TREATMENT_SIZE,
-    );
-    if (i < 0) return;
-    this.dragging = i;
-    this.grabDx = p.x - this.items[i].x;
-    this.grabDy = p.y - this.items[i].y;
-    this.events.push({ type: 'grab', x: p.x, y: p.y, index: i });
-  }
-
-  pointerMove(p: Point): void {
-    if (this.dragging === null) return;
-    const it = this.items[this.dragging];
-    it.x = p.x - this.grabDx;
-    it.y = p.y - this.grabDy;
-  }
-
-  // Al soltar: si el centro cae en su etapa, cuenta; en otra etapa o en
-  // la mesa, vuelve a su lugar.
-  pointerUp(): void {
-    if (this.dragging === null) return;
-    const i = this.dragging;
-    const it = this.items[i];
-    this.dragging = null;
-    const cx = it.x + TREATMENT_SIZE / 2;
-    const cy = it.y + TREATMENT_SIZE / 2;
-    const bin = TREATMENT_BINS.find(
-      (b) =>
-        cx >= b.x && cx <= b.x + b.w && cy >= b.y && cy <= b.y + b.h,
-    );
-    it.x = it.homeX;
-    it.y = it.homeY;
-    if (bin && bin.kind === it.kind) {
-      it.placed = true;
-      this.events.push({ type: 'drop-in', x: cx, y: cy, index: i });
+    if (this.connected) return;
+    const col = Math.floor((p.x - PIPES_GRID.x) / PIPES_TILE);
+    const row = Math.floor((p.y - PIPES_GRID.y) / PIPES_TILE);
+    const t = this.tiles.find((x) => x.col === col && x.row === row);
+    if (!t) {
+      this.events.push({ type: 'miss', x: p.x, y: p.y });
       return;
     }
-    this.events.push({ type: 'drop-out', x: it.x, y: it.y, index: i });
+    t.rot = (t.rot + 1) % 4;
+    this.events.push({
+      type: 'pop',
+      x: PIPES_GRID.x + (col + 0.5) * PIPES_TILE,
+      y: PIPES_GRID.y + (row + 0.5) * PIPES_TILE,
+      index: this.tiles.indexOf(t),
+    });
   }
+
+  pointerMove(): void {}
+
+  pointerUp(): void {}
 
   step(dtMs: number): void {
     this.elapsed += dtMs;

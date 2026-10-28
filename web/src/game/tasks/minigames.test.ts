@@ -41,12 +41,10 @@ import {
   SealGame,
   VALVE_FILL_MS,
   ValveGame,
-  TreatmentGame,
-  type TreatmentKind,
-  TREATMENT_BINS,
-  TREATMENT_COUNT,
-  TREATMENT_KINDS,
-  TREATMENT_SIZE,
+  PipesGame,
+  PIPES_COLS,
+  PIPES_GRID,
+  PIPES_TILE,
   WateringGame,
   type WaterKind,
   WATERING_COUNT,
@@ -73,7 +71,7 @@ describe('createMinigame', () => {
     expect(createMinigame('reuse', 'rain-2')).toBeInstanceOf(FirstRainGame);
     expect(createMinigame('reuse', 'greywater-2')).toBeInstanceOf(WateringGame);
     expect(createMinigame('recycle', 'compost-1')).toBeInstanceOf(JugFilterGame);
-    expect(createMinigame('recycle', 'sorter-1')).toBeInstanceOf(TreatmentGame);
+    expect(createMinigame('recycle', 'sorter-1')).toBeInstanceOf(PipesGame);
   });
 
   it('keeps the type game as fallback for the rest of the stations', () => {
@@ -246,81 +244,86 @@ describe('ParticlesGame', () => {
 
 // ─── Minijuegos por estación ────────────────────────────────────────────
 
-describe('TreatmentGame', () => {
-  const center = (g: TreatmentGame, i: number) => ({
-    x: g.items[i].x + TREATMENT_SIZE / 2,
-    y: g.items[i].y + TREATMENT_SIZE / 2,
+describe('PipesGame', () => {
+  const seeded = (seed: number) => {
+    let n = seed * 17;
+    return () => hash01(n++);
+  };
+  const center = (t: { col: number; row: number }) => ({
+    x: PIPES_GRID.x + (t.col + 0.5) * PIPES_TILE,
+    y: PIPES_GRID.y + (t.row + 0.5) * PIPES_TILE,
   });
-  const findItem = (g: TreatmentGame, kind: TreatmentKind) =>
-    g.items.find((it) => it.kind === kind)!;
-  const findBin = (kind: TreatmentKind) =>
-    TREATMENT_BINS.find((bin) => bin.kind === kind)!;
+  const solve = (g: PipesGame) => {
+    for (const t of g.tiles) t.rot = t.solution;
+  };
 
-  it('moves the sample jar with the pointer while it is held', () => {
-    const g = new TreatmentGame(() => 0);
-    const it = g.items[0];
-    g.pointerDown({ x: it.x + 5, y: it.y + 7 });
-    g.pointerMove({ x: 120, y: 80 });
-    expect(g.dragging).toBe(0);
-    expect(it.x).toBe(115);
-    expect(it.y).toBe(73);
-  });
-
-  it('treats a sample in the stage that matches it', () => {
-    const g = new TreatmentGame(() => 0);
-    const it = findItem(g, 'solids');
-    const bin = findBin('solids');
-    g.pointerDown({
-      x: it.x + TREATMENT_SIZE / 2,
-      y: it.y + TREATMENT_SIZE / 2,
-    });
-    g.pointerMove({ x: bin.x + bin.w / 2, y: bin.y + bin.h / 2 });
-    g.pointerUp();
-    expect(it.placed).toBe(true);
-    expect(g.placed).toBe(1);
-    expect(g.progress()).toBe(0.25);
+  it('is built as a path from the first column to the last', () => {
+    for (let seed = 1; seed <= 30; seed++) {
+      const g = new PipesGame(seeded(seed));
+      const t = g.tiles;
+      expect(t[0].col).toBe(0);
+      expect(t[0].row).toBe(g.startRow);
+      expect(t[t.length - 1].col).toBe(PIPES_COLS - 1);
+      expect(t[t.length - 1].row).toBe(g.endRow);
+      for (let i = 1; i < t.length; i++) {
+        const step =
+          Math.abs(t[i].col - t[i - 1].col) + Math.abs(t[i].row - t[i - 1].row);
+        expect(step).toBe(1);
+        expect(t[i].col).toBeGreaterThanOrEqual(t[i - 1].col);
+      }
+      expect(t.length).toBeGreaterThanOrEqual(PIPES_COLS);
+    }
   });
 
-  it('sends a sample in the wrong stage back to the table', () => {
-    const g = new TreatmentGame(() => 0);
-    const it = findItem(g, 'mud');
-    const home = { x: it.x, y: it.y };
-    const bin = findBin('oil');
-    g.pointerDown({
-      x: it.x + TREATMENT_SIZE / 2,
-      y: it.y + TREATMENT_SIZE / 2,
-    });
-    g.pointerMove({ x: bin.x + bin.w / 2, y: bin.y + bin.h / 2 });
-    g.pointerUp();
-    expect(it.placed).toBe(false);
-    expect({ x: it.x, y: it.y }).toEqual(home);
+  it('never starts already connected', () => {
+    for (let seed = 1; seed <= 30; seed++) {
+      const g = new PipesGame(seeded(seed));
+      expect(g.connected).toBe(false);
+      // Ningún tramo empieza bien puesto: el agua no sale de la fuente.
+      expect(g.flow).toBe(0);
+    }
   });
 
-  it('is done after every sample, but not before 3 s', () => {
-    const g = new TreatmentGame(() => 0);
-    g.items.forEach((it, i) => {
-      const bin = findBin(it.kind);
-      g.pointerDown(center(g, i));
-      g.pointerMove({ x: bin.x + bin.w / 2, y: bin.y + bin.h / 2 });
-      g.pointerUp();
-    });
-    expect(g.placed).toBe(TREATMENT_COUNT);
+  it('turns a path tile a quarter on click and ignores the rest', () => {
+    const g = new PipesGame(seeded(3));
+    const t = g.tiles[0];
+    const before = t.rot;
+    g.pointerDown(center(t));
+    expect(t.rot).toBe((before + 1) % 4);
+    expect(g.drainEvents().some((e) => e.type === 'pop')).toBe(true);
+    // Fuera de la cuadrícula no pasa nada.
+    g.pointerDown({ x: 2, y: 2 });
+    expect(g.drainEvents().some((e) => e.type === 'miss')).toBe(true);
+    expect(t.rot).toBe((before + 1) % 4);
+  });
+
+  it('lets the water through the tiles that are already in place', () => {
+    const g = new PipesGame(seeded(5));
+    expect(g.flow).toBeLessThan(g.tiles.length);
+    g.tiles[0].rot = g.tiles[0].solution;
+    expect(g.flow).toBeGreaterThanOrEqual(1);
+    solve(g);
+    expect(g.flow).toBe(g.tiles.length);
+    expect(g.connected).toBe(true);
+    expect(g.progress()).toBe(1);
+  });
+
+  it('is done once connected, but not before 3 s', () => {
+    const g = new PipesGame(seeded(7));
+    solve(g);
+    expect(g.connected).toBe(true);
     expect(g.done).toBe(false);
     g.step(MIN_GAME_MS);
     expect(g.done).toBe(true);
   });
 
-  it('deals the samples in a different order each game', () => {
-    const a = new TreatmentGame(() => 0);
-    const b = new TreatmentGame(() => 0.99);
-    expect(a.items.map((it) => it.kind).sort()).toEqual(
-      [...TREATMENT_KINDS].sort(),
-    );
-    expect(new Set(a.items.map((it) => it.kind)).size).toBe(TREATMENT_COUNT);
-    expect(a.items.map((it) => it.kind)).not.toEqual(
-      b.items.map((it) => it.kind),
-    );
-    expect(a.items.map((it) => it.homeX)).toEqual([18, 60, 102, 144]);
+  it('deals a different route each game', () => {
+    const routes = new Set<string>();
+    for (let seed = 1; seed <= 30; seed++) {
+      const g = new PipesGame(seeded(seed));
+      routes.add(g.tiles.map((t) => `${t.col}${t.row}`).join());
+    }
+    expect(routes.size).toBeGreaterThan(3);
   });
 });
 

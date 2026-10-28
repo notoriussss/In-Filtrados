@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { StationType } from '../../map';
 import { TASK_ICONS, Icon } from '../../ui/Icon';
 import { Button, Gauge, Kbd } from '../../ui/kit';
-import { BOARD, TreatmentGame } from '../../game/tasks/minigames';
+import { BOARD, JugFilterGame } from '../../game/tasks/minigames';
 import { createMinigame } from '../../game/tasks/minigames';
 import { BOARD_SCALE, MinigameView } from '../../game/tasks/minigameDraw';
 import { TASK_TEXT } from '../../constants';
@@ -30,7 +30,7 @@ export function Minigame(props: {
     const ctx = cv?.getContext('2d');
     if (!cv || !ctx) return;
     const game = createMinigame(props.type, props.stationId);
-    const drag = game instanceof TreatmentGame;
+    const drag = game instanceof JugFilterGame;
     if (drag) cv.style.cursor = 'grab';
     const view = new MinigameView(
       game,
@@ -50,7 +50,7 @@ export function Minigame(props: {
       e.preventDefault();
       cv.setPointerCapture(e.pointerId);
       game.pointerDown(toBoard(e));
-      if (drag && game.dragging !== null) {
+      if (drag && game.dragging) {
         cv.style.cursor = 'grabbing';
       }
     };
