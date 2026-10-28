@@ -157,7 +157,7 @@ func TestSavesOnPhaseChangeAndEveryTwoSeconds(t *testing.T) {
 		WithCreator("a"),
 		WithSnapshots(saver),
 	)
-	for _, id := range []string{"a", "b"} {
+	for _, id := range []string{"a", "b", "c"} {
 		r.addPlayer(Join{
 			PlayerID: id,
 			Out:      make(chan *matchv1.ServerEvent, 64),

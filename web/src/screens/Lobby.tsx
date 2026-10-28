@@ -39,7 +39,7 @@ import '../styles/lobby.css';
 
 const NO_ACCESSORY = 'none';
 const MAX_SLOTS = 10;
-const MIN_PLAYERS = 2;
+const MIN_PLAYERS = 3;
 
 function equippedSummary(
   skin: string,

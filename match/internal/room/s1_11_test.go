@@ -105,7 +105,7 @@ func waitPhase(
 	}
 }
 
-func TestStartNeedsTwoPlayers(t *testing.T) {
+func TestStartNeedsThreePlayers(t *testing.T) {
 	pub := &fakePublisher{}
 	store := &fakeStore{}
 	r := startRoom(t,
@@ -116,19 +116,23 @@ func TestStartNeedsTwoPlayers(t *testing.T) {
 
 	out := make(chan *matchv1.ServerEvent, 64)
 	r.Join(Join{PlayerID: "creator", Out: out})
-	waitPlayers(t, out, 1)
+	r.Join(Join{
+		PlayerID: "friend",
+		Out:      make(chan *matchv1.ServerEvent, 64),
+	})
+	waitPlayers(t, out, 2)
 
 	r.Act(PlayerAction{PlayerID: "creator", Start: true})
 	time.Sleep(100 * time.Millisecond)
 
 	if got := len(pub.forKey(events.RoutingKeyStarted)); got != 0 {
 		t.Errorf(
-			"con un solo jugador no debe publicarse match.started, got %d",
+			"con solo 2 jugadores no debe publicarse match.started, got %d",
 			got,
 		)
 	}
 	if store.starts != 0 {
-		t.Errorf("con un solo jugador no debe guardarse la partida")
+		t.Errorf("con solo 2 jugadores no debe guardarse la partida")
 	}
 	if snap := drain(out); snap == nil || snap.Phase != matchv1.Phase_LOBBY {
 		t.Errorf("la sala debe seguir en LOBBY, got %v", snap)
@@ -148,7 +152,11 @@ func TestStartIsIgnoredAfterPlaying(t *testing.T) {
 	b := make(chan *matchv1.ServerEvent, 64)
 	r.Join(Join{PlayerID: "creator", Out: a})
 	r.Join(Join{PlayerID: "friend", Out: b})
-	waitPlayers(t, b, 2)
+	r.Join(Join{
+		PlayerID: "third",
+		Out:      make(chan *matchv1.ServerEvent, 64),
+	})
+	waitPlayers(t, b, 3)
 
 	r.Act(PlayerAction{PlayerID: "creator", Start: true})
 	waitPhase(t, b, matchv1.Phase_PLAYING)
@@ -180,7 +188,11 @@ func TestStartSavesAndPublishes(t *testing.T) {
 	b := make(chan *matchv1.ServerEvent, 64)
 	r.Join(Join{PlayerID: "creator", Out: a})
 	r.Join(Join{PlayerID: "friend", Out: b})
-	waitPlayers(t, b, 2)
+	r.Join(Join{
+		PlayerID: "third",
+		Out:      make(chan *matchv1.ServerEvent, 64),
+	})
+	waitPlayers(t, b, 3)
 
 	// Un intruso no puede empezar la partida.
 	r.Act(PlayerAction{PlayerID: "friend", Start: true})
@@ -202,9 +214,9 @@ func TestStartSavesAndPublishes(t *testing.T) {
 			store.startCode,
 		)
 	}
-	if len(store.startPlayers) != 2 {
+	if len(store.startPlayers) != 3 {
 		t.Errorf(
-			"deben guardarse 2 participantes, got %d",
+			"deben guardarse 3 participantes, got %d",
 			len(store.startPlayers),
 		)
 	}
@@ -225,9 +237,9 @@ func TestStartSavesAndPublishes(t *testing.T) {
 	if event.MatchID != "match-1" || event.RoomCode != "TEST" {
 		t.Errorf("evento con datos raros: %+v", event)
 	}
-	if len(event.PlayerIDs) != 2 {
+	if len(event.PlayerIDs) != 3 {
 		t.Errorf(
-			"el evento debe llevar 2 jugadores, got %d",
+			"el evento debe llevar 3 jugadores, got %d",
 			len(event.PlayerIDs),
 		)
 	}
@@ -250,7 +262,11 @@ func TestMatchFinishesAfterDuration(t *testing.T) {
 	b := make(chan *matchv1.ServerEvent, 64)
 	r.Join(Join{PlayerID: "creator", Out: a})
 	r.Join(Join{PlayerID: "friend", Out: b})
-	waitPlayers(t, b, 2)
+	r.Join(Join{
+		PlayerID: "third",
+		Out:      make(chan *matchv1.ServerEvent, 64),
+	})
+	waitPlayers(t, b, 3)
 
 	r.Act(PlayerAction{PlayerID: "creator", Start: true})
 	waitPhase(t, b, matchv1.Phase_PLAYING)
@@ -283,9 +299,9 @@ func TestMatchFinishesAfterDuration(t *testing.T) {
 	if event.EventID == "" || event.FinishedAt == "" {
 		t.Errorf("el evento debe llevar event_id y finished_at: %+v", event)
 	}
-	if len(event.Players) != 2 {
+	if len(event.Players) != 3 {
 		t.Fatalf(
-			"el evento debe llevar 2 jugadores, got %d",
+			"el evento debe llevar 3 jugadores, got %d",
 			len(event.Players),
 		)
 	}

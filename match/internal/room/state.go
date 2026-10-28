@@ -13,7 +13,7 @@ const (
 	actionBuffer = 256
 
 	// S1-11: empezar y terminar la partida.
-	minPlayersToStart = 2
+	minPlayersToStart = 3
 	depsTimeout       = 2 * time.Second
 
 	// S2-02: roles y tanques.

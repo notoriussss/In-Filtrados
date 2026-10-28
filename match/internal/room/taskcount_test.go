@@ -36,6 +36,10 @@ func lobbyRoomTaskCount(t *testing.T) (*Room, chan *matchv1.ServerEvent) {
 		PlayerID: "imp",
 		Out:      make(chan *matchv1.ServerEvent, 4),
 	})
+	r.addPlayer(Join{
+		PlayerID: "crew2",
+		Out:      make(chan *matchv1.ServerEvent, 4),
+	})
 	return r, creatorOut
 }
 
