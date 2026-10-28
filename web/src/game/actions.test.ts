@@ -22,7 +22,7 @@ const map: GameMap = {
     { slot: 1, x: 400, y: 100 },
   ],
   fixPoints: [],
-  markers: [],
+  markers: [{ id: 'reunion', name: 'Mesa de reuniones', x: 900, y: 900 }],
 };
 
 const player = (
@@ -153,6 +153,105 @@ describe('contextAction', () => {
   it('offers nothing far from everything', () => {
     const me = player('x', 600, 600);
     expect(contextAction(me, 'IMPOSTOR', tanks, map, 0, 0)).toBeNull();
+  });
+
+  it('offers Llamar reunión at the table while it is available', () => {
+    const me = player('x', 900, 900);
+    const meeting = { readyAtTick: 0, callsLeft: 2 };
+    const a = contextAction(
+      me,
+      'CREW',
+      tanks,
+      map,
+      0,
+      0,
+      new Set(),
+      [],
+      null,
+      meeting,
+      100,
+    );
+    expect(a?.kind).toBe('meeting');
+    expect(a?.label).toBe(ACTION_TEXT.CALL_MEETING);
+    expect(a?.enabled).toBe(true);
+    expect(actionMessage(a!)).toEqual({ type: 'callMeeting' });
+  });
+
+  it('shows the meeting cooldown and the remaining uses', () => {
+    const me = player('x', 900, 900);
+    const waiting = contextAction(
+      me,
+      'CREW',
+      tanks,
+      map,
+      0,
+      0,
+      new Set(),
+      [],
+      null,
+      { readyAtTick: 1200, callsLeft: 2 },
+      1000,
+    );
+    expect(waiting?.enabled).toBe(false);
+    expect(waiting?.label).toBe(ACTION_TEXT.meetingWait(10));
+
+    const none = contextAction(
+      me,
+      'CREW',
+      tanks,
+      map,
+      0,
+      0,
+      new Set(),
+      [],
+      null,
+      { readyAtTick: 0, callsLeft: 0 },
+      1000,
+    );
+    expect(none?.enabled).toBe(false);
+    expect(none?.label).toBe(ACTION_TEXT.NO_MEETINGS);
+  });
+
+  it('does not offer the meeting to ghosts or during an emergency', () => {
+    const ghost = player('x', 900, 900, false);
+    const meeting = { readyAtTick: 0, callsLeft: 2 };
+    expect(
+      contextAction(
+        ghost,
+        'CREW',
+        tanks,
+        map,
+        0,
+        0,
+        new Set(),
+        [],
+        null,
+        meeting,
+        0,
+      ),
+    ).toBeNull();
+
+    const alive = player('x', 900, 900);
+    const emergency = {
+      kind: 'steam' as const,
+      endsAtTick: 1000,
+      heldPoints: [],
+    };
+    expect(
+      contextAction(
+        alive,
+        'CREW',
+        tanks,
+        map,
+        0,
+        0,
+        new Set(),
+        [],
+        emergency,
+        meeting,
+        0,
+      ),
+    ).toBeNull();
   });
 });
 

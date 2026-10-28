@@ -51,6 +51,14 @@ const (
 	chatCooldownTicks  = 20  // 1 s entre mensajes de chat
 	chatHistoryLimit   = 30  // mensajes guardados en snapshot
 
+	// Mesa: se puede usar dos veces por
+	// partida, con 60 s de espera y 30 s de gracia al empezar.
+	meetingCallRange            = 80   // unidades desde el marker "reunion"
+	meetingCallGraceTicks       = 600  // 30 s desde el inicio
+	meetingCallCooldownTicks    = 1200 // 60 s entre convocatorias
+	meetingCallAfterReportTicks = 200  // 10 s extra tras una reunión por reporte
+	meetingCallsMax             = 2    // convocatorias por partida
+
 	// S3-01: lugar reservado al jugador que se desconecta en partida.
 	// En el laboratorio se sube con RECONNECT_GRACE_SECONDS.
 	defaultGracePeriod = 90 * time.Second
@@ -141,6 +149,9 @@ type PlayerAction struct {
 	ChatMessageID string
 	ChatText      string
 
+	// Mesa: convocar desde la mesa.
+	CallMeeting bool
+
 	// S3-05: sabotear (solo el impostor) y arreglar una emergencia.
 	Sabotage     bool
 	SabotageKind string
@@ -168,6 +179,7 @@ type PlayerAction struct {
 func (a PlayerAction) isMove() bool {
 	return !a.Start && !a.Contaminate && !a.InteractTask &&
 		!a.Report && !a.Vote && !a.Chat && !a.Sabotage && !a.Fix &&
+		!a.CallMeeting &&
 		!a.PickColor && !a.PickAccessory && !a.PickSkin && !a.SetOwned
 }
 
@@ -216,6 +228,7 @@ type player struct {
 type meetingState struct {
 	reporterID   string
 	tankSlot     int32
+	reason       matchv1.MeetingReason
 	votes        map[string]voteChoice // voterID -> choice
 	votingEndsAt int64                 // tick donde vence la votación
 	resultEndsAt int64                 // tick donde termina resultado

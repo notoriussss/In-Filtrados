@@ -44,6 +44,7 @@ function snap(meeting: Partial<Meeting>, tick = 100): Snapshot {
     meeting: {
       reporterId: 'a',
       tankSlot: 3,
+      reason: 'report',
       votesCast: [],
       endsAtTick: 1000,
       votingClosed: false,
@@ -59,6 +60,7 @@ function snap(meeting: Partial<Meeting>, tick = 100): Snapshot {
     myActiveTask: null,
     emergency: null,
     mySabotage: null,
+    myMeeting: null,
   };
 }
 
@@ -80,6 +82,17 @@ describe('meetingView', () => {
     expect(v.reporterText).toBe('Ana reportó un tanque muerto');
     expect(v.tankText).toBe('Tanque de Dani');
     expect(v.countdownText).toBe('Votación: 45 s');
+  });
+
+  it('says who called an emergency meeting, without a tank', () => {
+    const v = meetingView(
+      snap({ reason: 'emergency', tankSlot: -1 }),
+      'a',
+    )!;
+    expect(v.reporterText).toBe(
+      'Ana convocó una reunión de emergencia',
+    );
+    expect(v.tankText).toBe('');
   });
 
   it('a living player can vote for the living, not for ghosts', () => {

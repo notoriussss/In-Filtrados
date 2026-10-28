@@ -63,6 +63,18 @@ type TankSpot struct {
 	Y    float64 `json:"y"`
 }
 
+// Marker is a named point of shared/map.json. The meeting table is the
+// one with id "reunion".
+type Marker struct {
+	ID   string  `json:"id"`
+	Name string  `json:"name"`
+	X    float64 `json:"x"`
+	Y    float64 `json:"y"`
+}
+
+// meetingMarkerID is the id of the table where meetings gather.
+const meetingMarkerID = "reunion"
+
 // Map holds the parts of shared/map.json that the room needs for now.
 type Map struct {
 	Width    float64    `json:"width"`
@@ -73,6 +85,8 @@ type Map struct {
 	Tanks    []TankSpot `json:"tanks"`
 	// S3-05: puntos donde se arreglan las emergencias.
 	FixPoints []FixPoint `json:"fixPoints"`
+	// Mesa: puntos con nombre, como la mesa de reuniones.
+	Markers []Marker `json:"markers"`
 
 	spawnOnce sync.Once
 	spawns    []Point
@@ -107,6 +121,17 @@ func (m *Map) validate() error {
 		return errSpawn
 	}
 	return nil
+}
+
+// MeetingPoint devuelve el centro de la mesa de reuniones. Si el mapa
+// no trae el marker (mapas de prueba), usa el spawn.
+func (m *Map) MeetingPoint() Point {
+	for _, marker := range m.Markers {
+		if marker.ID == meetingMarkerID {
+			return Point{X: marker.X, Y: marker.Y}
+		}
+	}
+	return m.Spawn
 }
 
 // SpawnPoint places players on free points of a grid centered on spawn,

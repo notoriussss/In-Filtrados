@@ -2,7 +2,7 @@
   "_nota": "Escala 1:1 (1 unidad de mundo = 1 px). x,y = esquina superior izquierda del sprite en el mapa; baseY = línea de base para ordenar por profundidad con los jugadores (y-sort: dibuja primero lo de menor baseY; un jugador se ordena con su y + 6). El suelo (capas/suelo.png) ya trae pisos, paredes, decoración mural, tapetes y calcomanías.",
   "width": 2752,
   "height": 1824,
-  "total": 190,
+  "total": 182,
   "sprites": 53,
   "props": [
     {
@@ -1500,78 +1500,6 @@
       "exterior": true
     },
     {
-      "id": "chair",
-      "sprite": "chair",
-      "x": 1295,
-      "y": 834,
-      "w": 34,
-      "h": 46,
-      "baseY": 876,
-      "tile": [
-        40,
-        26
-      ],
-      "footprint": [
-        1,
-        1
-      ],
-      "exterior": false
-    },
-    {
-      "id": "chair",
-      "sprite": "chair",
-      "x": 1327,
-      "y": 834,
-      "w": 34,
-      "h": 46,
-      "baseY": 876,
-      "tile": [
-        42,
-        26
-      ],
-      "footprint": [
-        1,
-        1
-      ],
-      "exterior": false
-    },
-    {
-      "id": "chair",
-      "sprite": "chair-v2",
-      "x": 1263,
-      "y": 866,
-      "w": 34,
-      "h": 46,
-      "baseY": 908,
-      "tile": [
-        40,
-        27
-      ],
-      "footprint": [
-        1,
-        1
-      ],
-      "exterior": false
-    },
-    {
-      "id": "chair",
-      "sprite": "chair-v3",
-      "x": 1359,
-      "y": 866,
-      "w": 34,
-      "h": 46,
-      "baseY": 908,
-      "tile": [
-        42,
-        27
-      ],
-      "footprint": [
-        1,
-        1
-      ],
-      "exterior": false
-    },
-    {
       "id": "post-lamp",
       "sprite": "post-lamp",
       "x": 896,
@@ -1581,24 +1509,6 @@
       "baseY": 928,
       "tile": [
         28,
-        28
-      ],
-      "footprint": [
-        1,
-        1
-      ],
-      "exterior": false
-    },
-    {
-      "id": "chair",
-      "sprite": "chair-v2",
-      "x": 1263,
-      "y": 898,
-      "w": 34,
-      "h": 46,
-      "baseY": 940,
-      "tile": [
-        40,
         28
       ],
       "footprint": [
@@ -1626,24 +1536,6 @@
       "exterior": false
     },
     {
-      "id": "chair",
-      "sprite": "chair-v3",
-      "x": 1359,
-      "y": 898,
-      "w": 34,
-      "h": 46,
-      "baseY": 940,
-      "tile": [
-        42,
-        28
-      ],
-      "footprint": [
-        1,
-        1
-      ],
-      "exterior": false
-    },
-    {
       "id": "post-lamp",
       "sprite": "post-lamp",
       "x": 1728,
@@ -1654,42 +1546,6 @@
       "tile": [
         54,
         23
-      ],
-      "footprint": [
-        1,
-        1
-      ],
-      "exterior": false
-    },
-    {
-      "id": "chair",
-      "sprite": "chair-v4",
-      "x": 1295,
-      "y": 930,
-      "w": 34,
-      "h": 46,
-      "baseY": 972,
-      "tile": [
-        40,
-        29
-      ],
-      "footprint": [
-        1,
-        1
-      ],
-      "exterior": false
-    },
-    {
-      "id": "chair",
-      "sprite": "chair-v4",
-      "x": 1327,
-      "y": 930,
-      "w": 34,
-      "h": 46,
-      "baseY": 972,
-      "tile": [
-        42,
-        29
       ],
       "footprint": [
         1,
@@ -3406,6 +3262,24 @@
         1
       ],
       "exterior": true
+    },
+    {
+      "id": "console",
+      "sprite": "console",
+      "x": 1260,
+      "y": 792,
+      "w": 136,
+      "h": 96,
+      "baseY": 888,
+      "tile": [
+        39,
+        24
+      ],
+      "footprint": [
+        4,
+        3
+      ],
+      "exterior": false
     }
   ]
 }

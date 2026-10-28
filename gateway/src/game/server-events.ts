@@ -5,6 +5,7 @@ import type {
   EmergencyKind,
   ErrorCode,
   Meeting,
+  MeetingButton,
   MyTask,
   OilDrop,
   PlayerView,
@@ -16,8 +17,9 @@ import type {
 
 // Shapes of the gRPC ServerEvent as @grpc/proto-loader decodes it
 // (camelCase, enums as strings, longs as numbers, defaults on).
-type GrpcMeeting = Omit<Meeting, 'ejectedId'> & {
+type GrpcMeeting = Omit<Meeting, 'ejectedId' | 'reason'> & {
   ejectedId?: string | null;
+  reason?: string;
 };
 
 type GrpcPlayerView = Omit<PlayerView, 'activity' | 'accessory' | 'skin'> & {
@@ -37,6 +39,7 @@ type GrpcSnapshot = Omit<
   | 'myActiveTask'
   | 'emergency'
   | 'mySabotage'
+  | 'myMeeting'
 > & {
   players?: GrpcPlayerView[];
   meeting: GrpcMeeting | null;
@@ -44,6 +47,7 @@ type GrpcSnapshot = Omit<
   myActiveTask?: string;
   emergency?: GrpcEmergency | null;
   mySabotage?: SabotageStatus | null;
+  myMeeting?: MeetingButton | null;
 };
 
 const ACTIVITIES: readonly string[] = [
@@ -117,6 +121,12 @@ function toSnapshot(s: GrpcSnapshot): Snapshot {
           pipesLeft: s.mySabotage.pipesLeft,
         }
       : null,
+    myMeeting: s.myMeeting
+      ? {
+          readyAtTick: s.myMeeting.readyAtTick,
+          callsLeft: s.myMeeting.callsLeft,
+        }
+      : null,
   };
 }
 
@@ -161,6 +171,8 @@ function toMeeting(m: GrpcMeeting): Meeting {
   return {
     reporterId: m.reporterId,
     tankSlot: m.tankSlot,
+    reason:
+      m.reason === 'MEETING_REASON_EMERGENCY' ? 'emergency' : 'report',
     votesCast: [...(m.votesCast ?? [])],
     endsAtTick: m.endsAtTick,
     votingClosed: Boolean(m.votingClosed),

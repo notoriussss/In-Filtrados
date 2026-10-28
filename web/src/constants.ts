@@ -30,6 +30,7 @@ export const CONNECTION_MESSAGES = {
 export const MEETING_TEXT = {
   TITLE: 'Reunión de emergencia',
   REPORTED_BY: (name: string) => `${name} reportó un tanque muerto`,
+  EMERGENCY_BY: (name: string) => `${name} convocó una reunión de emergencia`,
   TANK_OF: (name: string) => `Tanque de ${name}`,
   VOTING_ENDS_IN: (seconds: number) => `Votación: ${seconds} s`,
   RESULT_ENDS_IN: (seconds: number) => `Volvemos al huerto en ${seconds} s`,
@@ -77,6 +78,10 @@ export const ACTION_TEXT = {
   FIX_STEAM: 'Cerrar válvula',
   FIX_PIPE: 'Sostener tubería',
   contaminateWait: (seconds: number) => `Contaminar (${seconds} s)`,
+  // Mesa: convocar desde la mesa.
+  CALL_MEETING: 'Llamar reunión',
+  NO_MEETINGS: 'Sin reuniones',
+  meetingWait: (seconds: number) => `Reunión en ${seconds} s`,
   KEY_HINT: 'E',
 } as const;
 
@@ -105,6 +110,9 @@ export const GAME_RULES = {
   FIX_RANGE: 48,
   STEAM_FIX_MS: 2000 + 150,
   SABOTAGE_COOLDOWN_TICKS: 800,
+  // Mesa: la mesa del mirador.
+  MEETING_RANGE: 80,
+  MEETING_CALL_COOLDOWN_TICKS: 1200,
   TICKS_PER_SECOND: 20,
   VISION_RADIUS: 220, // la cámara muestra 960 × 540 unidades
   STEAM_VISION_FACTOR: 0.5,

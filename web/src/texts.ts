@@ -160,7 +160,8 @@ export const HELP_TEXT = {
   MEETING_POINT: 'Reuniones',
   MEETING_POINT_TEXT:
     'Al reportar un tanque todos aparecen en la Mesa de reuniones ' +
-    '(mirador del centro); en el mapa es «Reunión».',
+    '(mirador del centro). Acércate y pulsa E para convocar una ' +
+    'reunión; la mesa tiene un número limitado de convocatorias.',
   CONTROLS: 'Controles',
   MOVE: 'Mover',
   USE: 'Usar',
@@ -177,7 +178,8 @@ export const ROLE_TEXT = {
   IMPOSTOR_SUB: 'Ensucia los tanques sin que te descubran.',
   MATES: 'En la estación',
   MEETING_NOTE:
-    'En una reunión todos van a la Mesa de reuniones, en el centro del mapa.',
+    'En una reunión todos van a la Mesa de reuniones, en el centro del ' +
+    'mapa. También puedes convocar desde la mesa con E.',
   startsIn: (s: number) => `La partida empieza en ${s}`,
 } as const;
 
@@ -196,6 +198,7 @@ export const HUD_TEXT = {
   NO_TANK: 'sin tanque',
   MAP: 'Mapa',
   MEETING_POINT: 'Reunión',
+  MEETING: 'Llamar reunión',
   USE: 'Usar',
   REPORT: 'Reportar',
   CONTAMINATE: 'Contaminar',
@@ -246,6 +249,7 @@ export const MEETING_UI_TEXT = {
   GHOST: 'Fantasma',
   OFFLINE: 'Desconectado',
   REPORTER: 'Reportó',
+  CALLER: 'Convocó',
   VOTED: 'Votó',
   MY_VOTE: 'Tu voto',
   SKIP: 'Saltar voto',

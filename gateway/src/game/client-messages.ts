@@ -59,6 +59,8 @@ export function parseClientMessage(raw: string): ClientMessage | null {
         return null;
       }
       return { type: 'fix', pointId: msg.pointId };
+    case 'callMeeting':
+      return { type: 'callMeeting' };
     case 'pickColor':
       // match revisa la fase y que el color esté libre.
       if (!isShortString(msg.color, MAX_COLOR_LENGTH)) return null;
@@ -112,6 +114,8 @@ export function toGrpcAction(msg: ClientMessage): object | null {
       return { sabotage: { kind: msg.kind } };
     case 'fix':
       return { fix: { pointId: msg.pointId } };
+    case 'callMeeting':
+      return { callMeeting: {} };
     case 'pickColor':
       return { pickColor: { color: msg.color } };
     case 'pickAccessory':

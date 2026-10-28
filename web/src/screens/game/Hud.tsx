@@ -37,6 +37,7 @@ const ACTION_SLOT: Record<
   report: { label: HUD_TEXT.REPORT, icon: 'eye', palette: 'amber' },
   contaminate: { label: HUD_TEXT.CONTAMINATE, icon: 'oil', palette: 'coral' },
   fix: { label: HUD_TEXT.FIX, icon: 'gear', palette: 'amber' },
+  meeting: { label: HUD_TEXT.MEETING, icon: 'speaker', palette: 'amber' },
 };
 
 const SABOTAGE_KEYS: Record<string, EmergencyKind> = {
@@ -298,6 +299,10 @@ function Minimap(props: { snap: Snapshot; meId: string; now: number }) {
   });
   const pending = (snap.myTasks ?? []).filter((t) => !t.done);
   const meeting = meetingMarker(gameMap);
+  const meetingReady =
+    !!snap.myMeeting &&
+    snap.myMeeting.callsLeft > 0 &&
+    snap.tick >= snap.myMeeting.readyAtTick;
   return (
     <section className="panel glass mini" aria-label={HUD_TEXT.MAP}>
       <div className="lab">
@@ -329,7 +334,7 @@ function Minimap(props: { snap: Snapshot; meId: string; now: number }) {
             ))}
         {meeting && (
           <span
-            className="dot meet"
+            className={`dot meet ${meetingReady ? 'ready' : ''}`}
             title={meeting.name}
             style={pos(meeting.x, meeting.y)}
           />

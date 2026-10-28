@@ -69,7 +69,7 @@ El mapa vive en **`shared/map.json`** (carpeta nueva en la raíz). Lo usan `matc
 - `tanks[].draw`: esquina del sprite del tanque; `x, y` siguen siendo el punto de interacción.
 - Un tanque por sala (10 salas, 10 tanques) y cada uno lleva su pared de 72×44 en `(x-36, y-24)` dentro de `walls`; si lo mueves, mueve también esa pared y la base de concreto de `ground.png`.
 - `fixPoints`: `{ id, kind: 'pipe' | 'steam', room, x, y }`, los puntos donde se arreglan los sabotajes (2 extremos de tubería y 1 válvula de vapor).
-- `zones[].kind/theme`, `doors` y `markers`: solo para dibujar y nombrar salas; `match` no los usa.
+- `zones[].kind/theme`, `doors` y `markers`: casi todos son solo para dibujar y nombrar salas; `match` usa el marker `reunion` para validar la mesa de reuniones.
 - Las imágenes del mapa (suelo, props, tanques, luz nocturna y minimapa) viven en `web/public/assets/map/manglar-verde/`; `walls` sigue siendo la única fuente de colisiones.
 
 ### 0.4 Reglas de movimiento
@@ -113,6 +113,7 @@ En la semana 2 se agregan mensajes; se agregan aquí, nunca se duplican en `web`
   | { type: 'report'; tankSlot: number }                          // tanque muerto
   | { type: 'vote'; targetPlayerId: string | null }               // null = saltar
   | { type: 'chat'; clientMsgId: string; text: string }           // solo en MEETING
+  | { type: 'callMeeting' }                                       // mesa de reuniones
 
 // Gateway → navegador
   | { type: 'matchEnded'; winner: 'crew' | 'impostor'; impostorIds: string[] }
@@ -122,13 +123,19 @@ tanks: { slot, ownerId, contamination /* 0 a 100 */, dead }[];
 reservoir: number;                 // 0 a 100
 myRole: 'NO_ROLE' | 'CREW' | 'IMPOSTOR'; // solo el del destinatario
 myTaskProgress: { completed, total };
-meeting: { reporterId, tankSlot, votesCast[], endsAtTick, votingClosed, ejectedId, wasImpostor } | null;
+meeting: {
+  reporterId,
+  tankSlot,                        // -1 si fue una convocatoria
+  reason: 'report' | 'emergency',
+  votesCast[], endsAtTick, votingClosed, ejectedId, wasImpostor,
+} | null;
 chat: { id, playerId, text, tick }[]; // últimos 30
 oilDrops: { x, y, color, expiresAtTick }[]; // S2-12: rastro del impostor
 paused: boolean;                   // S3-02: el host está en su periodo de gracia
 waitingFor: string[];              // S3-02: ids de quienes se esperan
 myTasks: { stationId, done }[];    // S2-11: solo las del destinatario
 myActiveTask: string | null;       // S2-11: tarea iniciada por el servidor
+myMeeting: { readyAtTick, callsLeft } | null; // mesa, solo en PLAYING
 ```
 
 **Heartbeat (`deployment-lab.md`, 9.1).** Solo entre el navegador y el gateway; nunca llega a `match`:
@@ -982,6 +989,19 @@ Sin esta tarea tampoco se puede verificar S2-13 jugando (completar 3 tareas y ve
 - Emergencias aleatorias cada 60 a 120 s (no antes de 60 s tras un sabotaje), con el mismo aspecto que un sabotaje.
 - Visión: radio de **220 unidades** en lugar de 300, porque la cámara del mapa v3 muestra 960 × 540 unidades y con 300 casi no se notaba. El vapor la reduce a la mitad.
 - `web`: botones de sabotaje del impostor (teclas 1 y 2), aviso de emergencia, flechas hacia los puntos de arreglo y animaciones de cada actividad.
+
+---
+
+#### Mesa de reuniones (extra, después del plan)
+
+**Pasos:**
+1. Cualquier jugador vivo, a 80 unidades del marker `reunion`, puede pulsar `E` para convocar una reunión.
+2. La mesa tiene **2 convocatorias por partida** y **60 s de espera** entre una y otra; no se puede usar en los primeros **30 s**, durante una emergencia ni en una reunión.
+3. `CallMeeting` abre la misma fase `MEETING` que un reporte, pero `Meeting.reason = 'emergency'` y `tankSlot = -1`. El HUD muestra quién convocó.
+4. El servidor teletransporta a todos en dos arcos frente a la mesa, no en una rejilla debajo.
+5. La mesa muestra el estado en `Snapshot.myMeeting`; el cliente solo dibuja y manda la intención.
+
+**Criterio de verificación:** con 4 personas, acercarse a la mesa muestra `E Llamar reunión`; convocar abre la reunión correctamente, gasta una convocatoria y respeta la espera. Un fantasma, una emergencia activa o un jugador lejano no pueden convocar.
 
 ---
 

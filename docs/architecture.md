@@ -152,7 +152,8 @@ service Match {
   // Stream bidireccional: el jugador manda acciones, Go devuelve el estado
   rpc Play(stream Action) returns (stream State);
 }
-// Action: moverse, hacer tarea, contaminar, sabotear, reportar, votar
+// Action: moverse, hacer tarea, contaminar, sabotear, reportar, votar,
+//         convocar una reunión desde la mesa
 // State: posiciones, nivel de cada tanque, embalse, sabotaje activo, fase
 ```
 

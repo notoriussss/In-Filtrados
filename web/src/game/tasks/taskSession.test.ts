@@ -29,6 +29,7 @@ function snap(
     myActiveTask,
     emergency: null,
     mySabotage: null,
+    myMeeting: null,
   };
 }
 

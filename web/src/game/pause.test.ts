@@ -31,6 +31,7 @@ function snap(paused: boolean, waitingFor: string[]): Snapshot {
     myActiveTask: null,
     emergency: null,
     mySabotage: null,
+    myMeeting: null,
   };
 }
 

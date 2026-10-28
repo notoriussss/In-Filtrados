@@ -303,6 +303,11 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 					Report:   true,
 					TankSlot: msg.GetReport().GetTankSlot(),
 				})
+			case msg.GetCallMeeting() != nil:
+				r.Act(room.PlayerAction{
+					PlayerID:    playerID,
+					CallMeeting: true,
+				})
 			case msg.GetVote() != nil:
 				v := msg.GetVote()
 				action := room.PlayerAction{

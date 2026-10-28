@@ -71,6 +71,10 @@ type Room struct {
 	nextRandomAt      int64
 	randomEmergencies bool
 	emergencyRand     func(n int) int
+
+	// Mesa: estado de la mesa de reuniones.
+	meetingReadyAt   int64
+	meetingCallsUsed int
 }
 
 func NewRoom(code string, matchID string, m *Map, opts ...Option) *Room {
@@ -202,6 +206,8 @@ func (r *Room) handleAction(a PlayerAction) {
 	switch {
 	case a.Report:
 		r.handleReport(a.PlayerID, a.TankSlot)
+	case a.CallMeeting:
+		r.handleCallMeeting(a.PlayerID)
 	case a.Chat:
 		r.handleChat(
 			a.PlayerID,
@@ -496,6 +502,8 @@ func (r *Room) startMatch(playerID string) {
 	r.sabotageReadyAt = 0
 	r.pipesUsed = 0
 	r.nextRandomAt = 0
+	r.meetingReadyAt = r.startTick + meetingCallGraceTicks
+	r.meetingCallsUsed = 0
 	r.participants = r.snapshotParticipants()
 
 	ctx, cancel := context.WithTimeout(context.Background(), depsTimeout)
@@ -903,6 +911,7 @@ func (r *Room) sendTo(p *player, s sharedState) {
 		MyActiveTask: p.taskStation,
 		Emergency:    s.emergency,
 		MySabotage:   r.sabotageView(p),
+		MyMeeting:    r.meetingButtonView(),
 	}
 	ev := &matchv1.ServerEvent{
 		Event: &matchv1.ServerEvent_Snapshot{

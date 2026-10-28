@@ -26,9 +26,6 @@ export function Meeting(props: {
   const [myVote, setMyVote] = useState<string | null | undefined>(undefined);
   const [text, setText] = useState('');
   const chatEnd = useRef<HTMLDivElement>(null);
-  const tank = snap.tanks.find((t) => t.slot === m.tankSlot);
-  const reporter = nameOf(snap.players, m.reporterId);
-  const owner = tank ? nameOf(snap.players, tank.ownerId) : '';
   const seconds = secondsLeft(m.endsAtTick, snap.tick);
   // Pocas tarjetas se agrandan para llenar el panel; con más, caben más
   // por fila (hasta 10 jugadores en 2 filas).
@@ -107,7 +104,7 @@ export function Meeting(props: {
           }}
         >
           <TitleBar icon="user" title={T.CHOOSE} size={32}>
-            <Chip tone="warn">{T.reported(reporter, owner)}</Chip>
+            <Chip tone="warn">{view.reporterText}</Chip>
           </TitleBar>
           <div
             className="pcs"
@@ -121,6 +118,9 @@ export function Meeting(props: {
                 isMe={p.isMe}
                 voted={p.voted}
                 reporter={p.id === m.reporterId}
+                reporterLabel={
+                  m.reason === 'emergency' ? T.CALLER : T.REPORTER
+                }
                 mine={myVote === p.id}
                 votable={p.votable}
                 onVote={() => vote(p.id)}
@@ -162,7 +162,7 @@ export function Meeting(props: {
           </TitleBar>
           <div className="well chat-log">
             <div className="msg sys">
-              <span>{T.reported(reporter, owner)}</span>
+              <span>{view.reporterText}</span>
             </div>
             {snap.chat.map((c) => (
               <ChatLine
@@ -214,6 +214,7 @@ function PlayerCard(props: {
   isMe: boolean;
   voted: boolean;
   reporter: boolean;
+  reporterLabel: string;
   mine: boolean;
   votable: boolean;
   onVote: () => void;
@@ -223,7 +224,9 @@ function PlayerCard(props: {
   let chip = <Chip tone="ok">{T.ALIVE}</Chip>;
   if (ghost) chip = <Chip tone="warn">{T.GHOST}</Chip>;
   else if (!p.connected) chip = <Chip tone="bad">{T.OFFLINE}</Chip>;
-  else if (props.reporter) chip = <Chip tone="info">{T.REPORTER}</Chip>;
+  else if (props.reporter) {
+    chip = <Chip tone="info">{props.reporterLabel}</Chip>;
+  }
   return (
     <button
       className={`card pc ${props.mine ? 'on' : ''} ${ghost ? 'ghostc' : ''}`}
