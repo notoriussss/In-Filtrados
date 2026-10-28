@@ -49,12 +49,61 @@ const DROP_ROWS = [
   '..oo..',
 ];
 
+const dropSprites = new Map<boolean, HTMLCanvasElement>();
+
 function dropSprite(clean: boolean): HTMLCanvasElement {
-  return spriteFromRows(DROP_ROWS, {
-    o: C.ink,
-    b: clean ? C.water : BROWN,
-    h: clean ? C.waterHi : BROWN_HI,
-  });
+  let sprite = dropSprites.get(clean);
+  if (!sprite) {
+    sprite = spriteFromRows(DROP_ROWS, {
+      o: C.ink,
+      b: clean ? C.water : BROWN,
+      h: clean ? C.waterHi : BROWN_HI,
+    });
+    dropSprites.set(clean, sprite);
+  }
+  return sprite;
+}
+
+// El cartel sobre la caja: a la izquierda la gota sucia (va al desvío) y
+// a la derecha la limpia (va al barril). La mitad abierta se ilumina.
+const SIGN = {
+  x: RAIN_JUNCTION.x - 26,
+  y: RAIN_JUNCTION.y - 42,
+  w: 52,
+  h: 22,
+};
+
+type Pt = [number, number];
+
+// Los tubos de la compuerta, de la caja al desvío y al barril.
+const ARM_DEFLECT: Pt[] = [
+  [RAIN_JUNCTION.x, RAIN_JUNCTION.y + 10],
+  [RAIN_JUNCTION.x - 30, RAIN_JUNCTION.y + 40],
+  [RAIN_DRAIN.x + 24, RAIN_DRAIN.y - 8],
+];
+const ARM_BARREL: Pt[] = [
+  [RAIN_JUNCTION.x, RAIN_JUNCTION.y + 10],
+  [RAIN_JUNCTION.x + 60, RAIN_JUNCTION.y + 26],
+  [RAIN_BARREL.x + 30, RAIN_BARREL.y - 10],
+];
+
+// El punto a lo largo del tubo; t va de 0 a 1.
+function along(pts: Pt[], t: number): Pt {
+  const lens = pts
+    .slice(1)
+    .map((p, i) => Math.hypot(p[0] - pts[i][0], p[1] - pts[i][1]));
+  let left = t * lens.reduce((a, b) => a + b, 0);
+  for (let i = 0; i < lens.length; i++) {
+    if (left <= lens[i] || i === lens.length - 1) {
+      const k = Math.min(1, left / lens[i]);
+      return [
+        pts[i][0] + (pts[i + 1][0] - pts[i][0]) * k,
+        pts[i][1] + (pts[i + 1][1] - pts[i][1]) * k,
+      ];
+    }
+    left -= lens[i];
+  }
+  return pts[pts.length - 1];
 }
 
 // Piezas fijas: canaleta, caja de la compuerta, los dos tubos, el barril
@@ -93,18 +142,16 @@ function drawJunction(c: CanvasRenderingContext2D): void {
   ]) {
     px(c, j.x + rx, j.y + ry, PX, PX, C.metalHi);
   }
-  // Cartel arriba de la caja.
-  px(c, j.x - 22, j.y - 34, 44, 14, C.metalInk);
-  px(c, j.x - 20, j.y - 32, 40, 10, C.wallHi);
-  px(c, j.x - 20, j.y - 32, 40, PX, C.lineHi);
+  // Cartel arriba de la caja; las gotas se dibujan encima de cada cuadro.
+  px(c, SIGN.x - 2, SIGN.y - 2, SIGN.w + 4, SIGN.h + 4, C.metalInk);
+  px(c, SIGN.x, SIGN.y, SIGN.w, SIGN.h, C.wallHi);
+  px(c, SIGN.x, SIGN.y, SIGN.w, PX, C.lineHi);
+  px(c, SIGN.x + SIGN.w / 2 - 1, SIGN.y + 2, PX, SIGN.h - 4, C.line);
 }
 
 // Tubos hacia el desvío (izquierda) y hacia el barril (derecha).
 function drawArms(c: CanvasRenderingContext2D): void {
-  const j = RAIN_JUNCTION;
-  const drawArm = (
-    pts: [number, number][],
-  ): void => {
+  const drawArm = (pts: Pt[]): void => {
     for (let i = 0; i < pts.length - 1; i++) {
       const [x0, y0] = pts[i];
       const [x1, y1] = pts[i + 1];
@@ -113,16 +160,8 @@ function drawArms(c: CanvasRenderingContext2D): void {
       pxLine(c, x0, y0 - 1, x1, y1 - 1, C.metalHi, 1);
     }
   };
-  drawArm([
-    [j.x, j.y + 10],
-    [j.x - 30, j.y + 40],
-    [RAIN_DRAIN.x + 24, RAIN_DRAIN.y - 8],
-  ]);
-  drawArm([
-    [j.x, j.y + 10],
-    [j.x + 60, j.y + 26],
-    [RAIN_BARREL.x + 30, RAIN_BARREL.y - 10],
-  ]);
+  drawArm(ARM_DEFLECT);
+  drawArm(ARM_BARREL);
 }
 
 function drawBarrel(c: CanvasRenderingContext2D): void {
@@ -183,6 +222,8 @@ export class RainScene implements Scene {
     if (this.game.done && this.doneAt === null) this.doneAt = now;
     ctx.drawImage(this.back, 0, 0, BOARD.w, BOARD.h);
     this.drawBarrelWater(ctx, now);
+    this.drawFlow(ctx, now);
+    this.drawLabels(ctx);
     this.drawVane(ctx, now);
     this.drawFalling(ctx, now);
     this.drawGhosts(ctx, now);
@@ -268,6 +309,58 @@ export class RainScene implements Scene {
       px(ctx, b.x + 2, top, b.w - 4, b.y + b.h - 8 - top, BROWN);
       ctx.globalAlpha = 1;
     }
+  }
+
+  // El tubo abierto se ilumina con puntos que corren hacia su destino y
+  // el cerrado se oscurece: se ve a dónde va a parar la próxima gota.
+  private drawFlow(ctx: CanvasRenderingContext2D, now: number): void {
+    const toBarrel = this.game.gate === 'barrel';
+    const open = toBarrel ? ARM_BARREL : ARM_DEFLECT;
+    const shut = toBarrel ? ARM_DEFLECT : ARM_BARREL;
+    ctx.globalAlpha = 0.4;
+    for (let i = 0; i < shut.length - 1; i++) {
+      const [x0, y0] = shut[i];
+      const [x1, y1] = shut[i + 1];
+      pxLine(ctx, x0, y0, x1, y1, C.ink, 7);
+    }
+    ctx.globalAlpha = 1;
+    const color = toBarrel ? C.waterHi : BROWN_HI;
+    for (let k = 0; k < 3; k++) {
+      const t = this.env.calm
+        ? (k + 0.5) / 3
+        : (now / 1100 + k / 3) % 1;
+      const [x, y] = along(open, t);
+      px(ctx, x - 2, y - 2, 4, 4, C.ink);
+      px(ctx, x - 1, y - 1, 2, 2, color);
+    }
+  }
+
+  // Cada destino lleva la gota que recibe y el cartel de la compuerta
+  // muestra cuál de las dos deja pasar ahora.
+  private drawLabels(ctx: CanvasRenderingContext2D): void {
+    const d = RAIN_DRAIN;
+    const b = RAIN_BARREL;
+    const plaque = (cx: number, cy: number, clean: boolean): void => {
+      px(ctx, cx - 11, cy - 11, 22, 22, C.metalInk);
+      px(ctx, cx - 9, cy - 9, 18, 18, C.wallHi);
+      stamp(ctx, dropSprite(clean), cx, cy);
+    };
+    plaque(d.x + d.w / 2, d.y + d.h / 2, false);
+    plaque(b.x + b.w / 2, b.y + 34, true);
+    const toBarrel = this.game.gate === 'barrel';
+    const cy = SIGN.y + SIGN.h / 2;
+    stamp(ctx, dropSprite(false), SIGN.x + SIGN.w / 4, cy);
+    stamp(ctx, dropSprite(true), SIGN.x + (SIGN.w * 3) / 4, cy);
+    // Lo que no pasa se apaga; lo que pasa lleva marco.
+    const half = SIGN.w / 2;
+    const shutX = toBarrel ? SIGN.x : SIGN.x + half;
+    const openX = toBarrel ? SIGN.x + half : SIGN.x;
+    ctx.globalAlpha = 0.6;
+    px(ctx, shutX + 2, SIGN.y + 2, half - 3, SIGN.h - 4, C.ink);
+    ctx.globalAlpha = 1;
+    const frame = toBarrel ? C.waterHi : BROWN_HI;
+    px(ctx, openX + 1, SIGN.y + 1, half - 1, PX, frame);
+    px(ctx, openX + 1, SIGN.y + SIGN.h - 3, half - 1, PX, frame);
   }
 
   // La palanca de la compuerta: apunta al lado que queda abierto.
@@ -358,8 +451,9 @@ export class RainScene implements Scene {
     ctx.globalAlpha = 1;
   }
 
-  // La mano pulsa la compuerta; si una gota que cae va a terminar en el
-  // lado equivocado, el aviso se pone rojo.
+  // La mano señala la compuerta desde abajo, sin tapar la palanca, y solo
+  // hasta que se prueba; si una gota que cae va a terminar en el lado
+  // equivocado, vuelve y el aviso se pone rojo.
   private drawHint(ctx: CanvasRenderingContext2D, now: number): void {
     const g = this.game;
     if (g.done) return;
@@ -374,7 +468,8 @@ export class RainScene implements Scene {
     } else if (!this.touched) {
       drawTapRing(ctx, j.x, j.y, this.env.calm ? 0.3 : (now % 900) / 900);
     }
+    if (!wrong && this.touched) return;
     const press = this.env.calm ? 1 : 0.5 + 0.5 * Math.sin(now / 240);
-    drawHand(ctx, j.x + 4, j.y - 18, press);
+    drawHand(ctx, j.x + 12, j.y + 19, press);
   }
 }
