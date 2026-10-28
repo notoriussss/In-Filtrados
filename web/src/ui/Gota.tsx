@@ -2,8 +2,9 @@ import { motionIsReduced } from '../settings';
 import { useEffect, useRef } from 'react';
 import { loadImage } from '../game/render/assets';
 import {
-  ACCESSORY_CELL_H,
-  ACCESSORY_CELL_W,
+  ACCESSORY_PAD_X,
+  ACCESSORY_PAD_Y,
+  SPRITE_H,
   SPRITE_W,
   accessoryCell,
   jimenaBakedUrl,
@@ -21,18 +22,8 @@ const CELL_W = 40;
 const CELL_H = 56;
 const VIEWS = ['front', 'side', 'back'] as const;
 const POSES = ['idle0', 'idle1', 'walk0', 'walk1', 'walk2', 'walk3'];
-// Busto para retratos de la gota clásica
-const PORTRAIT = { x: 2, y: 0, w: 36, h: 38 };
-
-// Busto uniforme para retratos de Jimena: encuadre que contiene cabeza,
-// hombros y cualquier accesorio (brote, sombrero, gafas) sin cortes.
-const JIMENA_PORTRAIT = { x: 8, y: 6, w: 120, h: 108 };
-const JIMENA_FULL = {
-  x: 0,
-  y: 0,
-  w: ACCESSORY_CELL_W,
-  h: ACCESSORY_CELL_H,
-};
+// Busto para retratos (como PK.characterPortrait de las maquetas).
+const PORTRAIT = { x: 3, y: 2, w: 34, h: 36 };
 
 // Color de match → nombre y accesorio de su gota (como en las maquetas).
 export const GOTA_ROSTER: Record<string, { name: string; accessory: string }> =
@@ -125,6 +116,7 @@ const JIMENA_FRAMES = {
 // Jimena (88 × 125). Su lienzo se dibuja en esos píxeles, sin remuestrear,
 // y el navegador lo amplía sin suavizado: así no se borronea.
 const KX = SPRITE_W / CELL_W;
+const KY = SPRITE_H / CELL_H;
 
 export type GotaProps = {
   color: string;
@@ -145,6 +137,9 @@ export type GotaProps = {
 export function Gota(props: GotaProps) {
   const ref = useRef<HTMLCanvasElement>(null);
   const scale = props.scale ?? 3;
+  const crop = props.portrait
+    ? PORTRAIT
+    : { x: 0, y: 0, w: CELL_W, h: CELL_H };
   const color = normalizeColor(props.color);
   const jimena = props.skin === SKIN_JIMENA;
   const rawAccessory =
@@ -154,14 +149,26 @@ export function Gota(props: GotaProps) {
         ? GOTA_ROSTER[color]?.accessory
         : undefined;
   const accessory = rawAccessory?.toLowerCase();
-
+  // Los accesorios de Jimena sobresalen del cuadro: con uno puesto el
+  // lienzo crece por los lados y por arriba.
+  const padded = jimena && Boolean(accessory && accessory !== 'none');
+  const padX = padded ? ACCESSORY_PAD_X : 0;
+  const padY = padded ? ACCESSORY_PAD_Y : 0;
+  // El recorte de Jimena en píxeles de su cuadro y el lienzo que lo rodea.
+  const nat = {
+    x: Math.round(crop.x * KX),
+    y: Math.round(crop.y * KY),
+    w: Math.round(crop.w * KX),
+    h: Math.round(crop.h * KY),
+  };
   const region = jimena
-    ? props.portrait
-      ? JIMENA_PORTRAIT
-      : JIMENA_FULL
-    : props.portrait
-      ? PORTRAIT
-      : { x: 0, y: 0, w: CELL_W, h: CELL_H };
+    ? {
+        x: nat.x - padX,
+        y: nat.y - padY,
+        w: nat.w + 2 * padX,
+        h: nat.h + padY,
+      }
+    : { x: crop.x, y: crop.y, w: crop.w, h: crop.h };
 
   useEffect(() => {
     const canvas = ref.current;
@@ -180,12 +187,13 @@ export function Gota(props: GotaProps) {
         let frame = 0;
         ctx.imageSmoothingEnabled = false;
         const draw = () => {
+          // La celda de este cuadro en la hoja, con su margen incluido.
           const cell = accessoryCell(names[frame % names.length]);
           ctx.clearRect(0, 0, canvas.width, canvas.height);
           ctx.drawImage(
             img,
-            cell.sx + region.x,
-            region.y,
+            cell.sx + region.x + ACCESSORY_PAD_X,
+            region.y + ACCESSORY_PAD_Y,
             region.w,
             region.h,
             0,
@@ -223,11 +231,11 @@ export function Gota(props: GotaProps) {
         const col =
           VIEWS.indexOf(props.view ?? 'front') * POSES.length +
           POSES.indexOf(pose);
-        const sx = col * CELL_W + region.x;
-        const sy = (props.ghost ? CELL_H : 0) + region.y;
-        ctx.clearRect(0, 0, region.w, region.h);
-        ctx.drawImage(b, sx, sy, region.w, region.h, 0, 0, region.w, region.h);
-        if (a) ctx.drawImage(a, sx, sy, region.w, region.h, 0, 0, region.w, region.h);
+        const sx = col * CELL_W + crop.x;
+        const sy = (props.ghost ? CELL_H : 0) + crop.y;
+        ctx.clearRect(0, 0, crop.w, crop.h);
+        ctx.drawImage(b, sx, sy, crop.w, crop.h, 0, 0, crop.w, crop.h);
+        if (a) ctx.drawImage(a, sx, sy, crop.w, crop.h, 0, 0, crop.w, crop.h);
       };
       draw();
       if (props.animate && !motionIsReduced()) {
@@ -252,10 +260,10 @@ export function Gota(props: GotaProps) {
     props.ghost,
     props.view,
     props.animate,
-    region.x,
-    region.y,
-    region.w,
-    region.h,
+    crop.x,
+    crop.y,
+    crop.w,
+    crop.h,
   ]);
 
   return (

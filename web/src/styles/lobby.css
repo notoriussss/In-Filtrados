@@ -327,8 +327,9 @@
 .scr-lobby .lobby-acc-item {
   height: 66px;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
+  padding: 0 0 7px;
   overflow: hidden;
   background: rgba(7, 25, 46, 0.75);
   border: 1.5px solid rgba(126, 230, 216, 0.22);
@@ -339,6 +340,7 @@
 
 .scr-lobby .lobby-acc-item.no-acc {
   align-items: center;
+  padding: 0;
 }
 
 .scr-lobby .lobby-acc-item:hover:not(.locked) {
@@ -425,11 +427,13 @@
 }
 
 .scr-lobby .lobby-player-avatar {
-  width: 48px;
-  height: 52px;
+  width: 46px;
+  height: 48px;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
+  padding-bottom: 2px;
+  overflow: hidden;
   flex-shrink: 0;
 }
 
