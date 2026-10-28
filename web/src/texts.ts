@@ -223,6 +223,7 @@ export const HUD_TEXT = {
   PIPE: 'Tubería',
   STEAM: 'Vapor',
   PAUSED: 'Partida en pausa',
+  CLOCK: 'Tiempo',
   waiting: (names: string) => `Esperando a ${names}`,
   percent: (n: number) => `${n}%`,
 } as const;

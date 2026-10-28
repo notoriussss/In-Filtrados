@@ -209,6 +209,18 @@ players[].activity: 'reduce' | 'reuse' | 'recycle' | 'tank' | 'fix' | null; // p
 // Gateway → navegador: Snapshot.impostors y Snapshot.matchMinutes
 ```
 
+**Reloj de la partida.** `match` ya termina la partida por tiempo (gana el infiltrado, motivo `timeout`). Para que el HUD dibuje el reloj se suma, sin romper lo anterior, `match_ends_at_tick = 21` en `Snapshot` (gRPC) y `matchEndsAtTick` en el mensaje al navegador:
+
+```ts
+// Gateway → navegador: Snapshot.matchEndsAtTick
+//   tick en que se acaba el tiempo; 0 en LOBBY y ENDED.
+//   Lo que falta = (matchEndsAtTick - tick) / 20 s.
+```
+
+- El reloj no corre durante las reuniones: `match` cuenta los ticks en `MEETING` (`meetingTicks`) y corre `matchEndsAtTick` ese mismo número, así que lo que ve el jugador queda congelado y retoma al volver a `PLAYING`. Tampoco corre en la pausa por desconexión, porque el tick de `match` no avanza. `meetingTicks` se guarda con la sala (`meeting_ticks`).
+- Si el tiempo ya está en 0 cuando empieza una reunión, la reunión se juega completa y, al volver a `PLAYING`, ganan los infiltrados con el motivo `timeout` (salvo que la votación expulse al último infiltrado, que gana el equipo).
+- El navegador solo resta ticks y dibuja (`web/src/game/matchClock.ts`); no usa su propio reloj para decidir nada.
+
 - Infiltrados: de 1 a (jugadores − 1) / 2, redondeado hacia abajo y nunca menos de 1 (`maxImpostors` en `match/internal/room/roles.go`). Si el creador no elige, vale la regla de siempre: 1, o 2 con 7 jugadores o más. Si salen jugadores y el valor elegido ya no cabe, `Snapshot.impostors` y la partida usan el tope. Fuera de rango, `match` responde `INVALID_IMPOSTOR_COUNT`.
 - Duración: de 4 a 12 minutos enteros, 8 por defecto (`minMatchMinutes` y `maxMatchMinutes` en `match/internal/room/matchconfig.go`). Fuera de rango, `match` responde `INVALID_MATCH_DURATION`. El navegador ofrece 4, 6, 8, 10 y 12 (`web/src/game/matchConfig.ts`).
 - Un invitado o una fase distinta de LOBBY se ignoran, igual que con las tareas.

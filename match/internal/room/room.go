@@ -40,6 +40,7 @@ type Room struct {
 	tanks          []*tank
 	rnd            io.Reader // azar de los roles: crypto/rand
 	startTick      int64
+	meetingTicks   int64 // ticks en reunión: el reloj de la partida no corre
 	eventLog       EventLog
 	reservoir      int32 // S2-04
 	eventHistory   []LogEntry
@@ -703,10 +704,27 @@ func (r *Room) checkEndConditions() {
 		r.finishMatch(events.WinnerImpostor, events.ReasonTanksContaminated)
 		return
 	}
-	if r.tick-r.startTick >= int64(r.matchDuration/tickInterval) {
+	if r.tick >= r.matchEndTick() {
 		r.finishMatch(events.WinnerImpostor, events.ReasonTimeOut)
 		return
 	}
+}
+
+// matchEndTick es el tick en que se acaba el tiempo de la partida. Las
+// reuniones no cuentan: cada tick en MEETING corre el fin un tick.
+func (r *Room) matchEndTick() int64 {
+	return r.startTick + r.meetingTicks +
+		int64(r.matchDuration/tickInterval)
+}
+
+// matchEndsAtTick es lo que viaja en el snapshot: 0 si la partida no
+// está en curso (LOBBY o ENDED).
+func (r *Room) matchEndsAtTick() int64 {
+	switch r.phase {
+	case matchv1.Phase_PLAYING, matchv1.Phase_MEETING:
+		return r.matchEndTick()
+	}
+	return 0
 }
 
 // allImpostorsEjected verifica si todos los impostores fueron expulsados.
@@ -845,6 +863,9 @@ func (r *Room) snapshotParticipants() []PlayerInfo {
 
 // step mueve a cada jugador y evalúa las condiciones de la partida.
 func (r *Room) step() {
+	if r.phase == matchv1.Phase_MEETING {
+		r.meetingTicks++
+	}
 	if r.phase != matchv1.Phase_MEETING {
 		for _, p := range r.players {
 			nx, ny := r.m.Move(
@@ -961,6 +982,8 @@ func (r *Room) sendTo(p *player, s sharedState) {
 		TasksPerPlayer: int32(r.tasksPerPlayer),
 		Impostors:      int32(r.impostorsNow()),
 		MatchMinutes:   int32(r.matchDuration / time.Minute),
+
+		MatchEndsAtTick: r.matchEndsAtTick(),
 	}
 	ev := &matchv1.ServerEvent{
 		Event: &matchv1.ServerEvent_Snapshot{

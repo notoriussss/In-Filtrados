@@ -73,6 +73,7 @@ function snap(meeting: Partial<Meeting>, tick = 100): Snapshot {
     tasksPerPlayer: 6,
     impostors: 1,
     matchMinutes: 8,
+    matchEndsAtTick: 0,
   };
 }
 

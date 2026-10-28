@@ -1801,10 +1801,16 @@ type Snapshot struct {
 	TasksPerPlayer int32 `protobuf:"varint,18,opt,name=tasks_per_player,json=tasksPerPlayer,proto3" json:"tasks_per_player,omitempty"`
 	// Infiltrados de la partida (ya recortados al máximo de los jugadores que
 	// hay) y minutos que dura. Se ven en LOBBY.
-	Impostors     int32 `protobuf:"varint,19,opt,name=impostors,proto3" json:"impostors,omitempty"`
-	MatchMinutes  int32 `protobuf:"varint,20,opt,name=match_minutes,json=matchMinutes,proto3" json:"match_minutes,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Impostors    int32 `protobuf:"varint,19,opt,name=impostors,proto3" json:"impostors,omitempty"`
+	MatchMinutes int32 `protobuf:"varint,20,opt,name=match_minutes,json=matchMinutes,proto3" json:"match_minutes,omitempty"`
+	// Tick en que se acaba el tiempo y ganan los infiltrados (reason
+	// "timeout"). 0 en LOBBY y ENDED. El reloj se detiene en las reuniones
+	// (el fin se corre un tick por cada tick de reunión) y en la pausa
+	// (el tick no avanza). Lo que falta es match_ends_at_tick - tick, a 20
+	// ticks por segundo.
+	MatchEndsAtTick int64 `protobuf:"varint,21,opt,name=match_ends_at_tick,json=matchEndsAtTick,proto3" json:"match_ends_at_tick,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *Snapshot) Reset() {
@@ -1973,6 +1979,13 @@ func (x *Snapshot) GetImpostors() int32 {
 func (x *Snapshot) GetMatchMinutes() int32 {
 	if x != nil {
 		return x.MatchMinutes
+	}
+	return 0
+}
+
+func (x *Snapshot) GetMatchEndsAtTick() int64 {
+	if x != nil {
+		return x.MatchEndsAtTick
 	}
 	return 0
 }
@@ -2887,7 +2900,7 @@ const file_match_proto_rawDesc = "" +
 	"\x05error\x18\x02 \x01(\v2\x0f.match.v1.ErrorH\x00R\x05error\x127\n" +
 	"\vmatch_ended\x18\x03 \x01(\v2\x14.match.v1.MatchEndedH\x00R\n" +
 	"matchEndedB\a\n" +
-	"\x05event\"\xcf\x06\n" +
+	"\x05event\"\xfc\x06\n" +
 	"\bSnapshot\x12\x12\n" +
 	"\x04tick\x18\x01 \x01(\x03R\x04tick\x12%\n" +
 	"\x05phase\x18\x02 \x01(\x0e2\x0f.match.v1.PhaseR\x05phase\x12.\n" +
@@ -2912,7 +2925,8 @@ const file_match_proto_rawDesc = "" +
 	"my_meeting\x18\x11 \x01(\v2\x17.match.v1.MeetingButtonR\tmyMeeting\x12(\n" +
 	"\x10tasks_per_player\x18\x12 \x01(\x05R\x0etasksPerPlayer\x12\x1c\n" +
 	"\timpostors\x18\x13 \x01(\x05R\timpostors\x12#\n" +
-	"\rmatch_minutes\x18\x14 \x01(\x05R\fmatchMinutes\"b\n" +
+	"\rmatch_minutes\x18\x14 \x01(\x05R\fmatchMinutes\x12+\n" +
+	"\x12match_ends_at_tick\x18\x15 \x01(\x03R\x0fmatchEndsAtTick\"b\n" +
 	"\tEmergency\x12\x12\n" +
 	"\x04kind\x18\x01 \x01(\tR\x04kind\x12 \n" +
 	"\fends_at_tick\x18\x02 \x01(\x03R\n" +

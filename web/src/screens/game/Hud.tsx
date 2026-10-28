@@ -18,6 +18,11 @@ import { emergencyBanner, sabotageButtons } from '../../game/emergency';
 import type { Action } from '../../game/actions';
 import type { GameSession, GameState } from '../../game/session';
 import { pauseMessage } from '../../game/pause';
+import {
+  clockLevel,
+  formatClock,
+  matchSecondsLeft,
+} from '../../game/matchClock';
 import { session } from '../../session';
 import { APP_TEXT, HUD_TEXT } from '../../texts';
 import { Gota } from '../../ui/Gota';
@@ -79,6 +84,7 @@ export function Hud(props: { game: GameSession; state: GameState }) {
       <TasksPanel snap={snap} />
       <AlertPanel state={state} now={now} />
       <ReservoirPanel snap={snap} />
+      <ClockPanel snap={snap} />
       <PlayerCard snap={snap} me={me} />
       <nav className="panel glass hot" aria-label="Acciones">
         <ActionSlot action={state.action} onUse={game.triggerAction} />
@@ -222,6 +228,29 @@ function ReservoirPanel(props: { snap: Snapshot }) {
         <span>{HUD_TEXT.PURITY}</span>
         <Gauge value={purity / 100} tone="leaf" />
         <span className="num">{HUD_TEXT.percent(purity)}</span>
+      </div>
+    </section>
+  );
+}
+
+// ClockPanel: lo que falta para que se acabe el tiempo y ganen los
+// infiltrados; lo manda match en el snapshot, que ya lo congela en las
+// reuniones y en la pausa.
+function ClockPanel(props: { snap: Snapshot }) {
+  const seconds = matchSecondsLeft(props.snap);
+  if (seconds === null) return null;
+  const level = clockLevel(seconds);
+  return (
+    <section
+      className={`panel glass clock ${level}`}
+      aria-label={HUD_TEXT.CLOCK}
+    >
+      <div className="ttl hud-ttl">
+        <Icon name="clock" palette="amber" />
+        <span>{HUD_TEXT.CLOCK.toUpperCase()}</span>
+      </div>
+      <div className="t num" role="timer">
+        {formatClock(seconds)}
       </div>
     </section>
   );

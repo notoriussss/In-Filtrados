@@ -211,6 +211,12 @@ message Snapshot {
   // hay) y minutos que dura. Se ven en LOBBY.
   int32          impostors     = 19;
   int32          match_minutes = 20;
+  // Tick en que se acaba el tiempo y ganan los infiltrados (reason
+  // "timeout"). 0 en LOBBY y ENDED. El reloj se detiene en las reuniones
+  // (el fin se corre un tick por cada tick de reunión) y en la pausa
+  // (el tick no avanza). Lo que falta es match_ends_at_tick - tick, a 20
+  // ticks por segundo.
+  int64          match_ends_at_tick = 21;
 }
 // Emergency: tubería rota o vapor en la planta (S3-05).
 message Emergency {
