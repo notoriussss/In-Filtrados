@@ -4,9 +4,13 @@ import {
   BUCKET_COUNT,
   BUCKET_SIZE,
   BucketsGame,
-  BiofilterGame,
-  BIOFILTER_BIN,
-  BIOFILTER_SIZE,
+  JugFilterGame,
+  JUG_BUCKET_HOME,
+  JUG_FILTER_MS,
+  JUG_ROUNDS,
+  JUG_SIZE,
+  JUG_TAP,
+  JUG_TOP,
   FILL_COUNT,
   FILL_MARK,
   FILL_RATE,
@@ -68,7 +72,7 @@ describe('createMinigame', () => {
     expect(createMinigame('reuse', 'rain-1')).toBeInstanceOf(FirstRainGame);
     expect(createMinigame('reuse', 'rain-2')).toBeInstanceOf(FirstRainGame);
     expect(createMinigame('reuse', 'greywater-2')).toBeInstanceOf(WateringGame);
-    expect(createMinigame('recycle', 'compost-1')).toBeInstanceOf(BiofilterGame);
+    expect(createMinigame('recycle', 'compost-1')).toBeInstanceOf(JugFilterGame);
     expect(createMinigame('recycle', 'sorter-1')).toBeInstanceOf(TreatmentGame);
   });
 
@@ -624,52 +628,73 @@ describe('SealGame', () => {
   });
 });
 
-describe('BiofilterGame', () => {
-  const center = (g: BiofilterGame, i: number) => ({
-    x: g.bags[i].x + BIOFILTER_SIZE / 2,
-    y: g.bags[i].y + BIOFILTER_SIZE / 2,
+describe('JugFilterGame', () => {
+  const bucket = (g: JugFilterGame) => ({
+    x: g.bucket.x + JUG_SIZE / 2,
+    y: g.bucket.y + JUG_SIZE / 2,
   });
-  const bin = {
-    x: BIOFILTER_BIN.x + BIOFILTER_BIN.w / 2,
-    y: BIOFILTER_BIN.y + BIOFILTER_BIN.h / 2,
+  const top = { x: JUG_TOP.x + JUG_TOP.w / 2, y: JUG_TOP.y + JUG_TOP.h / 2 };
+  const tap = { x: JUG_TAP.x + JUG_TAP.w / 2, y: JUG_TAP.y + JUG_TAP.h / 2 };
+  const pour = (g: JugFilterGame) => {
+    g.pointerDown(bucket(g));
+    g.pointerMove(top);
+    g.pointerUp();
   };
 
-  it('takes the bags in order (grava, arena, carbón), two rounds', () => {
-    const g = new BiofilterGame();
-    for (const round of [0, 1]) {
-      for (const i of [0, 1, 2]) {
-        expect(g.required).toBe(i);
-        g.pointerDown(center(g, i));
-        g.pointerMove(bin);
-        g.pointerUp();
-        expect(g.bags[i].inBin).toBe(round + 1);
-        expect({ x: g.bags[i].x, y: g.bags[i].y }).toEqual({
-          x: g.bags[i].homeX,
-          y: g.bags[i].homeY,
-        });
-      }
-    }
-    expect(g.steps).toBe(6);
-    expect(g.done).toBe(false);
-    g.step(MIN_GAME_MS);
-    expect(g.done).toBe(true);
+  it('starts waiting for the bucket and ignores the tap', () => {
+    const g = new JugFilterGame();
+    expect(g.phase).toBe('pour');
+    g.pointerDown(tap);
+    expect(g.glasses).toBe(0);
+    expect(g.phase).toBe('pour');
   });
 
-  it('shakes the wrong bag back without counting it', () => {
-    const g = new BiofilterGame();
-    expect(g.required).toBe(0);
-    g.pointerDown(center(g, 1)); // arena primero: mal
-    g.pointerMove(bin);
-    g.pointerUp();
-    expect(g.steps).toBe(0);
-    expect({ x: g.bags[1].x, y: g.bags[1].y }).toEqual({
-      x: g.bags[1].homeX,
-      y: g.bags[1].homeY,
-    });
-    // Soltar fuera de la columna tampoco cuenta.
-    g.pointerDown(center(g, 0));
+  it('returns the bucket when dropped away from the jug', () => {
+    const g = new JugFilterGame();
+    g.pointerDown(bucket(g));
     g.pointerMove({ x: 20, y: 20 });
     g.pointerUp();
-    expect(g.steps).toBe(0);
+    expect(g.phase).toBe('pour');
+    expect(g.bucket).toEqual(JUG_BUCKET_HOME);
+  });
+
+  it('filters the poured water for JUG_FILTER_MS before the tap works', () => {
+    const g = new JugFilterGame();
+    pour(g);
+    expect(g.phase).toBe('filter');
+    // Con el agua todavía bajando, el clic en la llave no cuenta.
+    g.pointerDown(tap);
+    expect(g.glasses).toBe(0);
+    g.step(JUG_FILTER_MS - 1);
+    expect(g.phase).toBe('filter');
+    g.step(1);
+    expect(g.phase).toBe('tap');
+  });
+
+  it('fills a glass on the tap and misses clicks elsewhere', () => {
+    const g = new JugFilterGame();
+    pour(g);
+    g.step(JUG_FILTER_MS);
+    g.drainEvents();
+    g.pointerDown({ x: 10, y: 10 });
+    expect(g.drainEvents().some((e) => e.type === 'miss')).toBe(true);
+    expect(g.glasses).toBe(0);
+    g.pointerDown(tap);
+    expect(g.glasses).toBe(1);
+    expect(g.phase).toBe('pour');
+  });
+
+  it('is done after every glass, but not before 3 s', () => {
+    const g = new JugFilterGame();
+    for (let i = 0; i < JUG_ROUNDS; i++) {
+      pour(g);
+      g.step(JUG_FILTER_MS);
+      g.pointerDown(tap);
+    }
+    expect(g.glasses).toBe(JUG_ROUNDS);
+    expect(g.progress()).toBe(1);
+    expect(g.done).toBe(g.elapsed >= MIN_GAME_MS);
+    g.step(MIN_GAME_MS);
+    expect(g.done).toBe(true);
   });
 });

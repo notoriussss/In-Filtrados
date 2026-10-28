@@ -57,7 +57,7 @@ const STATION_GAMES: Record<string, () => Minigame> = {
   'rain-1': () => new FirstRainGame(),
   'rain-2': () => new FirstRainGame(),
   'greywater-2': () => new WateringGame(),
-  'compost-1': () => new BiofilterGame(),
+  'compost-1': () => new JugFilterGame(),
   'sorter-1': () => new TreatmentGame(),
 };
 
@@ -1002,112 +1002,112 @@ export class SealGame extends BaseGame implements Minigame {
   }
 }
 
-// Reciclar (compost-1, Lombrifiltro): capas del biofiltro. El agua gris
-// se limpia al pasar por capas: se arrastran las bolsas a la columna en
-// el orden que señala la mano, de abajo hacia arriba: grava, arena,
-// carbón. Equivocarse de bolsa la devuelve sacudiéndose. Cada ronda
-// completa deja pasar agua sucia que sale clara. Dos rondas.
-export const BIOFILTER_ROUNDS = 2;
-// El orden de cada ronda: grava, arena y carbón.
-export const BIOFILTER_ORDER: readonly number[] = [0, 1, 2];
-export const BIOFILTER_STEPS = BIOFILTER_ROUNDS * BIOFILTER_ORDER.length;
-export const BIOFILTER_BIN = { x: 238, y: 128, w: 106, h: 100 };
-export const BIOFILTER_SIZE = 40;
-export const BIOFILTER_HOME_X: readonly number[] = [22, 90, 158];
+// Reciclar (compost-1, Purificador): jarra filtrante. Se arrastra el balde
+// de agua turbia a la jarra; el agua baja por el filtro y abajo queda
+// clara; entonces se hace clic en la llave para llenar el vaso. Dos
+// vasos. Soltar el balde fuera de la jarra lo devuelve a su lugar.
+export const JUG_ROUNDS = 2;
+export const JUG_FILTER_MS = 1500; // lo que tarda el agua en pasar
+export const JUG_SIZE = 48; // zona de agarre del balde
+export const JUG_BUCKET_HOME = { x: 28, y: 152 };
+export const JUG_BODY = { x: 146, y: 92, w: 88, h: 108 };
+export const JUG_TOP = { x: 146, y: 92, w: 88, h: 46 }; // donde se vierte
+export const JUG_TAP = { x: 236, y: 150, w: 36, h: 34 }; // clic: la llave
+export const JUG_GLASS = { x: 246, y: 168, w: 30, h: 32 };
 
-export type BiofilterBag = {
-  index: number;
-  x: number; // esquina superior izquierda
-  y: number;
-  homeX: number;
-  homeY: number;
-  inBin: number; // veces que entró
-};
+// pour: falta verter el balde; filter: el agua baja por el filtro;
+// tap: el agua ya está clara y falta abrir la llave.
+export type JugPhase = 'pour' | 'filter' | 'tap';
 
-export class BiofilterGame extends BaseGame implements Minigame {
-  readonly bags: BiofilterBag[] = [];
-  dragging: number | null = null;
+export class JugFilterGame extends BaseGame implements Minigame {
+  phase: JugPhase = 'pour';
+  glasses = 0; // vasos ya llenos
+  filterMs = 0; // lo que lleva bajando el agua por el filtro
+  dragging = false;
   elapsed = 0;
+  bucket = { x: JUG_BUCKET_HOME.x, y: JUG_BUCKET_HOME.y };
   private grabDx = 0;
   private grabDy = 0;
 
-  constructor() {
-    super();
-    const y = FLOOR_Y - BIOFILTER_SIZE;
-    BIOFILTER_HOME_X.forEach((x, i) => {
-      this.bags.push({
-        index: i,
-        x,
-        y,
-        homeX: x,
-        homeY: y,
-        inBin: 0,
-      });
-    });
-  }
-
-  get steps(): number {
-    return this.bags.reduce((n, s) => n + s.inBin, 0);
-  }
-
-  // La bolsa que toca ahora: la mano lo señala.
-  get required(): number {
-    return BIOFILTER_ORDER[this.steps % BIOFILTER_ORDER.length];
-  }
-
   get done(): boolean {
-    return this.steps === BIOFILTER_STEPS && this.elapsed >= MIN_GAME_MS;
+    return this.glasses === JUG_ROUNDS && this.elapsed >= MIN_GAME_MS;
   }
 
+  // Cada vaso tiene tres pasos: verter, esperar el filtro y abrir la llave.
   progress(): number {
-    return this.steps / BIOFILTER_STEPS;
+    const step = this.phase === 'pour' ? 0 : this.phase === 'filter' ? 1 : 2;
+    return Math.min(1, (this.glasses * 3 + step) / (JUG_ROUNDS * 3));
   }
 
   pointerDown(p: Point): void {
-    const i = this.bags.findIndex(
-      (s) =>
-        p.x >= s.x &&
-        p.x <= s.x + BIOFILTER_SIZE &&
-        p.y >= s.y &&
-        p.y <= s.y + BIOFILTER_SIZE,
-    );
-    if (i < 0) return;
-    this.dragging = i;
-    this.grabDx = p.x - this.bags[i].x;
-    this.grabDy = p.y - this.bags[i].y;
-    this.events.push({ type: 'grab', x: p.x, y: p.y, index: i });
+    if (this.phase === 'tap') {
+      if (inRect(p.x, p.y, JUG_TAP)) {
+        this.glasses += 1;
+        this.phase = 'pour';
+        this.events.push({
+          type: 'pop',
+          x: p.x,
+          y: p.y,
+          index: this.glasses - 1,
+        });
+        return;
+      }
+      this.events.push({ type: 'miss', x: p.x, y: p.y });
+      return;
+    }
+    const B = this.bucket;
+    const inside =
+      this.phase === 'pour' &&
+      p.x >= B.x &&
+      p.x <= B.x + JUG_SIZE &&
+      p.y >= B.y &&
+      p.y <= B.y + JUG_SIZE;
+    if (!inside) return;
+    this.dragging = true;
+    this.grabDx = p.x - B.x;
+    this.grabDy = p.y - B.y;
+    this.events.push({ type: 'grab', x: p.x, y: p.y });
   }
 
   pointerMove(p: Point): void {
-    if (this.dragging === null) return;
-    const s = this.bags[this.dragging];
-    s.x = p.x - this.grabDx;
-    s.y = p.y - this.grabDy;
+    if (!this.dragging) return;
+    this.bucket.x = p.x - this.grabDx;
+    this.bucket.y = p.y - this.grabDy;
   }
 
-  // Al soltar: la bolsa correcta dentro de la columna cuenta y vuelve a
-  // su lugar (se reusa en la siguiente ronda); cualquier otra cosa, la
-  // bolsa se sacude y vuelve.
+  // Al soltar: sobre la jarra se vierte y empieza el filtro; en
+  // cualquier otro lado el balde vuelve a su lugar.
   pointerUp(): void {
-    if (this.dragging === null) return;
-    const i = this.dragging;
-    const s = this.bags[i];
-    this.dragging = null;
-    const cx = s.x + BIOFILTER_SIZE / 2;
-    const cy = s.y + BIOFILTER_SIZE / 2;
-    const inBin = inRect(cx, cy, BIOFILTER_BIN) && i === this.required;
-    s.x = s.homeX;
-    s.y = s.homeY;
-    if (inBin) {
-      s.inBin += 1;
-      this.events.push({ type: 'drop-in', x: cx, y: cy, index: i });
+    if (!this.dragging) return;
+    this.dragging = false;
+    const cx = this.bucket.x + JUG_SIZE / 2;
+    const cy = this.bucket.y + JUG_SIZE / 2;
+    this.bucket.x = JUG_BUCKET_HOME.x;
+    this.bucket.y = JUG_BUCKET_HOME.y;
+    if (inRect(cx, cy, JUG_TOP)) {
+      this.phase = 'filter';
+      this.filterMs = 0;
+      this.events.push({
+        type: 'drop-in',
+        x: cx,
+        y: cy,
+        index: this.glasses,
+      });
       return;
     }
-    this.events.push({ type: 'drop-out', x: s.x, y: s.y, index: i });
+    this.events.push({
+      type: 'drop-out',
+      x: cx,
+      y: cy,
+      index: this.glasses,
+    });
   }
 
   step(dtMs: number): void {
     this.elapsed += dtMs;
+    if (this.phase !== 'filter') return;
+    this.filterMs += dtMs;
+    if (this.filterMs >= JUG_FILTER_MS) this.phase = 'tap';
   }
 }
 

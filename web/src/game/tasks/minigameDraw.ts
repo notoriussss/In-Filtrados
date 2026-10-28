@@ -4,7 +4,7 @@ import {
   BOARD,
   type Minigame,
   BucketsGame,
-  BiofilterGame,
+  JugFilterGame,
   FillGame,
   FirstRainGame,
   ParticlesGame,
@@ -15,7 +15,7 @@ import {
   WateringGame,
 } from './minigames';
 import { BUCKETS_HERO_X, BucketsScene } from './draw/bucketsScene';
-import { BIOFILTER_HERO_X, BiofilterScene } from './draw/biofilterScene';
+import { JUG_HERO_X, JugScene } from './draw/jugScene';
 import { FILL_HERO_X, FillScene } from './draw/fillScene';
 import { drawDoneBanner, warmBannerFont } from './draw/hand';
 import { Hero } from './draw/hero';
@@ -100,7 +100,7 @@ function buildScene(
   if (game instanceof FirstRainGame) return new RainScene(game, env);
   if (game instanceof TreatmentGame) return new TreatmentScene(game, env);
   if (game instanceof WateringGame) return new WateringScene(game, env);
-  if (game instanceof BiofilterGame) return new BiofilterScene(game, env);
+  if (game instanceof JugFilterGame) return new JugScene(game, env);
   throw new Error('minijuego sin escena');
 }
 
@@ -115,5 +115,5 @@ function heroXOf(game: Minigame): number {
   if (game instanceof FirstRainGame) return RAIN_HERO_X;
   if (game instanceof TreatmentGame) return TREATMENT_HERO_X;
   if (game instanceof WateringGame) return WATERING_HERO_X;
-  return BIOFILTER_HERO_X;
+  return JUG_HERO_X;
 }
