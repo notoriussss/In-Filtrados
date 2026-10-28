@@ -1,3 +1,4 @@
+import { drawJimena } from '../../render/jimenaDraw';
 import { drawPosedSprite } from '../../render/spriteDraw';
 import {
   GOTA_CELL_H,
@@ -141,7 +142,15 @@ export class Hero {
         const box = { x: this.x, feetY: this.feetY, w: HERO_W, h: HERO_H };
         ctx.save();
         ctx.imageSmoothingEnabled = false;
-        drawPosedSprite(ctx, img, box, shown);
+        drawJimena(
+          ctx,
+          img,
+          shown.frame,
+          box,
+          shown,
+          this.color,
+          this.accessory,
+        );
         ctx.restore();
       }
     }

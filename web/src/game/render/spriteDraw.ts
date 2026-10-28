@@ -23,6 +23,15 @@ export type SourceRect = {
   sh: number;
 };
 
+// Una capa que va pegada a otra (un accesorio sobre el cuerpo) debe
+// moverse igual que ella: pasa lo que mide el cuerpo y cuántas filas de
+// la capa quedan sobre su primera fila (el margen de arriba).
+export type PoseRef = {
+  unitW: number; // ancho del cuerpo, para convertir la pose
+  rows: number; // filas del cuerpo
+  rowOffset: number; // filas de esta capa por encima del cuerpo
+};
+
 export function drawPosedSprite(
   ctx: CanvasRenderingContext2D,
   img: HTMLImageElement,
@@ -30,8 +39,9 @@ export function drawPosedSprite(
   pose: Pose,
   srcRect?: SourceRect,
   flip?: boolean,
+  ref?: PoseRef,
 ): void {
-  const unit = box.w / POSE_UNIT;
+  const unit = (ref?.unitW ?? box.w) / POSE_UNIT;
   const w = box.w * pose.sx;
   const h = box.h * pose.sy;
   const left = box.x + pose.dx * unit - w / 2;
@@ -57,7 +67,9 @@ export function drawPosedSprite(
     const rowH = h / rows;
     for (let r = 0; r < rows; r += sliceRows) {
       const n = Math.min(sliceRows, rows - r);
-      const mid = (r + n / 2) / rows;
+      const mid = ref
+        ? (r + n / 2 - ref.rowOffset) / ref.rows
+        : (r + n / 2) / rows;
       const shift = pose.lean * unit * (1 - mid) ** LEAN_CURVE;
       ctx.drawImage(
         img,

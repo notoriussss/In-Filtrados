@@ -37,12 +37,17 @@ export function ownedIds(shop: ShopResponse | null): Set<string> {
   return new Set(shop?.items.filter((i) => i.owned).map((i) => i.id));
 }
 
-// Lo último que eligió el jugador, para ponérselo solo al entrar a una
-// sala (match vuelve a validar que lo tenga comprado).
-export type Cosmetics = { skin: Skin; accessory: string };
+// Cómo se ve el jugador: personaje, color y accesorio. Lo último que
+// eligió se guarda para ponérselo solo al entrar a una sala (match vuelve
+// a validar que lo tenga comprado y que el color esté libre).
+export type Cosmetics = {
+  skin: Skin;
+  color: string; // '' si nunca eligió uno
+  accessory: string; // '' si no lleva ninguno
+};
 
 const COSMETICS_KEY = 'in-filtrados-cosmetics';
-const NO_COSMETICS: Cosmetics = { skin: SKIN_JIMENA, accessory: '' };
+const NO_COSMETICS: Cosmetics = { skin: SKIN_JIMENA, color: '', accessory: '' };
 
 export function loadCosmetics(): Cosmetics {
   try {
@@ -51,12 +56,31 @@ export function loadCosmetics(): Cosmetics {
     const data = JSON.parse(raw) as Partial<Cosmetics>;
     return {
       skin: skinOf(data.skin),
+      color: typeof data.color === 'string' ? data.color : '',
       accessory: typeof data.accessory === 'string' ? data.accessory : '',
     };
   } catch {
     return NO_COSMETICS;
   }
 }
+
+// Los accesorios se ordenan por dónde se llevan, como las pestañas del
+// vestidor. Cada jugador lleva uno solo a la vez.
+export type AccessoryCategory = 'head' | 'face' | 'body';
+
+export const ACCESSORY_CATEGORIES: Record<AccessoryCategory, string[]> = {
+  head: [
+    'cap',
+    'straw-hat',
+    'fisher-hat',
+    'helmet',
+    'sprout',
+    'flower',
+    'headphones',
+  ],
+  face: ['glasses', 'diving-mask'],
+  body: ['scarf', 'raincoat', 'backpack'],
+};
 
 export function saveCosmetics(next: Cosmetics): void {
   try {

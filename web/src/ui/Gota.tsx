@@ -1,7 +1,14 @@
 import { motionIsReduced } from '../settings';
 import { useEffect, useRef } from 'react';
 import { loadImage } from '../game/render/assets';
-import { SPRITE_COLORS, SPRITE_H, SPRITE_W } from '../game/render/sprites';
+import {
+  ACCESSORY_PAD_X,
+  ACCESSORY_PAD_Y,
+  SPRITE_H,
+  SPRITE_W,
+  accessoryCell,
+  jimenaBakedUrl,
+} from '../game/render/sprites';
 import { SKIN_JIMENA, type Skin } from '../shop';
 
 // Personajes «gota» del paquete v3 para los menús (en la partida se usan
@@ -70,7 +77,6 @@ function sheet(url: string): Promise<HTMLImageElement> {
 
 // Cuadros de Jimena para cada vista (de lado mira a la derecha, igual
 // que la hoja de la gota; flip la voltea).
-const JIMENA_URL = '/assets/characters/jimena';
 const JIMENA_FRAMES = {
   front: { idle: ['front'], walk: ['front-walking1', 'front-walking2'] },
   side: {
@@ -79,9 +85,11 @@ const JIMENA_FRAMES = {
   },
   back: { idle: ['back'], walk: ['back-walking1', 'back-walking2'] },
 } as const;
-// El cuadro de Jimena se dibuja al doble de resolución que el de la
-// gota para no perder detalle (88 × 125 contra 40 × 56).
-const JIMENA_RES = 2;
+// Medidas de la gota (celdas de 40 × 56) pasadas a píxeles del cuadro de
+// Jimena (88 × 125). Su lienzo se dibuja en esos píxeles, sin remuestrear,
+// y el navegador lo amplía sin suavizado: así no se borronea.
+const KX = SPRITE_W / CELL_W;
+const KY = SPRITE_H / CELL_H;
 
 export type GotaProps = {
   color: string;
@@ -107,7 +115,6 @@ export function Gota(props: GotaProps) {
     : { x: 0, y: 0, w: CELL_W, h: CELL_H };
   const color = props.color.toLowerCase();
   const jimena = props.skin === SKIN_JIMENA;
-  const res = jimena ? JIMENA_RES : 1;
   const rawAccessory =
     props.accessory !== undefined && props.accessory !== ''
       ? props.accessory
@@ -115,6 +122,26 @@ export function Gota(props: GotaProps) {
         ? GOTA_ROSTER[color]?.accessory
         : undefined;
   const accessory = rawAccessory?.toLowerCase();
+  // Los accesorios de Jimena sobresalen del cuadro: con uno puesto el
+  // lienzo crece por los lados y por arriba.
+  const padded = jimena && Boolean(accessory && accessory !== 'none');
+  const padX = padded ? ACCESSORY_PAD_X : 0;
+  const padY = padded ? ACCESSORY_PAD_Y : 0;
+  // El recorte de Jimena en píxeles de su cuadro y el lienzo que lo rodea.
+  const nat = {
+    x: Math.round(crop.x * KX),
+    y: Math.round(crop.y * KY),
+    w: Math.round(crop.w * KX),
+    h: Math.round(crop.h * KY),
+  };
+  const region = jimena
+    ? {
+        x: nat.x - padX,
+        y: nat.y - padY,
+        w: nat.w + 2 * padX,
+        h: nat.h + padY,
+      }
+    : { x: crop.x, y: crop.y, w: crop.w, h: crop.h };
 
   useEffect(() => {
     const canvas = ref.current;
@@ -122,37 +149,34 @@ export function Gota(props: GotaProps) {
     let alive = true;
     let timer: ReturnType<typeof setInterval> | undefined;
     if (jimena) {
-      const name = SPRITE_COLORS[color];
+      const url = jimenaBakedUrl(color, accessory);
+      if (!url) return;
       const frames = JIMENA_FRAMES[props.view ?? 'front'];
       const names = props.walk ? frames.walk : frames.idle;
-      if (!name) return;
-      Promise.all(
-        names.map((f) => sheet(`${JIMENA_URL}/${name}_Player-${f}.png`)),
-      ).then((imgs) => {
+      sheet(url).then((img) => {
         if (!alive) return;
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
         let frame = 0;
+        ctx.imageSmoothingEnabled = false;
         const draw = () => {
-          const img = imgs[frame % imgs.length];
-          // El recorte de la gota (en celdas de 40 × 56) en el cuadro.
-          const kx = SPRITE_W / CELL_W;
-          const ky = SPRITE_H / CELL_H;
-          ctx.clearRect(0, 0, crop.w * res, crop.h * res);
+          // La celda de este cuadro en la hoja, con su margen incluido.
+          const cell = accessoryCell(names[frame % names.length]);
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
           ctx.drawImage(
             img,
-            crop.x * kx,
-            crop.y * ky,
-            crop.w * kx,
-            crop.h * ky,
+            cell.sx + region.x + ACCESSORY_PAD_X,
+            region.y + ACCESSORY_PAD_Y,
+            region.w,
+            region.h,
             0,
             0,
-            crop.w * res,
-            crop.h * res,
+            canvas.width,
+            canvas.height,
           );
         };
         draw();
-        if (props.animate && !motionIsReduced() && imgs.length > 1) {
+        if (props.animate && !motionIsReduced() && names.length > 1) {
           timer = setInterval(() => {
             frame++;
             draw();
@@ -219,11 +243,11 @@ export function Gota(props: GotaProps) {
     <canvas
       ref={ref}
       className={`px-sprite ${props.className ?? ''}`}
-      width={crop.w * res}
-      height={crop.h * res}
+      width={region.w}
+      height={region.h}
       style={{
-        width: crop.w * scale,
-        height: crop.h * scale,
+        width: jimena ? (region.w * scale) / KX : region.w * scale,
+        height: jimena ? (region.h * scale) / KX : region.h * scale,
         opacity: props.ghost ? 0.7 : 1,
         transform: props.flip ? 'scaleX(-1)' : undefined,
       }}

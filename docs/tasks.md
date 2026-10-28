@@ -174,7 +174,7 @@ players[].skin: 'jimena' | 'gota';       // 'jimena' es el personaje de inicio
 
 - Los personajes de **Jimena** son gratis y vienen de inicio. Las **gotas** (una por color, id `gota-<color sin #>`, como `gota-e6194b`) y los **accesorios** (id como `cap`) solo se usan si el jugador los compró en la tienda.
 - `match` no se fía del navegador: el **gateway** le pregunta a `players` qué tiene comprado y se lo pasa en `Join.owned` (y en `SetOwned` tras un `refreshShop`). `match` acepta `pickSkin: 'gota'` solo si el jugador tiene la gota de su color actual, y `pickAccessory` solo si tiene ese accesorio. Si cambia a un color cuya gota no compró, vuelve a Jimena.
-- El accesorio solo se ve en las gotas; los sprites de Jimena no lo llevan.
+- Los accesorios sirven para **cualquier** personaje, el de Jimena o la gota. Los de Jimena no son una capa encima: `web/tools/gen_jimena_sprites.py` mide la rejilla de píxeles de cada cuadro (`web/tools/jimena_grid.json`), dibuja el accesorio en esa misma rejilla y deja al personaje completo en una hoja de 14 cuadros por color y accesorio, `web/public/assets/characters/jimena/baked/<Color>-<accesorio|none>.png` (con margen alrededor, porque lo puesto sobresale del cuadro). Si se cambia un accesorio o un cuadro de Jimena hay que volver a correr el script. Cada jugador lleva un accesorio a la vez.
 
 ### 0.6 REST del gateway
 

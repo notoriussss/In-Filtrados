@@ -7,10 +7,12 @@ import {
   gotaCell,
 } from './playerAnim';
 import { motionIsReduced } from '../../settings';
+import { drawJimena } from './jimenaDraw';
 import { drawPosedSprite } from './spriteDraw';
 import {
   GOTA_CELL_H,
   GOTA_CELL_W,
+  accessoryLift,
   gotaAccessoryImage,
   gotaBodyImage,
   spriteImageOrFront,
@@ -38,7 +40,8 @@ export function depthOf(p: { y: number }): number {
 
 // topOf: dónde termina la cabeza (para poner la etiqueta del nombre).
 export function topOf(p: PlayerView): number {
-  return p.y + FEET - PLAYER_H - (p.alive ? 0 : GHOST_FLOAT * 2);
+  const lift = skinOf(p.skin) === SKIN_GOTA ? 0 : accessoryLift(p.accessory);
+  return p.y + FEET - PLAYER_H - lift - (p.alive ? 0 : GHOST_FLOAT * 2);
 }
 
 // bodyOf elige cómo se mueve el cuerpo: fantasma flotando, la pose de
@@ -113,13 +116,19 @@ export function drawPlayer(
       drawPosedSprite(ctx, accImg, box, body, srcRect, cell.flip);
     }
   } else {
-    const legacyImg = spriteImageOrFront(
-      p.color,
-      ghost ? 'front' : body.frame,
-    );
-    if (legacyImg) {
+    const frame = ghost ? 'front' : body.frame;
+    const jimenaImg = spriteImageOrFront(p.color, frame);
+    if (jimenaImg) {
       const box = { x: p.x, feetY, w: PLAYER_W, h: PLAYER_H };
-      drawPosedSprite(ctx, legacyImg, box, body);
+      drawJimena(
+        ctx,
+        jimenaImg,
+        frame,
+        box,
+        body,
+        p.color,
+        p.accessory,
+      );
     } else {
       ctx.fillStyle = p.color;
       ctx.beginPath();

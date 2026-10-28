@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  ACCESSORY_CATEGORIES,
   type ShopResponse,
   gotaItemId,
   loadCosmetics,
@@ -7,7 +8,7 @@ import {
   saveCosmetics,
   skinOf,
 } from './shop';
-import { SERVER_COLORS } from './ui/Gota';
+import { ACCESSORIES, SERVER_COLORS } from './ui/Gota';
 
 function fakeStorage(initial?: string) {
   const data = new Map<string, string>();
@@ -56,24 +57,35 @@ describe('ownedIds', () => {
 });
 
 describe('cosmetics', () => {
+  const NOTHING = { skin: 'jimena', color: '', accessory: '' };
+
   it('starts as jimena with no accessory', () => {
     vi.stubGlobal('localStorage', fakeStorage());
-    expect(loadCosmetics()).toEqual({ skin: 'jimena', accessory: '' });
+    expect(loadCosmetics()).toEqual(NOTHING);
   });
 
   it('remembers the last choice', () => {
     vi.stubGlobal('localStorage', fakeStorage());
-    saveCosmetics({ skin: 'gota', accessory: 'cap' });
-    expect(loadCosmetics()).toEqual({ skin: 'gota', accessory: 'cap' });
+    const mine = { skin: 'gota', color: '#3cb44b', accessory: 'cap' } as const;
+    saveCosmetics(mine);
+    expect(loadCosmetics()).toEqual(mine);
   });
 
   it('ignores garbage in storage', () => {
     vi.stubGlobal('localStorage', fakeStorage('{no es json'));
-    expect(loadCosmetics()).toEqual({ skin: 'jimena', accessory: '' });
+    expect(loadCosmetics()).toEqual(NOTHING);
     vi.stubGlobal(
       'localStorage',
-      fakeStorage(JSON.stringify({ skin: 7, accessory: 3 })),
+      fakeStorage(JSON.stringify({ skin: 7, color: 1, accessory: 3 })),
     );
-    expect(loadCosmetics()).toEqual({ skin: 'jimena', accessory: '' });
+    expect(loadCosmetics()).toEqual(NOTHING);
+  });
+});
+
+describe('accessory categories', () => {
+  it('place every accessory of the shop exactly once', () => {
+    const placed = Object.values(ACCESSORY_CATEGORIES).flat();
+    expect(new Set(placed).size).toBe(placed.length);
+    expect([...placed].sort()).toEqual(ACCESSORIES.map((a) => a.id).sort());
   });
 });

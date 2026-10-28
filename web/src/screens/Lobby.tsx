@@ -107,7 +107,17 @@ export function Lobby(props: {
     if (prefsApplied.current || !meView || !shop) return;
     prefsApplied.current = true;
     const prefs = loadCosmetics();
-    if (prefs.skin === SKIN_GOTA && gotaOwned) {
+    // match ignora el color si otro jugador ya lo tiene; entonces la gota
+    // que vale es la del color que quedó.
+    const wanted = prefs.color.toLowerCase();
+    const taken = players.some(
+      (p) => p.id !== meView.id && p.connected && p.color.toLowerCase() === wanted,
+    );
+    const color = wanted && !taken ? wanted : myColor.toLowerCase();
+    if (color !== myColor.toLowerCase()) {
+      props.game.send({ type: 'pickColor', color });
+    }
+    if (prefs.skin === SKIN_GOTA && owned.has(gotaItemId(color))) {
       props.game.send({ type: 'pickSkin', skin: SKIN_GOTA });
     }
     if (prefs.accessory && owned.has(prefs.accessory)) {
@@ -282,9 +292,6 @@ export function Lobby(props: {
                     {LOBBY_TEXT.CLOSE}
                   </Button>
                 </div>
-                {mySkin !== SKIN_GOTA && (
-                  <p className="acc-note">{LOBBY_TEXT.ACCESSORY_NEEDS_GOTA}</p>
-                )}
                 <ChoiceGrid
                   kind="accessory"
                   label={LOBBY_TEXT.ACCESSORY}
@@ -305,7 +312,7 @@ export function Lobby(props: {
                         <Gota
                           color={myColor}
                           accessory={a.id}
-                          skin={SKIN_GOTA}
+                          skin={mySkin}
                           scale={1.4}
                           portrait
                         />
@@ -381,6 +388,7 @@ export function Lobby(props: {
             onPick={(c) => {
               if (c !== myColor.toLowerCase()) {
                 props.game.send({ type: 'pickColor', color: c });
+                saveCosmetics({ ...loadCosmetics(), color: c });
               }
             }}
           />

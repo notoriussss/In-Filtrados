@@ -123,7 +123,7 @@ describe('meetingView', () => {
     expect(v.stage).toBe('result');
     expect(v.canVote).toBe(false);
     expect(v.resultTitle).toBe('Expulsaron a Beto');
-    expect(v.resultDetail).toBe('Beto era el impostor');
+    expect(v.resultDetail).toBe('Beto era el infiltrado');
     expect(v.countdownText).toBe('Volvemos al huerto en 4 s');
   });
 });
@@ -137,15 +137,15 @@ describe('resultText', () => {
 
   it('a crewmate ejected', () => {
     expect(resultText('c', false, players).detail).toBe(
-      'Caro no era el impostor',
+      'Caro no era el infiltrado',
     );
   });
 });
 
 describe('end of match', () => {
   it('says who won', () => {
-    expect(endTitle('crew')).toBe('¡Ganó la tripulación!');
-    expect(endTitle('impostor')).toBe('¡Ganó el impostor!');
+    expect(endTitle('crew')).toBe('¡Ganaron los cuidadores!');
+    expect(endTitle('impostor')).toBe('¡Ganó el infiltrado!');
     expect(endTitle(null)).toBe('La partida terminó');
   });
 
