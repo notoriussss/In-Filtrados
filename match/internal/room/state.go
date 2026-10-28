@@ -58,9 +58,9 @@ const (
 	disconnectDebounce = time.Second
 
 	// S2-12: gotas de aceite tras contaminar.
-	oilTrailTicks     = 300 // 15 s soltando gotas
+	oilTrailTicks     = 100 // 5 s soltando gotas
 	oilDropEveryTicks = 20  // 1 gota por segundo
-	oilDropLifeTicks  = 300 // cada gota dura 15 s
+	oilDropLifeTicks  = 100 // cada gota dura 5 s
 
 	// S3-05: emergencias (sabotajes y eventos aleatorios).
 	emergencyPipe            = "pipe"

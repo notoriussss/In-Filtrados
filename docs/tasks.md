@@ -886,10 +886,10 @@ Sin esta tarea tampoco se puede verificar S2-13 jugando (completar 3 tareas y ve
 #### S2-12 — Gotas de aceite (`web/` y `match/`)
 
 **Pasos:**
-1. **`match`:** durante 15 segundos después de contaminar, el impostor deja una gota cada 1 segundo en su posición. Las gotas van en el snapshot (`oil_drops[] { x, y, color, expires_at_tick }`).
+1. **`match`:** durante 5 segundos después de contaminar, el impostor deja una gota cada 1 segundo en su posición; cada gota dura 5 segundos. Las gotas van en el snapshot (`oil_drops[] { x, y, color, expires_at_tick }`).
 2. **`web`:** dibujar las gotas con el color del impostor, desvaneciéndose a medida que se acercan a su vencimiento.
 
-**Criterio de verificación:** tras contaminar, todos ven un rastro de gotas del color del impostor que desaparece a los 15 segundos.
+**Criterio de verificación:** tras contaminar, todos ven un rastro de gotas del color del impostor que desaparece en pocos segundos (cada gota dura 5).
 
 ---
 

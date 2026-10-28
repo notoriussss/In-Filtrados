@@ -17,8 +17,8 @@ const TEXT = '#e8f8ff';
 const WATER = '#7cc4ff';
 export const TAG_FONT = '13px VT323, ui-monospace, monospace';
 
-// Igual que oilDropLifeTicks en match: cada gota dura 15 s (S2-12).
-export const OIL_DROP_LIFE_TICKS = 300;
+// Igual que oilDropLifeTicks en match: cada gota dura 5 s (S2-12).
+export const OIL_DROP_LIFE_TICKS = 100;
 
 // oilDropAlpha va de 1 (recién caída) a 0 (vencida).
 export function oilDropAlpha(expiresAtTick: number, tick: number): number {
