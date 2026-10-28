@@ -170,7 +170,8 @@ export type TankView = {
   slot: number;
   ownerId: string;
   contamination: number; // 0 a 100
-  dead: boolean;
+  dead: boolean; // contaminación 100: el tanque se puede reportar
+  reported: boolean; // ya tuvo su reunión: no se reporta otra vez
 };
 
 export type TaskProgress = {
@@ -205,4 +206,10 @@ export type ErrorCode =
   | 'BAD_MESSAGE'
   | 'INVALID_TASK_COUNT'
   | 'INVALID_IMPOSTOR_COUNT'
-  | 'INVALID_MATCH_DURATION';
+  | 'INVALID_MATCH_DURATION'
+  | 'MEETING_IN_PROGRESS'
+  | 'REPORT_NOT_ALIVE'
+  | 'UNKNOWN_TANK'
+  | 'TANK_NOT_POLLUTED'
+  | 'TANK_ALREADY_REPORTED'
+  | 'REPORT_TOO_FAR';

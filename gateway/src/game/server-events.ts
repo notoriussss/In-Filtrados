@@ -192,6 +192,7 @@ function toTank(t: TankView): TankView {
     ownerId: t.ownerId,
     contamination: t.contamination,
     dead: t.dead,
+    reported: t.reported ?? false,
   };
 }
 
