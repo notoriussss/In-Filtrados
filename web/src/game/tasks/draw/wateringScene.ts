@@ -16,7 +16,7 @@ import {
   type WateringGame,
 } from '../minigames';
 import { drawDropZone, type ZoneTone } from './dragHelpers';
-import { drawHand, drawTapRing } from './hand';
+import { drawHand } from './hand';
 import { type Scene, type SceneEnv, celebrateK } from './scene';
 import {
   C,
@@ -35,22 +35,9 @@ import { roomLayer } from './room';
 
 const TABLE = { x: 140, y: 170, w: 80, h: 26 };
 export const WATERING_HERO_X = 126;
-// Frasco con agua gris: el color y lo que flota arriba dependen del
-// origen (F y f son lo que flota).
-const CUP_ROWS = [
-  '.oooooooooo.',
-  '.oFfFfFfFfo.',
-  '.oLLLLLLLLo.',
-  '.oLLLLLLLLo.',
-  '.oLLLLLLLLo.',
-  '.oLLLLLLLLo.',
-  '.oLLLLLLLLo.',
-  '.oooooooooo.',
-];
-
 type Look = { rows: string[]; palette: Record<string, string> };
 
-// Cada recipiente se dibuja con su origen, a color, para que se
+// Cada pieza es el objeto de donde viene el agua, a color, para que se
 // reconozca sin leer nada: tomate (verduras), camiseta (ropa), botella de
 // aceite y botella de cloro con su «!».
 const ORIGINS: Look[] = [
@@ -136,21 +123,11 @@ const ORIGINS: Look[] = [
   },
 ];
 
-// El agua de cada frasco: murky con hojitas, jabonosa, con aceite
-// flotando y verdosa por el cloro.
-const WATER_LOOKS: Record<string, string>[] = [
-  { L: '#9aa890', F: C.leaf, f: C.leafLo },
-  { L: '#b4c4d4', F: C.white, f: C.waterHi },
-  { L: '#8a9aa6', F: C.amber, f: C.amberHi },
-  { L: '#9ad6c8', F: '#c8ff7a', f: '#9ad6c8' },
-];
-
 const originSprites = ORIGINS.map((o) =>
   spriteFromRows(o.rows, o.palette),
 );
-const cupSprites = WATER_LOOKS.map((w) =>
-  spriteFromRows(CUP_ROWS, { o: C.ink, ...w }),
-);
+// El objeto se dibuja más grande que su arte: es la pieza que se arrastra.
+const ITEM_SCALE = 1.5;
 
 // Iconos de las dos cajas: una planta que se riega y un embudo que trata.
 const SPROUT_ROWS = [
@@ -257,7 +234,6 @@ export class WateringScene implements Scene {
   };
   private cheerAt = -1e9;
   private shrugAt = -1e9;
-  private touched = false;
   private doneAt: number | null = null;
   readonly settleMs = 1100;
 
@@ -278,7 +254,7 @@ export class WateringScene implements Scene {
     if (this.game.done && this.doneAt === null) this.doneAt = now;
     ctx.drawImage(this.back, 0, 0, BOARD.w, BOARD.h);
     this.drawZones(ctx, now);
-    this.drawCurrent(ctx, now);
+    this.drawCurrent(ctx);
     this.driveHero(now, dt);
     this.env.hero.draw(ctx, now, {
       calm: this.env.calm,
@@ -299,10 +275,8 @@ export class WateringScene implements Scene {
           index: e.index,
         });
         this.cheerAt = now;
-        this.touched = true;
       } else if (e.type === 'drop-out') {
         this.shrugAt = now;
-        this.touched = true;
       } else if (e.type === 'grab') {
         this.shown.lift = 1;
       }
@@ -410,26 +384,18 @@ export class WateringScene implements Scene {
     );
   }
 
-  // El recipiente que toca, con el cartel de su origen.
-  private drawCurrent(ctx: CanvasRenderingContext2D, now: number): void {
+  // La pieza que toca: el objeto del que viene el agua.
+  private drawCurrent(ctx: CanvasRenderingContext2D): void {
     const i = this.game.current;
     if (i < 0) return;
     const it = this.game.items[i];
     if (it.placed) return;
     const cx = this.shown.x + WATERING_SIZE / 2;
     const cy = this.shown.y + WATERING_SIZE / 2;
-    stamp(ctx, cupSprites[i], cx, cy - 2 * this.shown.lift, {
+    stamp(ctx, originSprites[i], cx, cy - 2 * this.shown.lift, {
       angle: this.shown.tilt,
+      scale: ITEM_SCALE,
     });
-    // Cartel del origen sobre el recipiente, con una leve ola: el dibujo
-    // a color es lo que el jugador usa para decidir.
-    const bob = this.env.calm ? 0 : Math.sin(now / 320) * 1.5;
-    const top = Math.max(2, cy - 56 + bob);
-    px(ctx, cx - 22, top, 44, 38, C.ink);
-    px(ctx, cx - 20, top + 2, 40, 34, C.wallHi);
-    px(ctx, cx - 20, top + 2, 40, PX, C.lineHi);
-    px(ctx, cx - 2, top + 38, 4, 4, C.ink);
-    stamp(ctx, originSprites[i], cx, top + 19);
   }
 
   // El acertado vuela hasta su caja y se vacía ahí.
@@ -449,24 +415,20 @@ export class WateringScene implements Scene {
         (target.y + target.h * 0.6 - gh.y) * k -
         Math.sin(Math.PI * k) * 22;
       ctx.globalAlpha = 1 - t * 0.4;
-      stamp(ctx, cupSprites[gh.index], x, y, { angle: k * 3 });
+      stamp(ctx, originSprites[gh.index], x, y, {
+        angle: k * 3,
+        scale: ITEM_SCALE,
+      });
       ctx.globalAlpha = 1;
     }
   }
 
-  // La mano agarra el recipiente que toca.
+  // La mano señala la pieza que toca.
   private drawHint(ctx: CanvasRenderingContext2D, now: number): void {
     const g = this.game;
     if (g.dragging !== null || g.done || this.game.current < 0) return;
     const press = this.env.calm ? 1 : 0.5 + 0.5 * Math.sin(now / 240);
-    drawHand(ctx, this.shown.x - 8, this.shown.y + 12, press);
-    if (!this.touched) {
-      drawTapRing(
-        ctx,
-        this.shown.x + WATERING_SIZE / 2,
-        this.shown.y + WATERING_SIZE / 2,
-        this.env.calm ? 0.3 : (now % 900) / 900,
-      );
-    }
+    // La mano queda debajo del objeto y solo lo señala: nunca lo tapa.
+    drawHand(ctx, this.shown.x + 30, this.shown.y + 42, press);
   }
 }
