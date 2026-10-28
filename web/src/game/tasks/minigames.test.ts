@@ -338,7 +338,9 @@ describe('PipesGame', () => {
         expect(step).toBe(1);
         expect(t[i].col).toBeGreaterThanOrEqual(t[i - 1].col);
       }
-      expect(t.length).toBeGreaterThanOrEqual(PIPES_COLS);
+      // Dos o tres curvas: nunca recto, nunca largo.
+      expect(t.length).toBeGreaterThanOrEqual(PIPES_COLS + 2);
+      expect(t.length).toBeLessThanOrEqual(PIPES_COLS + 3);
     }
   });
 

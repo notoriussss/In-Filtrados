@@ -394,18 +394,21 @@ export class PipesGame extends BaseGame implements Minigame {
     });
   }
 
-  // El recorrido: de la columna 0 a la última; en cada columna puede
-  // subir o bajar una fila antes de salir hacia la derecha, así el camino
-  // no se alarga demasiado.
+  // El recorrido: de la columna 0 a la última. Dos o tres columnas, al
+  // azar, suben o bajan una fila antes de salir hacia la derecha: nunca
+  // es una línea recta, y no se alarga (6 o 7 tramos).
   private walk(rnd: () => number): PathCell[] {
+    const columns = Array.from({ length: PIPES_COLS }, (_, i) => i);
+    const bends = shuffle(columns, rnd).slice(0, 2 + Math.floor(rnd() * 2));
     const cells: PathCell[] = [];
     let row = Math.floor(rnd() * PIPES_ROWS);
     for (let col = 0; col < PIPES_COLS; col++) {
-      const step = Math.floor(rnd() * 3) - 1;
-      const target = Math.min(Math.max(row + step, 0), PIPES_ROWS - 1);
-      if (target !== row) {
-        cells.push({ col, row, exit: target > row ? 2 : 0 });
-        row = target;
+      if (bends.includes(col)) {
+        const canUp = row > 0;
+        const canDown = row < PIPES_ROWS - 1;
+        const down = canUp && canDown ? rnd() < 0.5 : canDown;
+        cells.push({ col, row, exit: down ? 2 : 0 });
+        row += down ? 1 : -1;
       }
       cells.push({ col, row, exit: 1 });
     }
