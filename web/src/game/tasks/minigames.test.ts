@@ -38,8 +38,10 @@ import {
   VALVE_FILL_MS,
   ValveGame,
   WasteGame,
+  type WasteKind,
   WASTE_BINS,
   WASTE_COUNT,
+  WASTE_KINDS,
   WASTE_SIZE,
   WateringGame,
   WATERING_COUNT,
@@ -244,32 +246,55 @@ describe('WasteGame', () => {
     x: g.items[i].x + WASTE_SIZE / 2,
     y: g.items[i].y + WASTE_SIZE / 2,
   });
+  const findItem = (g: WasteGame, kind: WasteKind) =>
+    g.items.find((it) => it.kind === kind)!;
+  const findBin = (kind: WasteKind) =>
+    WASTE_BINS.find((bin) => bin.kind === kind)!;
+
+  it('moves the residue with the pointer while it is held', () => {
+    const g = new WasteGame(() => 0);
+    const it = g.items[0];
+    g.pointerDown({ x: it.x + 5, y: it.y + 7 });
+    g.pointerMove({ x: 120, y: 80 });
+    expect(g.dragging).toBe(0);
+    expect(it.x).toBe(115);
+    expect(it.y).toBe(73);
+  });
 
   it('sorts a residue into its matching bin', () => {
-    const g = new WasteGame();
-    const bin = WASTE_BINS[0]; // plástico
-    g.pointerDown(center(g, 0));
+    const g = new WasteGame(() => 0);
+    const it = findItem(g, 'plastic');
+    const bin = findBin('plastic');
+    g.pointerDown({
+      x: it.x + WASTE_SIZE / 2,
+      y: it.y + WASTE_SIZE / 2,
+    });
     g.pointerMove({ x: bin.x + bin.w / 2, y: bin.y + bin.h / 2 });
     g.pointerUp();
-    expect(g.items[0].placed).toBe(true);
+    expect(it.placed).toBe(true);
     expect(g.placed).toBe(1);
     expect(g.progress()).toBe(0.25);
   });
 
   it('sends a residue in the wrong bin back to the table', () => {
-    const g = new WasteGame();
-    const home = { x: g.items[1].x, y: g.items[1].y };
-    const bin = WASTE_BINS[2]; // orgánico, no el suyo (vidrio)
-    g.pointerDown(center(g, 1));
+    const g = new WasteGame(() => 0);
+    const it = findItem(g, 'glass');
+    const home = { x: it.x, y: it.y };
+    const bin = findBin('organic');
+    g.pointerDown({
+      x: it.x + WASTE_SIZE / 2,
+      y: it.y + WASTE_SIZE / 2,
+    });
     g.pointerMove({ x: bin.x + bin.w / 2, y: bin.y + bin.h / 2 });
     g.pointerUp();
-    expect(g.items[1].placed).toBe(false);
-    expect({ x: g.items[1].x, y: g.items[1].y }).toEqual(home);
+    expect(it.placed).toBe(false);
+    expect({ x: it.x, y: it.y }).toEqual(home);
   });
 
   it('is done after every residue, but not before 3 s', () => {
-    const g = new WasteGame();
-    WASTE_BINS.forEach((bin, i) => {
+    const g = new WasteGame(() => 0);
+    g.items.forEach((it, i) => {
+      const bin = findBin(it.kind);
       g.pointerDown(center(g, i));
       g.pointerMove({ x: bin.x + bin.w / 2, y: bin.y + bin.h / 2 });
       g.pointerUp();
@@ -278,6 +303,19 @@ describe('WasteGame', () => {
     expect(g.done).toBe(false);
     g.step(MIN_GAME_MS);
     expect(g.done).toBe(true);
+  });
+
+  it('deals the residues in a different order each game', () => {
+    const a = new WasteGame(() => 0);
+    const b = new WasteGame(() => 0.99);
+    expect(a.items.map((it) => it.kind).sort()).toEqual(
+      [...WASTE_KINDS].sort(),
+    );
+    expect(new Set(a.items.map((it) => it.kind)).size).toBe(WASTE_COUNT);
+    expect(a.items.map((it) => it.kind)).not.toEqual(
+      b.items.map((it) => it.kind),
+    );
+    expect(a.items.map((it) => it.homeX)).toEqual([24, 66, 108, 150]);
   });
 });
 

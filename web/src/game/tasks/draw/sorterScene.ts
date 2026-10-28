@@ -236,7 +236,14 @@ export class SorterScene implements Scene {
   private update(dt: number): void {
     for (const [i, it] of this.game.items.entries()) {
       const s = this.shown[i];
-      if (it.placed || this.game.dragging === i) continue;
+      if (it.placed) continue;
+      if (this.game.dragging === i) {
+        // El residuo sigue al puntero: la lógica actualiza it.x/it.y y
+        // el dibujo tiene que usar esa misma posición.
+        s.x = it.x;
+        s.y = it.y;
+        continue;
+      }
       const k = 1 - Math.exp((-dt / 1000) * 14);
       s.x += (it.x - s.x) * k;
       s.y += (it.y - s.y) * k;
