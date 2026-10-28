@@ -155,6 +155,7 @@ function toSnapshot(s: GrpcSnapshot): Snapshot {
     tasksPerPlayer: s.tasksPerPlayer ?? 0,
     impostors: s.impostors ?? 0,
     matchMinutes: s.matchMinutes ?? 0,
+    matchEndsAtTick: s.matchEndsAtTick ?? 0,
   };
 }
 

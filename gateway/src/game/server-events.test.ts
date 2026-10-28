@@ -86,6 +86,7 @@ test('snapshot keeps only the fields of the contract', () => {
     tasksPerPlayer: 0,
     impostors: 0,
     matchMinutes: 0,
+    matchEndsAtTick: 0,
   });
 });
 
@@ -145,6 +146,7 @@ test('snapshot with meeting result maps ejectedId', () => {
     tasksPerPlayer: 0,
     impostors: 0,
     matchMinutes: 0,
+    matchEndsAtTick: 0,
   });
 });
 
@@ -405,4 +407,18 @@ test('snapshot carries the chosen tasksPerPlayer', () => {
   } as unknown as GrpcServerEvent;
   const msg = toServerMessage(ev);
   assert.equal(msg?.type === 'snapshot' && msg.tasksPerPlayer, 8);
+});
+
+test('snapshot carries the tick when the match time runs out', () => {
+  const ev = {
+    event: 'snapshot',
+    snapshot: { tick: 40, phase: 'PLAYING', matchEndsAtTick: 9640 },
+  } as unknown as GrpcServerEvent;
+  const msg = toServerMessage(ev);
+  assert.equal(msg?.type === 'snapshot' && msg.matchEndsAtTick, 9640);
+  const lobby = toServerMessage({
+    event: 'snapshot',
+    snapshot: { tick: 1, phase: 'LOBBY' },
+  } as unknown as GrpcServerEvent);
+  assert.equal(lobby?.type === 'snapshot' && lobby.matchEndsAtTick, 0);
 });
