@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { StationType } from '../../map';
 import { TASK_ICONS, Icon } from '../../ui/Icon';
 import { Button, Gauge, Kbd } from '../../ui/kit';
-import { BOARD } from '../../game/tasks/minigames';
+import { BOARD, WasteGame } from '../../game/tasks/minigames';
 import { createMinigame } from '../../game/tasks/minigames';
 import { BOARD_SCALE, MinigameView } from '../../game/tasks/minigameDraw';
 import { TASK_TEXT } from '../../constants';
@@ -30,6 +30,8 @@ export function Minigame(props: {
     const ctx = cv?.getContext('2d');
     if (!cv || !ctx) return;
     const game = createMinigame(props.type, props.stationId);
+    const drag = game instanceof WasteGame;
+    if (drag) cv.style.cursor = 'grab';
     const view = new MinigameView(
       game,
       props.color,
@@ -48,9 +50,15 @@ export function Minigame(props: {
       e.preventDefault();
       cv.setPointerCapture(e.pointerId);
       game.pointerDown(toBoard(e));
+      if (drag && game.dragging !== null) {
+        cv.style.cursor = 'grabbing';
+      }
     };
     const move = (e: PointerEvent) => game.pointerMove(toBoard(e));
-    const up = () => game.pointerUp();
+    const up = () => {
+      if (drag) cv.style.cursor = 'grab';
+      game.pointerUp();
+    };
     cv.addEventListener('pointerdown', down);
     cv.addEventListener('pointermove', move);
     cv.addEventListener('pointerup', up);
@@ -81,6 +89,7 @@ export function Minigame(props: {
       cv.removeEventListener('pointermove', move);
       cv.removeEventListener('pointerup', up);
       cv.removeEventListener('pointercancel', up);
+      cv.style.cursor = '';
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.type, props.stationId]);
