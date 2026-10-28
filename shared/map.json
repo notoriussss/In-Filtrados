@@ -2296,7 +2296,7 @@
     {
       "id": "compost-1",
       "type": "recycle",
-      "name": "Compostera",
+      "name": "Lombrifiltro",
       "room": "compost",
       "x": 1304,
       "y": 1584,

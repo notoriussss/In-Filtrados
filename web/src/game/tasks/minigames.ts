@@ -57,7 +57,7 @@ const STATION_GAMES: Record<string, () => Minigame> = {
   'rain-1': () => new FirstRainGame(),
   'rain-2': () => new FirstRainGame(),
   'greywater-2': () => new WateringGame(),
-  'compost-1': () => new CompostGame(),
+  'compost-1': () => new BiofilterGame(),
   'sorter-1': () => new WasteGame(),
 };
 
@@ -1000,18 +1000,20 @@ export class SealGame extends BaseGame implements Minigame {
   }
 }
 
-// Reciclar (compost-1, Compostera): capas del compost. Arrastrar los
-// sacos a la compostera en el orden que señala la mano: seco, húmedo,
-// tierra. Equivocarse de saco lo devuelve sacudiéndose. Dos rondas.
-export const COMPOST_ROUNDS = 2;
-// El orden de cada ronda: seco, húmedo y tierra.
-export const COMPOST_ORDER: readonly number[] = [0, 1, 2];
-export const COMPOST_STEPS = COMPOST_ROUNDS * COMPOST_ORDER.length;
-export const COMPOST_BIN = { x: 238, y: 128, w: 106, h: 100 };
-export const COMPOST_SIZE = 40;
-export const COMPOST_HOME_X: readonly number[] = [22, 90, 158];
+// Reciclar (compost-1, Lombrifiltro): capas del biofiltro. El agua gris
+// se limpia al pasar por capas: se arrastran las bolsas a la columna en
+// el orden que señala la mano, de abajo hacia arriba: grava, arena,
+// carbón. Equivocarse de bolsa la devuelve sacudiéndose. Cada ronda
+// completa deja pasar agua sucia que sale clara. Dos rondas.
+export const BIOFILTER_ROUNDS = 2;
+// El orden de cada ronda: grava, arena y carbón.
+export const BIOFILTER_ORDER: readonly number[] = [0, 1, 2];
+export const BIOFILTER_STEPS = BIOFILTER_ROUNDS * BIOFILTER_ORDER.length;
+export const BIOFILTER_BIN = { x: 238, y: 128, w: 106, h: 100 };
+export const BIOFILTER_SIZE = 40;
+export const BIOFILTER_HOME_X: readonly number[] = [22, 90, 158];
 
-export type CompostSack = {
+export type BiofilterBag = {
   index: number;
   x: number; // esquina superior izquierda
   y: number;
@@ -1020,8 +1022,8 @@ export type CompostSack = {
   inBin: number; // veces que entró
 };
 
-export class CompostGame extends BaseGame implements Minigame {
-  readonly sacks: CompostSack[] = [];
+export class BiofilterGame extends BaseGame implements Minigame {
+  readonly bags: BiofilterBag[] = [];
   dragging: number | null = null;
   elapsed = 0;
   private grabDx = 0;
@@ -1029,9 +1031,9 @@ export class CompostGame extends BaseGame implements Minigame {
 
   constructor() {
     super();
-    const y = FLOOR_Y - COMPOST_SIZE;
-    COMPOST_HOME_X.forEach((x, i) => {
-      this.sacks.push({
+    const y = FLOOR_Y - BIOFILTER_SIZE;
+    BIOFILTER_HOME_X.forEach((x, i) => {
+      this.bags.push({
         index: i,
         x,
         y,
@@ -1043,55 +1045,55 @@ export class CompostGame extends BaseGame implements Minigame {
   }
 
   get steps(): number {
-    return this.sacks.reduce((n, s) => n + s.inBin, 0);
+    return this.bags.reduce((n, s) => n + s.inBin, 0);
   }
 
-  // El saco que toca ahora: la mano lo señala.
+  // La bolsa que toca ahora: la mano lo señala.
   get required(): number {
-    return COMPOST_ORDER[this.steps % COMPOST_ORDER.length];
+    return BIOFILTER_ORDER[this.steps % BIOFILTER_ORDER.length];
   }
 
   get done(): boolean {
-    return this.steps === COMPOST_STEPS && this.elapsed >= MIN_GAME_MS;
+    return this.steps === BIOFILTER_STEPS && this.elapsed >= MIN_GAME_MS;
   }
 
   progress(): number {
-    return this.steps / COMPOST_STEPS;
+    return this.steps / BIOFILTER_STEPS;
   }
 
   pointerDown(p: Point): void {
-    const i = this.sacks.findIndex(
+    const i = this.bags.findIndex(
       (s) =>
         p.x >= s.x &&
-        p.x <= s.x + COMPOST_SIZE &&
+        p.x <= s.x + BIOFILTER_SIZE &&
         p.y >= s.y &&
-        p.y <= s.y + COMPOST_SIZE,
+        p.y <= s.y + BIOFILTER_SIZE,
     );
     if (i < 0) return;
     this.dragging = i;
-    this.grabDx = p.x - this.sacks[i].x;
-    this.grabDy = p.y - this.sacks[i].y;
+    this.grabDx = p.x - this.bags[i].x;
+    this.grabDy = p.y - this.bags[i].y;
     this.events.push({ type: 'grab', x: p.x, y: p.y, index: i });
   }
 
   pointerMove(p: Point): void {
     if (this.dragging === null) return;
-    const s = this.sacks[this.dragging];
+    const s = this.bags[this.dragging];
     s.x = p.x - this.grabDx;
     s.y = p.y - this.grabDy;
   }
 
-  // Al soltar: el saco correcto dentro de la compostera cuenta y vuelve
-  // a su lugar (se reusa en la siguiente ronda); cualquier otra cosa,
-  // el saco se sacude y vuelve.
+  // Al soltar: la bolsa correcta dentro de la columna cuenta y vuelve a
+  // su lugar (se reusa en la siguiente ronda); cualquier otra cosa, la
+  // bolsa se sacude y vuelve.
   pointerUp(): void {
     if (this.dragging === null) return;
     const i = this.dragging;
-    const s = this.sacks[i];
+    const s = this.bags[i];
     this.dragging = null;
-    const cx = s.x + COMPOST_SIZE / 2;
-    const cy = s.y + COMPOST_SIZE / 2;
-    const inBin = inRect(cx, cy, COMPOST_BIN) && i === this.required;
+    const cx = s.x + BIOFILTER_SIZE / 2;
+    const cy = s.y + BIOFILTER_SIZE / 2;
+    const inBin = inRect(cx, cy, BIOFILTER_BIN) && i === this.required;
     s.x = s.homeX;
     s.y = s.homeY;
     if (inBin) {

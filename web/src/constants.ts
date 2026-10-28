@@ -168,7 +168,7 @@ export const TASK_TEXT = {
     'greywater-2': 'Reutilizar: ¿sirve para regar?',
     'filter-1': 'Reciclar: filtra el agua',
     'filter-2': 'Reciclar: filtra el agua',
-    'compost-1': 'Reciclar: capas del compost',
+    'compost-1': 'Reciclar: filtra en capas',
     'sorter-1': 'Reciclar: clasifica los residuos',
   } as Record<string, string>,
   ROW: (type: string, zone: string) => `${type} · ${zone}`,

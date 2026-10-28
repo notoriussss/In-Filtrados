@@ -55,12 +55,12 @@ Enseña algo real: el *desvío de primer lavado* que se usa en los sistemas de c
 
 **Se completa al:** sellar 5 grietas.
 
-### Capas del compost (Reciclar)
-**Estación:** `compost-1` (Compostera).
+### Capas del biofiltro (Reciclar)
+**Estación:** `compost-1` (Lombrifiltro, en la sala de Compostaje y lombricultura).
 
-1. Hay tres sacos: hojas secas, restos de comida y tierra.
-2. Se arrastran a la compostera en el orden que señala la mano (seco, húmedo, tierra), dos veces.
-3. Si se equivoca de saco, se sacude y vuelve.
+1. Hay tres bolsas de material filtrante: grava, arena y carbón.
+2. Se arrastran a la columna del biofiltro en el orden que señala la mano (grava, arena, carbón), dos veces. Al cerrar cada ronda, el agua sucia baja por las capas y se junta limpia abajo.
+3. Si se equivoca de bolsa, se sacude y vuelve.
 
 **Se completa al:** completar las 2 rondas.
 
@@ -78,7 +78,7 @@ Enseña algo real: el *desvío de primer lavado* que se usa en los sistemas de c
 | `greywater-2` Agua gris del laboratorio | ¿Sirve para regar? *(extra)* | Reutilizar |
 | `filter-1` Filtro de carrizo | Partículas de suciedad (actual) | Reciclar |
 | `filter-2` Filtro de residuos | Partículas de suciedad (actual) | Reciclar |
-| `compost-1` Compostera | Capas del compost *(extra)* | Reciclar |
+| `compost-1` Lombrifiltro | Capas del biofiltro *(extra)* | Reciclar |
 | `sorter-1` Mesa clasificadora | Clasificar residuos | Reciclar |
 
 Así cada R tiene 3 juegos distintos y ninguno se repite más de dos veces.
@@ -91,7 +91,7 @@ Así cada R tiene 3 juegos distintos y ninguno se repite más de dos veces.
 4. Primera lluvia
 5. ¿Sirve para regar? (sale casi gratis después de Clasificar residuos)
 6. Sellar la fuga
-7. Capas del compost
+7. Capas del biofiltro
 
 Los 4 primeros son la meta; el resto, si sobra tiempo.
 

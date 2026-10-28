@@ -927,7 +927,7 @@ Sin esta tarea tampoco se puede verificar S2-13 jugando (completar 3 tareas y ve
     7. **Reciclar (clasificar residuos, `sorter-1`):** arrastrar 4 residuos al cajón de su color.
     8. **Reutilizar (¿sirve para regar?, `greywater-2`):** arrastrar 4 recipientes a Regar o a Tratar según su origen.
     9. **Reducir (sellar la fuga, `leak-2`):** clic en las grietas que se abren solas para ponerles cinta; se sellan 5.
-    10. **Reciclar (capas del compost, `compost-1`):** arrastrar los sacos en orden (seco, húmedo, tierra), dos rondas.
+    10. **Reciclar (capas del biofiltro, `compost-1`, Lombrifiltro):** arrastrar las bolsas en orden (grava, arena, carbón), dos rondas; al cerrar cada ronda el agua sucia baja por las capas y se junta limpia.
     Todos los juegos nuevos respetan un mínimo de 3 s (`MIN_GAME_MS`): match rechaza tareas más rápidas (`taskMinTicks`).
 13. **Terminar:** al completar el minijuego, mandar `interact { stationId, completed: true }`. Si se completó antes de 3 s desde el inicio, esperar a que pasen antes de mandarlo (el servidor rechaza los menores de 3 s). Se cierra con `Esc`, al empezar una reunión o si `myActiveTask` deja de ser esa estación (el jugador se alejó).
 14. El impostor ve sus tareas y los minijuegos igual que un tripulante (las "finge"; `match` no suma nada).

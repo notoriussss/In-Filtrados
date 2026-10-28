@@ -4,9 +4,9 @@ import {
   BUCKET_COUNT,
   BUCKET_SIZE,
   BucketsGame,
-  CompostGame,
-  COMPOST_BIN,
-  COMPOST_SIZE,
+  BiofilterGame,
+  BIOFILTER_BIN,
+  BIOFILTER_SIZE,
   FILL_COUNT,
   FILL_MARK,
   FILL_RATE,
@@ -68,7 +68,7 @@ describe('createMinigame', () => {
     expect(createMinigame('reuse', 'rain-1')).toBeInstanceOf(FirstRainGame);
     expect(createMinigame('reuse', 'rain-2')).toBeInstanceOf(FirstRainGame);
     expect(createMinigame('reuse', 'greywater-2')).toBeInstanceOf(WateringGame);
-    expect(createMinigame('recycle', 'compost-1')).toBeInstanceOf(CompostGame);
+    expect(createMinigame('recycle', 'compost-1')).toBeInstanceOf(BiofilterGame);
     expect(createMinigame('recycle', 'sorter-1')).toBeInstanceOf(WasteGame);
   });
 
@@ -624,28 +624,28 @@ describe('SealGame', () => {
   });
 });
 
-describe('CompostGame', () => {
-  const center = (g: CompostGame, i: number) => ({
-    x: g.sacks[i].x + COMPOST_SIZE / 2,
-    y: g.sacks[i].y + COMPOST_SIZE / 2,
+describe('BiofilterGame', () => {
+  const center = (g: BiofilterGame, i: number) => ({
+    x: g.bags[i].x + BIOFILTER_SIZE / 2,
+    y: g.bags[i].y + BIOFILTER_SIZE / 2,
   });
   const bin = {
-    x: COMPOST_BIN.x + COMPOST_BIN.w / 2,
-    y: COMPOST_BIN.y + COMPOST_BIN.h / 2,
+    x: BIOFILTER_BIN.x + BIOFILTER_BIN.w / 2,
+    y: BIOFILTER_BIN.y + BIOFILTER_BIN.h / 2,
   };
 
-  it('takes the sacks in order (seco, húmedo, tierra), two rounds', () => {
-    const g = new CompostGame();
+  it('takes the bags in order (grava, arena, carbón), two rounds', () => {
+    const g = new BiofilterGame();
     for (const round of [0, 1]) {
       for (const i of [0, 1, 2]) {
         expect(g.required).toBe(i);
         g.pointerDown(center(g, i));
         g.pointerMove(bin);
         g.pointerUp();
-        expect(g.sacks[i].inBin).toBe(round + 1);
-        expect({ x: g.sacks[i].x, y: g.sacks[i].y }).toEqual({
-          x: g.sacks[i].homeX,
-          y: g.sacks[i].homeY,
+        expect(g.bags[i].inBin).toBe(round + 1);
+        expect({ x: g.bags[i].x, y: g.bags[i].y }).toEqual({
+          x: g.bags[i].homeX,
+          y: g.bags[i].homeY,
         });
       }
     }
@@ -655,18 +655,18 @@ describe('CompostGame', () => {
     expect(g.done).toBe(true);
   });
 
-  it('shakes the wrong sack back without counting it', () => {
-    const g = new CompostGame();
+  it('shakes the wrong bag back without counting it', () => {
+    const g = new BiofilterGame();
     expect(g.required).toBe(0);
-    g.pointerDown(center(g, 1)); // húmedo primero: mal
+    g.pointerDown(center(g, 1)); // arena primero: mal
     g.pointerMove(bin);
     g.pointerUp();
     expect(g.steps).toBe(0);
-    expect({ x: g.sacks[1].x, y: g.sacks[1].y }).toEqual({
-      x: g.sacks[1].homeX,
-      y: g.sacks[1].homeY,
+    expect({ x: g.bags[1].x, y: g.bags[1].y }).toEqual({
+      x: g.bags[1].homeX,
+      y: g.bags[1].homeY,
     });
-    // Soltar fuera de la compostera tampoco cuenta.
+    // Soltar fuera de la columna tampoco cuenta.
     g.pointerDown(center(g, 0));
     g.pointerMove({ x: 20, y: 20 });
     g.pointerUp();
