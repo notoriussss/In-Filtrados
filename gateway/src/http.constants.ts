@@ -16,6 +16,7 @@ export const SWAGGER = {
   TAG_AUTH: 'auth',
   TAG_ROOMS: 'rooms',
   TAG_SHOP: 'shop',
+  TAG_RANKING: 'ranking',
   TAG_HEALTH: 'health',
 } as const;
 

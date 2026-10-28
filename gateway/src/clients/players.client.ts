@@ -39,6 +39,21 @@ export class ShopReply {
   @ApiProperty({ type: [ShopItemReply] }) items!: ShopItemReply[];
 }
 
+export class RankingEntryReply {
+  @ApiProperty() playerId!: string;
+  @ApiProperty() username!: string;
+  @ApiProperty() matchesPlayed!: number;
+  @ApiProperty() wins!: number;
+  @ApiProperty() timesImpostor!: number;
+  @ApiProperty() winsAsImpostor!: number;
+  @ApiProperty() harvest!: number;
+  @ApiProperty() coinsEarned!: number;
+}
+
+export class RankingReply {
+  @ApiProperty({ type: [RankingEntryReply] }) entries!: RankingEntryReply[];
+}
+
 @Injectable()
 export class PlayersClient {
   private readonly client: any;
@@ -101,6 +116,12 @@ export class PlayersClient {
       this.breaker,
       () => unary<ShopReply>(this.client, 'BuyItem', { playerId, itemId }),
       false,
+    );
+  }
+
+  getRanking(limit = 0): Promise<RankingReply> {
+    return guarded(this.breaker, () =>
+      unary<RankingReply>(this.client, 'GetRanking', { limit }),
     );
   }
 

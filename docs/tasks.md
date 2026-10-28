@@ -185,6 +185,7 @@ players[].skin: 'jimena' | 'gota';       // 'jimena' es el personaje de inicio
 | `GET /api/me` | — (header `Authorization: Bearer <token>`) | `200 { playerId, username, coins, matchesPlayed, wins, timesImpostor, winsAsImpostor }` (las dos últimas desde S2-07) |
 | `GET /api/shop` | — | `200 { coins, items: [{ id, kind: 'character' \| 'accessory', price, owned }] }` (tienda: lo que se compra con monedas) |
 | `POST /api/shop/buy` | `{ itemId }` | `200` igual que `GET /api/shop`, con la compra hecha. `404` si el artículo no existe, `409` si ya lo tiene o no le alcanzan las monedas |
+| `GET /api/ranking` | — | `200 { entries: [{ playerId, username, matchesPlayed, wins, timesImpostor, winsAsImpostor, harvest, coinsEarned }] }`: todos los jugadores (hasta 100), de más a menos victorias; a igualdad, menos partidas y luego el nombre. `harvest` y `coinsEarned` suman todas sus partidas |
 | `POST /api/rooms` | — | `201 { roomCode, matchId }` |
 | `POST /api/rooms/:roomCode/join` | — | `200 { roomCode, matchId }` |
 

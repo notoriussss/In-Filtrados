@@ -1,4 +1,5 @@
 import { ERROR_MESSAGES } from './constants';
+import type { RankingResponse } from './ranking';
 import type { ShopResponse } from './shop';
 
 export interface AuthResponse {
@@ -86,6 +87,13 @@ export const api = {
 
   async getShop(token: string): Promise<ShopResponse> {
     return apiFetch<ShopResponse>('/shop', {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+
+  async getRanking(token: string): Promise<RankingResponse> {
+    return apiFetch<RankingResponse>('/ranking', {
       method: 'GET',
       headers: { Authorization: `Bearer ${token}` },
     });

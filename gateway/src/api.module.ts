@@ -4,6 +4,7 @@ import { AuthController } from './auth/auth.controller';
 import { AuthGuard } from './auth/auth.guard';
 import { AUTH_MESSAGES, LOGIN_RATE_LIMIT } from './auth/auth.constants';
 import { RoomsController } from './rooms/rooms.controller';
+import { RankingController } from './ranking/ranking.controller';
 import { ShopController } from './shop/shop.controller';
 
 @Module({
@@ -20,7 +21,12 @@ import { ShopController } from './shop/shop.controller';
       errorMessage: AUTH_MESSAGES.TOO_MANY_LOGIN_ATTEMPTS,
     }),
   ],
-  controllers: [AuthController, RoomsController, ShopController],
+  controllers: [
+    AuthController,
+    RoomsController,
+    ShopController,
+    RankingController,
+  ],
   providers: [AuthGuard],
 })
 export class ApiModule {}

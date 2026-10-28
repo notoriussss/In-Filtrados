@@ -23,8 +23,9 @@ pub mod players_v1 {
 
 use players_v1::players_server::Players;
 use players_v1::{
-    BuyItemRequest, LoginRequest, Player, PlayerIdRequest, Profile,
-    RegisterRequest, Shop, ShopItem, Token, ValidateRequest,
+    BuyItemRequest, LoginRequest, Player, PlayerIdRequest, Profile, Ranking,
+    RankingEntry, RankingRequest, RegisterRequest, Shop, ShopItem, Token,
+    ValidateRequest,
 };
 
 /// Servicio gRPC de cuentas; comparte el pool con el resto del proceso.
@@ -132,6 +133,31 @@ impl Players for PlayersService {
             .await
             .map_err(status_from_shop)?;
         Ok(Response::new(shop_reply(view)))
+    }
+
+    async fn get_ranking(
+        &self,
+        request: Request<RankingRequest>,
+    ) -> Result<Response<Ranking>, Status> {
+        let limit = request.into_inner().limit;
+        let rows = progress::get_ranking(&self.pool, limit)
+            .await
+            .map_err(status_from_profile)?;
+        Ok(Response::new(Ranking {
+            entries: rows
+                .into_iter()
+                .map(|row| RankingEntry {
+                    player_id: row.player_id.to_string(),
+                    username: row.username,
+                    matches_played: row.matches_played,
+                    wins: row.wins,
+                    times_impostor: row.times_impostor,
+                    wins_as_impostor: row.wins_as_impostor,
+                    harvest: row.harvest,
+                    coins_earned: row.coins_earned,
+                })
+                .collect(),
+        }))
     }
 }
 
@@ -573,6 +599,79 @@ mod tests {
 
             assert_eq!(status.code(), Code::NotFound);
             assert_eq!(status.message(), ERR_MSG_PLAYER_NOT_FOUND);
+        }
+    }
+
+    #[tokio::test]
+    async fn ranking_orders_by_wins_and_sums_the_results() {
+        let Some(pool) = test_pool().await else {
+            return;
+        };
+        let service = PlayersService::new(pool.clone());
+        let top = register_player(&service, &unique_username()).await;
+        let low = register_player(&service, &unique_username()).await;
+        // Tantas victorias que quedan arriba aunque la base ya tenga datos.
+        for (player, wins) in [(&top, 2_000_000), (&low, 1_999_999)] {
+            sqlx::query(
+                "UPDATE players SET wins = $1, matches_played = $1
+                 WHERE id = $2",
+            )
+            .bind(wins)
+            .bind(Uuid::parse_str(&player.player_id).unwrap())
+            .execute(&pool)
+            .await
+            .unwrap();
+        }
+        for _ in 0..2 {
+            sqlx::query(
+                "INSERT INTO results
+                   (match_id, player_id, role, won, harvest, coins_earned)
+                 VALUES ($1, $2, 'CREW', TRUE, 30, 50)",
+            )
+            .bind(Uuid::new_v4())
+            .bind(Uuid::parse_str(&top.player_id).unwrap())
+            .execute(&pool)
+            .await
+            .unwrap();
+        }
+
+        let ranking = service
+            .get_ranking(Request::new(RankingRequest { limit: 0 }))
+            .await
+            .expect("el ranking debería funcionar")
+            .into_inner();
+
+        assert_eq!(ranking.entries[0].player_id, top.player_id);
+        assert_eq!(ranking.entries[0].harvest, 60);
+        assert_eq!(ranking.entries[0].coins_earned, 100);
+        assert_eq!(ranking.entries[1].player_id, low.player_id);
+        assert_eq!(ranking.entries[1].harvest, 0);
+
+        let one = service
+            .get_ranking(Request::new(RankingRequest { limit: 1 }))
+            .await
+            .unwrap()
+            .into_inner();
+        assert_eq!(one.entries.len(), 1);
+
+        // Estos dos no deben quedar arriba del ranking de la base de pruebas.
+        for player in [&top, &low] {
+            let id = Uuid::parse_str(&player.player_id).unwrap();
+            sqlx::query("DELETE FROM results WHERE player_id = $1")
+                .bind(id)
+                .execute(&pool)
+                .await
+                .unwrap();
+            sqlx::query("DELETE FROM sessions WHERE player_id = $1")
+                .bind(id)
+                .execute(&pool)
+                .await
+                .unwrap();
+            sqlx::query("DELETE FROM players WHERE id = $1")
+                .bind(id)
+                .execute(&pool)
+                .await
+                .unwrap();
         }
     }
 

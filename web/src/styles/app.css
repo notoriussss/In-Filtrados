@@ -289,3 +289,25 @@ html[data-motion='reduced'] *::after {
 .scr-shop .wd-title { font-size: 40px; margin-top: 10px; }
 .scr-shop .wd-sub { font-size: 28px; }
 .scr-shop .wd-action { margin: 18px 0 6px; min-height: 64px; display: flex; align-items: center; }
+
+/* Ranking: tabla con todos los jugadores y sus estadísticas. */
+.scr-ranking .rk-top { position: absolute; left: 60px; right: 60px; top: 20px; height: 80px; display: flex; align-items: center; justify-content: space-between; }
+.scr-ranking .rk-panel { left: 60px; top: 128px; width: 1800px; height: 860px; padding: 8px 28px 20px; overflow: auto; }
+.scr-ranking .rk-empty { margin: 80px 0; font-size: 34px; text-align: center; }
+.scr-ranking .rk-foot { position: absolute; left: 60px; right: 60px; bottom: 24px; margin: 0; font-size: 24px; text-align: center; }
+.scr-ranking .rk-table { width: 100%; border-collapse: separate; border-spacing: 0 6px; font-size: 28px; }
+.scr-ranking .rk-table th { position: sticky; top: 0; z-index: 1; padding: 14px 12px 10px; font: inherit; font-size: 24px; font-weight: normal; text-align: right; color: var(--aqua); background: #0a2a4a; border-bottom: 4px dashed var(--line-d); white-space: nowrap; }
+.scr-ranking .rk-table th.pos, .scr-ranking .rk-table th.name { text-align: left; }
+.scr-ranking .rk-table th button { border: 0; padding: 0; font: inherit; color: inherit; background: none; cursor: pointer; }
+.scr-ranking .rk-table th button:hover, .scr-ranking .rk-table th button:focus-visible { color: #fff; text-decoration: underline; }
+.scr-ranking .rk-table th.on { color: var(--amber, #ffd24a); }
+.scr-ranking .rk-table td { padding: 8px 12px 4px; text-align: right; background: var(--bg2); white-space: nowrap; }
+.scr-ranking .rk-table td.pos, .scr-ranking .rk-table td.name { text-align: left; }
+.scr-ranking .rk-table td.name { width: 100%; }
+.scr-ranking .rk-table td.name small { color: var(--aqua); font-size: 22px; }
+.scr-ranking .rk-table td.strong { color: var(--amber, #ffd24a); }
+.scr-ranking .rk-table tr.rk-self td { background: var(--pan3); }
+.scr-ranking .rk-medal { display: inline-grid; place-items: center; min-width: 46px; height: 40px; padding: 4px 6px 0; color: #e8fff6; background: var(--ink); box-shadow: -3px 0 0 0 var(--line-d), 3px 0 0 0 var(--line-d), 0 -3px 0 0 var(--line-d), 0 3px 0 0 var(--line-d); }
+.scr-ranking .rk-table tr.rk-p1 .rk-medal { color: var(--ink); background: #ffd24a; box-shadow: -3px 0 0 0 #fff0a8, 3px 0 0 0 #fff0a8, 0 -3px 0 0 #fff0a8, 0 3px 0 0 #fff0a8; }
+.scr-ranking .rk-table tr.rk-p2 .rk-medal { color: var(--ink); background: #cfd8e3; box-shadow: -3px 0 0 0 #f3f7fb, 3px 0 0 0 #f3f7fb, 0 -3px 0 0 #f3f7fb, 0 3px 0 0 #f3f7fb; }
+.scr-ranking .rk-table tr.rk-p3 .rk-medal { color: var(--ink); background: #d9964f; box-shadow: -3px 0 0 0 #f0c391, 3px 0 0 0 #f0c391, 0 -3px 0 0 #f0c391, 0 3px 0 0 #f0c391; }
