@@ -130,13 +130,13 @@
 }
 
 /* =========================================================================
-   CUERPO UNIFICADO DE LA PANTALLA (Elevado y con altura balanceada)
+   CUERPO UNIFICADO DE LA PANTALLA (Separado de la barra superior)
    ========================================================================= */
 .scr-lobby .lobby-stage-content {
   position: absolute;
   left: 90px;
   right: 90px;
-  top: 94px;
+  top: 122px;
   height: 750px;
   display: grid;
   grid-template-columns: 780px 1px 1fr;
