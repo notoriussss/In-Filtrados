@@ -44,7 +44,6 @@ function snap(meeting: Partial<Meeting>, tick = 100): Snapshot {
     meeting: {
       reporterId: 'a',
       tankSlot: 3,
-      lastVisitors: ['b', 'c'],
       votesCast: [],
       endsAtTick: 1000,
       votingClosed: false,
@@ -76,11 +75,10 @@ describe('meetingView', () => {
     expect(meetingView({ ...snap({}), phase: 'PLAYING' }, 'a')).toBeNull();
   });
 
-  it('says who reported, whose tank and the last visitors', () => {
+  it('says who reported, and whose tank', () => {
     const v = meetingView(snap({}), 'a')!;
     expect(v.reporterText).toBe('Ana reportó un tanque muerto');
     expect(v.tankText).toBe('Tanque de Dani');
-    expect(v.lastVisitors).toEqual(['Beto', 'Caro']);
     expect(v.countdownText).toBe('Votación: 45 s');
   });
 
@@ -125,7 +123,7 @@ describe('meetingView', () => {
     expect(v.stage).toBe('result');
     expect(v.canVote).toBe(false);
     expect(v.resultTitle).toBe('Expulsaron a Beto');
-    expect(v.resultDetail).toBe('Beto era el impostor');
+    expect(v.resultDetail).toBe('Beto era el infiltrado');
     expect(v.countdownText).toBe('Volvemos al huerto en 4 s');
   });
 });
@@ -139,15 +137,15 @@ describe('resultText', () => {
 
   it('a crewmate ejected', () => {
     expect(resultText('c', false, players).detail).toBe(
-      'Caro no era el impostor',
+      'Caro no era el infiltrado',
     );
   });
 });
 
 describe('end of match', () => {
   it('says who won', () => {
-    expect(endTitle('crew')).toBe('¡Ganó la tripulación!');
-    expect(endTitle('impostor')).toBe('¡Ganó el impostor!');
+    expect(endTitle('crew')).toBe('¡Ganaron los cuidadores!');
+    expect(endTitle('impostor')).toBe('¡Ganó el infiltrado!');
     expect(endTitle(null)).toBe('La partida terminó');
   });
 

@@ -1,5 +1,5 @@
 import type { Emergency, OilDrop } from '@in-filtrados/messages';
-import type { FixPoint, Station } from '../../map';
+import type { FixPoint, Marker, Station } from '../../map';
 import { type Camera, worldToScreen } from './camera';
 
 // Lo que se dibuja encima del mapa, en unidades del mundo (el contexto ya
@@ -233,6 +233,37 @@ export function drawFixPoints(
       drawSteam(ctx, fp.x, fp.y - 18, now);
     }
   }
+}
+
+// drawMeetingPoint: el anillo que late en la mesa de reuniones y su
+// cartel, para que se sepa adónde llevan a todos al abrirse una reunión.
+export function drawMeetingPoint(
+  ctx: CanvasRenderingContext2D,
+  marker: Marker | undefined,
+  now: number,
+): void {
+  if (!marker) return;
+  const t = (now % 2400) / 2400;
+  ctx.strokeStyle = AMBER;
+  ctx.lineWidth = 3;
+  ctx.globalAlpha = 0.9;
+  ctx.beginPath();
+  ctx.ellipse(marker.x, marker.y + 6, 46, 18, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.globalAlpha = (1 - t) * 0.7;
+  ctx.beginPath();
+  ctx.ellipse(
+    marker.x,
+    marker.y + 6,
+    46 + t * 40,
+    18 + t * 16,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  drawTag(ctx, marker.name, marker.x, marker.y - 46);
 }
 
 function drawPipe(ctx: CanvasRenderingContext2D, x: number, y: number) {

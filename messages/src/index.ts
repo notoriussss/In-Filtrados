@@ -18,7 +18,14 @@ export type ClientMessage =
   | { type: 'sabotage'; kind: EmergencyKind }
   | { type: 'fix'; pointId: string }
   // Elegir color en LOBBY; match lo acepta si nadie conectado lo tiene.
-  | { type: 'pickColor'; color: string };
+  | { type: 'pickColor'; color: string }
+  // Elegir accesorio en LOBBY.
+  | { type: 'pickAccessory'; accessory: string }
+  // Personaje en LOBBY: 'jimena' (de inicio) o 'gota' (comprada, de tu color).
+  | { type: 'pickSkin'; skin: string }
+  // Después de comprar en la tienda: el gateway vuelve a preguntarle a
+  // players qué tienes y se lo pasa a match.
+  | { type: 'refreshShop' };
 
 // interact: hacer una tarea en una estación o limpiar un tanque.
 // completed se manda al terminar el minijuego (S2-04).
@@ -106,6 +113,8 @@ export type PlayerView = {
   connected: boolean;
   alive: boolean;
   activity: Activity | null; // S3-05: null si no hace nada
+  accessory?: string; // accesorio de la gota; vacío si no lleva
+  skin?: string; // 'jimena' (de inicio) o 'gota' (comprada)
 };
 
 export type TankView = {
@@ -123,7 +132,6 @@ export type TaskProgress = {
 export type Meeting = {
   reporterId: string;
   tankSlot: number;
-  lastVisitors: string[]; // últimos 3 jugadores distintos junto al tanque
   votesCast: string[]; // quién ya votó, nunca por quién
   endsAtTick: number;
   votingClosed: boolean;

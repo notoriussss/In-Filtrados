@@ -27,7 +27,7 @@ const MOVING_SPEED = 40;
 // frente (evita parpadeos entre snapshots).
 const STOP_GRACE_MS = 120;
 
-type Heading = 'up' | 'down' | 'left' | 'right';
+export type Heading = 'up' | 'down' | 'left' | 'right';
 
 // Una tarea más corta que esto no termina con brinco de alegría: se
 // canceló o el jugador solo pasó rozando la estación.
@@ -55,7 +55,73 @@ export type PlayerPose = {
   body: Pose; // inclinación, aplastamiento y salto sobre el cuadro
   working: Activity | null;
   celebrate: number | null; // 0 a 1 durante el brinco de alegría
+  heading?: Heading;
+  stepIndex?: number;
 };
+
+export type GotaCell = {
+  col: number;
+  flip: boolean;
+};
+
+// gotaCell determina la columna (0..17) y el volteo horizontal de la hoja Gota.
+export function gotaCell(pose: PlayerPose, now: number): GotaCell {
+  if (pose.walking) {
+    const step = pose.stepIndex ?? 0;
+    const h = pose.heading ?? 'down';
+    if (h === 'down') {
+      return { col: 2 + (step % 4), flip: false };
+    }
+    if (h === 'up') {
+      return { col: 14 + (step % 4), flip: false };
+    }
+    if (h === 'left') {
+      return { col: 8 + (step % 4), flip: true };
+    }
+    return { col: 8 + (step % 4), flip: false };
+  }
+
+  // Si está realizando una actividad de trabajo con pose lateral:
+  const workFrame = pose.body.frame;
+  if (workFrame === 'right-walking1') {
+    return { col: 8, flip: false };
+  }
+  if (workFrame === 'right-passing1') {
+    return { col: 9, flip: false };
+  }
+  if (workFrame === 'right-walking2') {
+    return { col: 10, flip: false };
+  }
+  if (workFrame === 'left-walking1') {
+    return { col: 8, flip: true };
+  }
+  if (workFrame === 'left-passing1') {
+    return { col: 9, flip: true };
+  }
+  if (workFrame === 'left-walking2') {
+    return { col: 10, flip: true };
+  }
+
+  // Celebración al terminar una tarea (brinco de frente):
+  if (pose.celebrate !== null) {
+    const step = Math.floor(now / 250) % 2;
+    return { col: step, flip: false };
+  }
+
+  // Reposo (idle): respiración a 2 fps (500 ms por cuadro) según orientación
+  const idleStep = Math.floor(now / 500) % 2;
+  const h = pose.heading ?? 'down';
+  if (h === 'up') {
+    return { col: 12 + idleStep, flip: false };
+  }
+  if (h === 'left') {
+    return { col: 6 + idleStep, flip: true };
+  }
+  if (h === 'right') {
+    return { col: 6 + idleStep, flip: false };
+  }
+  return { col: idleStep, flip: false };
+}
 
 const UP_CYCLE: SpriteFrame[] = [
   'back-walking1',
@@ -106,7 +172,7 @@ export class PlayerAnimator {
         x: p.x,
         y: p.y,
         at: now,
-        heading: 'right',
+        heading: 'down',
         movingUntil: 0,
         walkStart: now,
         work: null,
@@ -139,21 +205,26 @@ export class PlayerAnimator {
         body,
         working: s.work ? s.work.activity : null,
         celebrate,
+        heading: s.heading,
       };
     }
     const vertical = s.heading === 'up' || s.heading === 'down';
     const stepMs = vertical ? VERTICAL_STEP_MS : STEP_MS;
     const cycle = CYCLES[s.heading];
-    const i = Math.floor((now - s.walkStart) / stepMs) % cycle.length;
-    const frame = cycle[i];
+    const stepIndex =
+      Math.floor((now - s.walkStart) / stepMs) % cycle.length;
+    const frame = cycle[stepIndex];
     return {
       frame,
       walking: true,
       body: { ...IDLE_POSE, frame },
       working: null,
       celebrate: null,
+      heading: s.heading,
+      stepIndex,
     };
   }
+
 
   // trackWork lleva cuándo empezó y terminó la tarea, para entrar al
   // ritmo poco a poco y celebrar al acabar.

@@ -4,7 +4,7 @@ import type {
   PlayerView,
   TankView,
 } from '@in-filtrados/messages';
-import type { GameMap } from '../../map';
+import { type GameMap, meetingMarker } from '../../map';
 import type { Frame, MapAssets } from './assets';
 import {
   type Camera,
@@ -18,6 +18,7 @@ import {
   drawFixArrows,
   drawFixPoints,
   drawHoldProgress,
+  drawMeetingPoint,
   drawOilDrops,
   drawStationMarks,
   drawTag,
@@ -92,6 +93,7 @@ export class WorldRenderer {
     ctx.globalCompositeOperation = 'source-over';
 
     drawFixPoints(ctx, this.map.fixPoints, f.emergency, now);
+    drawMeetingPoint(ctx, meetingMarker(this.map), now);
     renderActivities(ctx, f.players, now, f.visible);
     this.drawLabels(ctx, f);
     renderDarkness(ctx, view, this.me(f), f.visionRadius);

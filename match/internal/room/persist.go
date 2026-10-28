@@ -56,6 +56,8 @@ type savedPlayer struct {
 	ID             string       `json:"id"`
 	Name           string       `json:"name"`
 	Color          string       `json:"color"`
+	Skin           string       `json:"skin,omitempty"`
+	Accessory      string       `json:"accessory,omitempty"`
 	X              float32      `json:"x"`
 	Y              float32      `json:"y"`
 	Alive          bool         `json:"alive"`
@@ -85,7 +87,6 @@ type savedTank struct {
 type savedMeeting struct {
 	ReporterID   string               `json:"reporter_id"`
 	TankSlot     int32                `json:"tank_slot"`
-	LastVisitors []string             `json:"last_visitors"`
 	Votes        map[string]savedVote `json:"votes"`
 	VotingEndsAt int64                `json:"voting_ends_at"`
 	ResultEndsAt int64                `json:"result_ends_at"`
@@ -182,6 +183,8 @@ func (r *Room) toSaved() savedRoom {
 			ID:              id,
 			Name:            p.view.Name,
 			Color:           p.view.Color,
+			Skin:            p.view.Skin,
+			Accessory:       p.view.Accessory,
 			X:               p.view.X,
 			Y:               p.view.Y,
 			Alive:           p.view.Alive,
@@ -216,7 +219,6 @@ func (r *Room) toSaved() savedRoom {
 		s.Meeting = &savedMeeting{
 			ReporterID:   m.reporterID,
 			TankSlot:     m.tankSlot,
-			LastVisitors: m.lastVisitors,
 			Votes:        votes,
 			VotingEndsAt: m.votingEndsAt,
 			ResultEndsAt: m.resultEndsAt,
@@ -302,6 +304,8 @@ func Restore(state []byte, m *Map, opts ...Option) (*Room, error) {
 				Id:        sp.ID,
 				Name:      sp.Name,
 				Color:     sp.Color,
+				Skin:      skinOrDefault(sp.Skin),
+				Accessory: sp.Accessory,
 				X:         sp.X,
 				Y:         sp.Y,
 				Connected: false,
@@ -342,7 +346,6 @@ func Restore(state []byte, m *Map, opts ...Option) (*Room, error) {
 		r.meeting = &meetingState{
 			reporterID:   sm.ReporterID,
 			tankSlot:     sm.TankSlot,
-			lastVisitors: sm.LastVisitors,
 			votes:        votes,
 			votingEndsAt: sm.VotingEndsAt,
 			resultEndsAt: sm.ResultEndsAt,

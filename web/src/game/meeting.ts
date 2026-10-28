@@ -20,7 +20,6 @@ export type MeetingView = {
   stage: 'voting' | 'result';
   reporterText: string;
   tankText: string;
-  lastVisitors: string[];
   countdownText: string;
   players: MeetingPlayer[];
   canVote: boolean;
@@ -84,7 +83,6 @@ export function meetingView(snap: Snapshot, meId: string): MeetingView | null {
       nameOf(snap.players, meeting.reporterId),
     ),
     tankText: tank ? MEETING_TEXT.TANK_OF(tankOwner) : '',
-    lastVisitors: meeting.lastVisitors.map((id) => nameOf(snap.players, id)),
     countdownText: voting
       ? MEETING_TEXT.VOTING_ENDS_IN(seconds)
       : MEETING_TEXT.RESULT_ENDS_IN(seconds),

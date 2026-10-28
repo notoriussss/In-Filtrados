@@ -1,3 +1,4 @@
+import { skinOf } from '../../shop';
 import { useEffect, useState } from 'react';
 import type { Snapshot, Winner } from '@in-filtrados/messages';
 import { Stage } from '../../ui/Stage';
@@ -130,7 +131,13 @@ export function Result(props: {
             return (
               <div className={`tr ${p.id === meId ? 'on' : ''}`} key={p.id}>
                 <span className="av">
-                  <Gota color={p.color} scale={1.2} portrait />
+                  <Gota
+                    color={p.color}
+                    accessory={p.accessory}
+                    skin={skinOf(p.skin)}
+                    scale={1.2}
+                    portrait
+                  />
                 </span>
                 <b>
                   {p.name}

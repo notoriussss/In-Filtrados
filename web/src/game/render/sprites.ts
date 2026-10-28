@@ -26,6 +26,91 @@ export type SpriteFrame =
 export const SPRITE_W = 88;
 export const SPRITE_H = 125;
 
+// Orden de los cuadros en las hojas de Jimena (web/tools/
+// gen_jimena_sprites.py): igual que SpriteFrame.
+export const SPRITE_FRAMES: readonly SpriteFrame[] = [
+  'front',
+  'front-walking1',
+  'front-walking2',
+  'back',
+  'back-walking1',
+  'back-walking2',
+  'left-walking1',
+  'left-passing1',
+  'left-walking2',
+  'left-passing2',
+  'right-walking1',
+  'right-passing1',
+  'right-walking2',
+  'right-passing2',
+];
+
+// Lo que sobresale del cuadro de Jimena (sombreros, ramas, mochila): cada
+// celda de las hojas trae este margen a cada lado y arriba.
+export const ACCESSORY_PAD_X = 24;
+export const ACCESSORY_PAD_Y = 40;
+export const ACCESSORY_CELL_W = SPRITE_W + 2 * ACCESSORY_PAD_X;
+export const ACCESSORY_CELL_H = SPRITE_H + ACCESSORY_PAD_Y;
+
+// Cuánto sobresale de la cabeza de Jimena cada accesorio (en unidades del
+// mundo), para subir la etiqueta del nombre y que no la tape.
+const HEAD_LIFT: Record<string, number> = {
+  cap: 6,
+  'straw-hat': 12,
+  'fisher-hat': 8,
+  helmet: 7,
+  sprout: 16,
+  flower: 9,
+  headphones: 4,
+};
+
+export function accessoryLift(accessory: string | undefined): number {
+  return accessory ? (HEAD_LIFT[accessory.toLowerCase()] ?? 0) : 0;
+}
+
+// Qué celda de la hoja toca a cada cuadro.
+export function accessoryCell(frame: SpriteFrame) {
+  return {
+    sx: Math.max(0, SPRITE_FRAMES.indexOf(frame)) * ACCESSORY_CELL_W,
+    sy: 0,
+    sw: ACCESSORY_CELL_W,
+    sh: ACCESSORY_CELL_H,
+  };
+}
+
+// jimenaBakedUrl es la hoja del personaje completo con su accesorio ya
+// integrado (web/tools/gen_jimena_sprites.py): un cuerpo con la rejilla de
+// píxeles limpia y el accesorio dibujado en ella, no una capa encima.
+export function jimenaBakedUrl(
+  color: string,
+  accessory?: string,
+): string | null {
+  const name = SPRITE_COLORS[color.toLowerCase()];
+  if (!name) return null;
+  const id =
+    accessory && accessory !== 'none' ? accessory.toLowerCase() : 'none';
+  return `${SPRITES_URL}/baked/${name}-${id}.png`;
+}
+
+const bakedCache = new Map<string, HTMLImageElement>();
+
+// jimenaBakedImage devuelve esa hoja, o null mientras carga o si el color
+// no tiene sprite: quien dibuja usa entonces el cuadro suelto de Jimena.
+export function jimenaBakedImage(
+  color: string,
+  accessory?: string,
+): HTMLImageElement | null {
+  const url = jimenaBakedUrl(color, accessory);
+  if (!url || typeof Image === 'undefined') return null;
+  let img = bakedCache.get(url);
+  if (!img) {
+    img = new Image();
+    img.src = url;
+    bakedCache.set(url, img);
+  }
+  return img.complete && img.naturalWidth > 0 ? img : null;
+}
+
 // Los 8 colores fijos de match (state.go) y el nombre de su sprite.
 export const SPRITE_COLORS: Record<string, string> = {
   '#e6194b': 'Red',
@@ -72,9 +157,74 @@ export function spriteImageOrFront(
   return spriteImage(color, frame) ?? spriteImage(color, 'front');
 }
 
-// preloadSprites pide todos los cuadros al entrar a la partida, para
+// Constantes de dimensiones para las hojas de sprites Gota (v3).
+export const GOTA_URL = '/assets/characters/gota';
+export const GOTA_CELL_W = 40;
+export const GOTA_CELL_H = 56;
+export const GOTA_ANCHOR_X = 20;
+export const GOTA_ANCHOR_Y = 46;
+
+export const GOTA_ACCESSORIES = [
+  'backpack',
+  'cap',
+  'diving-mask',
+  'fisher-hat',
+  'flower',
+  'glasses',
+  'headphones',
+  'helmet',
+  'raincoat',
+  'scarf',
+  'sprout',
+  'straw-hat',
+] as const;
+
+const gotaCache = new Map<string, HTMLImageElement>();
+
+// gotaBodyImage devuelve la hoja de sprites del cuerpo según el color.
+export function gotaBodyImage(color: string): HTMLImageElement | null {
+  const hex = color.toLowerCase().replace('#', '');
+  const url = `${GOTA_URL}/bodies/${hex}.png`;
+  if (typeof Image === 'undefined') return null;
+  let img = gotaCache.get(url);
+  if (!img) {
+    img = new Image();
+    img.src = url;
+    gotaCache.set(url, img);
+  }
+  return img.complete && img.naturalWidth > 0 ? img : null;
+}
+
+// gotaAccessoryImage devuelve la hoja de sprites del accesorio.
+export function gotaAccessoryImage(
+  accessory: string | undefined,
+): HTMLImageElement | null {
+  if (!accessory || accessory === 'none') return null;
+  const id = accessory.toLowerCase();
+  const url = `${GOTA_URL}/accessories/${id}.png`;
+  if (typeof Image === 'undefined') return null;
+  let img = gotaCache.get(url);
+  if (!img) {
+    img = new Image();
+    img.src = url;
+    gotaCache.set(url, img);
+  }
+  return img.complete && img.naturalWidth > 0 ? img : null;
+}
+
+// preloadSprites pide todos los cuadros y hojas al entrar a la partida, para
 // que nadie aparezca como círculo el primer segundo.
 export function preloadSprites(): void {
+  // Precargar hojas modulares de Gota (cuerpos y accesorios)
+  for (const color of Object.keys(SPRITE_COLORS)) {
+    gotaBodyImage(color);
+    jimenaBakedImage(color);
+  }
+  for (const acc of GOTA_ACCESSORIES) {
+    gotaAccessoryImage(acc);
+  }
+
+  // Precargar cuadros clásicos de Jimena por compatibilidad
   const frames: SpriteFrame[] = [
     'front',
     'front-walking1',
@@ -95,3 +245,4 @@ export function preloadSprites(): void {
     for (const frame of frames) spriteImage(color, frame);
   }
 }
+

@@ -1,3 +1,4 @@
+import { skinOf } from '../../shop';
 import { type FormEvent, useEffect, useRef, useState } from 'react';
 import type { PlayerView, Snapshot } from '@in-filtrados/messages';
 import { Stage } from '../../ui/Stage';
@@ -10,7 +11,7 @@ import { MEETING_UI_TEXT as T } from '../../texts';
 import { BACKGROUNDS } from '../backgrounds';
 
 // Meeting (maqueta 14-reunion, fase de votación): tarjetas para votar,
-// el chat y los últimos que pasaron por el tanque. Todo sale del
+// el chat y el chat. Todo sale del
 // snapshot (meetingView); el servidor rechaza los votos que no valen.
 export function Meeting(props: {
   snap: Snapshot;
@@ -29,6 +30,11 @@ export function Meeting(props: {
   const reporter = nameOf(snap.players, m.reporterId);
   const owner = tank ? nameOf(snap.players, tank.ownerId) : '';
   const seconds = secondsLeft(m.endsAtTick, snap.tick);
+  // Pocas tarjetas se agrandan para llenar el panel; con más, caben más
+  // por fila (hasta 10 jugadores en 2 filas).
+  const count = view.players.length;
+  const cols = count <= 4 ? 2 : count <= 6 ? 3 : count <= 8 ? 4 : 5;
+  const portraitScale = count <= 4 ? 5 : count <= 6 ? 4 : 3;
 
   useEffect(() => {
     chatEnd.current?.scrollIntoView({ block: 'end' });
@@ -65,9 +71,14 @@ export function Meeting(props: {
           }}
         >
           <div className="col" style={{ gap: 6 }}>
-            <Chip tone="bad" big icon="warning">
-              {T.BADGE}
-            </Chip>
+            <div className="row" style={{ gap: 12 }}>
+              <Chip tone="bad" big icon="warning">
+                {T.BADGE}
+              </Chip>
+              <Chip tone="warn" icon="map">
+                {T.GATHERED}
+              </Chip>
+            </div>
             <span className="h2 screen-title" style={{ fontSize: 56 }}>
               {T.TITLE}
             </span>
@@ -86,22 +97,26 @@ export function Meeting(props: {
         </div>
 
         <section
-          className="panel"
+          className="panel col-panel"
           style={{
             left: 60,
             top: 150,
             width: 1180,
-            height: 716,
+            height: 896,
             padding: '22px 26px',
           }}
         >
           <TitleBar icon="user" title={T.CHOOSE} size={32}>
             <Chip tone="warn">{T.reported(reporter, owner)}</Chip>
           </TitleBar>
-          <div className="pcs">
+          <div
+            className="pcs"
+            style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}
+          >
             {view.players.map((p) => (
               <PlayerCard
                 key={p.id}
+                scale={portraitScale}
                 player={snap.players.find((x) => x.id === p.id)!}
                 isMe={p.isMe}
                 voted={p.voted}
@@ -131,12 +146,12 @@ export function Meeting(props: {
         </section>
 
         <section
-          className="panel"
+          className="panel col-panel"
           style={{
             left: 1260,
             top: 150,
             width: 600,
-            height: 716,
+            height: 896,
             padding: '22px 26px',
           }}
         >
@@ -188,37 +203,6 @@ export function Meeting(props: {
             </Button>
           </form>
         </section>
-
-        <section
-          className="panel"
-          style={{
-            left: 60,
-            top: 886,
-            width: 1800,
-            height: 160,
-            padding: '18px 26px',
-          }}
-        >
-          <div className="strip">
-            <div style={{ width: 340 }}>
-              <b>{T.LAST_AT_TANK}</b>
-              <div className="small muted">{T.LAST_NOTE}</div>
-            </div>
-            {m.lastVisitors.length === 0 && (
-              <span className="muted">{T.NOBODY}</span>
-            )}
-            {m.lastVisitors.map((id) => {
-              const p = snap.players.find((x) => x.id === id);
-              return p ? (
-                <div className="well row" key={id} style={{ gap: 12 }}>
-                  <Gota color={p.color} scale={2} portrait />
-                  <b>{p.name}</b>
-                </div>
-              ) : null;
-            })}
-            <span className="small muted grow rt">{T.HINT}</span>
-          </div>
-        </section>
       </Stage>
     </div>
   );
@@ -226,6 +210,7 @@ export function Meeting(props: {
 
 function PlayerCard(props: {
   player: PlayerView;
+  scale: number;
   isMe: boolean;
   voted: boolean;
   reporter: boolean;
@@ -246,7 +231,14 @@ function PlayerCard(props: {
       onClick={props.onVote}
     >
       <div className="pic">
-        <Gota color={p.color} scale={3} portrait={!ghost} ghost={ghost} />
+        <Gota
+          color={p.color}
+          accessory={p.accessory}
+          skin={skinOf(p.skin)}
+          scale={props.scale}
+          portrait={!ghost}
+          ghost={ghost}
+        />
       </div>
       <b className="pn">{props.isMe ? T.you(p.name) : p.name}</b>
       {chip}
@@ -269,7 +261,17 @@ function ChatLine(props: {
   const p = props.players.find((x) => x.id === props.playerId);
   return (
     <div className={`msg ${props.pending ? 'pending' : ''}`}>
-      <span>{p && <Gota color={p.color} scale={1} portrait />}</span>
+      <span>
+        {p && (
+          <Gota
+            color={p.color}
+            accessory={p.accessory}
+            skin={skinOf(p.skin)}
+            scale={1}
+            portrait
+          />
+        )}
+      </span>
       <span>
         <b>{p?.name ?? nameOf(props.players, props.playerId)}</b>
         {props.text}

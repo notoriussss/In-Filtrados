@@ -4,11 +4,13 @@ import type {
 } from '@in-filtrados/messages';
 import {
   EMERGENCY_KINDS,
+  MAX_ACCESSORY_LENGTH,
   MAX_CHAT_LENGTH,
   MAX_COLOR_LENGTH,
   MAX_CLIENT_MSG_ID_LENGTH,
   MAX_FIX_POINT_ID_LENGTH,
   MAX_PLAYER_ID_LENGTH,
+  MAX_SKIN_LENGTH,
   MAX_STATION_ID_LENGTH,
   MAX_TANK_SLOT,
 } from './game.constants';
@@ -61,6 +63,17 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       // match revisa la fase y que el color esté libre.
       if (!isShortString(msg.color, MAX_COLOR_LENGTH)) return null;
       return { type: 'pickColor', color: msg.color };
+    case 'pickAccessory':
+      if (!isShortString(msg.accessory, MAX_ACCESSORY_LENGTH)) {
+        return null;
+      }
+      return { type: 'pickAccessory', accessory: msg.accessory };
+    case 'pickSkin':
+      // match revisa la fase y que el jugador la haya comprado.
+      if (!isShortString(msg.skin, MAX_SKIN_LENGTH)) return null;
+      return { type: 'pickSkin', skin: msg.skin };
+    case 'refreshShop':
+      return { type: 'refreshShop' };
     default:
       return null;
   }
@@ -98,6 +111,11 @@ export function toGrpcAction(msg: ClientMessage): object | null {
       return { fix: { pointId: msg.pointId } };
     case 'pickColor':
       return { pickColor: { color: msg.color } };
+    case 'pickAccessory':
+      return { pickAccessory: { accessory: msg.accessory } };
+    case 'pickSkin':
+      return { pickSkin: { skin: msg.skin } };
+    // refreshShop no es de match: el gateway lo atiende solo.
     default:
       return null;
   }

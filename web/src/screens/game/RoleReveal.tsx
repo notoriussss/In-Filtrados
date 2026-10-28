@@ -1,5 +1,7 @@
+import { skinOf } from '../../shop';
 import { useEffect, useState } from 'react';
 import type { Snapshot } from '@in-filtrados/messages';
+import { Icon } from '../../ui/Icon';
 import { Stage } from '../../ui/Stage';
 import { Gota } from '../../ui/Gota';
 import { Chip, Gauge } from '../../ui/kit';
@@ -68,9 +70,29 @@ export function RoleReveal(props: {
         />
         {me && (
           <div className="chr">
-            <Gota color={me.color} scale={8} animate />
+            <Gota
+              color={me.color}
+              accessory={me.accessory}
+              skin={skinOf(me.skin)}
+              scale={8}
+              animate
+            />
           </div>
         )}
+        <div
+          className="well row"
+          style={{
+            position: 'absolute',
+            left: 40,
+            top: 930,
+            width: 500,
+            gap: 16,
+            padding: '14px 18px',
+          }}
+        >
+          <Icon name="map" palette="amber" size={40} />
+          <span className="small">{ROLE_TEXT.MEETING_NOTE}</span>
+        </div>
         <div className="mates">
           <div className="ctr">
             <div className="lab" style={{ color: '#f4fffb' }}>
@@ -85,7 +107,14 @@ export function RoleReveal(props: {
               }}
             >
               {others.map((p) => (
-                <Gota key={p.id} color={p.color} scale={2} animate />
+                <Gota
+                  key={p.id}
+                  color={p.color}
+                  accessory={p.accessory}
+                  skin={skinOf(p.skin)}
+                  scale={2}
+                  animate
+                />
               ))}
             </div>
           </div>

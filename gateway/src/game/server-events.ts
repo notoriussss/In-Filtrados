@@ -20,8 +20,10 @@ type GrpcMeeting = Omit<Meeting, 'ejectedId'> & {
   ejectedId?: string | null;
 };
 
-type GrpcPlayerView = Omit<PlayerView, 'activity'> & {
+type GrpcPlayerView = Omit<PlayerView, 'activity' | 'accessory' | 'skin'> & {
   activity?: string;
+  accessory?: string;
+  skin?: string;
 };
 
 type GrpcEmergency = Omit<Emergency, 'kind'> & { kind: string };
@@ -131,6 +133,8 @@ function toPlayer(p: GrpcPlayerView): PlayerView {
       p.activity && ACTIVITIES.includes(p.activity)
         ? (p.activity as Activity)
         : null,
+    accessory: p.accessory ?? '',
+    skin: p.skin || 'jimena',
   };
 }
 
@@ -157,7 +161,6 @@ function toMeeting(m: GrpcMeeting): Meeting {
   return {
     reporterId: m.reporterId,
     tankSlot: m.tankSlot,
-    lastVisitors: [...(m.lastVisitors ?? [])],
     votesCast: [...(m.votesCast ?? [])],
     endsAtTick: m.endsAtTick,
     votingClosed: Boolean(m.votingClosed),

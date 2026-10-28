@@ -1,10 +1,27 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { PlayerView } from '@in-filtrados/messages';
 import { Stage } from '../ui/Stage';
-import { Gota, SERVER_COLORS, colorName } from '../ui/Gota';
+import {
+  Gota,
+  SERVER_COLORS,
+  colorName,
+  ACCESSORIES,
+  accessoryName,
+} from '../ui/Gota';
 import { Icon } from '../ui/Icon';
 import { Button, Chip, Pill, TitleBar } from '../ui/kit';
 import { api, type MeResponse } from '../api';
+import {
+  SKIN_GOTA,
+  SKIN_JIMENA,
+  type ShopResponse,
+  type Skin,
+  gotaItemId,
+  loadCosmetics,
+  ownedIds,
+  saveCosmetics,
+  skinOf,
+} from '../shop';
 import { session } from '../session';
 import { gameMap } from '../map';
 import type { GameSession } from '../game/session';
@@ -14,10 +31,15 @@ import { useGame } from './game/useGame';
 import { ChoiceGrid } from './pending/ChoiceGrid';
 import { FEATURES } from '../features';
 
+const NO_ACCESSORY = 'none'; // pickAccessory: quitar el accesorio
 const MAP_THUMB = '/assets/map/manglar-verde/thumbnail.jpg';
 const MAX_SLOTS = 10; // match acepta hasta 10 jugadores por sala
 const MIN_PLAYERS = 2;
 const TWO_IMPOSTORS_FROM = 7; // twoImpostorsFrom en match
+
+function accessoryLabel(id: string): string {
+  return id === NO_ACCESSORY ? LOBBY_TEXT.NO_ACCESSORY : accessoryName(id);
+}
 
 // Lobby (maqueta 06-lobby): tu gota con tu color, los jugadores de la
 // sala, el mapa y el botón de empezar (solo quien creó la sala). La
@@ -32,6 +54,9 @@ export function Lobby(props: {
   const data = session.loadSession();
   const [me, setMe] = useState<MeResponse | null>(null);
   const [copied, setCopied] = useState(false);
+  const [showAccessoryMenu, setShowAccessoryMenu] = useState(false);
+  const [shop, setShop] = useState<ShopResponse | null>(null);
+  const prefsApplied = useRef(false);
   const snap = state.snapshot;
 
   useEffect(() => {
@@ -45,12 +70,76 @@ export function Lobby(props: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Lo comprado: se lee al entrar y al volver a esta pestaña (por si se
+  // compró en otra); en ese caso también se le avisa al servidor de juego.
+  useEffect(() => {
+    if (!data) return;
+    const load = (notify: boolean) => {
+      api.getShop(data.token).then(
+        (s) => {
+          setShop(s);
+          if (notify) props.game.send({ type: 'refreshShop' });
+        },
+        () => setShop(null),
+      );
+    };
+    load(false);
+    const onFocus = () => load(true);
+    addEventListener('focus', onFocus);
+    return () => removeEventListener('focus', onFocus);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const players = snap?.players ?? [];
   const meView = players.find((p) => p.id === data?.playerId);
   const host = players[0]; // match pone primero a quien creó la sala
   const isHost = Boolean(data?.isCreator);
   const connected = players.filter((p) => p.connected).length;
   const myColor = meView?.color ?? SERVER_COLORS[1];
+  const mySkin = skinOf(meView?.skin);
+  const myAccessory = meView?.accessory || NO_ACCESSORY;
+  const owned = ownedIds(shop);
+  const gotaOwned = owned.has(gotaItemId(myColor));
+
+  // Al entrar se vuelve a poner lo último que se eligió; match revisa que
+  // de verdad esté comprado.
+  useEffect(() => {
+    if (prefsApplied.current || !meView || !shop) return;
+    prefsApplied.current = true;
+    const prefs = loadCosmetics();
+    // match ignora el color si otro jugador ya lo tiene; entonces la gota
+    // que vale es la del color que quedó.
+    const wanted = prefs.color.toLowerCase();
+    const taken = players.some(
+      (p) => p.id !== meView.id && p.connected && p.color.toLowerCase() === wanted,
+    );
+    const color = wanted && !taken ? wanted : myColor.toLowerCase();
+    if (color !== myColor.toLowerCase()) {
+      props.game.send({ type: 'pickColor', color });
+    }
+    if (prefs.skin === SKIN_GOTA && owned.has(gotaItemId(color))) {
+      props.game.send({ type: 'pickSkin', skin: SKIN_GOTA });
+    }
+    if (prefs.accessory && owned.has(prefs.accessory)) {
+      props.game.send({ type: 'pickAccessory', accessory: prefs.accessory });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [meView?.id, shop]);
+
+  const pickSkin = (skin: Skin) => {
+    if (skin !== mySkin) props.game.send({ type: 'pickSkin', skin });
+    saveCosmetics({ ...loadCosmetics(), skin });
+  };
+  const pickAccessory = (id: string) => {
+    if (id !== myAccessory) {
+      props.game.send({ type: 'pickAccessory', accessory: id });
+    }
+    saveCosmetics({
+      ...loadCosmetics(),
+      accessory: id === NO_ACCESSORY ? '' : id,
+    });
+    setShowAccessoryMenu(false);
+  };
   const code = data?.roomCode ?? '----';
   const impostors = players.length >= TWO_IMPOSTORS_FROM ? 2 : 1;
   const compact = players.length > 8;
@@ -116,11 +205,165 @@ export function Lobby(props: {
             </span>
           </Chip>
         </TitleBar>
-        <div className="prev stand">
+        <div className="prev stand" style={{ position: 'relative' }}>
           <div className="plank" />
-          <Gota color={myColor} scale={5} animate />
+          <Gota
+            color={myColor}
+            accessory={meView?.accessory}
+            skin={mySkin}
+            scale={4}
+            animate
+          />
+          {FEATURES.accessoryPicker && (
+            <Button
+              variant="sec"
+              small
+              style={{
+                position: 'absolute',
+                top: 6,
+                right: 8,
+                zIndex: 5,
+                fontSize: 18,
+                minHeight: 34,
+                padding: '4px 12px 2px',
+                maxWidth: 300,
+                gap: 6,
+              }}
+              onClick={() => setShowAccessoryMenu((open) => !open)}
+            >
+              <span
+                style={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+                title={accessoryLabel(myAccessory)}
+              >
+                {accessoryLabel(myAccessory)}
+              </span>
+              <span style={{ fontSize: 13, opacity: 0.8 }}>▾</span>
+            </Button>
+          )}
+          {showAccessoryMenu && (
+            <>
+              <div
+                style={{
+                  position: 'fixed',
+                  inset: 0,
+                  zIndex: 15,
+                }}
+                onClick={() => setShowAccessoryMenu(false)}
+              />
+              <div
+                className="panel"
+                style={{
+                  position: 'absolute',
+                  top: 46,
+                  right: 8,
+                  left: 8,
+                  zIndex: 20,
+                  padding: '14px 16px',
+                  boxShadow: '0 12px 28px rgba(0,0,0,0.7)',
+                }}
+              >
+                <div
+                  className="row"
+                  style={{
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: 10,
+                  }}
+                >
+                  <span className="lab" style={{ margin: 0 }}>
+                    {LOBBY_TEXT.CHOOSE_ACCESSORY}
+                  </span>
+                  <Button
+                    variant="sec"
+                    small
+                    icon="cross"
+                    style={{
+                      fontSize: 18,
+                      minHeight: 34,
+                      padding: '4px 12px 2px',
+                      gap: 6,
+                    }}
+                    onClick={() => setShowAccessoryMenu(false)}
+                  >
+                    {LOBBY_TEXT.CLOSE}
+                  </Button>
+                </div>
+                <ChoiceGrid
+                  kind="accessory"
+                  label={LOBBY_TEXT.ACCESSORY}
+                  value={myAccessory}
+                  choices={[
+                    {
+                      id: NO_ACCESSORY,
+                      label: LOBBY_TEXT.NO_ACCESSORY,
+                      preview: <Icon name="cross" size={28} />,
+                    },
+                    ...ACCESSORIES.map((a) => ({
+                      id: a.id,
+                      label: owned.has(a.id)
+                        ? a.name
+                        : LOBBY_TEXT.lockedHint(a.name),
+                      locked: !owned.has(a.id),
+                      preview: (
+                        <Gota
+                          color={myColor}
+                          accessory={a.id}
+                          skin={mySkin}
+                          scale={1.4}
+                          portrait
+                        />
+                      ),
+                    })),
+                  ]}
+                  onPick={pickAccessory}
+                />
+              </div>
+            </>
+          )}
         </div>
-        <div className="lab">
+        <div className="lab">{LOBBY_TEXT.CHARACTER}</div>
+        <div className="chars">
+          <ChoiceGrid
+            kind="accessory"
+            label={LOBBY_TEXT.CHARACTER}
+            value={mySkin}
+            choices={[
+              {
+                id: SKIN_JIMENA,
+                label: LOBBY_TEXT.CHARACTER_JIMENA,
+                preview: (
+                  <Gota
+                    color={myColor}
+                    skin={SKIN_JIMENA}
+                    scale={1.6}
+                    portrait
+                  />
+                ),
+              },
+              {
+                id: SKIN_GOTA,
+                label: gotaOwned
+                  ? LOBBY_TEXT.CHARACTER_GOTA
+                  : LOBBY_TEXT.lockedHint(LOBBY_TEXT.CHARACTER_GOTA),
+                locked: !gotaOwned,
+                preview: (
+                  <Gota
+                    color={myColor}
+                    skin={SKIN_GOTA}
+                    scale={1.6}
+                    portrait
+                  />
+                ),
+              },
+            ]}
+            onPick={(id) => pickSkin(id as Skin)}
+          />
+        </div>
+        <div className="lab" style={{ marginTop: 14 }}>
           {LOBBY_TEXT.COLOR}{' '}
           <span className="muted">· {colorName(myColor)}</span>
         </div>
@@ -145,6 +388,7 @@ export function Lobby(props: {
             onPick={(c) => {
               if (c !== myColor.toLowerCase()) {
                 props.game.send({ type: 'pickColor', color: c });
+                saveCosmetics({ ...loadCosmetics(), color: c });
               }
             }}
           />
@@ -311,7 +555,13 @@ function PlayerSlot(props: {
   return (
     <div className={`slot ${props.isMe ? 'me' : ''}`} style={style}>
       <span className="av">
-        <Gota color={p.color} scale={props.compact ? 1.6 : 2} portrait />
+        <Gota
+          color={p.color}
+          accessory={p.accessory}
+          skin={skinOf(p.skin)}
+          scale={props.compact ? 1.6 : 2}
+          portrait
+        />
       </span>
       <span className="nm">
         <span className="fit" title={p.name}>

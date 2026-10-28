@@ -5,6 +5,7 @@ export type Choice = {
   id: string;
   label: string;
   taken?: boolean; // someone else has it: shown dimmed and not pickable
+  locked?: boolean; // not bought yet: shown with a lock, not pickable
   swatch?: string; // CSS color, for color choices
   preview?: ReactNode; // drawing, for accessory choices
 };
@@ -36,11 +37,19 @@ export function ChoiceGrid(props: {
             aria-label={c.label}
             title={c.label}
             disabled={c.taken && !picked}
-            className={[color ? 'sw' : 'ac', c.taken && !picked ? 'taken' : '']
+            className={[
+              color ? 'sw' : 'ac',
+              c.taken && !picked ? 'taken' : '',
+              c.locked ? 'locked' : '',
+              picked ? 'me' : '',
+            ]
               .filter(Boolean)
               .join(' ')}
             style={color ? { background: c.swatch } : undefined}
-            onClick={() => props.onPick(c.id)}
+            aria-disabled={c.locked || undefined}
+            onClick={() => {
+              if (!c.locked) props.onPick(c.id);
+            }}
           >
             {color ? (
               picked && <Icon name="check" palette="ink" size={24} />

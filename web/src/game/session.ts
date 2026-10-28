@@ -398,7 +398,7 @@ export class GameSession {
             now,
             this.contaminateReadyAt,
             this.reportedTanks,
-            snap.myTasks,
+            snap.myTasks ?? [],
             snap.emergency,
           )
         : null;
@@ -436,9 +436,10 @@ function sameAction(a: Action | null, b: Action | null): boolean {
 
 // stationMarks: estaciones propias pendientes y hechas (S2-11).
 export function stationMarks(snap: Snapshot): StationMarks | null {
-  if (snap.myTasks.length === 0) return null;
+  const tasks = snap.myTasks ?? [];
+  if (tasks.length === 0) return null;
   const pending = new Set<string>();
   const done = new Set<string>();
-  for (const t of snap.myTasks) (t.done ? done : pending).add(t.stationId);
+  for (const t of tasks) (t.done ? done : pending).add(t.stationId);
   return { pending, done };
 }

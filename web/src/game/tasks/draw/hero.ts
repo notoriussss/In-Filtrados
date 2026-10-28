@@ -1,11 +1,17 @@
+import { drawJimena } from '../../render/jimenaDraw';
 import { drawPosedSprite } from '../../render/spriteDraw';
 import {
+  GOTA_CELL_H,
+  GOTA_CELL_W,
   SPRITE_COLORS,
   SPRITE_H,
   SPRITE_W,
   type SpriteFrame,
+  gotaAccessoryImage,
+  gotaBodyImage,
   spriteImage,
 } from '../../render/sprites';
+import { SKIN_GOTA, type Skin } from '../../../shop';
 import { drawDust, drawSparkles, drawSweat } from '../../render/workFx';
 import {
   IDLE_POSE,
@@ -42,18 +48,33 @@ function mirrorPose(p: Pose): Pose {
   return { ...p, frame: mirrorFrame(p.frame), dx: -p.dx, lean: -p.lean };
 }
 
+function frameToGotaCol(frame: SpriteFrame): number {
+  if (frame === 'right-walking1' || frame === 'left-walking1') return 8;
+  if (frame === 'right-passing1' || frame === 'left-passing1') return 9;
+  if (frame === 'right-walking2' || frame === 'left-walking2') return 10;
+  if (frame === 'right-passing2' || frame === 'left-passing2') return 11;
+  if (frame.startsWith('back')) return 12;
+  return 0;
+}
+
 export class Hero {
   private pose: Pose = IDLE_POSE;
   private face: Face = 'right';
   private readonly color: string;
+  private readonly accessory?: string;
+  private readonly skin: Skin | undefined;
 
   constructor(
     color: string | undefined,
     readonly x: number,
     readonly feetY: number,
+    accessory?: string,
+    skin?: Skin,
   ) {
+    this.skin = skin;
     const known = color && SPRITE_COLORS[color.toLowerCase()];
     this.color = known && color ? color : DEFAULT_COLOR;
+    this.accessory = accessory;
   }
 
   // lookAt gira al personaje hacia el lado donde pasa algo.
@@ -85,14 +106,55 @@ export class Hero {
       AMPLITUDE,
     );
     this.drawShadow(ctx, shown.shadow);
-    const img = spriteImage(this.color, shown.frame);
-    if (img) {
-      const box = { x: this.x, feetY: this.feetY, w: HERO_W, h: HERO_H };
+
+    // Jimena de inicio; la gota solo si el jugador la compró.
+    const isGota = this.skin === SKIN_GOTA;
+    const bodyImg = isGota ? gotaBodyImage(this.color) : null;
+    const accImg = isGota ? gotaAccessoryImage(this.accessory) : null;
+
+    if (bodyImg) {
+      const col = frameToGotaCol(shown.frame);
+      const flip =
+        shown.frame.startsWith('left-') ||
+        (this.face === 'left' && shown.frame === 'front');
+      const srcRect = {
+        sx: col * GOTA_CELL_W,
+        sy: 0,
+        sw: GOTA_CELL_W,
+        sh: GOTA_CELL_H,
+      };
+      const box = {
+        x: this.x,
+        feetY: this.feetY,
+        w: GOTA_CELL_W,
+        h: GOTA_CELL_H,
+      };
       ctx.save();
       ctx.imageSmoothingEnabled = false;
-      drawPosedSprite(ctx, img, box, shown);
+      drawPosedSprite(ctx, bodyImg, box, shown, srcRect, flip);
+      if (accImg) {
+        drawPosedSprite(ctx, accImg, box, shown, srcRect, flip);
+      }
       ctx.restore();
+    } else {
+      const img = spriteImage(this.color, shown.frame);
+      if (img) {
+        const box = { x: this.x, feetY: this.feetY, w: HERO_W, h: HERO_H };
+        ctx.save();
+        ctx.imageSmoothingEnabled = false;
+        drawJimena(
+          ctx,
+          img,
+          shown.frame,
+          box,
+          shown,
+          this.color,
+          this.accessory,
+        );
+        ctx.restore();
+      }
     }
+
     if (opts.calm) return;
     const head = this.headTop;
     const lean = shown.lean;

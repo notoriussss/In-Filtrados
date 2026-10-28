@@ -163,28 +163,6 @@ func TestReportSuccessfulTeleportsAndSetsMeeting(t *testing.T) {
 		t.Errorf("tankSlot debe ser 0, got %d", r.meeting.tankSlot)
 	}
 
-	// Comprobar últimos 3 visitantes distintos
-	// (del más reciente al más antiguo)
-	expectedVisitors := []string{"crew1", "imp", "crew2"}
-	if len(r.meeting.lastVisitors) != len(expectedVisitors) {
-		t.Fatalf(
-			"esperaba %d visitantes, got %d: %v",
-			len(expectedVisitors),
-			len(r.meeting.lastVisitors),
-			r.meeting.lastVisitors,
-		)
-	}
-	for i, v := range expectedVisitors {
-		if r.meeting.lastVisitors[i] != v {
-			t.Errorf(
-				"visitante en [%d] esperaba %s, got %s",
-				i,
-				v,
-				r.meeting.lastVisitors[i],
-			)
-		}
-	}
-
 	// Comprobar teletransporte: todos deben estar detenidos (dx=0, dy=0)
 	for id, pl := range r.players {
 		if pl.dx != 0 || pl.dy != 0 {
@@ -930,27 +908,6 @@ func TestFullMeetingCycleIntegration(t *testing.T) {
 	}
 	if r.meeting == nil {
 		t.Fatal("meeting no debe ser nil")
-	}
-
-	// Verificar visitantes del snapshot
-	view := r.meetingView()
-	expectedVisitors := []string{"crew1", "imp", "crew2"}
-	if len(view.LastVisitors) != len(expectedVisitors) {
-		t.Fatalf(
-			"esperaba %d visitantes, got %d",
-			len(expectedVisitors),
-			len(view.LastVisitors),
-		)
-	}
-	for i, v := range expectedVisitors {
-		if view.LastVisitors[i] != v {
-			t.Errorf(
-				"visitante %d esperaba %s, got %s",
-				i,
-				v,
-				view.LastVisitors[i],
-			)
-		}
 	}
 
 	// 4. Chat durante reunion

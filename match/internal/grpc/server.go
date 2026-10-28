@@ -216,6 +216,7 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 	r.Join(room.Join{
 		PlayerID: playerID,
 		Out:      out,
+		Owned:    join.GetOwned(),
 	})
 	log.Printf("play: %s joined %s", playerID, r.Code)
 	defer func() {
@@ -332,6 +333,24 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 					PlayerID:  playerID,
 					PickColor: true,
 					Color:     msg.GetPickColor().GetColor(),
+				})
+			case msg.GetPickAccessory() != nil:
+				r.Act(room.PlayerAction{
+					PlayerID:      playerID,
+					PickAccessory: true,
+					Accessory:     msg.GetPickAccessory().GetAccessory(),
+				})
+			case msg.GetPickSkin() != nil:
+				r.Act(room.PlayerAction{
+					PlayerID: playerID,
+					PickSkin: true,
+					Skin:     msg.GetPickSkin().GetSkin(),
+				})
+			case msg.GetSetOwned() != nil:
+				r.Act(room.PlayerAction{
+					PlayerID: playerID,
+					SetOwned: true,
+					Owned:    msg.GetSetOwned().GetItems(),
 				})
 			case msg.GetChat() != nil:
 				c := msg.GetChat()

@@ -67,6 +67,7 @@ El mapa vive en **`shared/map.json`** (carpeta nueva en la raíz). Lo usan `matc
 - `id`, `name`, `tile`, `playerRadius`: datos generales del mapa.
 - `stations[].name`, `room` y `radius`: nombre visible, sala y alcance propio de cada estación (si falta `radius`, se usa el de `match`).
 - `tanks[].draw`: esquina del sprite del tanque; `x, y` siguen siendo el punto de interacción.
+- Un tanque por sala (10 salas, 10 tanques) y cada uno lleva su pared de 72×44 en `(x-36, y-24)` dentro de `walls`; si lo mueves, mueve también esa pared y la base de concreto de `ground.png`.
 - `fixPoints`: `{ id, kind: 'pipe' | 'steam', room, x, y }`, los puntos donde se arreglan los sabotajes (2 extremos de tubería y 1 válvula de vapor).
 - `zones[].kind/theme`, `doors` y `markers`: solo para dibujar y nombrar salas; `match` no los usa.
 - Las imágenes del mapa (suelo, props, tanques, luz nocturna y minimapa) viven en `web/public/assets/map/manglar-verde/`; `walls` sigue siendo la única fuente de colisiones.
@@ -121,7 +122,7 @@ tanks: { slot, ownerId, contamination /* 0 a 100 */, dead }[];
 reservoir: number;                 // 0 a 100
 myRole: 'NO_ROLE' | 'CREW' | 'IMPOSTOR'; // solo el del destinatario
 myTaskProgress: { completed, total };
-meeting: { reporterId, tankSlot, lastVisitors[], votesCast[], endsAtTick, votingClosed, ejectedId, wasImpostor } | null;
+meeting: { reporterId, tankSlot, votesCast[], endsAtTick, votingClosed, ejectedId, wasImpostor } | null;
 chat: { id, playerId, text, tick }[]; // últimos 30
 oilDrops: { x, y, color, expiresAtTick }[]; // S2-12: rastro del impostor
 paused: boolean;                   // S3-02: alguien está en su periodo de gracia
@@ -159,6 +160,22 @@ players[].activity: 'reduce' | 'reuse' | 'recycle' | 'tank' | 'fix' | null; // p
 
 - `match` sigue asignando un color al entrar. Acepta el cambio solo si es uno de los 8 colores y ningún otro jugador **conectado** lo tiene; si no, lo ignora. El color nuevo llega a todos en el siguiente snapshot.
 
+**Tienda: personaje y accesorio.** También se suma sin romper lo anterior (en gRPC, `PickSkin pick_skin = 13` y `SetOwned set_owned = 14` dentro de `ClientAction`, `repeated string owned = 4` en `Join` y `string skin = 10` en `PlayerView`):
+
+```ts
+// Navegador → gateway
+  | { type: 'pickSkin'; skin: string }   // 'jimena' o 'gota', solo en LOBBY
+  | { type: 'pickAccessory'; accessory: string } // 'none' lo quita
+  | { type: 'refreshShop' }              // tras comprar en otra pestaña
+
+// Campo nuevo del snapshot
+players[].skin: 'jimena' | 'gota';       // 'jimena' es el personaje de inicio
+```
+
+- Los personajes de **Jimena** son gratis y vienen de inicio. Las **gotas** (una por color, id `gota-<color sin #>`, como `gota-e6194b`) y los **accesorios** (id como `cap`) solo se usan si el jugador los compró en la tienda.
+- `match` no se fía del navegador: el **gateway** le pregunta a `players` qué tiene comprado y se lo pasa en `Join.owned` (y en `SetOwned` tras un `refreshShop`). `match` acepta `pickSkin: 'gota'` solo si el jugador tiene la gota de su color actual, y `pickAccessory` solo si tiene ese accesorio. Si cambia a un color cuya gota no compró, vuelve a Jimena.
+- Los accesorios sirven para **cualquier** personaje, el de Jimena o la gota. Los de Jimena no son una capa encima: `web/tools/gen_jimena_sprites.py` mide la rejilla de píxeles de cada cuadro (`web/tools/jimena_grid.json`), dibuja el accesorio en esa misma rejilla y deja al personaje completo en una hoja de 14 cuadros por color y accesorio, `web/public/assets/characters/jimena/baked/<Color>-<accesorio|none>.png` (con margen alrededor, porque lo puesto sobresale del cuadro). Si se cambia un accesorio o un cuadro de Jimena hay que volver a correr el script. Cada jugador lleva un accesorio a la vez.
+
 ### 0.6 REST del gateway
 
 | Método y ruta | Cuerpo | Respuesta |
@@ -166,6 +183,9 @@ players[].activity: 'reduce' | 'reuse' | 'recycle' | 'tank' | 'fix' | null; // p
 | `POST /api/auth/register` | `{ username, password }` | `201 { playerId, username }` |
 | `POST /api/auth/login` | `{ username, password }` | `200 { token, playerId, username }` |
 | `GET /api/me` | — (header `Authorization: Bearer <token>`) | `200 { playerId, username, coins, matchesPlayed, wins, timesImpostor, winsAsImpostor }` (las dos últimas desde S2-07) |
+| `GET /api/shop` | — | `200 { coins, items: [{ id, kind: 'character' \| 'accessory', price, owned }] }` (tienda: lo que se compra con monedas) |
+| `POST /api/shop/buy` | `{ itemId }` | `200` igual que `GET /api/shop`, con la compra hecha. `404` si el artículo no existe, `409` si ya lo tiene o no le alcanzan las monedas |
+| `GET /api/ranking` | — | `200 { entries: [{ playerId, username, matchesPlayed, wins, timesImpostor, winsAsImpostor, harvest, coinsEarned }] }`: todos los jugadores (hasta 100), de más a menos victorias; a igualdad, menos partidas y luego el nombre. `harvest` y `coinsEarned` suman todas sus partidas |
 | `POST /api/rooms` | — | `201 { roomCode, matchId }` |
 | `POST /api/rooms/:roomCode/join` | — | `200 { roomCode, matchId }` |
 
@@ -680,7 +700,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 **Pasos:**
 1. Nuevas acciones en `ClientAction` y `ClientMessage`: `Start`, `Interact { station_id }` (hacer tarea o limpiar tanque), `Contaminate { tank_slot }`, `Report { tank_slot }`, `Vote { target_player_id | skip }` y `Chat { client_msg_id, text }`.
-2. Nuevos campos en `Snapshot`: `tanks[] { slot, owner_id, contamination (0 a 100), dead }`, `reservoir` (0 a 100), `my_role` (solo el del destinatario), `my_task_progress`, `meeting { reporter_id, tank_slot, last_visitors[], votes_cast, ends_at_tick }` y `chat[]` (últimos 30 mensajes).
+2. Nuevos campos en `Snapshot`: `tanks[] { slot, owner_id, contamination (0 a 100), dead }`, `reservoir` (0 a 100), `my_role` (solo el del destinatario), `my_task_progress`, `meeting { reporter_id, tank_slot, votes_cast, ends_at_tick }` y `chat[]` (últimos 30 mensajes).
 3. Nuevo evento `MatchEnded { winner, impostor_id }`.
 4. Ver el rol del impostor **solo en su propio snapshot**: el gateway jamás debe recibir el rol de otros.
 
@@ -731,13 +751,13 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 **Pasos:**
 1. `Report { tank_slot }`: solo sobre un tanque `dead`, a 60 unidades o menos, y por un jugador vivo. Pasa a fase `MEETING` y teletransporta a todos a la plaza.
-2. `meeting.last_visitors`: los últimos 3 jugadores **distintos** que pasaron a 40 unidades o menos de ese tanque, según `event_log`.
+2. ~~`meeting.last_visitors`~~ (quitado: la reunión ya no dice quiénes pasaron por el tanque; el campo 3 de `Meeting` quedó `reserved` en `proto/match.proto`).
 3. La reunión dura 50 segundos: 45 para discutir por chat y votar (se cierra antes si todos los vivos ya votaron), y 5 de pantalla de resultado.
 4. **Chat (C):** `Chat` solo en `MEETING` y de jugadores vivos, máximo 200 caracteres, máximo 1 mensaje por segundo por jugador. Se guarda en el estado de la sala y va en los snapshots.
 5. Resultado: el más votado es expulsado (`ejected = true`, `alive = false`). Empate o mayoría de `skip`: nadie sale. Publicar `player.ejected`.
 6. Tras la reunión, 5 segundos de pantalla de resultado ("Morado era el impostor" o "Morado no era el impostor") y vuelta a `PLAYING`.
 
-**Criterio de verificación:** tests de tabla para el conteo: mayoría simple, empate, todos `skip` y un fantasma que intenta votar (se ignora). En el juego, con 4 personas: reportar un tanque muerto muestra la reunión con los 3 últimos visitantes correctos, el chat funciona y la expulsión se aplica.
+**Criterio de verificación:** tests de tabla para el conteo: mayoría simple, empate, todos `skip` y un fantasma que intenta votar (se ignora). En el juego, con 4 personas: reportar un tanque muerto muestra la reunión con quién reportó y de quién es el tanque, el chat funciona y la expulsión se aplica.
 
 ---
 
@@ -806,7 +826,7 @@ para el mismo usuario responde 429.
 #### S2-10 — Pantalla de reunión y votación (`web/`)
 
 **Pasos:**
-1. Al entrar en `MEETING`: superponer un panel con el tanque reportado, quién reportó, los 3 últimos visitantes, la lista de jugadores con su color, el chat y una cuenta regresiva.
+1. Al entrar en `MEETING`: superponer un panel con el tanque reportado, quién reportó, la lista de jugadores con su color, el chat y una cuenta regresiva.
 2. Votar: tocar un jugador o "Saltar". Mostrar quién ya votó (no a quién).
 3. Los fantasmas ven el chat pero no pueden escribir ni votar.
 4. Pantalla de resultado de 5 segundos y, en `ENDED`, pantalla final con ganador, impostor, monedas ganadas y botón "Volver a la sala".
@@ -841,10 +861,18 @@ Sin esta tarea tampoco se puede verificar S2-13 jugando (completar 3 tareas y ve
 9. **Lista de misiones** en la esquina superior izquierda, sobre el canvas: "Misiones (2/4)" y una fila por tarea con su tipo (Reducir, Reutilizar, Reciclar) y la zona donde está, por ejemplo "Reducir · Cuarto de bombas". La zona se calcula en el navegador con `shared/map.json`: la zona más pequeña que contiene la estación (así se ignora "Arroyo", que cubre todo el mapa). Las hechas aparecen tachadas. Se oculta en `LOBBY` y durante la reunión.
 10. **En el mapa:** resaltar solo las estaciones pendientes del jugador (anillo pulsante o signo "!"); las demás y las hechas se dibujan atenuadas.
 11. **Iniciar:** junto a una estación propia pendiente a 40 unidades o menos, el botón contextual de S2-09 (tecla `E`) dice "Hacer tarea" y manda `interact { stationId }`. El minijuego se abre cuando el snapshot trae `myActiveTask === stationId` (lo confirma el servidor, no el navegador).
-12. **Minijuegos**, en un panel encima del canvas; mientras está abierto no se manda `move`:
-    1. **Reducir (cerrar fuga):** girar una válvula manteniendo presionado el clic hasta llenar una barra.
-    2. **Reutilizar (agua gris):** arrastrar 3 cubetas al tanque.
-    3. **Reciclar (filtrar):** hacer clic en 4 partículas de suciedad que flotan en el agua.
+12. **Minijuegos**, en un panel encima del canvas; mientras está abierto no se manda `move`. Se eligen **por estación** (`createMinigame(type, stationId)` en `web/src/game/tasks/minigames.ts`): cada estación tiene el suyo y el juego de su tipo queda de respaldo. El detalle y el porqué están en `docs/design/minigames-3r.md`:
+    1. **Reducir (cerrar fuga, `leak-1`):** girar una válvula manteniendo presionado el clic hasta llenar una barra.
+    2. **Reutilizar (agua gris, `greywater-1`):** arrastrar 3 cubetas al tanque.
+    3. **Reciclar (filtrar, `filter-1` y `filter-2`):** hacer clic en 4 partículas de suciedad que flotan en el agua.
+    4. **Reducir (regular la presión, `valve-1`):** presionar el botón cuando la aguja pasa por la franja verde; 3 aciertos y la franja se encoge.
+    5. **Reducir (llenar sin derramar, `valve-2`):** sostener el grifo y soltar cuando el agua pase la marca; cruzar el borde derrama y el vaso vuelve a empezar. 3 vasos.
+    6. **Reutilizar (primera lluvia, `rain-1` y `rain-2`):** las gotas sucias de la primera lluvia (de 1 a 3, al azar por semilla) van al desvío y las limpias al barril; un clic cambia la compuerta de lado. 6 gotas limpias.
+    7. **Reciclar (clasificar residuos, `sorter-1`):** arrastrar 4 residuos al cajón de su color.
+    8. **Reutilizar (¿sirve para regar?, `greywater-2`):** arrastrar 4 recipientes a Regar o a Tratar según su origen.
+    9. **Reducir (sellar la fuga, `leak-2`):** clic en las grietas que se abren solas para ponerles cinta; se sellan 5.
+    10. **Reciclar (capas del compost, `compost-1`):** arrastrar los sacos en orden (seco, húmedo, tierra), dos rondas.
+    Todos los juegos nuevos respetan un mínimo de 3 s (`MIN_GAME_MS`): match rechaza tareas más rápidas (`taskMinTicks`).
 13. **Terminar:** al completar el minijuego, mandar `interact { stationId, completed: true }`. Si se completó antes de 3 s desde el inicio, esperar a que pasen antes de mandarlo (el servidor rechaza los menores de 3 s). Se cierra con `Esc`, al empezar una reunión o si `myActiveTask` deja de ser esa estación (el jugador se alejó).
 14. El impostor ve sus tareas y los minijuegos igual que un tripulante (las "finge"; `match` no suma nada).
 15. Textos que ve el jugador como constantes en `web/src/constants.ts` (regla 9). Pruebas con `vitest` del cálculo de zona, del armado de la lista y de la lógica de cada minijuego (sin canvas).

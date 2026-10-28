@@ -213,6 +213,30 @@
   color: #e74c3c;
 }
 
+.scr-help .help-roles-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: 100%;
+}
+
+.scr-help .help-meeting-note {
+  background: #07192e;
+  border: 1.5px solid var(--line-d);
+  border-radius: 12px;
+  padding: 16px 24px;
+  font-size: 20px;
+  line-height: 1.4;
+  color: #e0f2fe;
+}
+
+.scr-help .help-meeting-note b {
+  color: var(--amber, #f59e0b);
+  margin-right: 8px;
+  font-family: var(--head);
+  letter-spacing: 1px;
+}
+
 /* Controles: filas como en Ajustes */
 .scr-help .help-list {
   background: #07192e;

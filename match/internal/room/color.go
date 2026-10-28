@@ -17,13 +17,11 @@ func (r *Room) pickColor(p *player, color string) {
 	if !isPlayerColor(color) {
 		return
 	}
-	for _, other := range r.players {
-		if other != p && other.view.Connected &&
-			strings.EqualFold(other.view.Color, color) {
-			return
-		}
+	if r.colorTaken(p, color) {
+		return
 	}
 	p.view.Color = color
+	r.fixSkin(p)
 }
 
 func isPlayerColor(color string) bool {
@@ -33,4 +31,31 @@ func isPlayerColor(color string) bool {
 		}
 	}
 	return false
+}
+
+// colorTaken dice si otro jugador conectado ya usa ese color.
+func (r *Room) colorTaken(p *player, color string) bool {
+	for _, other := range r.players {
+		if other != p && other.view.Connected &&
+			strings.EqualFold(other.view.Color, color) {
+			return true
+		}
+	}
+	return false
+}
+
+// resolveColor se llama al reconectar: si mientras el jugador estaba
+// fuera otro tomó su color, recibe el primero libre. Sin colores libres
+// (más de 8 jugadores) conserva el suyo.
+func (r *Room) resolveColor(p *player) {
+	if !r.colorTaken(p, p.view.Color) {
+		return
+	}
+	for _, c := range colors {
+		if !r.colorTaken(p, c) {
+			p.view.Color = c
+			r.fixSkin(p)
+			return
+		}
+	}
 }

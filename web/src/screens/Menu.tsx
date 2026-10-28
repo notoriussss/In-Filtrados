@@ -18,6 +18,8 @@ export function Menu(props: {
   onCreated: (matchId: string, roomCode: string, isCreator: boolean) => void;
   onJoin: () => void;
   onHelp: () => void;
+  onShop: () => void;
+  onRanking: () => void;
   onSettings: () => void;
   onLogout: () => void;
   onUnauthorized: () => void;
@@ -85,6 +87,8 @@ export function Menu(props: {
   const strips = [
     { label: MENU_TEXT.CREATE, onClick: create, disabled: busy },
     { label: MENU_TEXT.JOIN_SHORT, onClick: props.onJoin },
+    { label: MENU_TEXT.SHOP, onClick: props.onShop },
+    { label: MENU_TEXT.RANKING, onClick: props.onRanking },
     { label: MENU_TEXT.HELP, onClick: props.onHelp },
     { label: MENU_TEXT.LOGOUT, onClick: props.onLogout },
   ];

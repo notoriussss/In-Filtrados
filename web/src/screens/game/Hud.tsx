@@ -1,3 +1,4 @@
+import { skinOf } from '../../shop';
 import { useEffect } from 'react';
 import type {
   EmergencyKind,
@@ -11,7 +12,7 @@ import {
   TASK_ICONS,
 } from '../../ui/Icon';
 import { Chip, Gauge } from '../../ui/kit';
-import { gameMap } from '../../map';
+import { gameMap, meetingMarker } from '../../map';
 import { roomName } from '../../game/tasks/tasks';
 import { emergencyBanner, sabotageButtons } from '../../game/emergency';
 import type { Action } from '../../game/actions';
@@ -19,7 +20,7 @@ import type { GameSession, GameState } from '../../game/session';
 import { pauseMessage } from '../../game/pause';
 import { session } from '../../session';
 import { APP_TEXT, HUD_TEXT } from '../../texts';
-import { spriteFile } from '../../game/render/sprites';
+import { Gota } from '../../ui/Gota';
 import { useNow } from './useNow';
 
 const TYPE_NAMES = {
@@ -106,17 +107,18 @@ export function Hud(props: { game: GameSession; state: GameState }) {
 
 function TasksPanel(props: { snap: Snapshot }) {
   const { snap } = props;
-  const done = snap.myTasks.filter((t) => t.done).length;
+  const myTasks = snap.myTasks ?? [];
+  const done = myTasks.filter((t) => t.done).length;
   return (
     <section className="panel glass tasks" aria-label={HUD_TEXT.TASKS}>
       <div className="ttl hud-ttl">
         <Icon name="check" palette="leaf" />
         <span style={{ flex: 1 }}>{HUD_TEXT.TASKS.toUpperCase()}</span>
         <span className="tg ok num">
-          {done}/{snap.myTasks.length}
+          {done}/{myTasks.length}
         </span>
       </div>
-      {snap.myTasks.map((t) => {
+      {myTasks.map((t) => {
         const st = gameMap.stations.find((s) => s.id === t.stationId);
         if (!st) return null;
         const ic = TASK_ICONS[st.type];
@@ -232,18 +234,19 @@ function PlayerCard(props: { snap: Snapshot; me?: PlayerView }) {
     : snap.myRole === 'IMPOSTOR'
       ? { tone: 'bad' as const, text: HUD_TEXT.IMPOSTOR }
       : { tone: 'ok' as const, text: HUD_TEXT.CREW };
-  const file = spriteFile(me.color, 'front');
   const clean = tank ? 100 - tank.contamination : 0;
   return (
     <section className="panel glass me-card" aria-label={me.name}>
       <div className="row" style={{ gap: 18 }}>
-        {file && (
-          <img
-            className="portrait"
-            alt=""
-            src={`/assets/characters/jimena/${file}`}
-          />
-        )}
+        <Gota
+          color={me.color}
+          accessory={me.accessory}
+          skin={skinOf(me.skin)}
+          portrait
+          scale={2.5}
+          className="portrait"
+        />
+
         <div className="who-box">
           <div className="who">
             <b className="hud-name" title={me.name}>
@@ -294,11 +297,18 @@ function Minimap(props: { snap: Snapshot; meId: string; now: number }) {
     left: `${(x / gameMap.width) * 100}%`,
     top: `${(y / gameMap.height) * 100}%`,
   });
-  const pending = snap.myTasks.filter((t) => !t.done);
+  const pending = (snap.myTasks ?? []).filter((t) => !t.done);
+  const meeting = meetingMarker(gameMap);
   return (
     <section className="panel glass mini" aria-label={HUD_TEXT.MAP}>
       <div className="lab">
         <span>{HUD_TEXT.MAP.toUpperCase()}</span>
+        {meeting && (
+          <span className="mm-key">
+            <i />
+            {HUD_TEXT.MEETING_POINT.toUpperCase()}
+          </span>
+        )}
       </div>
       <div className="map-box">
         <img src="/assets/map/manglar-verde/minimap.png" alt="" />
@@ -318,6 +328,13 @@ function Minimap(props: { snap: Snapshot; meId: string; now: number }) {
             .map((f) => (
               <span key={f.id} className="dot fix" style={pos(f.x, f.y)} />
             ))}
+        {meeting && (
+          <span
+            className="dot meet"
+            title={meeting.name}
+            style={pos(meeting.x, meeting.y)}
+          />
+        )}
         {me && <span className="dot me" style={pos(me.x, me.y)} />}
       </div>
     </section>

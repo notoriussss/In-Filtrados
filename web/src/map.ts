@@ -32,6 +32,11 @@ export type FixPoint = {
   y: number;
 };
 
+// Puntos con nombre del mapa; "reunion" es donde todos aparecen al abrirse
+// una reunión (match los teletransporta ahí).
+export type Marker = { id: string; name: string; x: number; y: number };
+export const MEETING_MARKER_ID = 'reunion';
+
 export type GameMap = {
   id?: string;
   name?: string;
@@ -43,6 +48,10 @@ export type GameMap = {
   stations: Station[];
   tanks: Tank[];
   fixPoints: FixPoint[];
+  markers: Marker[];
 };
+
+export const meetingMarker = (m: GameMap): Marker | undefined =>
+  m.markers.find((k) => k.id === MEETING_MARKER_ID);
 
 export const gameMap = mapData as GameMap;

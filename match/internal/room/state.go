@@ -52,7 +52,6 @@ const (
 	chatMaxChars       = 200 // caracteres máximos por mensaje de chat
 	chatCooldownTicks  = 20  // 1 s entre mensajes de chat
 	chatHistoryLimit   = 30  // mensajes guardados en snapshot
-	maxLastVisitors    = 3   // visitantes máximos en el reporte
 
 	// S3-01: lugar reservado al jugador que se desconecta en partida.
 	// En el laboratorio se sube con RECONNECT_GRACE_SECONDS.
@@ -106,6 +105,9 @@ var colors = []string{
 type Join struct {
 	PlayerID string
 	Out      chan *matchv1.ServerEvent
+	// Owned son los artículos que el jugador compró (los pone el gateway
+	// con lo que dice players).
+	Owned []string
 }
 
 // Leave says that the stream ended.
@@ -151,17 +153,30 @@ type PlayerAction struct {
 	// Elegir color en la sala de espera.
 	PickColor bool
 	Color     string
+
+	// Elegir accesorio en la sala de espera.
+	PickAccessory bool
+	Accessory     string
+
+	// Elegir personaje (jimena o gota) en la sala de espera.
+	PickSkin bool
+	Skin     string
+
+	// Reemplazar lo comprado (solo lo manda el gateway).
+	SetOwned bool
+	Owned    []string
 }
 
 // isMove: la acción solo cambia la dirección (un Move).
 func (a PlayerAction) isMove() bool {
 	return !a.Start && !a.Contaminate && !a.Clean && !a.InteractTask &&
 		!a.Report && !a.Vote && !a.Chat && !a.Sabotage && !a.Fix &&
-		!a.PickColor
+		!a.PickColor && !a.PickAccessory && !a.PickSkin && !a.SetOwned
 }
 
 type player struct {
 	view         *matchv1.PlayerView
+	owned        map[string]bool // artículos comprados (ids de la tienda)
 	dx, dy       int32
 	out          chan *matchv1.ServerEvent
 	pendingEnded bool
@@ -203,7 +218,6 @@ type player struct {
 type meetingState struct {
 	reporterID   string
 	tankSlot     int32
-	lastVisitors []string
 	votes        map[string]voteChoice // voterID -> choice
 	votingEndsAt int64                 // tick donde vence la votación
 	resultEndsAt int64                 // tick donde termina resultado

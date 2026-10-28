@@ -1,3 +1,4 @@
+import { skinOf } from '../shop';
 import { useEffect, useRef, useState } from 'react';
 import { HudLayer } from '../ui/Stage';
 import { api, type MeResponse } from '../api';
@@ -79,10 +80,18 @@ export function Game(props: {
           <Minigame
             key={state.minigame.stationId}
             type={state.minigame.type}
+            stationId={state.minigame.stationId}
             color={snap?.players.find((p) => p.id === game.meId)?.color}
+            accessory={
+              snap?.players.find((p) => p.id === game.meId)?.accessory
+            }
+            skin={skinOf(
+              snap?.players.find((p) => p.id === game.meId)?.skin,
+            )}
             onComplete={state.minigame.onComplete}
             onClose={state.minigame.onClose}
           />
+
         )}
         <ConnectionPanel status={state.status} matchDown={state.matchDown} />
       </HudLayer>

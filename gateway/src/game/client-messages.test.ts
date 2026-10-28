@@ -111,3 +111,40 @@ test('pickColor needs a short color', () => {
     null,
   );
 });
+
+test('pickAccessory needs a short accessory string', () => {
+  assert.deepEqual(
+    toGrpcAction(parse({ type: 'pickAccessory', accessory: 'straw-hat' })!),
+    { pickAccessory: { accessory: 'straw-hat' } },
+  );
+  assert.equal(parse({ type: 'pickAccessory' }), null);
+  assert.equal(parse({ type: 'pickAccessory', accessory: '' }), null);
+  assert.equal(parse({ type: 'pickAccessory', accessory: 123 }), null);
+  assert.equal(
+    parse({ type: 'pickAccessory', accessory: 'x'.repeat(33) }),
+    null,
+  );
+});
+
+test('pickSkin needs a short skin string', () => {
+  assert.deepEqual(
+    toGrpcAction(parse({ type: 'pickSkin', skin: 'gota' })!),
+    { pickSkin: { skin: 'gota' } },
+  );
+  assert.equal(parse({ type: 'pickSkin' }), null);
+  assert.equal(parse({ type: 'pickSkin', skin: '' }), null);
+  assert.equal(parse({ type: 'pickSkin', skin: 'x'.repeat(17) }), null);
+});
+
+test('refreshShop is accepted but never sent to match as is', () => {
+  const msg = parse({ type: 'refreshShop' });
+  assert.deepEqual(msg, { type: 'refreshShop' });
+  assert.equal(toGrpcAction(msg!), null);
+});
+
+test('the browser cannot forge what it owns', () => {
+  assert.equal(parse({ type: 'setOwned', items: ['gota-e6194b'] }), null);
+  assert.deepEqual(parse({ type: 'refreshShop', items: ['cap'] }), {
+    type: 'refreshShop',
+  });
+});

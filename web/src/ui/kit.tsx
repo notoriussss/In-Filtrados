@@ -58,9 +58,10 @@ export function Button(props: {
   iconAfter?: IconName;
   disabled?: boolean;
   onClick?: () => void;
-  children: ReactNode;
+  children?: ReactNode;
   type?: 'button' | 'submit';
   className?: string;
+  style?: CSSProperties;
 }) {
   const cls = [
     'btn',
@@ -77,6 +78,7 @@ export function Button(props: {
     <button
       type={props.type ?? 'button'}
       className={cls}
+      style={props.style}
       disabled={props.disabled}
       onClick={props.onClick}
     >

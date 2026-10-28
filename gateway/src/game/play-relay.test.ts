@@ -130,3 +130,23 @@ test('retry delays grow up to 10 s', () => {
     [500, 1000, 2000, 4000, 8000, 10000, 10000],
   );
 });
+
+test('setOwned tells match now and every later Join', () => {
+  const t = setup();
+  t.relay.start();
+  t.relay.setOwned(['gota-e6194b']);
+  assert.deepEqual(t.streams[0].written[1], {
+    setOwned: { items: ['gota-e6194b'] },
+  });
+  // Play se cae y se reabre: el nuevo Join ya trae lo comprado.
+  t.streams[0].emit('status', { code: status.UNAVAILABLE });
+  t.timers[0].fn();
+  assert.deepEqual(t.streams[1].written[0], {
+    join: {
+      matchId: 'm1',
+      playerId: 'p1',
+      lastTick: 0,
+      owned: ['gota-e6194b'],
+    },
+  });
+});

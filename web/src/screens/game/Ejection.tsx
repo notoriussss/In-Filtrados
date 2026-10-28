@@ -1,3 +1,4 @@
+import { skinOf } from '../../shop';
 import type { Snapshot } from '@in-filtrados/messages';
 import { Stage } from '../../ui/Stage';
 import { Gota } from '../../ui/Gota';
@@ -24,7 +25,12 @@ export function Ejection(props: { snap: Snapshot }) {
         {ejected ? (
           <>
             <div className="float bob">
-              <Gota color={ejected.color} scale={9} />
+              <Gota
+                color={ejected.color}
+                accessory={ejected.accessory}
+                skin={skinOf(ejected.skin)}
+                scale={9}
+              />
             </div>
             <div
               className="big1 sm"

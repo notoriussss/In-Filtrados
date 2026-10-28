@@ -182,7 +182,7 @@ match/
 |---|---|
 | `matches` | id, sala, inicio, fin, ganador (tripulantes o impostor) |
 | `participants` | quién jugó cada partida, su rol y si fue expulsado |
-| `event_log` | eventos importantes (contaminó, reportó, votó). Sirve para mostrar en la reunión los últimos 3 que pasaron por un tanque |
+| `event_log` | eventos importantes (contaminó, reportó, votó). Registro de auditoría; la reunión ya no muestra quiénes pasaron por un tanque (se quitó `meeting.lastVisitors` del contrato) |
 
 **Eventos que publica en RabbitMQ:** `match.started`, `match.finished` (con id de partida, jugadores, cosecha y resultado), `sabotage` y `ejection`.
 
@@ -224,7 +224,7 @@ players/
 | Tabla | Para qué |
 |---|---|
 | `players` | id, nombre, hash de la contraseña, monedas |
-| `upgrades` | qué mejoras y atuendos compró cada jugador |
+| `purchases` | llave `(player_id, item_id)`: lo que compró cada jugador en la tienda (gotas y accesorios) y a qué precio |
 | `results` | llave `(match_id, player_id)`: cosecha y monedas ganadas en cada partida |
 
 **Cómo guarda un resultado sin duplicarlo (D5):** al recibir `match.finished`, en una sola transacción hace `INSERT INTO results ... ON CONFLICT DO NOTHING` y solo si se insertó la fila suma las monedas. Después confirma el mensaje a RabbitMQ (ack). Si el mensaje llega dos veces, la segunda no hace nada.

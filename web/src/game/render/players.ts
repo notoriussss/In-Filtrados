@@ -1,22 +1,34 @@
 import type { PlayerView } from '@in-filtrados/messages';
+import { SKIN_GOTA, skinOf } from '../../shop';
 import { phaseOf } from './activityFx';
-import type { PlayerAnimator, PlayerPose } from './playerAnim';
+import {
+  type PlayerAnimator,
+  type PlayerPose,
+  gotaCell,
+} from './playerAnim';
 import { motionIsReduced } from '../../settings';
+import { drawJimena } from './jimenaDraw';
 import { drawPosedSprite } from './spriteDraw';
-import { SPRITE_H, SPRITE_W, spriteImageOrFront } from './sprites';
+import {
+  GOTA_CELL_H,
+  GOTA_CELL_W,
+  accessoryLift,
+  gotaAccessoryImage,
+  gotaBodyImage,
+  spriteImageOrFront,
+} from './sprites';
 import { drawDust, drawSparkles, drawSweat } from './workFx';
 import { IDLE_POSE, type Pose } from './workPose';
 
-// Jugadores con los sprites de Jimena, en unidades del mundo. Cada
-// sprite (88 × 125) se dibuja de 40 de ancho, como las celdas de 40 × 56
-// del paquete v3, con los pies un poco por debajo de (x, y) para que el
-// orden por profundidad (y + 6) coincida con los props del mapa.
-export const PLAYER_W = 40;
-export const PLAYER_H = (SPRITE_H * PLAYER_W) / SPRITE_W;
+// Jugadores con los sprites modulares Gota (cuerpos y accesorios del paquete v3)
+// en unidades del mundo. Cada celda (40 × 56) se dibuja con los pies en
+// y + FEET para que la profundidad (y + 6) coincida con los props del mapa.
+export const PLAYER_W = GOTA_CELL_W;
+export const PLAYER_H = GOTA_CELL_H;
 const FEET = 8; // los pies quedan en y + FEET
 const PLAYER_RADIUS = 16;
 const DISCONNECTED_ALPHA = 0.4;
-const GHOST_ALPHA = 0.55;
+const GHOST_ALPHA = 0.62;
 const GHOST_FLOAT = 3;
 const WORK_BOB = 1.5;
 const SHADOW = 'rgba(2, 8, 20, 0.45)';
@@ -28,7 +40,8 @@ export function depthOf(p: { y: number }): number {
 
 // topOf: dónde termina la cabeza (para poner la etiqueta del nombre).
 export function topOf(p: PlayerView): number {
-  return p.y + FEET - PLAYER_H - (p.alive ? 0 : GHOST_FLOAT * 2);
+  const lift = skinOf(p.skin) === SKIN_GOTA ? 0 : accessoryLift(p.accessory);
+  return p.y + FEET - PLAYER_H - lift - (p.alive ? 0 : GHOST_FLOAT * 2);
 }
 
 // bodyOf elige cómo se mueve el cuerpo: fantasma flotando, la pose de
@@ -48,9 +61,9 @@ function bodyOf(
   return { ...IDLE_POSE, frame: pose.frame, dy: -bob };
 }
 
-// drawPlayer dibuja un jugador: sombra, sprite con su cuadro y su pose
-// (PlayerAnimator) y, si es fantasma, flotando y transparente. Mientras
-// el sprite carga, un círculo.
+// drawPlayer dibuja un jugador: sombra, sprite gota (cuerpo y accesorio)
+// con su cuadro y pose (PlayerAnimator) y, si es fantasma, flotando y
+// transparente con la fila 1 de la hoja. Mientras carga, un círculo.
 export function drawPlayer(
   ctx: CanvasRenderingContext2D,
   p: PlayerView,
@@ -81,16 +94,49 @@ export function drawPlayer(
     );
     ctx.fill();
   }
-  const img = spriteImageOrFront(p.color, ghost ? 'front' : body.frame);
-  if (img) {
+
+  const cell = gotaCell(pose, now);
+  const row = ghost ? 1 : 0;
+  const srcRect = {
+    sx: cell.col * GOTA_CELL_W,
+    sy: row * GOTA_CELL_H,
+    sw: GOTA_CELL_W,
+    sh: GOTA_CELL_H,
+  };
+
+  // Jimena de inicio; la gota solo si el jugador la compró (match lo valida).
+  const isGota = skinOf(p.skin) === SKIN_GOTA;
+  const bodyImg = isGota ? gotaBodyImage(p.color) : null;
+  const accImg = isGota ? gotaAccessoryImage(p.accessory) : null;
+
+  if (bodyImg) {
     const box = { x: p.x, feetY, w: PLAYER_W, h: PLAYER_H };
-    drawPosedSprite(ctx, img, box, body);
+    drawPosedSprite(ctx, bodyImg, box, body, srcRect, cell.flip);
+    if (accImg) {
+      drawPosedSprite(ctx, accImg, box, body, srcRect, cell.flip);
+    }
   } else {
-    ctx.fillStyle = p.color;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y + body.dy, PLAYER_RADIUS, 0, Math.PI * 2);
-    ctx.fill();
+    const frame = ghost ? 'front' : body.frame;
+    const jimenaImg = spriteImageOrFront(p.color, frame);
+    if (jimenaImg) {
+      const box = { x: p.x, feetY, w: PLAYER_W, h: PLAYER_H };
+      drawJimena(
+        ctx,
+        jimenaImg,
+        frame,
+        box,
+        body,
+        p.color,
+        p.accessory,
+      );
+    } else {
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y + body.dy, PLAYER_RADIUS, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
+
   ctx.globalAlpha = 1;
   if (ghost || calm || !p.connected) return;
   drawBodyFx(ctx, p, pose, body, now);

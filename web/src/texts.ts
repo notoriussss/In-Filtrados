@@ -75,6 +75,8 @@ export const MENU_TEXT = {
   HINT_CHOOSE: 'Elegir',
   HINT_ACCEPT: 'Aceptar',
   JOIN_SHORT: 'Unirse a sala',
+  SHOP: 'Tienda',
+  RANKING: 'Ranking',
   TAGLINE: 'Cada gota cuenta',
   PROFILE: 'Perfil',
   MENU_ARIA: 'Menú principal',
@@ -101,6 +103,15 @@ export const LOBBY_TEXT = {
   COPIED: 'Copiado',
   YOUR_GOTA: 'Tu gota',
   COLOR: 'Color',
+  ACCESSORY: 'Accesorio',
+  CHOOSE_ACCESSORY: 'Elegir accesorio',
+  NO_ACCESSORY: 'Sin accesorio',
+  CHARACTER: 'Personaje',
+  CHARACTER_JIMENA: 'Hidro',
+  CHARACTER_GOTA: 'Gota',
+  LOCKED: 'Bloqueado',
+  lockedHint: (name: string) => `${name} · bloqueado, cómpralo en la tienda`,
+  CLOSE: 'Cerrar',
   PROFILE: 'Tu perfil',
   COINS: 'Monedas',
   MATCHES: 'Partidas',
@@ -120,11 +131,11 @@ export const LOBBY_TEXT = {
   onlyHost: (name: string) => `Solo ${name} puede iniciar la partida.`,
   HOW_TO_WIN: 'Cómo se gana',
   WIN_CREW:
-    'Tripulantes: llenen el embalse con las tareas ' +
+    'Cuidadores: llenen el embalse con las tareas ' +
     '3R o expulsen al infiltrado.',
   WIN_IMPOSTOR:
-    'Infiltrado: contamina tanques hasta igualar a la ' +
-    'tripulación o aguanta 8 minutos.',
+    'Infiltrado: contamina tanques hasta igualar a los ' +
+    'cuidadores o aguanta 8 minutos.',
   MIN_PLAYERS: 'Mínimo 2 jugadores para empezar',
   START: 'Iniciar partida',
   waitingFor: (name: string) => `Esperando a que ${name} inicie`,
@@ -144,13 +155,17 @@ export const HELP_TEXT = {
   RECYCLE_1: 'Filtra el agua sucia y clasifica los residuos.',
   RECYCLE_2: 'Toca la suciedad que flota hasta dejarla limpia.',
   ROLES: 'Roles',
-  CREW: 'Tripulante',
+  CREW: 'Cuidador',
   CREW_TEXT: 'Haz tus 4 tareas, limpia los tanques y vota en las reuniones.',
   CREW_WIN: 'Ganan: embalse lleno o infiltrado expulsado',
   IMPOSTOR: 'Infiltrado',
   IMPOSTOR_TEXT:
     'Contamina los tanques sin que te vean ' + 'y sabotea la estación.',
   IMPOSTOR_WIN: 'Gana: tanques arruinados o fin del tiempo',
+  MEETING_POINT: 'Reuniones',
+  MEETING_POINT_TEXT:
+    'Al reportar un tanque todos aparecen en la Mesa de reuniones ' +
+    '(mirador del centro); en el mapa es «Reunión».',
   CONTROLS: 'Controles',
   MOVE: 'Mover',
   USE: 'Usar',
@@ -165,11 +180,13 @@ export const HELP_TEXT = {
 
 export const ROLE_TEXT = {
   BADGE: 'Tu rol en esta partida',
-  CREW: 'Eres Tripulante',
+  CREW: 'Eres Cuidador',
   IMPOSTOR: 'Eres Infiltrado',
   CREW_SUB: 'Completa tus tareas 3R y descubre quién ensucia el agua.',
   IMPOSTOR_SUB: 'Ensucia los tanques sin que te descubran.',
   MATES: 'En la estación',
+  MEETING_NOTE:
+    'En una reunión todos van a la Mesa de reuniones, en el centro del mapa.',
   startsIn: (s: number) => `La partida empieza en ${s}`,
 } as const;
 
@@ -181,12 +198,13 @@ export const HUD_TEXT = {
   RESERVOIR: 'Embalse',
   LEVEL: 'Nivel',
   PURITY: 'Pureza',
-  CREW: 'Tripulante',
+  CREW: 'Cuidador',
   IMPOSTOR: 'Infiltrado',
   GHOST: 'Fantasma',
   MY_TANK: 'Tanque',
   NO_TANK: 'sin tanque',
   MAP: 'Mapa',
+  MEETING_POINT: 'Reunión',
   USE: 'Usar',
   CLEAN: 'Limpiar',
   REPORT: 'Reportar',
@@ -232,6 +250,7 @@ export const MEETING_UI_TEXT = {
   reported: (who: string, owner: string) =>
     `${who} reportó el tanque de ${owner}`,
   VOTING: 'Votación',
+  GATHERED: 'Todos están en la Mesa de reuniones',
   RESULT: 'Resultado',
   ALIVE: 'Vivo',
   GHOST: 'Fantasma',
@@ -248,10 +267,6 @@ export const MEETING_UI_TEXT = {
   GHOST_PLACEHOLDER: 'Los fantasmas no pueden escribir',
   SEND: 'Enviar',
   SENDING: 'enviando…',
-  LAST_AT_TANK: 'Últimos en el tanque',
-  LAST_NOTE: 'Registro de cercanía al reporte',
-  NOBODY: 'Nadie pasó cerca',
-  HINT: 'Pista, no prueba: los tripulantes también limpian tanques.',
   you: (name: string) => `${name} (tú)`,
 } as const;
 
@@ -266,7 +281,7 @@ export const EJECT_TEXT = {
 } as const;
 
 export const RESULT_TEXT = {
-  CREW_WON: '¡Ganan los Tripulantes!',
+  CREW_WON: '¡Ganan los Cuidadores!',
   IMPOSTOR_WON: 'Ganan los Infiltrados',
   ENDED: 'Fin de la partida',
   CREW_SUB: 'El embalse se llenó o el infiltrado quedó fuera.',
@@ -276,7 +291,7 @@ export const RESULT_TEXT = {
   PLAYER: 'Jugador',
   ROLE: 'Rol',
   STATE: 'Estado',
-  CREW: 'Tripulante',
+  CREW: 'Cuidador',
   IMPOSTOR: 'Infiltrado',
   ALIVE: 'Vivo',
   GHOST: 'Fantasma',
@@ -336,4 +351,47 @@ export const PENDING_TEXT = {
   ROOM_JOIN: 'Unirse',
   ROOM_FULL: 'Llena',
   roomPlayers: (n: number, max: number) => `${n}/${max} jugadores`,
+} as const;
+
+export const SHOP_TEXT = {
+  TITLE: 'Tienda',
+  BACK: 'Volver',
+  COINS: 'Tus monedas',
+  TAB_CHARACTERS: 'Personajes',
+  TAB_HEAD: 'Cabeza',
+  TAB_FACE: 'Cara',
+  TAB_BODY: 'Cuerpo',
+  JIMENA: 'Hidro',
+  GOTA: 'Gota',
+  NO_ACCESSORY: 'Sin accesorio',
+  BUY: 'Comprar',
+  OWNED: 'Tuyo',
+  EQUIPPED: 'Puesto',
+  NOT_ENOUGH: 'No te alcanzan las monedas',
+  price: (n: number) => `${n} ◆`,
+  bought: (name: string) => `Compraste: ${name}`,
+  LOADING: 'Cargando la tienda…',
+  LOAD_ERROR: 'No se pudo abrir la tienda',
+} as const;
+
+export const RANKING_TEXT = {
+  TITLE: 'Ranking',
+  BACK: 'Volver',
+  LOADING: 'Cargando el ranking…',
+  EMPTY: 'Todavía no hay jugadores',
+  POS: '#',
+  PLAYER: 'Jugador',
+  MATCHES: 'Partidas',
+  WINS: 'Victorias',
+  RATE: '% victorias',
+  CREW: 'Cuidador',
+  IMPOSTOR: 'Infiltrado',
+  HARVEST: 'Cosecha',
+  COINS: 'Monedas ganadas',
+  YOU: '(tú)',
+  SORT_BY: 'Ordenar por',
+  HINT: 'Toca el título de una columna para ordenar.',
+  position: (n: number, total: number) => `Tu posición: ${n} de ${total}`,
+  ratio: (wins: number, played: number) => `${wins} de ${played}`,
+  liters: (l: number) => `${l} L`,
 } as const;

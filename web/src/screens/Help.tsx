@@ -118,16 +118,21 @@ export function Help(props: { onClose: () => void; overlay?: boolean }) {
           )}
 
           {tab === 'roles' && (
-            <div className="help-cols two">
-              <div className="help-card crew">
-                <h3>{HELP_TEXT.CREW}</h3>
-                <p className="lead">{HELP_TEXT.CREW_TEXT}</p>
-                <div className="help-win">{HELP_TEXT.CREW_WIN}</div>
+            <div className="help-roles-wrap">
+              <div className="help-cols two">
+                <div className="help-card crew">
+                  <h3>{HELP_TEXT.CREW}</h3>
+                  <p className="lead">{HELP_TEXT.CREW_TEXT}</p>
+                  <div className="help-win">{HELP_TEXT.CREW_WIN}</div>
+                </div>
+                <div className="help-card impostor">
+                  <h3>{HELP_TEXT.IMPOSTOR}</h3>
+                  <p className="lead">{HELP_TEXT.IMPOSTOR_TEXT}</p>
+                  <div className="help-win">{HELP_TEXT.IMPOSTOR_WIN}</div>
+                </div>
               </div>
-              <div className="help-card impostor">
-                <h3>{HELP_TEXT.IMPOSTOR}</h3>
-                <p className="lead">{HELP_TEXT.IMPOSTOR_TEXT}</p>
-                <div className="help-win">{HELP_TEXT.IMPOSTOR_WIN}</div>
+              <div className="help-meeting-note">
+                <b>{HELP_TEXT.MEETING_POINT}:</b> {HELP_TEXT.MEETING_POINT_TEXT}
               </div>
             </div>
           )}

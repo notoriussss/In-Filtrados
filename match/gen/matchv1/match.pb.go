@@ -301,6 +301,9 @@ type ClientAction struct {
 	//	*ClientAction_Sabotage
 	//	*ClientAction_Fix
 	//	*ClientAction_PickColor
+	//	*ClientAction_PickAccessory
+	//	*ClientAction_PickSkin
+	//	*ClientAction_SetOwned
 	Action        isClientAction_Action `protobuf_oneof:"action"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -442,6 +445,33 @@ func (x *ClientAction) GetPickColor() *PickColor {
 	return nil
 }
 
+func (x *ClientAction) GetPickAccessory() *PickAccessory {
+	if x != nil {
+		if x, ok := x.Action.(*ClientAction_PickAccessory); ok {
+			return x.PickAccessory
+		}
+	}
+	return nil
+}
+
+func (x *ClientAction) GetPickSkin() *PickSkin {
+	if x != nil {
+		if x, ok := x.Action.(*ClientAction_PickSkin); ok {
+			return x.PickSkin
+		}
+	}
+	return nil
+}
+
+func (x *ClientAction) GetSetOwned() *SetOwned {
+	if x != nil {
+		if x, ok := x.Action.(*ClientAction_SetOwned); ok {
+			return x.SetOwned
+		}
+	}
+	return nil
+}
+
 type isClientAction_Action interface {
 	isClientAction_Action()
 }
@@ -493,6 +523,21 @@ type ClientAction_PickColor struct {
 	PickColor *PickColor `protobuf:"bytes,11,opt,name=pick_color,json=pickColor,proto3,oneof"`
 }
 
+type ClientAction_PickAccessory struct {
+	// Elegir accesorio en la sala de espera.
+	PickAccessory *PickAccessory `protobuf:"bytes,12,opt,name=pick_accessory,json=pickAccessory,proto3,oneof"`
+}
+
+type ClientAction_PickSkin struct {
+	// Elegir personaje (jimena o gota) en la sala de espera.
+	PickSkin *PickSkin `protobuf:"bytes,13,opt,name=pick_skin,json=pickSkin,proto3,oneof"`
+}
+
+type ClientAction_SetOwned struct {
+	// Lo que el jugador tiene comprado; solo lo manda el gateway.
+	SetOwned *SetOwned `protobuf:"bytes,14,opt,name=set_owned,json=setOwned,proto3,oneof"`
+}
+
 func (*ClientAction_Join) isClientAction_Action() {}
 
 func (*ClientAction_Move) isClientAction_Action() {}
@@ -515,11 +560,20 @@ func (*ClientAction_Fix) isClientAction_Action() {}
 
 func (*ClientAction_PickColor) isClientAction_Action() {}
 
+func (*ClientAction_PickAccessory) isClientAction_Action() {}
+
+func (*ClientAction_PickSkin) isClientAction_Action() {}
+
+func (*ClientAction_SetOwned) isClientAction_Action() {}
+
 type Join struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	MatchId       string                 `protobuf:"bytes,1,opt,name=match_id,json=matchId,proto3" json:"match_id,omitempty"`
-	PlayerId      string                 `protobuf:"bytes,2,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
-	LastTick      int64                  `protobuf:"varint,3,opt,name=last_tick,json=lastTick,proto3" json:"last_tick,omitempty"`
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	MatchId  string                 `protobuf:"bytes,1,opt,name=match_id,json=matchId,proto3" json:"match_id,omitempty"`
+	PlayerId string                 `protobuf:"bytes,2,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
+	LastTick int64                  `protobuf:"varint,3,opt,name=last_tick,json=lastTick,proto3" json:"last_tick,omitempty"`
+	// Artículos comprados del jugador (ids de players.proto ShopItem). Los
+	// pone el gateway con lo que dice players, nunca el navegador.
+	Owned         []string `protobuf:"bytes,4,rep,name=owned,proto3" json:"owned,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -573,6 +627,13 @@ func (x *Join) GetLastTick() int64 {
 		return x.LastTick
 	}
 	return 0
+}
+
+func (x *Join) GetOwned() []string {
+	if x != nil {
+		return x.Owned
+	}
+	return nil
 }
 
 type Move struct {
@@ -1120,6 +1181,142 @@ func (x *PickColor) GetColor() string {
 	return ""
 }
 
+// PickAccessory: solo en LOBBY. match lo acepta si es un accesorio válido.
+type PickAccessory struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Accessory     string                 `protobuf:"bytes,1,opt,name=accessory,proto3" json:"accessory,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PickAccessory) Reset() {
+	*x = PickAccessory{}
+	mi := &file_match_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PickAccessory) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PickAccessory) ProtoMessage() {}
+
+func (x *PickAccessory) ProtoReflect() protoreflect.Message {
+	mi := &file_match_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PickAccessory.ProtoReflect.Descriptor instead.
+func (*PickAccessory) Descriptor() ([]byte, []int) {
+	return file_match_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *PickAccessory) GetAccessory() string {
+	if x != nil {
+		return x.Accessory
+	}
+	return ""
+}
+
+// PickSkin: solo en LOBBY. "jimena" siempre; "gota" solo si el jugador
+// compró la gota de su color actual ("gota-<color sin #>").
+type PickSkin struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Skin          string                 `protobuf:"bytes,1,opt,name=skin,proto3" json:"skin,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *PickSkin) Reset() {
+	*x = PickSkin{}
+	mi := &file_match_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PickSkin) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PickSkin) ProtoMessage() {}
+
+func (x *PickSkin) ProtoReflect() protoreflect.Message {
+	mi := &file_match_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PickSkin.ProtoReflect.Descriptor instead.
+func (*PickSkin) Descriptor() ([]byte, []int) {
+	return file_match_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *PickSkin) GetSkin() string {
+	if x != nil {
+		return x.Skin
+	}
+	return ""
+}
+
+// SetOwned: reemplaza lo comprado de quien lo manda (tras una compra).
+type SetOwned struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Items         []string               `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetOwned) Reset() {
+	*x = SetOwned{}
+	mi := &file_match_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetOwned) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetOwned) ProtoMessage() {}
+
+func (x *SetOwned) ProtoReflect() protoreflect.Message {
+	mi := &file_match_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetOwned.ProtoReflect.Descriptor instead.
+func (*SetOwned) Descriptor() ([]byte, []int) {
+	return file_match_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *SetOwned) GetItems() []string {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
 type ServerEvent struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Types that are valid to be assigned to Event:
@@ -1134,7 +1331,7 @@ type ServerEvent struct {
 
 func (x *ServerEvent) Reset() {
 	*x = ServerEvent{}
-	mi := &file_match_proto_msgTypes[15]
+	mi := &file_match_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1146,7 +1343,7 @@ func (x *ServerEvent) String() string {
 func (*ServerEvent) ProtoMessage() {}
 
 func (x *ServerEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[15]
+	mi := &file_match_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1159,7 +1356,7 @@ func (x *ServerEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ServerEvent.ProtoReflect.Descriptor instead.
 func (*ServerEvent) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{15}
+	return file_match_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *ServerEvent) GetEvent() isServerEvent_Event {
@@ -1253,7 +1450,7 @@ type Snapshot struct {
 
 func (x *Snapshot) Reset() {
 	*x = Snapshot{}
-	mi := &file_match_proto_msgTypes[16]
+	mi := &file_match_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1265,7 +1462,7 @@ func (x *Snapshot) String() string {
 func (*Snapshot) ProtoMessage() {}
 
 func (x *Snapshot) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[16]
+	mi := &file_match_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1278,7 +1475,7 @@ func (x *Snapshot) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Snapshot.ProtoReflect.Descriptor instead.
 func (*Snapshot) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{16}
+	return file_match_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *Snapshot) GetTick() int64 {
@@ -1405,7 +1602,7 @@ type Emergency struct {
 
 func (x *Emergency) Reset() {
 	*x = Emergency{}
-	mi := &file_match_proto_msgTypes[17]
+	mi := &file_match_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1417,7 +1614,7 @@ func (x *Emergency) String() string {
 func (*Emergency) ProtoMessage() {}
 
 func (x *Emergency) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[17]
+	mi := &file_match_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1430,7 +1627,7 @@ func (x *Emergency) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Emergency.ProtoReflect.Descriptor instead.
 func (*Emergency) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{17}
+	return file_match_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *Emergency) GetKind() string {
@@ -1465,7 +1662,7 @@ type SabotageStatus struct {
 
 func (x *SabotageStatus) Reset() {
 	*x = SabotageStatus{}
-	mi := &file_match_proto_msgTypes[18]
+	mi := &file_match_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1477,7 +1674,7 @@ func (x *SabotageStatus) String() string {
 func (*SabotageStatus) ProtoMessage() {}
 
 func (x *SabotageStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[18]
+	mi := &file_match_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1490,7 +1687,7 @@ func (x *SabotageStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SabotageStatus.ProtoReflect.Descriptor instead.
 func (*SabotageStatus) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{18}
+	return file_match_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *SabotageStatus) GetReadyAtTick() int64 {
@@ -1520,7 +1717,7 @@ type OilDrop struct {
 
 func (x *OilDrop) Reset() {
 	*x = OilDrop{}
-	mi := &file_match_proto_msgTypes[19]
+	mi := &file_match_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1532,7 +1729,7 @@ func (x *OilDrop) String() string {
 func (*OilDrop) ProtoMessage() {}
 
 func (x *OilDrop) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[19]
+	mi := &file_match_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1545,7 +1742,7 @@ func (x *OilDrop) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OilDrop.ProtoReflect.Descriptor instead.
 func (*OilDrop) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{19}
+	return file_match_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *OilDrop) GetX() float32 {
@@ -1588,7 +1785,7 @@ type TankView struct {
 
 func (x *TankView) Reset() {
 	*x = TankView{}
-	mi := &file_match_proto_msgTypes[20]
+	mi := &file_match_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1600,7 +1797,7 @@ func (x *TankView) String() string {
 func (*TankView) ProtoMessage() {}
 
 func (x *TankView) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[20]
+	mi := &file_match_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1613,7 +1810,7 @@ func (x *TankView) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TankView.ProtoReflect.Descriptor instead.
 func (*TankView) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{20}
+	return file_match_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *TankView) GetSlot() int32 {
@@ -1655,7 +1852,7 @@ type MyTask struct {
 
 func (x *MyTask) Reset() {
 	*x = MyTask{}
-	mi := &file_match_proto_msgTypes[21]
+	mi := &file_match_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1667,7 +1864,7 @@ func (x *MyTask) String() string {
 func (*MyTask) ProtoMessage() {}
 
 func (x *MyTask) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[21]
+	mi := &file_match_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1680,7 +1877,7 @@ func (x *MyTask) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MyTask.ProtoReflect.Descriptor instead.
 func (*MyTask) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{21}
+	return file_match_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *MyTask) GetStationId() string {
@@ -1707,7 +1904,7 @@ type TaskProgress struct {
 
 func (x *TaskProgress) Reset() {
 	*x = TaskProgress{}
-	mi := &file_match_proto_msgTypes[22]
+	mi := &file_match_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1719,7 +1916,7 @@ func (x *TaskProgress) String() string {
 func (*TaskProgress) ProtoMessage() {}
 
 func (x *TaskProgress) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[22]
+	mi := &file_match_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1732,7 +1929,7 @@ func (x *TaskProgress) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TaskProgress.ProtoReflect.Descriptor instead.
 func (*TaskProgress) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{22}
+	return file_match_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *TaskProgress) GetCompleted() int32 {
@@ -1753,8 +1950,7 @@ type Meeting struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ReporterId    string                 `protobuf:"bytes,1,opt,name=reporter_id,json=reporterId,proto3" json:"reporter_id,omitempty"`
 	TankSlot      int32                  `protobuf:"varint,2,opt,name=tank_slot,json=tankSlot,proto3" json:"tank_slot,omitempty"`
-	LastVisitors  []string               `protobuf:"bytes,3,rep,name=last_visitors,json=lastVisitors,proto3" json:"last_visitors,omitempty"` // últimos 3 jugadores distintos
-	VotesCast     []string               `protobuf:"bytes,4,rep,name=votes_cast,json=votesCast,proto3" json:"votes_cast,omitempty"`          // quién ya votó, nunca por quién
+	VotesCast     []string               `protobuf:"bytes,4,rep,name=votes_cast,json=votesCast,proto3" json:"votes_cast,omitempty"` // quién ya votó, nunca por quién
 	EndsAtTick    int64                  `protobuf:"varint,5,opt,name=ends_at_tick,json=endsAtTick,proto3" json:"ends_at_tick,omitempty"`
 	VotingClosed  bool                   `protobuf:"varint,6,opt,name=voting_closed,json=votingClosed,proto3" json:"voting_closed,omitempty"` // true durante los 5 s de resultado
 	EjectedId     string                 `protobuf:"bytes,7,opt,name=ejected_id,json=ejectedId,proto3" json:"ejected_id,omitempty"`           // vacío si nadie salió
@@ -1765,7 +1961,7 @@ type Meeting struct {
 
 func (x *Meeting) Reset() {
 	*x = Meeting{}
-	mi := &file_match_proto_msgTypes[23]
+	mi := &file_match_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1777,7 +1973,7 @@ func (x *Meeting) String() string {
 func (*Meeting) ProtoMessage() {}
 
 func (x *Meeting) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[23]
+	mi := &file_match_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1790,7 +1986,7 @@ func (x *Meeting) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Meeting.ProtoReflect.Descriptor instead.
 func (*Meeting) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{23}
+	return file_match_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *Meeting) GetReporterId() string {
@@ -1805,13 +2001,6 @@ func (x *Meeting) GetTankSlot() int32 {
 		return x.TankSlot
 	}
 	return 0
-}
-
-func (x *Meeting) GetLastVisitors() []string {
-	if x != nil {
-		return x.LastVisitors
-	}
-	return nil
 }
 
 func (x *Meeting) GetVotesCast() []string {
@@ -1861,7 +2050,7 @@ type ChatMessage struct {
 
 func (x *ChatMessage) Reset() {
 	*x = ChatMessage{}
-	mi := &file_match_proto_msgTypes[24]
+	mi := &file_match_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1873,7 +2062,7 @@ func (x *ChatMessage) String() string {
 func (*ChatMessage) ProtoMessage() {}
 
 func (x *ChatMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[24]
+	mi := &file_match_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1886,7 +2075,7 @@ func (x *ChatMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChatMessage.ProtoReflect.Descriptor instead.
 func (*ChatMessage) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{24}
+	return file_match_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *ChatMessage) GetId() string {
@@ -1928,7 +2117,7 @@ type MatchEnded struct {
 
 func (x *MatchEnded) Reset() {
 	*x = MatchEnded{}
-	mi := &file_match_proto_msgTypes[25]
+	mi := &file_match_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1940,7 +2129,7 @@ func (x *MatchEnded) String() string {
 func (*MatchEnded) ProtoMessage() {}
 
 func (x *MatchEnded) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[25]
+	mi := &file_match_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1953,7 +2142,7 @@ func (x *MatchEnded) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MatchEnded.ProtoReflect.Descriptor instead.
 func (*MatchEnded) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{25}
+	return file_match_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *MatchEnded) GetWinner() string {
@@ -1982,14 +2171,18 @@ type PlayerView struct {
 	// Lo que está haciendo ahora, para animarlo en el mapa: "" (nada),
 	// "reduce", "reuse" o "recycle" (tarea), "tank" (limpiar o
 	// contaminar: se ven igual) o "fix" (arreglar una emergencia).
-	Activity      string `protobuf:"bytes,8,opt,name=activity,proto3" json:"activity,omitempty"`
+	Activity string `protobuf:"bytes,8,opt,name=activity,proto3" json:"activity,omitempty"`
+	// Accesorio del personaje gota (vacío si no lleva ninguno).
+	Accessory string `protobuf:"bytes,9,opt,name=accessory,proto3" json:"accessory,omitempty"`
+	// Personaje: "jimena" (el de inicio) o "gota" (comprado).
+	Skin          string `protobuf:"bytes,10,opt,name=skin,proto3" json:"skin,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *PlayerView) Reset() {
 	*x = PlayerView{}
-	mi := &file_match_proto_msgTypes[26]
+	mi := &file_match_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2001,7 +2194,7 @@ func (x *PlayerView) String() string {
 func (*PlayerView) ProtoMessage() {}
 
 func (x *PlayerView) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[26]
+	mi := &file_match_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2014,7 +2207,7 @@ func (x *PlayerView) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlayerView.ProtoReflect.Descriptor instead.
 func (*PlayerView) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{26}
+	return file_match_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *PlayerView) GetId() string {
@@ -2073,6 +2266,20 @@ func (x *PlayerView) GetActivity() string {
 	return ""
 }
 
+func (x *PlayerView) GetAccessory() string {
+	if x != nil {
+		return x.Accessory
+	}
+	return ""
+}
+
+func (x *PlayerView) GetSkin() string {
+	if x != nil {
+		return x.Skin
+	}
+	return ""
+}
+
 type Error struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Code          string                 `protobuf:"bytes,1,opt,name=code,proto3" json:"code,omitempty"`
@@ -2083,7 +2290,7 @@ type Error struct {
 
 func (x *Error) Reset() {
 	*x = Error{}
-	mi := &file_match_proto_msgTypes[27]
+	mi := &file_match_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2095,7 +2302,7 @@ func (x *Error) String() string {
 func (*Error) ProtoMessage() {}
 
 func (x *Error) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[27]
+	mi := &file_match_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2108,7 +2315,7 @@ func (x *Error) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Error.ProtoReflect.Descriptor instead.
 func (*Error) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{27}
+	return file_match_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *Error) GetCode() string {
@@ -2139,7 +2346,7 @@ const file_match_proto_rawDesc = "" +
 	"\fdisplay_name\x18\x03 \x01(\tR\vdisplayName\">\n" +
 	"\x04Room\x12\x1b\n" +
 	"\troom_code\x18\x01 \x01(\tR\broomCode\x12\x19\n" +
-	"\bmatch_id\x18\x02 \x01(\tR\amatchId\"\xfd\x03\n" +
+	"\bmatch_id\x18\x02 \x01(\tR\amatchId\"\xa5\x05\n" +
 	"\fClientAction\x12$\n" +
 	"\x04join\x18\x01 \x01(\v2\x0e.match.v1.JoinH\x00R\x04join\x12$\n" +
 	"\x04move\x18\x02 \x01(\v2\x0e.match.v1.MoveH\x00R\x04move\x12'\n" +
@@ -2153,12 +2360,16 @@ const file_match_proto_rawDesc = "" +
 	"\x03fix\x18\n" +
 	" \x01(\v2\r.match.v1.FixH\x00R\x03fix\x124\n" +
 	"\n" +
-	"pick_color\x18\v \x01(\v2\x13.match.v1.PickColorH\x00R\tpickColorB\b\n" +
-	"\x06action\"[\n" +
+	"pick_color\x18\v \x01(\v2\x13.match.v1.PickColorH\x00R\tpickColor\x12@\n" +
+	"\x0epick_accessory\x18\f \x01(\v2\x17.match.v1.PickAccessoryH\x00R\rpickAccessory\x121\n" +
+	"\tpick_skin\x18\r \x01(\v2\x12.match.v1.PickSkinH\x00R\bpickSkin\x121\n" +
+	"\tset_owned\x18\x0e \x01(\v2\x12.match.v1.SetOwnedH\x00R\bsetOwnedB\b\n" +
+	"\x06action\"q\n" +
 	"\x04Join\x12\x19\n" +
 	"\bmatch_id\x18\x01 \x01(\tR\amatchId\x12\x1b\n" +
 	"\tplayer_id\x18\x02 \x01(\tR\bplayerId\x12\x1b\n" +
-	"\tlast_tick\x18\x03 \x01(\x03R\blastTick\"&\n" +
+	"\tlast_tick\x18\x03 \x01(\x03R\blastTick\x12\x14\n" +
+	"\x05owned\x18\x04 \x03(\tR\x05owned\"&\n" +
 	"\x04Move\x12\x0e\n" +
 	"\x02dx\x18\x01 \x01(\x05R\x02dx\x12\x0e\n" +
 	"\x02dy\x18\x02 \x01(\x05R\x02dy\"\a\n" +
@@ -2185,7 +2396,13 @@ const file_match_proto_rawDesc = "" +
 	"\x03Fix\x12\x19\n" +
 	"\bpoint_id\x18\x01 \x01(\tR\apointId\"!\n" +
 	"\tPickColor\x12\x14\n" +
-	"\x05color\x18\x01 \x01(\tR\x05color\"\xaa\x01\n" +
+	"\x05color\x18\x01 \x01(\tR\x05color\"-\n" +
+	"\rPickAccessory\x12\x1c\n" +
+	"\taccessory\x18\x01 \x01(\tR\taccessory\"\x1e\n" +
+	"\bPickSkin\x12\x12\n" +
+	"\x04skin\x18\x01 \x01(\tR\x04skin\" \n" +
+	"\bSetOwned\x12\x14\n" +
+	"\x05items\x18\x01 \x03(\tR\x05items\"\xaa\x01\n" +
 	"\vServerEvent\x120\n" +
 	"\bsnapshot\x18\x01 \x01(\v2\x12.match.v1.SnapshotH\x00R\bsnapshot\x12'\n" +
 	"\x05error\x18\x02 \x01(\v2\x0f.match.v1.ErrorH\x00R\x05error\x127\n" +
@@ -2238,12 +2455,11 @@ const file_match_proto_rawDesc = "" +
 	"\x04done\x18\x02 \x01(\bR\x04done\"B\n" +
 	"\fTaskProgress\x12\x1c\n" +
 	"\tcompleted\x18\x01 \x01(\x05R\tcompleted\x12\x14\n" +
-	"\x05total\x18\x02 \x01(\x05R\x05total\"\x94\x02\n" +
+	"\x05total\x18\x02 \x01(\x05R\x05total\"\x84\x02\n" +
 	"\aMeeting\x12\x1f\n" +
 	"\vreporter_id\x18\x01 \x01(\tR\n" +
 	"reporterId\x12\x1b\n" +
-	"\ttank_slot\x18\x02 \x01(\x05R\btankSlot\x12#\n" +
-	"\rlast_visitors\x18\x03 \x03(\tR\flastVisitors\x12\x1d\n" +
+	"\ttank_slot\x18\x02 \x01(\x05R\btankSlot\x12\x1d\n" +
 	"\n" +
 	"votes_cast\x18\x04 \x03(\tR\tvotesCast\x12 \n" +
 	"\fends_at_tick\x18\x05 \x01(\x03R\n" +
@@ -2251,7 +2467,7 @@ const file_match_proto_rawDesc = "" +
 	"\rvoting_closed\x18\x06 \x01(\bR\fvotingClosed\x12\x1d\n" +
 	"\n" +
 	"ejected_id\x18\a \x01(\tR\tejectedId\x12!\n" +
-	"\fwas_impostor\x18\b \x01(\bR\vwasImpostor\"b\n" +
+	"\fwas_impostor\x18\b \x01(\bR\vwasImpostorJ\x04\b\x03\x10\x04R\rlast_visitors\"b\n" +
 	"\vChatMessage\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1b\n" +
 	"\tplayer_id\x18\x02 \x01(\tR\bplayerId\x12\x12\n" +
@@ -2260,7 +2476,7 @@ const file_match_proto_rawDesc = "" +
 	"\n" +
 	"MatchEnded\x12\x16\n" +
 	"\x06winner\x18\x01 \x01(\tR\x06winner\x12!\n" +
-	"\fimpostor_ids\x18\x02 \x03(\tR\vimpostorIds\"\xb2\x01\n" +
+	"\fimpostor_ids\x18\x02 \x03(\tR\vimpostorIds\"\xe4\x01\n" +
 	"\n" +
 	"PlayerView\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
@@ -2270,7 +2486,10 @@ const file_match_proto_rawDesc = "" +
 	"\x01y\x18\x05 \x01(\x02R\x01y\x12\x1c\n" +
 	"\tconnected\x18\x06 \x01(\bR\tconnected\x12\x14\n" +
 	"\x05alive\x18\a \x01(\bR\x05alive\x12\x1a\n" +
-	"\bactivity\x18\b \x01(\tR\bactivity\"5\n" +
+	"\bactivity\x18\b \x01(\tR\bactivity\x12\x1c\n" +
+	"\taccessory\x18\t \x01(\tR\taccessory\x12\x12\n" +
+	"\x04skin\x18\n" +
+	" \x01(\tR\x04skin\"5\n" +
 	"\x05Error\x12\x12\n" +
 	"\x04code\x18\x01 \x01(\tR\x04code\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage*7\n" +
@@ -2302,7 +2521,7 @@ func file_match_proto_rawDescGZIP() []byte {
 }
 
 var file_match_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_match_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
+var file_match_proto_msgTypes = make([]protoimpl.MessageInfo, 31)
 var file_match_proto_goTypes = []any{
 	(Phase)(0),                // 0: match.v1.Phase
 	(Role)(0),                 // 1: match.v1.Role
@@ -2321,19 +2540,22 @@ var file_match_proto_goTypes = []any{
 	(*Sabotage)(nil),          // 14: match.v1.Sabotage
 	(*Fix)(nil),               // 15: match.v1.Fix
 	(*PickColor)(nil),         // 16: match.v1.PickColor
-	(*ServerEvent)(nil),       // 17: match.v1.ServerEvent
-	(*Snapshot)(nil),          // 18: match.v1.Snapshot
-	(*Emergency)(nil),         // 19: match.v1.Emergency
-	(*SabotageStatus)(nil),    // 20: match.v1.SabotageStatus
-	(*OilDrop)(nil),           // 21: match.v1.OilDrop
-	(*TankView)(nil),          // 22: match.v1.TankView
-	(*MyTask)(nil),            // 23: match.v1.MyTask
-	(*TaskProgress)(nil),      // 24: match.v1.TaskProgress
-	(*Meeting)(nil),           // 25: match.v1.Meeting
-	(*ChatMessage)(nil),       // 26: match.v1.ChatMessage
-	(*MatchEnded)(nil),        // 27: match.v1.MatchEnded
-	(*PlayerView)(nil),        // 28: match.v1.PlayerView
-	(*Error)(nil),             // 29: match.v1.Error
+	(*PickAccessory)(nil),     // 17: match.v1.PickAccessory
+	(*PickSkin)(nil),          // 18: match.v1.PickSkin
+	(*SetOwned)(nil),          // 19: match.v1.SetOwned
+	(*ServerEvent)(nil),       // 20: match.v1.ServerEvent
+	(*Snapshot)(nil),          // 21: match.v1.Snapshot
+	(*Emergency)(nil),         // 22: match.v1.Emergency
+	(*SabotageStatus)(nil),    // 23: match.v1.SabotageStatus
+	(*OilDrop)(nil),           // 24: match.v1.OilDrop
+	(*TankView)(nil),          // 25: match.v1.TankView
+	(*MyTask)(nil),            // 26: match.v1.MyTask
+	(*TaskProgress)(nil),      // 27: match.v1.TaskProgress
+	(*Meeting)(nil),           // 28: match.v1.Meeting
+	(*ChatMessage)(nil),       // 29: match.v1.ChatMessage
+	(*MatchEnded)(nil),        // 30: match.v1.MatchEnded
+	(*PlayerView)(nil),        // 31: match.v1.PlayerView
+	(*Error)(nil),             // 32: match.v1.Error
 }
 var file_match_proto_depIdxs = []int32{
 	6,  // 0: match.v1.ClientAction.join:type_name -> match.v1.Join
@@ -2347,31 +2569,34 @@ var file_match_proto_depIdxs = []int32{
 	14, // 8: match.v1.ClientAction.sabotage:type_name -> match.v1.Sabotage
 	15, // 9: match.v1.ClientAction.fix:type_name -> match.v1.Fix
 	16, // 10: match.v1.ClientAction.pick_color:type_name -> match.v1.PickColor
-	18, // 11: match.v1.ServerEvent.snapshot:type_name -> match.v1.Snapshot
-	29, // 12: match.v1.ServerEvent.error:type_name -> match.v1.Error
-	27, // 13: match.v1.ServerEvent.match_ended:type_name -> match.v1.MatchEnded
-	0,  // 14: match.v1.Snapshot.phase:type_name -> match.v1.Phase
-	28, // 15: match.v1.Snapshot.players:type_name -> match.v1.PlayerView
-	22, // 16: match.v1.Snapshot.tanks:type_name -> match.v1.TankView
-	1,  // 17: match.v1.Snapshot.my_role:type_name -> match.v1.Role
-	24, // 18: match.v1.Snapshot.my_task_progress:type_name -> match.v1.TaskProgress
-	25, // 19: match.v1.Snapshot.meeting:type_name -> match.v1.Meeting
-	26, // 20: match.v1.Snapshot.chat:type_name -> match.v1.ChatMessage
-	21, // 21: match.v1.Snapshot.oil_drops:type_name -> match.v1.OilDrop
-	23, // 22: match.v1.Snapshot.my_tasks:type_name -> match.v1.MyTask
-	19, // 23: match.v1.Snapshot.emergency:type_name -> match.v1.Emergency
-	20, // 24: match.v1.Snapshot.my_sabotage:type_name -> match.v1.SabotageStatus
-	2,  // 25: match.v1.Match.CreateRoom:input_type -> match.v1.CreateRoomRequest
-	3,  // 26: match.v1.Match.JoinRoom:input_type -> match.v1.JoinRoomRequest
-	5,  // 27: match.v1.Match.Play:input_type -> match.v1.ClientAction
-	4,  // 28: match.v1.Match.CreateRoom:output_type -> match.v1.Room
-	4,  // 29: match.v1.Match.JoinRoom:output_type -> match.v1.Room
-	17, // 30: match.v1.Match.Play:output_type -> match.v1.ServerEvent
-	28, // [28:31] is the sub-list for method output_type
-	25, // [25:28] is the sub-list for method input_type
-	25, // [25:25] is the sub-list for extension type_name
-	25, // [25:25] is the sub-list for extension extendee
-	0,  // [0:25] is the sub-list for field type_name
+	17, // 11: match.v1.ClientAction.pick_accessory:type_name -> match.v1.PickAccessory
+	18, // 12: match.v1.ClientAction.pick_skin:type_name -> match.v1.PickSkin
+	19, // 13: match.v1.ClientAction.set_owned:type_name -> match.v1.SetOwned
+	21, // 14: match.v1.ServerEvent.snapshot:type_name -> match.v1.Snapshot
+	32, // 15: match.v1.ServerEvent.error:type_name -> match.v1.Error
+	30, // 16: match.v1.ServerEvent.match_ended:type_name -> match.v1.MatchEnded
+	0,  // 17: match.v1.Snapshot.phase:type_name -> match.v1.Phase
+	31, // 18: match.v1.Snapshot.players:type_name -> match.v1.PlayerView
+	25, // 19: match.v1.Snapshot.tanks:type_name -> match.v1.TankView
+	1,  // 20: match.v1.Snapshot.my_role:type_name -> match.v1.Role
+	27, // 21: match.v1.Snapshot.my_task_progress:type_name -> match.v1.TaskProgress
+	28, // 22: match.v1.Snapshot.meeting:type_name -> match.v1.Meeting
+	29, // 23: match.v1.Snapshot.chat:type_name -> match.v1.ChatMessage
+	24, // 24: match.v1.Snapshot.oil_drops:type_name -> match.v1.OilDrop
+	26, // 25: match.v1.Snapshot.my_tasks:type_name -> match.v1.MyTask
+	22, // 26: match.v1.Snapshot.emergency:type_name -> match.v1.Emergency
+	23, // 27: match.v1.Snapshot.my_sabotage:type_name -> match.v1.SabotageStatus
+	2,  // 28: match.v1.Match.CreateRoom:input_type -> match.v1.CreateRoomRequest
+	3,  // 29: match.v1.Match.JoinRoom:input_type -> match.v1.JoinRoomRequest
+	5,  // 30: match.v1.Match.Play:input_type -> match.v1.ClientAction
+	4,  // 31: match.v1.Match.CreateRoom:output_type -> match.v1.Room
+	4,  // 32: match.v1.Match.JoinRoom:output_type -> match.v1.Room
+	20, // 33: match.v1.Match.Play:output_type -> match.v1.ServerEvent
+	31, // [31:34] is the sub-list for method output_type
+	28, // [28:31] is the sub-list for method input_type
+	28, // [28:28] is the sub-list for extension type_name
+	28, // [28:28] is the sub-list for extension extendee
+	0,  // [0:28] is the sub-list for field type_name
 }
 
 func init() { file_match_proto_init() }
@@ -2391,6 +2616,9 @@ func file_match_proto_init() {
 		(*ClientAction_Sabotage)(nil),
 		(*ClientAction_Fix)(nil),
 		(*ClientAction_PickColor)(nil),
+		(*ClientAction_PickAccessory)(nil),
+		(*ClientAction_PickSkin)(nil),
+		(*ClientAction_SetOwned)(nil),
 	}
 	file_match_proto_msgTypes[7].OneofWrappers = []any{
 		(*Interact_StationId)(nil),
@@ -2400,7 +2628,7 @@ func file_match_proto_init() {
 		(*Vote_TargetPlayerId)(nil),
 		(*Vote_Skip)(nil),
 	}
-	file_match_proto_msgTypes[15].OneofWrappers = []any{
+	file_match_proto_msgTypes[18].OneofWrappers = []any{
 		(*ServerEvent_Snapshot)(nil),
 		(*ServerEvent_Error)(nil),
 		(*ServerEvent_MatchEnded)(nil),
@@ -2411,7 +2639,7 @@ func file_match_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_match_proto_rawDesc), len(file_match_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   28,
+			NumMessages:   31,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

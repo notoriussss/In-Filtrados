@@ -1,18 +1,33 @@
+import type { Skin } from '../../shop';
 import { motionIsReduced } from '../../settings';
 import {
   BOARD,
-  BucketsGame,
   type Minigame,
+  BucketsGame,
+  CompostGame,
+  FillGame,
+  FirstRainGame,
   ParticlesGame,
+  PressureGame,
+  SealGame,
   ValveGame,
+  WasteGame,
+  WateringGame,
 } from './minigames';
 import { BUCKETS_HERO_X, BucketsScene } from './draw/bucketsScene';
+import { COMPOST_HERO_X, CompostScene } from './draw/compostScene';
+import { FILL_HERO_X, FillScene } from './draw/fillScene';
 import { drawDoneBanner, warmBannerFont } from './draw/hand';
 import { Hero } from './draw/hero';
 import { PARTICLES_HERO_X, ParticlesScene } from './draw/particlesScene';
+import { PRESSURE_HERO_X, PressureScene } from './draw/pressureScene';
+import { RAIN_HERO_X, RainScene } from './draw/rainScene';
+import { SEAL_HERO_X, SealScene } from './draw/sealScene';
+import { SORTER_HERO_X, SorterScene } from './draw/sorterScene';
 import { BOARD_SCALE } from './draw/pixel';
-import { HERO_FEET_Y, type Scene } from './draw/scene';
+import { HERO_FEET_Y, type Scene, type SceneEnv } from './draw/scene';
 import { VALVE_HERO_X, ValveScene } from './draw/valveScene';
+import { WATERING_HERO_X, WateringScene } from './draw/wateringScene';
 
 // S2-11: dibujo de los minijuegos de las 3R en su tablero (BOARD). La
 // lógica está en minigames.ts y el panel en screens/game/Minigame.tsx;
@@ -33,9 +48,11 @@ export class MinigameView {
     game: Minigame,
     color: string | undefined,
     private readonly calm: boolean = motionIsReduced(),
+    accessory?: string,
+    skin?: Skin,
   ) {
     warmBannerFont();
-    this.scene = buildScene(game, color, calm);
+    this.scene = buildScene(game, color, calm, accessory, skin);
   }
 
   // frame dibuja un cuadro; now son los ms del requestAnimationFrame.
@@ -63,18 +80,40 @@ function buildScene(
   game: Minigame,
   color: string | undefined,
   calm: boolean,
+  accessory?: string,
+  skin?: Skin,
 ): Scene {
-  if (game instanceof ValveGame) {
-    const hero = new Hero(color, VALVE_HERO_X, HERO_FEET_Y);
-    return new ValveScene(game, { hero, calm });
-  }
-  if (game instanceof BucketsGame) {
-    const hero = new Hero(color, BUCKETS_HERO_X, HERO_FEET_Y);
-    return new BucketsScene(game, { hero, calm });
-  }
-  if (game instanceof ParticlesGame) {
-    const hero = new Hero(color, PARTICLES_HERO_X, HERO_FEET_Y);
-    return new ParticlesScene(game, { hero, calm });
-  }
+  const hero = new Hero(
+    color,
+    heroXOf(game),
+    HERO_FEET_Y,
+    accessory,
+    skin,
+  );
+  const env: SceneEnv = { hero, calm };
+  if (game instanceof ValveGame) return new ValveScene(game, env);
+  if (game instanceof BucketsGame) return new BucketsScene(game, env);
+  if (game instanceof ParticlesGame) return new ParticlesScene(game, env);
+  if (game instanceof PressureGame) return new PressureScene(game, env);
+  if (game instanceof FillGame) return new FillScene(game, env);
+  if (game instanceof SealGame) return new SealScene(game, env);
+  if (game instanceof FirstRainGame) return new RainScene(game, env);
+  if (game instanceof WasteGame) return new SorterScene(game, env);
+  if (game instanceof WateringGame) return new WateringScene(game, env);
+  if (game instanceof CompostGame) return new CompostScene(game, env);
   throw new Error('minijuego sin escena');
+}
+
+// Dónde pisa el personaje en cada minijuego.
+function heroXOf(game: Minigame): number {
+  if (game instanceof ValveGame) return VALVE_HERO_X;
+  if (game instanceof BucketsGame) return BUCKETS_HERO_X;
+  if (game instanceof ParticlesGame) return PARTICLES_HERO_X;
+  if (game instanceof PressureGame) return PRESSURE_HERO_X;
+  if (game instanceof FillGame) return FILL_HERO_X;
+  if (game instanceof SealGame) return SEAL_HERO_X;
+  if (game instanceof FirstRainGame) return RAIN_HERO_X;
+  if (game instanceof WasteGame) return SORTER_HERO_X;
+  if (game instanceof WateringGame) return WATERING_HERO_X;
+  return COMPOST_HERO_X;
 }

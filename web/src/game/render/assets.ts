@@ -88,7 +88,7 @@ async function load(onProgress?: (done: number) => void): Promise<MapAssets> {
     step(loadImage(`${base}/night-light.png`)),
     step(loadImage(`${base}/props-atlas.png`)),
     step(loadJson<AtlasJson>(`${base}/props-atlas.json`)),
-    step(loadJson<{ props: Prop[] }>(`${base}/props.json`)),
+    step(loadJson<{ props: Prop[] }>(`${base}/props.json?v=${Date.now()}`)),
     step(loadImage(`${base}/tanks-atlas.png`)),
     step(loadJson<AtlasJson>(`${base}/tanks-atlas.json`)),
     step(loadImage(`${base}/minimap.png`)),
