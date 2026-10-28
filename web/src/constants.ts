@@ -101,6 +101,8 @@ export const GAME_RULES = {
   // irregular 3000 ms justos a veces le llegan como 59 y la rechaza.
   TASK_MS: 3000 + 150,
   CONTAMINATE_COOLDOWN_MS: 20000,
+  // Cuánto se queda el aviso de que mi tanque llegó a 0.
+  TANK_EMPTY_NOTICE_MS: 7000,
   // El tanque del impostor sube 1 punto solo cada 5 s: eso no es una
   // contaminación y no debe avisar.
   // S3-05: emergencias y visión limitada.

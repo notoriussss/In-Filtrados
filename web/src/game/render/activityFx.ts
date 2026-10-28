@@ -3,6 +3,7 @@ import type {
   EmergencyKind,
   PlayerView,
 } from '@in-filtrados/messages';
+import { drawGhostHaunt } from './ghostFx';
 import { VALVE_TURN_MS } from './workPose';
 
 // Animaciones en el mapa de lo que hace cada jugador (PlayerView.activity).
@@ -43,7 +44,9 @@ export function renderActivities(
     const t = now + phaseOf(p.id);
     ctx.save();
     ctx.globalAlpha = p.alive ? 1 : 0.5;
-    drawActivity(ctx, p.activity, s.x, s.y, t, fix);
+    // Un fantasma que daña un tanque deja su propia marca fría.
+    if (!p.alive && p.activity === 'tank') drawGhostHaunt(ctx, s.x, s.y, t);
+    else drawActivity(ctx, p.activity, s.x, s.y, t, fix);
     ctx.restore();
   }
 }

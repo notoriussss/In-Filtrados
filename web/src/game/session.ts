@@ -23,6 +23,7 @@ import {
   contextAction,
   holdDuration,
 } from './actions';
+import { ownTankEmptied } from './ghost';
 import { DirectionInput, isTyping } from './input';
 import { TaskSession } from './tasks/taskSession';
 import {
@@ -54,6 +55,7 @@ export type OpenMinigame = {
 export type GameState = {
   snapshot: Snapshot | null;
   status: SocketStatus;
+  tankEmptyUntil: number; // ms; aviso "tu tanque llegó a 0"
   matchDown: boolean; // el gateway avisó que match no responde
   winner: Winner | null;
   reason: EndReason | null;
@@ -87,6 +89,7 @@ export class GameSession {
     action: null,
     holding: false,
     minigame: null,
+    tankEmptyUntil: 0,
     pendingChat: [],
     notFound: false,
     unauthorized: false,
@@ -308,6 +311,9 @@ export class GameSession {
     const now = performance.now();
     this.interpolator.push(msg.tick, msg.players, now);
     const patch: Partial<GameState> = { snapshot: msg };
+    if (ownTankEmptied(this.state.snapshot, msg, this.opts.meId)) {
+      patch.tankEmptyUntil = now + GAME_RULES.TANK_EMPTY_NOTICE_MS;
+    }
     if (msg.meeting) this.reportedTanks.add(msg.meeting.tankSlot);
     if (this.state.matchDown) {
       patch.matchDown = false; // match volvió (S3-02)

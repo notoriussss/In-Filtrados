@@ -7,6 +7,7 @@ import {
   gotaCell,
 } from './playerAnim';
 import { motionIsReduced } from '../../settings';
+import { drawGhost } from './ghostFx';
 import { drawJimena } from './jimenaDraw';
 import { drawPosedSprite } from './spriteDraw';
 import {
@@ -28,7 +29,6 @@ export const PLAYER_H = GOTA_CELL_H;
 const FEET = 8; // los pies quedan en y + FEET
 const PLAYER_RADIUS = 16;
 const DISCONNECTED_ALPHA = 0.4;
-const GHOST_ALPHA = 0.62;
 const GHOST_FLOAT = 3;
 const WORK_BOB = 1.5;
 const SHADOW = 'rgba(2, 8, 20, 0.45)';
@@ -76,7 +76,6 @@ export function drawPlayer(
   const body = bodyOf(p, pose, now, calm);
   let alpha = 1;
   if (!p.connected) alpha = DISCONNECTED_ALPHA;
-  else if (ghost) alpha = GHOST_ALPHA;
   const feetY = p.y + FEET;
 
   ctx.globalAlpha = alpha;
@@ -109,19 +108,21 @@ export function drawPlayer(
   const bodyImg = isGota ? gotaBodyImage(p.color) : null;
   const accImg = isGota ? gotaAccessoryImage(p.accessory) : null;
 
-  if (bodyImg) {
-    const box = { x: p.x, feetY, w: PLAYER_W, h: PLAYER_H };
-    drawPosedSprite(ctx, bodyImg, box, body, srcRect, cell.flip);
-    if (accImg) {
-      drawPosedSprite(ctx, accImg, box, body, srcRect, cell.flip);
+  const paint = (target: CanvasRenderingContext2D) => {
+    if (bodyImg) {
+      const box = { x: p.x, feetY, w: PLAYER_W, h: PLAYER_H };
+      drawPosedSprite(target, bodyImg, box, body, srcRect, cell.flip);
+      if (accImg) {
+        drawPosedSprite(target, accImg, box, body, srcRect, cell.flip);
+      }
+      return;
     }
-  } else {
     const frame = ghost ? 'front' : body.frame;
     const jimenaImg = spriteImageOrFront(p.color, frame);
     if (jimenaImg) {
       const box = { x: p.x, feetY, w: PLAYER_W, h: PLAYER_H };
       drawJimena(
-        ctx,
+        target,
         jimenaImg,
         frame,
         box,
@@ -130,11 +131,19 @@ export function drawPlayer(
         p.accessory,
       );
     } else {
-      ctx.fillStyle = p.color;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y + body.dy, PLAYER_RADIUS, 0, Math.PI * 2);
-      ctx.fill();
+      target.fillStyle = p.color;
+      target.beginPath();
+      target.arc(p.x, p.y + body.dy, PLAYER_RADIUS, 0, Math.PI * 2);
+      target.fill();
     }
+  };
+
+  if (ghost) {
+    const t = now + phaseOf(p.id);
+    // La hoja Gota ya trae su fila de fantasma: solo Jimena se estiliza.
+    drawGhost(ctx, p.x, feetY, -body.dy, t, calm, !bodyImg, paint);
+  } else {
+    paint(ctx);
   }
 
   ctx.globalAlpha = 1;

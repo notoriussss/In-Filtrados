@@ -77,7 +77,7 @@ export function Hud(props: { game: GameSession; state: GameState }) {
   return (
     <div className="hud">
       <TasksPanel snap={snap} />
-      <AlertPanel state={state} />
+      <AlertPanel state={state} now={now} />
       <ReservoirPanel snap={snap} />
       <PlayerCard snap={snap} me={me} />
       <nav className="panel glass hot" aria-label="Acciones">
@@ -154,10 +154,10 @@ function TasksPanel(props: { snap: Snapshot }) {
   );
 }
 
-// AlertPanel: emergencia (sabotaje o mala suerte, se ven igual) o la
-// pausa por alguien desconectado.
-function AlertPanel(props: { state: GameState }) {
-  const { state } = props;
+// AlertPanel: emergencia (sabotaje o mala suerte, se ven igual), la
+// pausa por alguien desconectado o el aviso de que mi tanque llegó a 0.
+function AlertPanel(props: { state: GameState; now: number }) {
+  const { state, now } = props;
   const snap = state.snapshot!;
   const banner = emergencyBanner(snap, gameMap, snap.tick);
   const paused = pauseMessage(snap, state.matchDown);
@@ -176,6 +176,11 @@ function AlertPanel(props: { state: GameState }) {
     icon = 'clock';
     title = HUD_TEXT.PAUSED;
     text = paused;
+  } else if (state.tankEmptyUntil > now) {
+    cls = 'ghost';
+    icon = 'drop';
+    title = HUD_TEXT.TANK_EMPTY;
+    text = HUD_TEXT.TANK_EMPTY_HINT;
   } else {
     return null;
   }

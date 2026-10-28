@@ -875,6 +875,8 @@ para el mismo usuario responde 429.
 4. Barra de progreso circular durante las acciones que requieren quedarse quieto.
 5. ~~Aviso al dueño "¡Tu tanque se está contaminando!"~~ (quitado: el dueño no recibe aviso cuando su tanque sube; descubrir un tanque contaminado es la pista del juego).
 
+6. Fantasmas (solo `web/`): el jugador muerto se dibuja con su mismo personaje, pálido, con la parte de abajo deshecha en una cola ondulada, flotando sobre un halo y con parpadeo suave (`web/src/game/render/ghostFx.ts`; la skin Gota usa su fila de fantasma). Cuando el tanque propio llega a 0 y el jugador pasa a fantasma, el HUD muestra un aviso "Tu tanque llegó a 0". La marca de un fantasma que daña un tanque (`activity: 'tank'` en un jugador muerto) está dibujada, pero `match` todavía no deja que un fantasma dañe tanques: sin esa mecánica, nunca se ve.
+
 **Criterio de verificación:** en una partida de 3, el impostor ve "Contaminar" junto a un tanque ajeno y los tripulantes no. Al contaminar, todos ven la barra subir; el dueño no recibe aviso.
 
 ---
