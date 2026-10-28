@@ -35,6 +35,7 @@ function snap(paused: boolean, waitingFor: string[]): Snapshot {
     tasksPerPlayer: 6,
     impostors: 1,
     matchMinutes: 8,
+    matchEndsAtTick: 0,
   };
 }
 

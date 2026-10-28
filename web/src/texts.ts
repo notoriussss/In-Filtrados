@@ -223,6 +223,7 @@ export const HUD_TEXT = {
   TANK_ALERT: '¡Tu tanque se está contaminando!',
   TANK_ALERT_HINT: 'Ve a limpiarlo antes de que se arruine',
   PAUSED: 'Partida en pausa',
+  CLOCK: 'Tiempo',
   waiting: (names: string) => `Esperando a ${names}`,
   percent: (n: number) => `${n}%`,
 } as const;

@@ -27,6 +27,7 @@ function snap(extra: Partial<Snapshot>): Snapshot {
     tasksPerPlayer: 6,
     impostors: 1,
     matchMinutes: 8,
+    matchEndsAtTick: 0,
     ...extra,
   };
 }
