@@ -8,7 +8,6 @@ export const APP_TEXT = {
   REDUCE: 'Reducir',
   REUSE: 'Reutilizar',
   RECYCLE: 'Reciclar',
-  VERSION: 'Computación en la Nube · v1.0',
 } as const;
 
 export const BOOT_TEXT = {

@@ -256,7 +256,6 @@ export function Menu(props: {
       </div>
 
       <div className="menu-tagline">{MENU_TEXT.TAGLINE}</div>
-      <div className="menu-version">{APP_TEXT.VERSION}</div>
       <HintBar
         hints={[
           ['Tab', MENU_TEXT.HINT_CHOOSE],
