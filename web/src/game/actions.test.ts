@@ -46,7 +46,8 @@ const tank = (
   ownerId: string,
   contamination = 0,
   dead = false,
-): TankView => ({ slot, ownerId, contamination, dead });
+  reported = false,
+): TankView => ({ slot, ownerId, contamination, dead, reported });
 
 const tanks = [tank(0, 'impostor'), tank(1, 'crew')];
 
@@ -100,6 +101,18 @@ describe('contextAction', () => {
     const me = player('x', 450, 100);
     const reported = new Set([1]);
     expect(contextAction(me, 'CREW', dead, map, 0, 0, reported)).toBeNull();
+  });
+
+  it('does not offer Reportar for a tank the server marks reported', () => {
+    const dead = [tank(0, 'impostor'), tank(1, 'crew', 100, true, true)];
+    const me = player('x', 450, 100);
+    expect(contextAction(me, 'CREW', dead, map, 0, 0)).toBeNull();
+  });
+
+  it('does not offer Reportar for a tank below one hundred', () => {
+    const almost = [tank(0, 'impostor'), tank(1, 'crew', 99)];
+    const me = player('x', 450, 100);
+    expect(contextAction(me, 'CREW', almost, map, 0, 0)).toBeNull();
   });
 
   it('lets the impostor contaminate near a reported dead tank', () => {

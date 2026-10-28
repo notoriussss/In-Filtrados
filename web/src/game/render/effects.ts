@@ -71,7 +71,12 @@ export function drawTankGrime(
   dead: boolean,
 ): void {
   const level = dead ? 100 : Math.min(Math.max(contamination, 0), 100);
-  const count = Math.ceil((level / 100) * TANK_STAINS.length);
+  // La última mancha es solo del tanque muerto: a 90 % todavía se ve
+  // distinto de uno contaminado al 100 %.
+  const count = Math.min(
+    Math.ceil((level / 100) * TANK_STAINS.length),
+    dead ? TANK_STAINS.length : TANK_STAINS.length - 1,
+  );
   if (dead) {
     ctx.globalAlpha = 0.8;
     ctx.fillStyle = '#241a33';
@@ -100,6 +105,33 @@ export function drawTankGrime(
     ctx.fillRect(cx - 1, cy, 2, r * 1.6);
     ctx.fillStyle = '#b48bf0';
     ctx.fillRect(cx - r * 0.4, cy - r * 0.4, 2, 2);
+  }
+  ctx.globalAlpha = 1;
+}
+
+// drawTankToxic: el tanque contaminado al 100 % (dead). El agua del
+// cuerpo se ve turbia y verdosa, con unas burbujas quietas, para que
+// no se confunda con uno al 90 %. Sin texto ni movimiento: la pista la
+// tiene que ver quien pase cerca. (x, y, w, h) es el cuadro del tanque.
+export function drawTankToxic(
+  ctx: CanvasRenderingContext2D,
+  box: { x: number; y: number; w: number; h: number },
+): void {
+  const left = box.x + box.w * 0.07;
+  const top = box.y + box.h * 0.12;
+  const width = box.w * 0.7;
+  const height = box.h * 0.72;
+
+  ctx.fillStyle = '#4f7a1c';
+  ctx.globalAlpha = 0.5;
+  ctx.fillRect(left, top, width, height);
+
+  ctx.fillStyle = '#b7e83a';
+  ctx.globalAlpha = 0.7;
+  for (let i = 0; i < 4; i++) {
+    const bx = left + width * (0.18 + 0.2 * i);
+    const by = top + height * (0.25 + 0.17 * ((i * 3) % 4));
+    ctx.fillRect(bx, by, 3, 3);
   }
   ctx.globalAlpha = 1;
 }

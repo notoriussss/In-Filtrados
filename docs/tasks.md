@@ -110,7 +110,7 @@ En la semana 2 se agregan mensajes; se agregan aquí, nunca se duplican en `web`
   | { type: 'interact'; stationId: string; completed?: boolean } // tarea
   | { type: 'interact'; tankSlot: number }                        // ya no hace nada: los tanques no se limpian
   | { type: 'contaminate'; tankSlot: number }                     // solo el impostor
-  | { type: 'report'; tankSlot: number }                          // tanque muerto
+  | { type: 'report'; tankSlot: number }                          // tanque contaminado al 100 %
   | { type: 'vote'; targetPlayerId: string | null }               // null = saltar
   | { type: 'chat'; clientMsgId: string; text: string }           // solo en MEETING
   | { type: 'callMeeting' }                                       // mesa de reuniones
@@ -129,7 +129,7 @@ En la semana 2 se agregan mensajes; se agregan aquí, nunca se duplican en `web`
     }
 
 // Campos nuevos del snapshot
-tanks: { slot, ownerId, contamination /* 0 a 100 */, dead }[];
+tanks: { slot, ownerId, contamination /* 0 a 100 */, dead, reported }[];
 reservoir: number;                 // 0 a 100
 myRole: 'NO_ROLE' | 'CREW' | 'IMPOSTOR'; // solo el del destinatario
 myTaskProgress: { completed, total };
@@ -806,7 +806,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 #### S2-05 — Reportar, reunión y votación (`match/`)
 
 **Pasos:**
-1. `Report { tank_slot }`: solo sobre un tanque `dead`, a 60 unidades o menos, y por un jugador vivo. Pasa a fase `MEETING` y teletransporta a todos a la plaza.
+1. `Report { tank_slot }`: solo sobre un tanque `dead` (contaminación 100; `reported` indica que ya tuvo su reunión), a 80 unidades o menos (`reportRange`), por un jugador vivo y fuera de una reunión. Pasa a fase `MEETING` y teletransporta a todos a la plaza, igual que `CallMeeting`. Cada rechazo responde un error: `MEETING_IN_PROGRESS`, `REPORT_NOT_ALIVE`, `UNKNOWN_TANK`, `TANK_NOT_POLLUTED`, `TANK_ALREADY_REPORTED` o `REPORT_TOO_FAR`. El tanque **sigue contaminado** tras la reunión (nadie limpia tanques); `reported` evita reportarlo otra vez. El tanque del impostor se queda en 99, así que nunca se reporta.
 2. ~~`meeting.last_visitors`~~ (quitado: la reunión ya no dice quiénes pasaron por el tanque; el campo 3 de `Meeting` quedó `reserved` en `proto/match.proto`).
 3. La reunión dura 50 segundos: 45 para discutir por chat y votar (se cierra antes si todos los vivos ya votaron), y 5 de pantalla de resultado.
 4. **Chat (C):** `Chat` solo en `MEETING` y de jugadores vivos, máximo 200 caracteres, máximo 1 mensaje por segundo por jugador. Se guarda en el estado de la sala y va en los snapshots.
@@ -869,7 +869,7 @@ para el mismo usuario responde 429.
 #### S2-09 — Barras de tanques y acción de contaminar (`web/`)
 
 **Pasos:**
-1. Dibujar cada tanque del huerto con una barra de contaminación (verde a café según el valor) y el nombre del dueño. Muerto: gris con una planta marchita.
+1. Dibujar cada tanque del huerto con una barra de contaminación (verde a café según el valor) y el nombre del dueño. Contaminado al 100 % (`dead`): agua turbia y verdosa con burbujas y la última mancha de aceite, sin cartel ni texto; así se distingue a simple vista de uno al 90 %, pero la pista la tiene que ver quien pase.
 2. Indicador del embalse arriba de la pantalla, de 0 a 100 %.
 3. Botón de acción contextual (tecla `E`) que cambia según lo que haya cerca: "Hacer tarea", "Reportar" o, si eres impostor, "Contaminar".
 4. Barra de progreso circular durante las acciones que requieren quedarse quieto.

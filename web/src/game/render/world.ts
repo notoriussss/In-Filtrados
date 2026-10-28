@@ -26,6 +26,7 @@ import {
   drawStationMarks,
   drawTag,
   drawTankGrime,
+  drawTankToxic,
 } from './effects';
 import { renderActivities } from './activityFx';
 import { FixEffects } from './fixFx';
@@ -201,6 +202,9 @@ export class WorldRenderer {
             tank.contamination,
             tank.dead,
           );
+          if (tank.dead) {
+            drawTankToxic(ctx, { x: at.x, y: at.y, w: fr.w, h: fr.h });
+          }
         },
       });
     }

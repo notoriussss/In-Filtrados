@@ -29,7 +29,7 @@ export const CONNECTION_MESSAGES = {
 // Textos de la reunión, la votación y el fin de partida (S2-10).
 export const MEETING_TEXT = {
   TITLE: 'Reunión de emergencia',
-  REPORTED_BY: (name: string) => `${name} reportó un tanque muerto`,
+  REPORTED_BY: (name: string) => `${name} reportó un tanque contaminado`,
   EMERGENCY_BY: (name: string) => `${name} convocó una reunión de emergencia`,
   TANK_OF: (name: string) => `Tanque de ${name}`,
   VOTING_ENDS_IN: (seconds: number) => `Votación: ${seconds} s`,

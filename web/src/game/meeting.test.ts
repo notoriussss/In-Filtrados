@@ -38,7 +38,15 @@ function snap(meeting: Partial<Meeting>, tick = 100): Snapshot {
     tick,
     phase: 'MEETING',
     players,
-    tanks: [{ slot: 3, ownerId: 'd', contamination: 100, dead: true }],
+    tanks: [
+      {
+        slot: 3,
+        ownerId: 'd',
+        contamination: 100,
+        dead: true,
+        reported: true,
+      },
+    ],
     reservoir: 0,
     myRole: 'CREW',
     myTaskProgress: { completed: 0, total: 4 },
@@ -83,7 +91,7 @@ describe('meetingView', () => {
 
   it('says who reported, and whose tank', () => {
     const v = meetingView(snap({}), 'a')!;
-    expect(v.reporterText).toBe('Ana reportó un tanque muerto');
+    expect(v.reporterText).toBe('Ana reportó un tanque contaminado');
     expect(v.tankText).toBe('Tanque de Dani');
     expect(v.countdownText).toBe('Votación: 45 s');
   });

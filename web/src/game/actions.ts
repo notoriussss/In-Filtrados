@@ -91,7 +91,7 @@ export function contextAction(
   if (me.alive) {
     const dead = nearestTank(
       GAME_RULES.REPORT_RANGE,
-      (t) => t.dead && !reported.has(t.slot),
+      (t) => t.dead && !t.reported && !reported.has(t.slot),
     );
     if (dead) {
       return {
