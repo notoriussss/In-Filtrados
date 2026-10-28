@@ -7,13 +7,20 @@ import {
 } from '../minigames';
 import { drawHand, drawTapRing } from './hand';
 import { swingPose } from './particlesScene';
-import { type Scene, type SceneEnv, celebrateK } from './scene';
+import {
+  HERO_FEET_Y,
+  type Scene,
+  type SceneEnv,
+  celebrateK,
+} from './scene';
 import { C, PX, bakeBoard, clamp01, px, pxDisc, pxRing } from './pixel';
 import { roomLayer } from './room';
 
 // Reducir (valve-1): regular la presión. Un acumulador de agua con la
 // aguja barriendo su carátula; hay que presionar el botón cuando el
-// nivel pasa por la franja verde, que se encoge con cada acierto.
+// nivel pasa por la franja verde, que se encoge con cada acierto. Una
+// presión mal regulada desperdicia agua: cada error revienta la junta de
+// la tubería y deja un charco en el piso que crece.
 
 const INNER = {
   top: PRESSURE_TUBE.y + 10,
@@ -27,6 +34,14 @@ const BUTTON_DOME = {
   h: 18,
 };
 const LAMPS = { x: 26, y: 30, gap: 20 };
+// La junta de la tubería, por donde se escapa el agua, y el charco.
+const JOINT = { x: 61, y: 58 };
+const PUDDLE = { x: 52, y: HERO_FEET_Y };
+const LEAK_MAX = 4;
+const SPRAY_MS = 650;
+const GRAVITY = 420;
+
+type Bit = { x: number; y: number; vx: number; vy: number };
 
 // Piezas fijas: acumulador, tubería de entrada, caja del botón y luces.
 function drawFixtures(c: CanvasRenderingContext2D): void {
@@ -73,6 +88,9 @@ export class PressureScene implements Scene {
   private levelShown = 0;
   private tapAt = -1e9;
   private missAt = -1e9;
+  private sprayAt = -1e9;
+  private leaks = 0; // errores de presión: tamaño del charco
+  private readonly bits: Bit[] = [];
   private doneAt: number | null = null;
   readonly settleMs = 1100;
 
@@ -94,7 +112,9 @@ export class PressureScene implements Scene {
       (g.level - this.levelShown) * (1 - Math.exp((-dt / 1000) * 18));
     if (g.done && this.doneAt === null) this.doneAt = now;
 
+    this.updateSpray(now, dt);
     ctx.drawImage(this.back, 0, 0, BOARD.w, BOARD.h);
+    this.drawPuddle(ctx);
     this.drawWater(ctx, now);
     this.drawLamps(ctx, now);
     this.driveHero(now, dt);
@@ -102,6 +122,7 @@ export class PressureScene implements Scene {
       calm: this.env.calm,
       celebrate: celebrateK(this.doneAt, now),
     });
+    this.drawSpray(ctx);
     this.drawButton(ctx, now);
     this.drawHint(ctx, now);
   }
@@ -112,8 +133,55 @@ export class PressureScene implements Scene {
         this.tapAt = now;
       } else if (e.type === 'miss') {
         this.missAt = now;
+        // Un clic fuera del botón no es un error de presión.
+        if (this.onButton(e.x, e.y)) {
+          this.sprayAt = now;
+          this.leaks = Math.min(LEAK_MAX, this.leaks + 1);
+        }
       }
     }
+  }
+
+  private onButton(x: number, y: number): boolean {
+    const b = PRESSURE_BUTTON;
+    return x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h;
+  }
+
+  // Un chorro sale de la junta mientras dura el error y cae al piso.
+  private updateSpray(now: number, dt: number): void {
+    if (!this.env.calm && now - this.sprayAt < SPRAY_MS) {
+      for (let i = 0; i < 2; i++) {
+        this.bits.push({
+          x: JOINT.x,
+          y: JOINT.y,
+          vx: -20 - Math.random() * 60,
+          vy: -90 - Math.random() * 50,
+        });
+      }
+    }
+    for (let i = this.bits.length - 1; i >= 0; i--) {
+      const bit = this.bits[i];
+      bit.x += (bit.vx * dt) / 1000;
+      bit.y += (bit.vy * dt) / 1000;
+      bit.vy += (GRAVITY * dt) / 1000;
+      if (bit.y >= PUDDLE.y) this.bits.splice(i, 1);
+    }
+  }
+
+  private drawSpray(ctx: CanvasRenderingContext2D): void {
+    for (const bit of this.bits) {
+      px(ctx, bit.x, bit.y, PX, PX * 2, bit.vy > 0 ? C.waterHi : C.water);
+    }
+  }
+
+  // El agua que se perdió: un charco en el piso que crece con cada error.
+  private drawPuddle(ctx: CanvasRenderingContext2D): void {
+    if (this.leaks === 0) return;
+    const w = 12 + this.leaks * 10;
+    const x = PUDDLE.x - w / 2;
+    px(ctx, x, PUDDLE.y, w, 4, C.waterDeep);
+    px(ctx, x + 4, PUDDLE.y - 2, w - 8, 2, C.water);
+    px(ctx, x + w / 4, PUDDLE.y - 2, w / 4, PX, C.waterHi);
   }
 
   private driveHero(now: number, dt: number): void {
