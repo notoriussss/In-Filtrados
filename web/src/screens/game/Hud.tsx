@@ -232,8 +232,8 @@ function ReservoirPanel(props: { snap: Snapshot }) {
 }
 
 // ClockPanel: lo que falta para que se acabe el tiempo y ganen los
-// infiltrados; lo manda match en el snapshot, así que se detiene en la
-// pausa y sigue corriendo en las reuniones.
+// infiltrados; lo manda match en el snapshot, que ya lo congela en las
+// reuniones y en la pausa.
 function ClockPanel(props: { snap: Snapshot }) {
   const seconds = matchSecondsLeft(props.snap);
   if (seconds === null) return null;

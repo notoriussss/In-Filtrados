@@ -217,7 +217,8 @@ players[].activity: 'reduce' | 'reuse' | 'recycle' | 'tank' | 'fix' | null; // p
 //   Lo que falta = (matchEndsAtTick - tick) / 20 s.
 ```
 
-- El reloj sigue corriendo durante las reuniones y se detiene solo en la pausa por desconexión, porque el tick de `match` no avanza. Si el tiempo se acaba en plena reunión, la partida termina al cerrarse el resultado de la reunión.
+- El reloj no corre durante las reuniones: `match` cuenta los ticks en `MEETING` (`meetingTicks`) y corre `matchEndsAtTick` ese mismo número, así que lo que ve el jugador queda congelado y retoma al volver a `PLAYING`. Tampoco corre en la pausa por desconexión, porque el tick de `match` no avanza. `meetingTicks` se guarda con la sala (`meeting_ticks`).
+- Si el tiempo ya está en 0 cuando empieza una reunión, la reunión se juega completa y, al volver a `PLAYING`, ganan los infiltrados con el motivo `timeout` (salvo que la votación expulse al último infiltrado, que gana el equipo).
 - El navegador solo resta ticks y dibuja (`web/src/game/matchClock.ts`); no usa su propio reloj para decidir nada.
 
 - Infiltrados: de 1 a (jugadores − 1) / 2, redondeado hacia abajo y nunca menos de 1 (`maxImpostors` en `match/internal/room/roles.go`). Si el creador no elige, vale la regla de siempre: 1, o 2 con 7 jugadores o más. Si salen jugadores y el valor elegido ya no cabe, `Snapshot.impostors` y la partida usan el tope. Fuera de rango, `match` responde `INVALID_IMPOSTOR_COUNT`.

@@ -102,7 +102,8 @@ export type Snapshot = {
   matchMinutes: number;
   // Tick en que se acaba el tiempo y ganan los infiltrados (reason
   // 'timeout'); 0 en LOBBY y ENDED. Lo que falta es matchEndsAtTick - tick
-  // a 20 ticks por segundo; en la pausa el tick no avanza.
+  // a 20 ticks por segundo. Se congela en las reuniones (el fin se corre) y
+  // en la pausa (el tick no avanza).
   matchEndsAtTick: number;
 };
 

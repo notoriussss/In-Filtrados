@@ -47,14 +47,18 @@ func TestSnapshotMatchEndsAtTick(t *testing.T) {
 	}
 }
 
-func TestMatchTimeKeepsRunningInMeetingAndEndsAfterIt(t *testing.T) {
-	pub := &fakePublisher{}
-	store := &fakeStore{}
+// clockMeetingRoom arma una sala PLAYING de 4 minutos con la reunión ya
+// convocada por crew1.
+func clockMeetingRoom(
+	t *testing.T,
+	store *fakeStore,
+) *Room {
+	t.Helper()
 	r := setupPlayingRoom(
 		t,
 		[]string{"crew1", "crew2", "imp"},
 		map[string]bool{"imp": true},
-		pub,
+		&fakePublisher{},
 		store,
 		WithMatchDuration(4*time.Minute),
 	)
@@ -64,33 +68,92 @@ func TestMatchTimeKeepsRunningInMeetingAndEndsAfterIt(t *testing.T) {
 	if r.phase != matchv1.Phase_MEETING {
 		t.Fatalf("la reunion no empezo")
 	}
+	return r
+}
+
+// tickOnce es lo que hace onTick sin pausa ni broadcast.
+func tickOnce(r *Room) {
+	r.step()
+	r.tick++
+}
+
+func TestMatchClockStandsStillDuringAMeeting(t *testing.T) {
+	r := clockMeetingRoom(t, &fakeStore{})
+	left := r.matchEndsAtTick() - r.tick
 	endsAt := r.matchEndsAtTick()
-	if endsAt != r.startTick+4800 {
-		t.Fatalf("el reloj debe seguir en la reunion: got %d", endsAt)
+
+	for i := 0; i < 200; i++ {
+		tickOnce(r)
+		if got := r.matchEndsAtTick() - r.tick; got != left {
+			t.Fatalf("tick %d: faltan %d ticks, want %d", i, got, left)
+		}
+	}
+	if r.matchEndsAtTick() != endsAt+200 {
+		t.Errorf("el fin debio correrse 200 ticks")
 	}
 
-	// El tiempo se acaba en plena reunion: la partida sigue en MEETING
-	// hasta que termina el resultado y entonces ganan los infiltrados.
-	r.tick = endsAt
-	r.meeting.votingClosed = true
-	r.meeting.resultEndsAt = endsAt + 5
-	r.step()
-	if r.phase != matchv1.Phase_MEETING {
-		t.Fatalf("la reunion no se interrumpe, phase %v", r.phase)
+	// Al volver a PLAYING el reloj retoma desde donde se quedo.
+	r.phase = matchv1.Phase_PLAYING
+	r.meeting = nil
+	tickOnce(r)
+	if got := r.matchEndsAtTick() - r.tick; got != left-1 {
+		t.Errorf("tras la reunion faltan %d, want %d", got, left-1)
 	}
-	r.tick = r.meeting.resultEndsAt
-	r.step()
+}
+
+func TestMatchTimeoutStillWorksAfterAMeeting(t *testing.T) {
+	store := &fakeStore{}
+	r := clockMeetingRoom(t, store)
+	for i := 0; i < 100; i++ {
+		tickOnce(r)
+	}
+	r.phase = matchv1.Phase_PLAYING
+	r.meeting = nil
+
+	r.tick = r.matchEndsAtTick() - 1
+	tickOnce(r)
+	tickOnce(r)
 	if r.phase != matchv1.Phase_ENDED {
 		t.Fatalf("sin tiempo debio terminar en ENDED")
 	}
 	me := r.ended.GetMatchEnded()
-	if me.GetWinner() != events.WinnerImpostor {
-		t.Errorf("ganador: want %s, got %s", events.WinnerImpostor, me.GetWinner())
-	}
-	if me.GetReason() != events.ReasonTimeOut {
-		t.Errorf("motivo: want %s, got %s", events.ReasonTimeOut, me.GetReason())
+	if me.GetWinner() != events.WinnerImpostor ||
+		me.GetReason() != events.ReasonTimeOut {
+		t.Errorf("fin: %s/%s", me.GetWinner(), me.GetReason())
 	}
 	if store.winner != events.WinnerImpostor {
 		t.Errorf("la base guardo %s", store.winner)
+	}
+}
+
+func TestMeetingAtZeroPlaysOutAndThenTheImpostorsWin(t *testing.T) {
+	r := clockMeetingRoom(t, &fakeStore{})
+	// El tiempo ya estaba en 0 cuando empezo la reunion.
+	r.meetingTicks = r.tick - r.startTick - 4800
+	if left := r.matchEndsAtTick() - r.tick; left != 0 {
+		t.Fatalf("faltan %d ticks, want 0", left)
+	}
+	tickOnce(r)
+	if r.phase != matchv1.Phase_MEETING {
+		t.Fatalf("la reunion no se interrumpe, phase %v", r.phase)
+	}
+	if left := r.matchEndsAtTick() - r.tick; left != 0 {
+		t.Errorf("en reunion el reloj se queda en 0, got %d", left)
+	}
+
+	r.meeting.votingClosed = true
+	r.meeting.resultEndsAt = r.tick
+	tickOnce(r) // cierra la reunion; ese tick cuenta como de reunion
+	if r.phase != matchv1.Phase_PLAYING {
+		t.Fatalf("la reunion debio cerrarse, phase %v", r.phase)
+	}
+	tickOnce(r)
+	if r.phase != matchv1.Phase_ENDED {
+		t.Fatalf("al volver a PLAYING debio terminar, phase %v", r.phase)
+	}
+	me := r.ended.GetMatchEnded()
+	if me.GetWinner() != events.WinnerImpostor ||
+		me.GetReason() != events.ReasonTimeOut {
+		t.Errorf("fin: %s/%s", me.GetWinner(), me.GetReason())
 	}
 }

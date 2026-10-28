@@ -1804,9 +1804,10 @@ type Snapshot struct {
 	Impostors    int32 `protobuf:"varint,19,opt,name=impostors,proto3" json:"impostors,omitempty"`
 	MatchMinutes int32 `protobuf:"varint,20,opt,name=match_minutes,json=matchMinutes,proto3" json:"match_minutes,omitempty"`
 	// Tick en que se acaba el tiempo y ganan los infiltrados (reason
-	// "timeout"). 0 en LOBBY y ENDED. El reloj sigue en las reuniones y se
-	// detiene solo en la pausa, porque el tick no avanza. Lo que falta es
-	// match_ends_at_tick - tick, a 20 ticks por segundo.
+	// "timeout"). 0 en LOBBY y ENDED. El reloj se detiene en las reuniones
+	// (el fin se corre un tick por cada tick de reunión) y en la pausa
+	// (el tick no avanza). Lo que falta es match_ends_at_tick - tick, a 20
+	// ticks por segundo.
 	MatchEndsAtTick int64 `protobuf:"varint,21,opt,name=match_ends_at_tick,json=matchEndsAtTick,proto3" json:"match_ends_at_tick,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache

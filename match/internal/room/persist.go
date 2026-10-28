@@ -30,6 +30,7 @@ type savedRoom struct {
 	Phase          matchv1.Phase     `json:"phase"`
 	Tick           int64             `json:"tick"`
 	StartTick      int64             `json:"start_tick"`
+	MeetingTicks   int64             `json:"meeting_ticks,omitempty"`
 	StartedAt      time.Time         `json:"started_at"`
 	Order          int               `json:"order"`
 	Reservoir      int32             `json:"reservoir"`
@@ -165,6 +166,7 @@ func (r *Room) toSaved() savedRoom {
 		Phase:          r.phase,
 		Tick:           r.tick,
 		StartTick:      r.startTick,
+		MeetingTicks:   r.meetingTicks,
 		StartedAt:      r.startedAt,
 		Order:          r.order,
 		Reservoir:      r.reservoir,
@@ -287,6 +289,7 @@ func Restore(state []byte, m *Map, opts ...Option) (*Room, error) {
 	}
 	r.tick = s.Tick
 	r.startTick = s.StartTick
+	r.meetingTicks = s.MeetingTicks
 	r.startedAt = s.StartedAt
 	r.order = s.Order
 	r.reservoir = s.Reservoir

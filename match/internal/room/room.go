@@ -40,6 +40,7 @@ type Room struct {
 	tanks          []*tank
 	rnd            io.Reader // azar de los roles: crypto/rand
 	startTick      int64
+	meetingTicks   int64 // ticks en reunión: el reloj de la partida no corre
 	eventLog       EventLog
 	reservoir      int32 // S2-04
 	eventHistory   []LogEntry
@@ -709,9 +710,11 @@ func (r *Room) checkEndConditions() {
 	}
 }
 
-// matchEndTick es el tick en que se acaba el tiempo de la partida.
+// matchEndTick es el tick en que se acaba el tiempo de la partida. Las
+// reuniones no cuentan: cada tick en MEETING corre el fin un tick.
 func (r *Room) matchEndTick() int64 {
-	return r.startTick + int64(r.matchDuration/tickInterval)
+	return r.startTick + r.meetingTicks +
+		int64(r.matchDuration/tickInterval)
 }
 
 // matchEndsAtTick es lo que viaja en el snapshot: 0 si la partida no
@@ -860,6 +863,9 @@ func (r *Room) snapshotParticipants() []PlayerInfo {
 
 // step mueve a cada jugador y evalúa las condiciones de la partida.
 func (r *Room) step() {
+	if r.phase == matchv1.Phase_MEETING {
+		r.meetingTicks++
+	}
 	if r.phase != matchv1.Phase_MEETING {
 		for _, p := range r.players {
 			nx, ny := r.m.Move(

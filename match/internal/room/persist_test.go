@@ -206,6 +206,7 @@ func TestRestoreBringsBackTheMatchPausedAndComplete(t *testing.T) {
 	a.completedTasks = []string{"filter-1", "leak-1"}
 	r.reservoir = 37
 	r.tick = 1234
+	r.meetingTicks = 42
 	r.tanks[0].contamination = 70
 	r.phase = matchv1.Phase_MEETING
 	r.meeting = &meetingState{
@@ -240,6 +241,9 @@ func TestRestoreBringsBackTheMatchPausedAndComplete(t *testing.T) {
 	if got.phase != matchv1.Phase_MEETING || got.tick != 1234 ||
 		got.reservoir != 37 {
 		t.Error("cambió la fase, el tick o el embalse")
+	}
+	if got.meetingTicks != 42 {
+		t.Error("se perdio el tiempo de reunion del reloj")
 	}
 	ra := got.players["a"]
 	if ra.view.X != 333 || ra.view.Y != 222 || ra.role != a.role ||
