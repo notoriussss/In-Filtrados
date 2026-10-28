@@ -340,6 +340,18 @@ export type WasteItem = {
   placed: boolean;
 };
 
+// Baraja los cuatro residuos con el generador que le pasen. Así cada
+// partida empieza con otro orden, pero las pruebas pueden fijar la
+// secuencia.
+function shuffleKinds(rnd: () => number): WasteKind[] {
+  const kinds = [...WASTE_KINDS];
+  for (let i = kinds.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    [kinds[i], kinds[j]] = [kinds[j], kinds[i]];
+  }
+  return kinds;
+}
+
 export class WasteGame extends BaseGame implements Minigame {
   readonly items: WasteItem[] = [];
   dragging: number | null = null;
@@ -347,9 +359,9 @@ export class WasteGame extends BaseGame implements Minigame {
   private grabDx = 0;
   private grabDy = 0;
 
-  constructor() {
+  constructor(rnd: () => number = Math.random) {
     super();
-    WASTE_KINDS.forEach((kind, i) => {
+    shuffleKinds(rnd).forEach((kind, i) => {
       const x = 24 + i * 42;
       this.items.push({
         kind,
