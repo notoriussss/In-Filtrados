@@ -91,23 +91,8 @@ button:disabled { cursor: default; opacity: .55; transform: none !important; }
 .scr-result .tr .av {display:grid;place-items:center;height:48px;overflow:hidden}
 .scr-result .imp {margin-bottom:22px}
 .scr-result .imp .row {justify-content:space-between;margin-bottom:8px}
-/* 13-expulsion */
-.scr-eject .float {position:absolute;left:760px;top:160px;transform:rotate(-14deg)}
-/* 14-reunion */
-.scr-meeting .col-panel {display:flex;flex-direction:column}
-.scr-meeting .pcs {display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:16px;flex:1;min-height:0;margin-top:14px}
-.scr-meeting .pc {display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:12px 8px;min-height:0}
-.scr-meeting .pc .pic {display:grid;place-items:center}
-.scr-meeting .pc .pn {font-size:28px}
-.scr-meeting .pc.ghostc {opacity:.7}
-.scr-meeting .pc .mark {position:absolute;right:8px;top:8px;font-size:.62em;white-space:nowrap}
-.scr-meeting .tally {position:absolute;right:12px;top:10px;min-width:48px;padding:2px 10px;text-align:center;font-size:30px;background:var(--amber,#e8b13a);color:#241a08}
-.scr-meeting .msg {display:grid;grid-template-columns:44px 1fr;gap:10px;margin-bottom:10px;font-size:.86em}
-.scr-meeting .msg b {display:block}
-.scr-meeting .msg.sys {grid-template-columns:1fr;opacity:.85;font-style:italic}
-.scr-meeting .strip {display:flex;gap:14px;align-items:center}
-.scr-meeting .strip .well {padding:6px 14px}
-.scr-meeting .phase {display:flex;gap:10px}
+/* 13-expulsion: estilos encapsulados en styles/ejection.css */
+/* 14-reunion: estilos encapsulados en styles/meeting.css */
 
 /* ===== HUD (maqueta 16-hud-eco) ===== */
 .hud .tasks {left: 60px; top: 36px; width: 470px; padding: 18px 22px 16px; }
@@ -147,14 +132,7 @@ button:disabled { cursor: default; opacity: .55; transform: none !important; }
 .hud .hud-ttl { font-size: 24px; padding-bottom: 10px; margin-bottom: 6px; }
 .hud .hud-name { font-family: var(--head); font-weight: 400; font-size: 24px; }
 .hud .card-meter { display: grid; grid-template-columns: 100px 1fr 120px; gap: 12px; align-items: center; font-size: 30px; margin-top: 8px; }
-.scr-meeting .pc { position: relative; border: 0; color: inherit; font: inherit; cursor: pointer; }
-.scr-meeting .pc:disabled { cursor: default; opacity: 1; }
-.scr-meeting .pc.ghostc:disabled { opacity: .7; }
-.scr-meeting .pc:not(:disabled):hover { background: var(--pan3); }
-.scr-meeting .chat-log { flex: 1; min-height: 0; margin-top: 14px; padding: 14px; overflow-y: auto; }
-.scr-meeting .msg.pending { opacity: .6; }
-.scr-meeting .ml { margin-left: 12px; }
-.scr-meeting .mark { display: inline-flex; align-items: center; gap: 4px; }
+
 .rt { text-align: right; }
 .scr-result .tr { grid-template-columns: 84px 1fr 180px 10px 200px; }
 
@@ -204,16 +182,7 @@ html[data-motion='reduced'] *::after {
   flex: 0 1 auto; min-width: 0;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.scr-meeting .pc .pn {
-  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-/* El aviso de quién reportó el tanque lleva dos nombres: el título conserva
-   su ancho y el aviso, que puede partir línea, usa el resto. */
-.scr-meeting .title-bar .h2.grow { flex: 0 0 auto; }
-.scr-meeting .title-bar .chip {
-  flex: 0 1 auto; min-width: 0; margin-left: auto; max-width: 62%;
-  white-space: normal; line-height: 1.15; overflow-wrap: anywhere;
-}
+
 /* Las teclas de las barras de ayuda heredaban la sombra de texto de la barra
    (pensada para letras claras sobre el fondo) y se veían dobles. */
 .kbd, .key { text-shadow: none; }

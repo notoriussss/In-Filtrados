@@ -2,83 +2,70 @@ import { skinOf } from '../../shop';
 import type { Snapshot } from '@in-filtrados/messages';
 import { Stage } from '../../ui/Stage';
 import { Gota } from '../../ui/Gota';
-import { Chip } from '../../ui/kit';
 import { EJECT_TEXT } from '../../texts';
 import { BACKGROUNDS } from '../backgrounds';
+import '../../styles/ejection.css';
 
-// Ejection (maqueta 13-expulsion): los 5 s de resultado de la reunión.
-// match dice a quién expulsaron y si era el infiltrado.
+// Ejection: pantalla de resolución y expulsión tras la votación de la reunión.
 export function Ejection(props: { snap: Snapshot }) {
   const m = props.snap.meeting!;
   const ejected = m.ejectedId
     ? props.snap.players.find((p) => p.id === m.ejectedId)
     : undefined;
+
+  const wasImpostor = m.wasImpostor;
+
   return (
     <div className="overlay-stage solid">
       <Stage className="scr-eject" background={BACKGROUNDS.mapBlur}>
-        <div className="shade dim" />
-        <div className="shade v" />
-        <div
-          className={`glow ${ejected && !m.wasImpostor ? 'bad' : ''}`}
-          style={{ left: 610, top: 90, width: 700, height: 700 }}
-        />
-        {ejected ? (
-          <>
-            <div className="float bob">
-              <Gota
-                color={ejected.color}
-                accessory={ejected.accessory}
-                skin={skinOf(ejected.skin)}
-                scale={9}
-              />
+        <div className="eject-vignette" />
+
+        <div className="eject-content">
+          {ejected ? (
+            <>
+              <div className="eject-avatar-stage">
+                <div
+                  className={`eject-halo ${
+                    wasImpostor ? 'caught' : 'innocent'
+                  }`}
+                />
+                <div className="eject-floating-character">
+                  <Gota
+                    color={ejected.color}
+                    accessory={ejected.accessory}
+                    skin={skinOf(ejected.skin)}
+                    scale={8}
+                    animate
+                  />
+                </div>
+              </div>
+
+              <div className="eject-card">
+                <h1 className="eject-title">
+                  {EJECT_TEXT.ejected(ejected.name)}
+                </h1>
+                <p className="eject-subtitle">
+                  {ejected.name}{' '}
+                  <b className={wasImpostor ? 'caught' : 'innocent'}>
+                    {wasImpostor ? EJECT_TEXT.WAS : EJECT_TEXT.WAS_NOT}
+                  </b>
+                  .
+                </p>
+
+                <div
+                  className={`eject-pill ${wasImpostor ? 'ok' : 'bad'}`}
+                >
+                  {wasImpostor ? EJECT_TEXT.CAUGHT : EJECT_TEXT.STILL}
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="eject-card">
+              <h1 className="eject-title">{EJECT_TEXT.NOBODY}</h1>
+              <p className="eject-subtitle">{EJECT_TEXT.NOBODY_SUB}</p>
             </div>
-            <div
-              className="big1 sm"
-              style={{ position: 'absolute', left: 0, right: 0, top: 700 }}
-            >
-              {EJECT_TEXT.ejected(ejected.name)}
-            </div>
-            <div
-              className="sub1"
-              style={{ position: 'absolute', left: 0, right: 0, top: 830 }}
-            >
-              {ejected.name}{' '}
-              <b style={{ color: m.wasImpostor ? '#ff9d94' : '#9be39a' }}>
-                {m.wasImpostor ? EJECT_TEXT.WAS : EJECT_TEXT.WAS_NOT}
-              </b>
-              .
-            </div>
-            <div
-              className="ctr"
-              style={{ position: 'absolute', left: 0, right: 0, top: 920 }}
-            >
-              {m.wasImpostor ? (
-                <Chip tone="ok" big icon="check">
-                  {EJECT_TEXT.CAUGHT}
-                </Chip>
-              ) : (
-                <Chip tone="bad" big icon="warning">
-                  {EJECT_TEXT.STILL}
-                </Chip>
-              )}
-            </div>
-          </>
-        ) : (
-          <>
-            <div
-              className="big1 sm"
-              style={{ position: 'absolute', left: 0, right: 0, top: 420 }}
-            >
-              {EJECT_TEXT.NOBODY}
-            </div>
-            <div
-              className="sub1"
-              style={{ position: 'absolute', left: 0, right: 0, top: 560 }}
-            >
-              {EJECT_TEXT.NOBODY_SUB}
-            </div>
-          </>
-        )}
+          )}
+        </div>
       </Stage>
     </div>
   );
