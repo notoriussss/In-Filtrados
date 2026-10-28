@@ -2,7 +2,7 @@
   "_nota": "Escala 1:1 (1 unidad de mundo = 1 px). x,y = esquina superior izquierda del sprite en el mapa; baseY = línea de base para ordenar por profundidad con los jugadores (y-sort: dibuja primero lo de menor baseY; un jugador se ordena con su y + 6). El suelo (capas/suelo.png) ya trae pisos, paredes, decoración mural, tapetes y calcomanías.",
   "width": 2752,
   "height": 1824,
-  "total": 182,
+  "total": 181,
   "sprites": 53,
   "props": [
     {
@@ -3262,24 +3262,6 @@
         1
       ],
       "exterior": true
-    },
-    {
-      "id": "console",
-      "sprite": "console",
-      "x": 1260,
-      "y": 792,
-      "w": 136,
-      "h": 96,
-      "baseY": 888,
-      "tile": [
-        39,
-        24
-      ],
-      "footprint": [
-        4,
-        3
-      ],
-      "exterior": false
     }
   ]
 }
