@@ -2,63 +2,31 @@ package room
 
 import (
 	"context"
-	"crypto/rand"
-	"fmt"
 	"log"
-	"math/big"
 	"sort"
 
 	"github.com/notoriussss/in-filtrados/match/gen/matchv1"
 	"github.com/notoriussss/in-filtrados/match/internal/events"
 )
 
-// pickRandomStations chooses count unique station IDs from the map using
-// crypto/rand. If there are fewer stations than count, it returns all of them.
-func pickRandomStations(all []Station, count int) ([]string, error) {
-	n := len(all)
-	if n == 0 {
-		return nil, nil
-	}
-	if count > n {
-		count = n
-	}
-
-	indices := make([]int, n)
-	for i := 0; i < n; i++ {
-		indices[i] = i
-	}
-
-	for i := 0; i < count; i++ {
-		max := big.NewInt(int64(n - i))
-		jBig, err := rand.Int(rand.Reader, max)
-		if err != nil {
-			return nil, fmt.Errorf("%s: %w", msgPickStations, err)
-		}
-		j := int(jBig.Int64()) + i
-		indices[i], indices[j] = indices[j], indices[i]
-	}
-
-	result := make([]string, count)
-	for i := 0; i < count; i++ {
-		result[i] = all[indices[i]].ID
-	}
-	return result, nil
-}
-
-// assignTasks randomly assigns exactly r.tasksPerPlayer tasks to each
-// player (crew or impostor) using the stations defined in the map.
+// assignTasks reparte r.tasksPerPlayer tareas a cada jugador (cuidador o
+// impostor) con planTasks: listas distintas, en orden propio y parejas
+// entre las estaciones del mapa. Solo corre al empezar la partida; el
+// reparto queda en el estado de cada jugador y no se vuelve a sortear.
 func (r *Room) assignTasks() error {
-	for _, p := range r.players {
-		stations, err := pickRandomStations(
-			r.m.Stations,
-			r.tasksPerPlayer,
-		)
-		if err != nil {
-			return err
-		}
-		p.assignedTasks = make(map[string]bool, len(stations))
-		for _, id := range stations {
-			p.assignedTasks[id] = true
+	ids := make([]string, 0, len(r.players))
+	for id := range r.players {
+		ids = append(ids, id)
+	}
+	plans, err := planTasks(r.m.Stations, ids, r.tasksPerPlayer, r.rnd)
+	if err != nil {
+		return err
+	}
+	for id, p := range r.players {
+		p.taskOrder = plans[id]
+		p.assignedTasks = make(map[string]bool, len(p.taskOrder))
+		for _, station := range p.taskOrder {
+			p.assignedTasks[station] = true
 		}
 		p.tasksCompleted = 0
 		p.completedTasks = nil
@@ -204,23 +172,30 @@ func (r *Room) cancelFarTasks() {
 	}
 }
 
-// myTasks arma la lista de tareas del jugador para su snapshot:
-// pendientes y hechas, ordenadas por estación para que no salten.
+// myTasks arma la lista de tareas del jugador para su snapshot, en el
+// orden en que se le asignaron (las hechas se quedan en su lugar). Sin
+// orden guardado (instantáneas viejas), por estación.
 func myTasks(p *player) []*matchv1.MyTask {
-	tasks := make(
-		[]*matchv1.MyTask,
-		0,
-		len(p.assignedTasks)+len(p.completedTasks),
-	)
-	for id := range p.assignedTasks {
-		tasks = append(tasks, &matchv1.MyTask{StationId: id})
-	}
+	done := make(map[string]bool, len(p.completedTasks))
 	for _, id := range p.completedTasks {
-		tasks = append(tasks, &matchv1.MyTask{StationId: id, Done: true})
+		done[id] = true
 	}
-	sort.Slice(tasks, func(i, j int) bool {
-		return tasks[i].StationId < tasks[j].StationId
-	})
+	ids := p.taskOrder
+	if len(ids) != len(p.assignedTasks)+len(p.completedTasks) {
+		ids = ids[:0:0]
+		for id := range p.assignedTasks {
+			ids = append(ids, id)
+		}
+		ids = append(ids, p.completedTasks...)
+		sort.Strings(ids)
+	}
+	tasks := make([]*matchv1.MyTask, 0, len(ids))
+	for _, id := range ids {
+		tasks = append(
+			tasks,
+			&matchv1.MyTask{StationId: id, Done: done[id]},
+		)
+	}
 	return tasks
 }
 
