@@ -116,7 +116,8 @@ export class PipesScene implements Scene {
     this.flowShown +=
       (g.flow - this.flowShown) * (1 - Math.exp((-dt / 1000) * FLOW_RATE));
     const full = g.connected && this.flowShown > g.tiles.length - 0.3;
-    this.tankFill += ((full ? 1 : 0) - this.tankFill) * (1 - Math.exp(-dt / 400));
+    const fill = (full ? 1 : 0) - this.tankFill;
+    this.tankFill += fill * (1 - Math.exp(-dt / 400));
   }
 
   private driveHero(now: number, dt: number): void {
@@ -281,7 +282,8 @@ export class PipesScene implements Scene {
         [-1, 1],
         [1, 1],
       ]) {
-        px(ctx, p.x + dx * (6 + k * 12), p.y + dy * (6 + k * 12), PX * 2, PX * 2, C.waterHi);
+        const r = 6 + k * 12;
+        px(ctx, p.x + dx * r, p.y + dy * r, PX * 2, PX * 2, C.waterHi);
       }
       ctx.globalAlpha = 1;
     }

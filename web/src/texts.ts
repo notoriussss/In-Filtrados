@@ -156,7 +156,7 @@ export const HELP_TEXT = {
   REUSE_1: 'Junta agua de lluvia y agua gris con la cubeta.',
   REUSE_2: 'Arrastra las cubetas al tanque para guardarla.',
   RECYCLE_SUB: 'Devuelve agua limpia',
-  RECYCLE_1: 'Filtra el agua sucia y trátala por etapas.',
+  RECYCLE_1: 'Filtra, purifica y conecta el agua limpia.',
   RECYCLE_2: 'Toca la suciedad que flota hasta dejarla limpia.',
   ROLES: 'Roles',
   CREW: 'Cuidador',

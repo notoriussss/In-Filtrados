@@ -42,6 +42,11 @@ import {
   VALVE_FILL_MS,
   ValveGame,
   PipesGame,
+  StreamGame,
+  STREAM_END_X,
+  STREAM_GOAL,
+  STREAM_SPEED,
+  STREAM_START_X,
   PIPES_COLS,
   PIPES_GRID,
   PIPES_TILE,
@@ -72,13 +77,13 @@ describe('createMinigame', () => {
     expect(createMinigame('reuse', 'greywater-2')).toBeInstanceOf(WateringGame);
     expect(createMinigame('recycle', 'compost-1')).toBeInstanceOf(JugFilterGame);
     expect(createMinigame('recycle', 'sorter-1')).toBeInstanceOf(PipesGame);
+    expect(createMinigame('recycle', 'filter-2')).toBeInstanceOf(StreamGame);
   });
 
   it('keeps the type game as fallback for the rest of the stations', () => {
     expect(createMinigame('reduce', 'leak-1')).toBeInstanceOf(ValveGame);
     expect(createMinigame('reuse', 'greywater-1')).toBeInstanceOf(BucketsGame);
     expect(createMinigame('recycle', 'filter-1')).toBeInstanceOf(ParticlesGame);
-    expect(createMinigame('recycle', 'filter-2')).toBeInstanceOf(ParticlesGame);
   });
 });
 
@@ -243,6 +248,68 @@ describe('ParticlesGame', () => {
 });
 
 // ─── Minijuegos por estación ────────────────────────────────────────────
+
+describe('StreamGame', () => {
+  // Corre el arroyo sin tocar nada: n pasos de 50 ms.
+  const run = (g: StreamGame, ms: number) => {
+    for (let t = 0; t < ms; t += 50) g.step(50);
+  };
+
+  it('sends the first piece of trash right away, drifting to the right', () => {
+    const g = new StreamGame(() => 0);
+    g.step(50);
+    expect(g.items.length).toBe(1);
+    const x0 = g.items[0].x;
+    expect(x0).toBeGreaterThanOrEqual(STREAM_START_X);
+    g.step(1000);
+    expect(g.items[0].x).toBeCloseTo(x0 + STREAM_SPEED, 0);
+  });
+
+  it('takes a piece out with a click on it, the nearest one', () => {
+    const g = new StreamGame(() => 0);
+    run(g, 1000);
+    const it = g.items[0];
+    g.pointerDown({ x: it.x + 3, y: it.y - 3 });
+    expect(g.caught).toBe(1);
+    expect(g.items.includes(it)).toBe(false);
+    expect(g.drainEvents().some((e) => e.type === 'pop')).toBe(true);
+  });
+
+  it('ignores clicks away from the trash', () => {
+    const g = new StreamGame(() => 0);
+    run(g, 500);
+    g.pointerDown({ x: 330, y: 20 });
+    expect(g.caught).toBe(0);
+    expect(g.drainEvents().some((e) => e.type === 'miss')).toBe(true);
+  });
+
+  it('lets a piece through at the intake without counting it', () => {
+    const g = new StreamGame(() => 0);
+    run(g, ((STREAM_END_X - STREAM_START_X) / STREAM_SPEED) * 1000 + 100);
+    expect(g.escaped).toBeGreaterThanOrEqual(1);
+    expect(g.caught).toBe(0);
+    expect(g.drainEvents().some((e) => e.type === 'spill')).toBe(true);
+  });
+
+  it('keeps sending trash even if nothing is caught', () => {
+    const g = new StreamGame(() => 0);
+    run(g, 30000);
+    expect(g.escaped).toBeGreaterThan(STREAM_GOAL * 2);
+    expect(g.items.length).toBeGreaterThan(0);
+  });
+
+  it('is done after STREAM_GOAL pieces, but not before 3 s', () => {
+    const g = new StreamGame(() => 0);
+    while (g.caught < STREAM_GOAL) {
+      g.step(50);
+      for (const it of [...g.items]) g.pointerDown({ x: it.x, y: it.y });
+    }
+    expect(g.progress()).toBe(1);
+    expect(g.done).toBe(g.elapsed >= MIN_GAME_MS);
+    g.step(MIN_GAME_MS);
+    expect(g.done).toBe(true);
+  });
+});
 
 describe('PipesGame', () => {
   const seeded = (seed: number) => {

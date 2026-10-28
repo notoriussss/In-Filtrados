@@ -2296,7 +2296,7 @@
     {
       "id": "compost-1",
       "type": "recycle",
-      "name": "Lombrifiltro",
+      "name": "Purificador de agua",
       "room": "compost",
       "x": 1304,
       "y": 1584,
@@ -2305,7 +2305,7 @@
     {
       "id": "sorter-1",
       "type": "recycle",
-      "name": "Mesa de tratamiento",
+      "name": "Tuberías del ecopunto",
       "room": "ecopunto",
       "x": 1556,
       "y": 1552,
@@ -2314,7 +2314,7 @@
     {
       "id": "filter-2",
       "type": "recycle",
-      "name": "Filtro de residuos",
+      "name": "Arroyo del ecopunto",
       "room": "ecopunto",
       "x": 1764,
       "y": 1452,

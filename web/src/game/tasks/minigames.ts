@@ -57,6 +57,7 @@ const STATION_GAMES: Record<string, () => Minigame> = {
   'rain-1': () => new FirstRainGame(),
   'rain-2': () => new FirstRainGame(),
   'greywater-2': () => new WateringGame(),
+  'filter-2': () => new StreamGame(),
   'compost-1': () => new JugFilterGame(),
   'sorter-1': () => new PipesGame(),
 };
@@ -474,6 +475,124 @@ export class PipesGame extends BaseGame implements Minigame {
 
   step(dtMs: number): void {
     this.elapsed += dtMs;
+  }
+}
+
+// Reciclar (filter-2, Arroyo del ecopunto): limpiar el arroyo. La basura
+// baja flotando por el arroyo hacia la toma de agua del tanque: hay que
+// sacarla con un clic antes de que llegue. La que se cuela no resta, pero
+// el agua sigue sucia hasta juntar la cantidad pedida.
+export const STREAM_GOAL = 6;
+export const STREAM_GAP_MS = 650; // entre una basura y la siguiente
+export const STREAM_SPEED = 70; // unidades por segundo
+export const STREAM_START_X = -14; // por donde entra al arroyo
+export const STREAM_END_X = 300; // la toma de agua: de aquí no se saca
+export const STREAM_HIT = 20; // qué tan cerca hay que hacer clic
+export const STREAM_LANES: readonly number[] = [112, 140, 168];
+export type StreamKind = 'bottle' | 'bag' | 'can' | 'boot';
+export const STREAM_KINDS: readonly StreamKind[] = [
+  'bottle',
+  'bag',
+  'can',
+  'boot',
+];
+
+export type StreamItem = {
+  index: number;
+  kind: StreamKind;
+  x: number; // centro
+  y: number;
+  gone: boolean; // ya se sacó o ya se coló
+};
+
+export class StreamGame extends BaseGame implements Minigame {
+  readonly items: StreamItem[] = [];
+  caught = 0;
+  escaped = 0;
+  elapsed = 0;
+  private spawned = 0;
+
+  constructor(private readonly rnd: () => number = Math.random) {
+    super();
+  }
+
+  get done(): boolean {
+    return this.caught >= STREAM_GOAL && this.elapsed >= MIN_GAME_MS;
+  }
+
+  progress(): number {
+    return clamp01(this.caught / STREAM_GOAL);
+  }
+
+  // Un clic sobre una basura la saca; la más cercana si hay varias; en
+  // otro lado no pasa nada.
+  pointerDown(p: Point): void {
+    let best: StreamItem | null = null;
+    let bestD = STREAM_HIT;
+    for (const it of this.items) {
+      if (it.gone) continue;
+      const d = Math.hypot(p.x - it.x, p.y - it.y);
+      if (d <= bestD) {
+        best = it;
+        bestD = d;
+      }
+    }
+    if (!best) {
+      this.events.push({ type: 'miss', x: p.x, y: p.y });
+      return;
+    }
+    this.items.splice(this.items.indexOf(best), 1);
+    this.caught += 1;
+    this.events.push({
+      type: 'pop',
+      x: best.x,
+      y: best.y,
+      index: best.index,
+    });
+  }
+
+  pointerMove(): void {}
+
+  pointerUp(): void {}
+
+  step(dtMs: number): void {
+    this.elapsed += dtMs;
+    while (
+      this.spawned * STREAM_GAP_MS <= this.elapsed &&
+      this.caught < STREAM_GOAL
+    ) {
+      this.spawn();
+    }
+    for (const it of this.items) {
+      if (it.gone) continue;
+      it.x += (STREAM_SPEED * dtMs) / 1000;
+      if (it.x < STREAM_END_X) continue;
+      it.gone = true;
+      this.escaped += 1;
+      this.events.push({
+        type: 'spill',
+        x: it.x,
+        y: it.y,
+        index: it.index,
+      });
+    }
+    // La basura ya sacada o colada deja la lista.
+    for (let i = this.items.length - 1; i >= 0; i--) {
+      if (this.items[i].gone) this.items.splice(i, 1);
+    }
+  }
+
+  private spawn(): void {
+    const kind = STREAM_KINDS[Math.floor(this.rnd() * STREAM_KINDS.length)];
+    const y = STREAM_LANES[Math.floor(this.rnd() * STREAM_LANES.length)];
+    this.items.push({
+      index: this.spawned,
+      kind,
+      x: STREAM_START_X,
+      y,
+      gone: false,
+    });
+    this.spawned += 1;
   }
 }
 

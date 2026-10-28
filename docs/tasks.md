@@ -937,10 +937,11 @@ Sin esta tarea tampoco se puede verificar S2-13 jugando (completar 3 tareas y ve
     4. **Reducir (regular la presión, `valve-1`):** presionar el botón cuando la aguja pasa por la franja verde; 3 aciertos y la franja se encoge. Cada error revienta la junta de la tubería y deja un charco que crece (el agua que se desperdicia).
     5. **Reducir (llenar sin derramar, `valve-2`):** sostener el grifo y soltar cuando el agua pase la marca; cruzar el borde derrama y el vaso vuelve a empezar. 3 vasos.
     6. **Reutilizar (primera lluvia, `rain-1` y `rain-2`):** las gotas sucias de la primera lluvia (de 1 a 3, al azar por semilla) van al desvío y las limpias al barril; un clic cambia la compuerta de lado. 6 gotas limpias.
-    7. **Reciclar (tratar el agua sucia, `sorter-1`, Mesa de tratamiento):** arrastrar 4 frascos de agua sucia (sólidos, lodo, aceite y espuma de detergente) a la etapa que los trata; cada etapa lleva el dibujo de lo que trata.
+    7. **Reciclar (conectar las tuberías, `sorter-1`, Tuberías del ecopunto):** girar con clic los tramos de tubería para llevar el agua limpia de la fuente al tanque; el recorrido cambia en cada partida.
     8. **Reutilizar (¿sirve para regar?, `greywater-2`):** arrastrar 4 recipientes a Regar o a Tratar según su origen.
     9. **Reducir (sellar la fuga, `leak-2`):** clic en las grietas que se abren solas para ponerles cinta; se sellan 5.
-    10. **Reciclar (capas del biofiltro, `compost-1`, Lombrifiltro):** arrastrar las bolsas en orden (grava, arena, carbón), dos rondas; al cerrar cada ronda el agua sucia baja por las capas y se junta limpia.
+    10. **Reciclar (jarra filtrante, `compost-1`, Purificador de agua):** arrastrar el balde de agua turbia a la jarra, esperar a que baje por el filtro y hacer clic en la llave para llenar el vaso; dos vasos.
+    11. **Reciclar (limpiar el arroyo, `filter-2`, Arroyo del ecopunto):** sacar con un clic la basura que baja flotando antes de que llegue a la reja de la toma; 6 basuras.
     Todos los juegos nuevos respetan un mínimo de 3 s (`MIN_GAME_MS`): match rechaza tareas más rápidas (`taskMinTicks`).
 13. **Terminar:** al completar el minijuego, mandar `interact { stationId, completed: true }`. Si se completó antes de 3 s desde el inicio, esperar a que pasen antes de mandarlo (el servidor rechaza los menores de 3 s). Se cierra con `Esc`, al empezar una reunión o si `myActiveTask` deja de ser esa estación (el jugador se alejó).
 14. El impostor ve sus tareas y los minijuegos igual que un tripulante (las "finge"; `match` no suma nada).

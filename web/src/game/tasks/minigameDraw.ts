@@ -10,6 +10,7 @@ import {
   ParticlesGame,
   PressureGame,
   SealGame,
+  StreamGame,
   ValveGame,
   PipesGame,
   WateringGame,
@@ -23,6 +24,7 @@ import { PARTICLES_HERO_X, ParticlesScene } from './draw/particlesScene';
 import { PRESSURE_HERO_X, PressureScene } from './draw/pressureScene';
 import { RAIN_HERO_X, RainScene } from './draw/rainScene';
 import { SEAL_HERO_X, SealScene } from './draw/sealScene';
+import { STREAM_HERO_X, StreamScene } from './draw/streamScene';
 import { PIPES_HERO_X, PipesScene } from './draw/pipesScene';
 import { BOARD_SCALE } from './draw/pixel';
 import { HERO_FEET_Y, type Scene, type SceneEnv } from './draw/scene';
@@ -99,6 +101,7 @@ function buildScene(
   if (game instanceof SealGame) return new SealScene(game, env);
   if (game instanceof FirstRainGame) return new RainScene(game, env);
   if (game instanceof PipesGame) return new PipesScene(game, env);
+  if (game instanceof StreamGame) return new StreamScene(game, env);
   if (game instanceof WateringGame) return new WateringScene(game, env);
   if (game instanceof JugFilterGame) return new JugScene(game, env);
   throw new Error('minijuego sin escena');
@@ -114,6 +117,7 @@ function heroXOf(game: Minigame): number {
   if (game instanceof SealGame) return SEAL_HERO_X;
   if (game instanceof FirstRainGame) return RAIN_HERO_X;
   if (game instanceof PipesGame) return PIPES_HERO_X;
+  if (game instanceof StreamGame) return STREAM_HERO_X;
   if (game instanceof WateringGame) return WATERING_HERO_X;
   return JUG_HERO_X;
 }
