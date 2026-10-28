@@ -199,6 +199,10 @@ func (r *Room) handleAction(a PlayerAction) {
 	if !ok {
 		return
 	}
+	if a.Leave {
+		r.handleLeave(a.PlayerID)
+		return
+	}
 	// S3-02: en pausa solo se guarda hacia dónde quiere ir cada uno (para
 	// que al soltar una tecla no siga caminando al reanudar); el resto de
 	// las acciones se ignora para que todo quede exactamente igual.
@@ -310,6 +314,32 @@ func (r *Room) removePlayer(l Leave) {
 		// disconnectDebounce: cambiar de socket (de la sala de espera a
 		// la partida, o al recargar) no pausa ni avisa al monitor.
 		p.leftAt = r.now()
+	}
+}
+
+// handleLeave atiende a quien tocó "Salir" a propósito. Si es el creador,
+// la sala se cierra para todos con la razón host_left: sin él nadie puede
+// empezar ni la partida tiene a quién esperar. Si se va otro jugador no
+// cambia nada: se cae el stream y se guarda su lugar como siempre.
+// Perder la conexión nunca llega aquí, solo pasa por removePlayer.
+func (r *Room) handleLeave(playerID string) {
+	if r.creatorID == "" || playerID != r.creatorID {
+		return
+	}
+	log.Printf(
+		"room %s: el creador %s salió; se cierra la sala",
+		r.Code,
+		playerID,
+	)
+	switch {
+	case r.inMatch():
+		r.finishMatch(events.WinnerNone, events.ReasonHostLeft)
+	case r.phase == matchv1.Phase_LOBBY:
+		// Sin partida guardada: solo se avisa y se libera la sala.
+		r.phase = matchv1.Phase_ENDED
+		r.endedAt = r.now()
+		r.broadcast()
+		r.broadcastMatchEnded(events.WinnerNone, events.ReasonHostLeft)
 	}
 }
 

@@ -89,6 +89,12 @@ pub async fn handle_message(pool: &PgPool, body: &[u8]) -> Outcome {
         }
     };
 
+    // Sin ganador = el host cerró la sala a propósito: la partida no
+    // cuenta (ni monedas, ni partidas jugadas, ni victorias).
+    if event.winner.is_empty() {
+        return Outcome::Ack;
+    }
+
     match save_results(pool, &event).await {
         Ok(()) => Outcome::Ack,
         Err(error) => {
@@ -365,6 +371,26 @@ mod tests {
         };
         let outcome = handle_message(&pool, b"{ no es json").await;
         assert_eq!(outcome, Outcome::Discard);
+    }
+
+    #[tokio::test]
+    async fn a_match_closed_without_winner_is_not_counted() {
+        let Some(pool) = test_pool().await else {
+            return;
+        };
+        let player = new_player(&pool).await;
+        let match_id = Uuid::new_v4();
+        let body = event_json_won_by(match_id, "", &[(player, "crew", 9)]);
+
+        assert_eq!(handle_message(&pool, body.as_bytes()).await, Outcome::Ack);
+
+        let saved: (i64,) =
+            sqlx::query_as("SELECT COUNT(*) FROM results WHERE match_id = $1")
+                .bind(match_id)
+                .fetch_one(&pool)
+                .await
+                .expect("count results");
+        assert_eq!(saved.0, 0);
     }
 
     #[tokio::test]

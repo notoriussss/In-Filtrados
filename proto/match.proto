@@ -48,8 +48,14 @@ message ClientAction {
     CallMeeting   call_meeting   = 15;
     // Elegir cuántas tareas hace cada jugador (solo el creador, en LOBBY).
     SetTaskCount  set_task_count = 16;
+    // Salir a propósito de la sala (distinto de perder la conexión).
+    Leave         leave          = 17;
   }
 }
+// Leave: el jugador toca "Salir". Si es el creador, la sala se cierra para
+// todos con la razón "host_left"; de otro jugador no cambia nada (su lugar
+// se guarda en la gracia como siempre).
+message Leave {}
 message Join {
   string match_id   = 1;
   string player_id  = 2;

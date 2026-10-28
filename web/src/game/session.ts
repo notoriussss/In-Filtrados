@@ -277,6 +277,9 @@ export class GameSession {
 
   closeMinigame = (): void => this.tasks.close();
 
+  // leave: salir a propósito; si es el creador, match cierra la sala.
+  leave = (): void => this.send({ type: 'leave' });
+
   setPaused(paused: boolean): void {
     this.paused = paused;
     if (paused) {

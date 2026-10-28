@@ -108,6 +108,10 @@ test('S3-05: fix needs a point id', () => {
   assert.equal(parse({ type: 'fix', pointId: 'x'.repeat(65) }), null);
 });
 
+test('leave goes to match as the creator leaving on purpose', () => {
+  assert.deepEqual(toGrpcAction(parse({ type: 'leave' })!), { leave: {} });
+});
+
 test('pickColor needs a short color', () => {
   assert.deepEqual(
     toGrpcAction(parse({ type: 'pickColor', color: '#4363d8' })!),

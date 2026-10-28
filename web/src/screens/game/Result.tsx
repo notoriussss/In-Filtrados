@@ -47,11 +47,14 @@ export function Result(props: {
   const { snap, meId, winner } = props;
   const [coins, setCoins] = useState<number | null>(null);
   const crewWon = winner === 'crew';
+  // Sala cerrada por el host: no hay ganador y players no suma monedas.
+  const hostLeft = props.reason === 'host_left';
+  const subtitle = endSubtitle(winner, props.reason, props.impostorIds.length);
 
   useEffect(() => {
     const data = session.loadSession();
     const before = props.before;
-    if (!data || !before) return;
+    if (!data || !before || hostLeft) return;
     let tries = 0;
     let alive = true;
     const poll = async () => {
@@ -72,7 +75,7 @@ export function Result(props: {
     return () => {
       alive = false;
     };
-  }, [props.before]);
+  }, [props.before, hostLeft]);
 
   const impact = myImpact(snap);
   const cleanTanks = snap.tanks.filter((t) => !t.dead).length;
@@ -97,16 +100,12 @@ export function Result(props: {
         >
           {title}
         </div>
-        {winner && (
+        {subtitle && (
           <div
             className="sub1"
             style={{ position: 'absolute', left: 0, right: 0, top: 150 }}
           >
-            {endSubtitle(
-              winner,
-              props.reason,
-              props.impostorIds.length,
-            )}
+            {subtitle}
           </div>
         )}
         <section
@@ -218,13 +217,15 @@ export function Result(props: {
                 <span>{T.RESERVOIR}</span>
               </div>
               <div className="stat">
-                <b className="num">{coins === null ? '…' : `+${coins}`}</b>
+                <b className="num">
+                  {hostLeft ? '+0' : coins === null ? '…' : `+${coins}`}
+                </b>
                 <span>{T.COINS}</span>
               </div>
             </div>
           </div>
           <p className="small muted" style={{ marginTop: 16 }}>
-            {coins === null ? T.COINS_PENDING : T.FACT}
+            {coins === null && !hostLeft ? T.COINS_PENDING : T.FACT}
           </p>
         </section>
         <div

@@ -118,13 +118,14 @@ En la semana 2 se agregan mensajes; se agregan aquí, nunca se duplican en `web`
 // Gateway → navegador
   | {
       type: 'matchEnded';
-      winner: 'crew' | 'impostor';
+      winner: 'crew' | 'impostor' | null; // null: sala cerrada sin ganador
       impostorIds: string[];
       reason?:
         | 'reservoir_full'
         | 'impostors_ejected'
         | 'tanks_contaminated'
-        | 'timeout';
+        | 'timeout'
+        | 'host_left'; // el creador salió a propósito: la sala se cierra para todos
     }
 
 // Campos nuevos del snapshot
@@ -206,10 +207,13 @@ players[].activity: 'reduce' | 'reuse' | 'recycle' | 'tank' | 'fix' | null; // p
   | { type: 'pickSkin'; skin: string }   // 'jimena' o 'gota', solo en LOBBY
   | { type: 'pickAccessory'; accessory: string } // 'none' lo quita
   | { type: 'refreshShop' }              // tras comprar en otra pestaña
+  | { type: 'leave' }                    // tocó «Salir»; si es el creador, match cierra la sala (host_left)
 
 // Campo nuevo del snapshot
 players[].skin: 'jimena' | 'gota';       // 'jimena' es el personaje de inicio
 ```
+
+- **Salir a propósito vs. perder la conexión:** `leave` es la única señal de que el jugador se fue por su gusto. Si lo manda el creador, `match` cierra la sala para todos (en LOBBY y en partida) con `matchEnded { winner: null, reason: 'host_left' }`, guarda la partida sin ganador y publica `match.finished` con `winner` vacío (`players` lo ignora y `monitor` lo muestra como sala cerrada). Perder la conexión no manda `leave`: se guarda el lugar durante la gracia y, si es el creador, la sala se pausa. Si lo manda otro jugador, no cambia nada.
 
 - Los personajes de **Jimena** son gratis y vienen de inicio. Las **gotas** (una por color, id `gota-<color sin #>`, como `gota-e6194b`) y los **accesorios** (id como `cap`) solo se usan si el jugador los compró en la tienda.
 - `match` no se fía del navegador: el **gateway** le pregunta a `players` qué tiene comprado y se lo pasa en `Join.owned` (y en `SetOwned` tras un `refreshShop`). `match` acepta `pickSkin: 'gota'` solo si el jugador tiene la gota de su color actual, y `pickAccessory` solo si tiene ese accesorio. Si cambia a un color cuya gota no compró, vuelve a Jimena.

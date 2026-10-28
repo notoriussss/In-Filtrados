@@ -35,7 +35,11 @@ const (
 	ReasonImpostorsEjected  = "impostors_ejected"
 	ReasonTanksContaminated = "tanks_contaminated"
 	ReasonTimeOut           = "timeout"
+	ReasonHostLeft          = "host_left"
 )
+
+// WinnerNone: la sala se cerró sin ganador (el host se fue a propósito).
+const WinnerNone = ""
 
 // Publisher publica un evento en el exchange `game.events`.
 type Publisher interface {

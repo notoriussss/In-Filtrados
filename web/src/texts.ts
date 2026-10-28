@@ -223,6 +223,8 @@ export const PAUSE_TEXT = {
   SETTINGS: 'Ajustes',
   LEAVE: 'Salir de la sala',
   LEAVE_NOTE: 'Si sales en plena partida, quedarás como desconectado.',
+  LEAVE_NOTE_HOST:
+    'Eres quien creó la sala: si sales, la partida se cierra para todos.',
 } as const;
 
 export const CONNECTION_TEXT = {
@@ -287,6 +289,8 @@ export const RESULT_TEXT = {
   CREW_EJECTED_MULTI_SUB: 'Los infiltrados fueron expulsados.',
   IMPOSTOR_TANKS_SUB: 'Los tanques se contaminaron.',
   IMPOSTOR_TIMEOUT_SUB: 'Se acabó el tiempo.',
+  HOST_LEFT_SUB:
+    'Quien creó la sala salió, así que la partida se cerró para todos.',
   PLAYERS: 'Jugadores',
   room: (code: string) => `Sala ${code}`,
   PLAYER: 'Jugador',

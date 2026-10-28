@@ -14,6 +14,7 @@ import type {
   ServerMessage,
   Snapshot,
   TankView,
+  Winner,
 } from '@in-filtrados/messages';
 
 // Shapes of the gRPC ServerEvent as @grpc/proto-loader decodes it
@@ -64,6 +65,7 @@ const VALID_END_REASONS: readonly EndReason[] = [
   'impostors_ejected',
   'tanks_contaminated',
   'timeout',
+  'host_left',
 ];
 
 function normalizeEndReason(raw?: string): EndReason | undefined {
@@ -91,9 +93,12 @@ export function toServerMessage(ev: GrpcServerEvent): ServerMessage | null {
     return toSnapshot(ev.snapshot);
   }
   if (ev.event === 'matchEnded') {
-    const winner = ev.matchEnded.winner;
-    if (winner !== 'crew' && winner !== 'impostor') return null;
+    const raw = ev.matchEnded.winner;
     const reason = normalizeEndReason(ev.matchEnded.reason);
+    // Sin ganador solo vale cuando el host cerró la sala; otro valor no.
+    const noWinner = !raw && reason === 'host_left';
+    if (!noWinner && raw !== 'crew' && raw !== 'impostor') return null;
+    const winner = noWinner ? null : (raw as Winner);
     return {
       type: 'matchEnded',
       winner,

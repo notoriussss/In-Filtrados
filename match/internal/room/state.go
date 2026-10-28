@@ -180,6 +180,9 @@ type PlayerAction struct {
 	// Reemplazar lo comprado (solo lo manda el gateway).
 	SetOwned bool
 	Owned    []string
+
+	// Salir a propósito de la sala (no es perder la conexión).
+	Leave bool
 }
 
 // isMove: la acción solo cambia la dirección (un Move).
@@ -187,7 +190,8 @@ func (a PlayerAction) isMove() bool {
 	return !a.Start && !a.Contaminate && !a.InteractTask &&
 		!a.Report && !a.Vote && !a.Chat && !a.Sabotage && !a.Fix &&
 		!a.CallMeeting && !a.SetTaskCount &&
-		!a.PickColor && !a.PickAccessory && !a.PickSkin && !a.SetOwned
+		!a.PickColor && !a.PickAccessory && !a.PickSkin && !a.SetOwned &&
+		!a.Leave
 }
 
 type player struct {

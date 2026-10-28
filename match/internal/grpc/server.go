@@ -339,6 +339,8 @@ func (s *Server) Play(stream matchv1.Match_PlayServer) error {
 					PickColor: true,
 					Color:     msg.GetPickColor().GetColor(),
 				})
+			case msg.GetLeave() != nil:
+				r.Act(room.PlayerAction{PlayerID: playerID, Leave: true})
 			case msg.GetSetTaskCount() != nil:
 				r.Act(room.PlayerAction{
 					PlayerID:     playerID,

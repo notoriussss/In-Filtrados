@@ -32,6 +32,9 @@ export type ClientMessage =
   // Después de comprar en la tienda: el gateway vuelve a preguntarle a
   // players qué tienes y se lo pasa a match.
   | { type: 'refreshShop' }
+  // El jugador tocó "Salir" a propósito (no es perder la conexión). Si es
+  // el creador, match cierra la sala para todos con reason 'host_left'.
+  | { type: 'leave' }
   // Heartbeat (deployment-lab.md, 9.1): cada 2 s; el gateway responde
   // pong y nunca lo reenvía a match.
   | { type: 'ping' };
@@ -49,7 +52,8 @@ export type ServerMessage =
   | Snapshot
   | {
       type: 'matchEnded';
-      winner: Winner;
+      winner: Winner | null; // null: la sala se cerró sin ganador
+      // host_left: el creador salió a propósito.
       impostorIds: string[];
       reason?: EndReason;
     }
@@ -135,7 +139,8 @@ export type EndReason =
   | 'reservoir_full'
   | 'impostors_ejected'
   | 'tanks_contaminated'
-  | 'timeout';
+  | 'timeout'
+  | 'host_left';
 
 export type PlayerView = {
   id: string;

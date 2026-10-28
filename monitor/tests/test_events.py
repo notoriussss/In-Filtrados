@@ -14,7 +14,11 @@ from app.events import (
     consume_events,
     make_message_handler,
 )
-from app.messages import EVENT_MATCH_FINISHED, WINNER_LABELS
+from app.messages import (
+    EVENT_MATCH_CLOSED_BY_HOST,
+    EVENT_MATCH_FINISHED,
+    WINNER_LABELS,
+)
 
 
 def started(event_id="e1", match_id="m1", players=3):
@@ -59,6 +63,16 @@ def test_finished_resets_active_and_counts_today():
     assert snapshot["finished_today"] == 1
     assert snapshot["recent_events"][0]["description"] == (
         EVENT_MATCH_FINISHED.format(winner=WINNER_LABELS["crew"])
+    )
+
+
+def test_finished_without_winner_says_the_host_closed_the_room():
+    stats = EventStats()
+    stats.handle("match.started", started())
+    stats.handle("match.finished", finished(winner=""))
+
+    assert stats.snapshot()["recent_events"][0]["description"] == (
+        EVENT_MATCH_CLOSED_BY_HOST
     )
 
 

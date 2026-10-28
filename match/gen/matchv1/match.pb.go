@@ -352,6 +352,7 @@ type ClientAction struct {
 	//	*ClientAction_SetOwned
 	//	*ClientAction_CallMeeting
 	//	*ClientAction_SetTaskCount
+	//	*ClientAction_Leave
 	Action        isClientAction_Action `protobuf_oneof:"action"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -538,6 +539,15 @@ func (x *ClientAction) GetSetTaskCount() *SetTaskCount {
 	return nil
 }
 
+func (x *ClientAction) GetLeave() *Leave {
+	if x != nil {
+		if x, ok := x.Action.(*ClientAction_Leave); ok {
+			return x.Leave
+		}
+	}
+	return nil
+}
+
 type isClientAction_Action interface {
 	isClientAction_Action()
 }
@@ -614,6 +624,11 @@ type ClientAction_SetTaskCount struct {
 	SetTaskCount *SetTaskCount `protobuf:"bytes,16,opt,name=set_task_count,json=setTaskCount,proto3,oneof"`
 }
 
+type ClientAction_Leave struct {
+	// Salir a propósito de la sala (distinto de perder la conexión).
+	Leave *Leave `protobuf:"bytes,17,opt,name=leave,proto3,oneof"`
+}
+
 func (*ClientAction_Join) isClientAction_Action() {}
 
 func (*ClientAction_Move) isClientAction_Action() {}
@@ -646,6 +661,47 @@ func (*ClientAction_CallMeeting) isClientAction_Action() {}
 
 func (*ClientAction_SetTaskCount) isClientAction_Action() {}
 
+func (*ClientAction_Leave) isClientAction_Action() {}
+
+// Leave: el jugador toca "Salir". Si es el creador, la sala se cierra para
+// todos con la razón "host_left"; de otro jugador no cambia nada (su lugar
+// se guarda en la gracia como siempre).
+type Leave struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Leave) Reset() {
+	*x = Leave{}
+	mi := &file_match_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Leave) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Leave) ProtoMessage() {}
+
+func (x *Leave) ProtoReflect() protoreflect.Message {
+	mi := &file_match_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Leave.ProtoReflect.Descriptor instead.
+func (*Leave) Descriptor() ([]byte, []int) {
+	return file_match_proto_rawDescGZIP(), []int{4}
+}
+
 type Join struct {
 	state    protoimpl.MessageState `protogen:"open.v1"`
 	MatchId  string                 `protobuf:"bytes,1,opt,name=match_id,json=matchId,proto3" json:"match_id,omitempty"`
@@ -660,7 +716,7 @@ type Join struct {
 
 func (x *Join) Reset() {
 	*x = Join{}
-	mi := &file_match_proto_msgTypes[4]
+	mi := &file_match_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -672,7 +728,7 @@ func (x *Join) String() string {
 func (*Join) ProtoMessage() {}
 
 func (x *Join) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[4]
+	mi := &file_match_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -685,7 +741,7 @@ func (x *Join) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Join.ProtoReflect.Descriptor instead.
 func (*Join) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{4}
+	return file_match_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *Join) GetMatchId() string {
@@ -726,7 +782,7 @@ type Move struct {
 
 func (x *Move) Reset() {
 	*x = Move{}
-	mi := &file_match_proto_msgTypes[5]
+	mi := &file_match_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -738,7 +794,7 @@ func (x *Move) String() string {
 func (*Move) ProtoMessage() {}
 
 func (x *Move) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[5]
+	mi := &file_match_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -751,7 +807,7 @@ func (x *Move) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Move.ProtoReflect.Descriptor instead.
 func (*Move) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{5}
+	return file_match_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *Move) GetDx() int32 {
@@ -777,7 +833,7 @@ type Start struct {
 
 func (x *Start) Reset() {
 	*x = Start{}
-	mi := &file_match_proto_msgTypes[6]
+	mi := &file_match_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -789,7 +845,7 @@ func (x *Start) String() string {
 func (*Start) ProtoMessage() {}
 
 func (x *Start) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[6]
+	mi := &file_match_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -802,7 +858,7 @@ func (x *Start) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Start.ProtoReflect.Descriptor instead.
 func (*Start) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{6}
+	return file_match_proto_rawDescGZIP(), []int{7}
 }
 
 // Interact: hacer una tarea en una estación o limpiar un tanque.
@@ -821,7 +877,7 @@ type Interact struct {
 
 func (x *Interact) Reset() {
 	*x = Interact{}
-	mi := &file_match_proto_msgTypes[7]
+	mi := &file_match_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -833,7 +889,7 @@ func (x *Interact) String() string {
 func (*Interact) ProtoMessage() {}
 
 func (x *Interact) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[7]
+	mi := &file_match_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -846,7 +902,7 @@ func (x *Interact) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Interact.ProtoReflect.Descriptor instead.
 func (*Interact) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{7}
+	return file_match_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *Interact) GetTarget() isInteract_Target {
@@ -907,7 +963,7 @@ type Contaminate struct {
 
 func (x *Contaminate) Reset() {
 	*x = Contaminate{}
-	mi := &file_match_proto_msgTypes[8]
+	mi := &file_match_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -919,7 +975,7 @@ func (x *Contaminate) String() string {
 func (*Contaminate) ProtoMessage() {}
 
 func (x *Contaminate) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[8]
+	mi := &file_match_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -932,7 +988,7 @@ func (x *Contaminate) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Contaminate.ProtoReflect.Descriptor instead.
 func (*Contaminate) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{8}
+	return file_match_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *Contaminate) GetTankSlot() int32 {
@@ -952,7 +1008,7 @@ type Report struct {
 
 func (x *Report) Reset() {
 	*x = Report{}
-	mi := &file_match_proto_msgTypes[9]
+	mi := &file_match_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -964,7 +1020,7 @@ func (x *Report) String() string {
 func (*Report) ProtoMessage() {}
 
 func (x *Report) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[9]
+	mi := &file_match_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -977,7 +1033,7 @@ func (x *Report) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Report.ProtoReflect.Descriptor instead.
 func (*Report) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{9}
+	return file_match_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *Report) GetTankSlot() int32 {
@@ -997,7 +1053,7 @@ type CallMeeting struct {
 
 func (x *CallMeeting) Reset() {
 	*x = CallMeeting{}
-	mi := &file_match_proto_msgTypes[10]
+	mi := &file_match_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1009,7 +1065,7 @@ func (x *CallMeeting) String() string {
 func (*CallMeeting) ProtoMessage() {}
 
 func (x *CallMeeting) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[10]
+	mi := &file_match_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1022,7 +1078,7 @@ func (x *CallMeeting) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CallMeeting.ProtoReflect.Descriptor instead.
 func (*CallMeeting) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{10}
+	return file_match_proto_rawDescGZIP(), []int{11}
 }
 
 // Vote: votar por un jugador o saltar el voto (S2-05).
@@ -1039,7 +1095,7 @@ type Vote struct {
 
 func (x *Vote) Reset() {
 	*x = Vote{}
-	mi := &file_match_proto_msgTypes[11]
+	mi := &file_match_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1051,7 +1107,7 @@ func (x *Vote) String() string {
 func (*Vote) ProtoMessage() {}
 
 func (x *Vote) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[11]
+	mi := &file_match_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1064,7 +1120,7 @@ func (x *Vote) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Vote.ProtoReflect.Descriptor instead.
 func (*Vote) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{11}
+	return file_match_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *Vote) GetChoice() isVote_Choice {
@@ -1119,7 +1175,7 @@ type Chat struct {
 
 func (x *Chat) Reset() {
 	*x = Chat{}
-	mi := &file_match_proto_msgTypes[12]
+	mi := &file_match_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1131,7 +1187,7 @@ func (x *Chat) String() string {
 func (*Chat) ProtoMessage() {}
 
 func (x *Chat) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[12]
+	mi := &file_match_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1144,7 +1200,7 @@ func (x *Chat) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Chat.ProtoReflect.Descriptor instead.
 func (*Chat) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{12}
+	return file_match_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *Chat) GetClientMsgId() string {
@@ -1172,7 +1228,7 @@ type Sabotage struct {
 
 func (x *Sabotage) Reset() {
 	*x = Sabotage{}
-	mi := &file_match_proto_msgTypes[13]
+	mi := &file_match_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1184,7 +1240,7 @@ func (x *Sabotage) String() string {
 func (*Sabotage) ProtoMessage() {}
 
 func (x *Sabotage) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[13]
+	mi := &file_match_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1197,7 +1253,7 @@ func (x *Sabotage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Sabotage.ProtoReflect.Descriptor instead.
 func (*Sabotage) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{13}
+	return file_match_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *Sabotage) GetKind() string {
@@ -1218,7 +1274,7 @@ type Fix struct {
 
 func (x *Fix) Reset() {
 	*x = Fix{}
-	mi := &file_match_proto_msgTypes[14]
+	mi := &file_match_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1230,7 +1286,7 @@ func (x *Fix) String() string {
 func (*Fix) ProtoMessage() {}
 
 func (x *Fix) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[14]
+	mi := &file_match_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1243,7 +1299,7 @@ func (x *Fix) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Fix.ProtoReflect.Descriptor instead.
 func (*Fix) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{14}
+	return file_match_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *Fix) GetPointId() string {
@@ -1264,7 +1320,7 @@ type PickColor struct {
 
 func (x *PickColor) Reset() {
 	*x = PickColor{}
-	mi := &file_match_proto_msgTypes[15]
+	mi := &file_match_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1276,7 +1332,7 @@ func (x *PickColor) String() string {
 func (*PickColor) ProtoMessage() {}
 
 func (x *PickColor) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[15]
+	mi := &file_match_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1289,7 +1345,7 @@ func (x *PickColor) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PickColor.ProtoReflect.Descriptor instead.
 func (*PickColor) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{15}
+	return file_match_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *PickColor) GetColor() string {
@@ -1309,7 +1365,7 @@ type PickAccessory struct {
 
 func (x *PickAccessory) Reset() {
 	*x = PickAccessory{}
-	mi := &file_match_proto_msgTypes[16]
+	mi := &file_match_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1321,7 +1377,7 @@ func (x *PickAccessory) String() string {
 func (*PickAccessory) ProtoMessage() {}
 
 func (x *PickAccessory) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[16]
+	mi := &file_match_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1334,7 +1390,7 @@ func (x *PickAccessory) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PickAccessory.ProtoReflect.Descriptor instead.
 func (*PickAccessory) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{16}
+	return file_match_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *PickAccessory) GetAccessory() string {
@@ -1355,7 +1411,7 @@ type PickSkin struct {
 
 func (x *PickSkin) Reset() {
 	*x = PickSkin{}
-	mi := &file_match_proto_msgTypes[17]
+	mi := &file_match_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1367,7 +1423,7 @@ func (x *PickSkin) String() string {
 func (*PickSkin) ProtoMessage() {}
 
 func (x *PickSkin) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[17]
+	mi := &file_match_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1380,7 +1436,7 @@ func (x *PickSkin) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PickSkin.ProtoReflect.Descriptor instead.
 func (*PickSkin) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{17}
+	return file_match_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *PickSkin) GetSkin() string {
@@ -1402,7 +1458,7 @@ type SetTaskCount struct {
 
 func (x *SetTaskCount) Reset() {
 	*x = SetTaskCount{}
-	mi := &file_match_proto_msgTypes[18]
+	mi := &file_match_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1414,7 +1470,7 @@ func (x *SetTaskCount) String() string {
 func (*SetTaskCount) ProtoMessage() {}
 
 func (x *SetTaskCount) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[18]
+	mi := &file_match_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1427,7 +1483,7 @@ func (x *SetTaskCount) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetTaskCount.ProtoReflect.Descriptor instead.
 func (*SetTaskCount) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{18}
+	return file_match_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *SetTaskCount) GetTasksPerPlayer() int32 {
@@ -1447,7 +1503,7 @@ type SetOwned struct {
 
 func (x *SetOwned) Reset() {
 	*x = SetOwned{}
-	mi := &file_match_proto_msgTypes[19]
+	mi := &file_match_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1459,7 +1515,7 @@ func (x *SetOwned) String() string {
 func (*SetOwned) ProtoMessage() {}
 
 func (x *SetOwned) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[19]
+	mi := &file_match_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1472,7 +1528,7 @@ func (x *SetOwned) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetOwned.ProtoReflect.Descriptor instead.
 func (*SetOwned) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{19}
+	return file_match_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *SetOwned) GetItems() []string {
@@ -1496,7 +1552,7 @@ type ServerEvent struct {
 
 func (x *ServerEvent) Reset() {
 	*x = ServerEvent{}
-	mi := &file_match_proto_msgTypes[20]
+	mi := &file_match_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1508,7 +1564,7 @@ func (x *ServerEvent) String() string {
 func (*ServerEvent) ProtoMessage() {}
 
 func (x *ServerEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[20]
+	mi := &file_match_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1521,7 +1577,7 @@ func (x *ServerEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ServerEvent.ProtoReflect.Descriptor instead.
 func (*ServerEvent) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{20}
+	return file_match_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *ServerEvent) GetEvent() isServerEvent_Event {
@@ -1620,7 +1676,7 @@ type Snapshot struct {
 
 func (x *Snapshot) Reset() {
 	*x = Snapshot{}
-	mi := &file_match_proto_msgTypes[21]
+	mi := &file_match_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1632,7 +1688,7 @@ func (x *Snapshot) String() string {
 func (*Snapshot) ProtoMessage() {}
 
 func (x *Snapshot) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[21]
+	mi := &file_match_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1645,7 +1701,7 @@ func (x *Snapshot) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Snapshot.ProtoReflect.Descriptor instead.
 func (*Snapshot) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{21}
+	return file_match_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *Snapshot) GetTick() int64 {
@@ -1786,7 +1842,7 @@ type Emergency struct {
 
 func (x *Emergency) Reset() {
 	*x = Emergency{}
-	mi := &file_match_proto_msgTypes[22]
+	mi := &file_match_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1798,7 +1854,7 @@ func (x *Emergency) String() string {
 func (*Emergency) ProtoMessage() {}
 
 func (x *Emergency) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[22]
+	mi := &file_match_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1811,7 +1867,7 @@ func (x *Emergency) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Emergency.ProtoReflect.Descriptor instead.
 func (*Emergency) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{22}
+	return file_match_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *Emergency) GetKind() string {
@@ -1846,7 +1902,7 @@ type SabotageStatus struct {
 
 func (x *SabotageStatus) Reset() {
 	*x = SabotageStatus{}
-	mi := &file_match_proto_msgTypes[23]
+	mi := &file_match_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1858,7 +1914,7 @@ func (x *SabotageStatus) String() string {
 func (*SabotageStatus) ProtoMessage() {}
 
 func (x *SabotageStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[23]
+	mi := &file_match_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1871,7 +1927,7 @@ func (x *SabotageStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SabotageStatus.ProtoReflect.Descriptor instead.
 func (*SabotageStatus) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{23}
+	return file_match_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *SabotageStatus) GetReadyAtTick() int64 {
@@ -1899,7 +1955,7 @@ type MeetingButton struct {
 
 func (x *MeetingButton) Reset() {
 	*x = MeetingButton{}
-	mi := &file_match_proto_msgTypes[24]
+	mi := &file_match_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1911,7 +1967,7 @@ func (x *MeetingButton) String() string {
 func (*MeetingButton) ProtoMessage() {}
 
 func (x *MeetingButton) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[24]
+	mi := &file_match_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1924,7 +1980,7 @@ func (x *MeetingButton) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MeetingButton.ProtoReflect.Descriptor instead.
 func (*MeetingButton) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{24}
+	return file_match_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *MeetingButton) GetReadyAtTick() int64 {
@@ -1954,7 +2010,7 @@ type OilDrop struct {
 
 func (x *OilDrop) Reset() {
 	*x = OilDrop{}
-	mi := &file_match_proto_msgTypes[25]
+	mi := &file_match_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1966,7 +2022,7 @@ func (x *OilDrop) String() string {
 func (*OilDrop) ProtoMessage() {}
 
 func (x *OilDrop) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[25]
+	mi := &file_match_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1979,7 +2035,7 @@ func (x *OilDrop) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OilDrop.ProtoReflect.Descriptor instead.
 func (*OilDrop) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{25}
+	return file_match_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *OilDrop) GetX() float32 {
@@ -2022,7 +2078,7 @@ type TankView struct {
 
 func (x *TankView) Reset() {
 	*x = TankView{}
-	mi := &file_match_proto_msgTypes[26]
+	mi := &file_match_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2034,7 +2090,7 @@ func (x *TankView) String() string {
 func (*TankView) ProtoMessage() {}
 
 func (x *TankView) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[26]
+	mi := &file_match_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2047,7 +2103,7 @@ func (x *TankView) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TankView.ProtoReflect.Descriptor instead.
 func (*TankView) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{26}
+	return file_match_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *TankView) GetSlot() int32 {
@@ -2089,7 +2145,7 @@ type MyTask struct {
 
 func (x *MyTask) Reset() {
 	*x = MyTask{}
-	mi := &file_match_proto_msgTypes[27]
+	mi := &file_match_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2101,7 +2157,7 @@ func (x *MyTask) String() string {
 func (*MyTask) ProtoMessage() {}
 
 func (x *MyTask) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[27]
+	mi := &file_match_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2114,7 +2170,7 @@ func (x *MyTask) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MyTask.ProtoReflect.Descriptor instead.
 func (*MyTask) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{27}
+	return file_match_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *MyTask) GetStationId() string {
@@ -2141,7 +2197,7 @@ type TaskProgress struct {
 
 func (x *TaskProgress) Reset() {
 	*x = TaskProgress{}
-	mi := &file_match_proto_msgTypes[28]
+	mi := &file_match_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2153,7 +2209,7 @@ func (x *TaskProgress) String() string {
 func (*TaskProgress) ProtoMessage() {}
 
 func (x *TaskProgress) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[28]
+	mi := &file_match_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2166,7 +2222,7 @@ func (x *TaskProgress) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TaskProgress.ProtoReflect.Descriptor instead.
 func (*TaskProgress) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{28}
+	return file_match_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *TaskProgress) GetCompleted() int32 {
@@ -2199,7 +2255,7 @@ type Meeting struct {
 
 func (x *Meeting) Reset() {
 	*x = Meeting{}
-	mi := &file_match_proto_msgTypes[29]
+	mi := &file_match_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2211,7 +2267,7 @@ func (x *Meeting) String() string {
 func (*Meeting) ProtoMessage() {}
 
 func (x *Meeting) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[29]
+	mi := &file_match_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2224,7 +2280,7 @@ func (x *Meeting) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Meeting.ProtoReflect.Descriptor instead.
 func (*Meeting) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{29}
+	return file_match_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *Meeting) GetReporterId() string {
@@ -2295,7 +2351,7 @@ type ChatMessage struct {
 
 func (x *ChatMessage) Reset() {
 	*x = ChatMessage{}
-	mi := &file_match_proto_msgTypes[30]
+	mi := &file_match_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2307,7 +2363,7 @@ func (x *ChatMessage) String() string {
 func (*ChatMessage) ProtoMessage() {}
 
 func (x *ChatMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[30]
+	mi := &file_match_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2320,7 +2376,7 @@ func (x *ChatMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChatMessage.ProtoReflect.Descriptor instead.
 func (*ChatMessage) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{30}
+	return file_match_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *ChatMessage) GetId() string {
@@ -2365,7 +2421,7 @@ type MatchEnded struct {
 
 func (x *MatchEnded) Reset() {
 	*x = MatchEnded{}
-	mi := &file_match_proto_msgTypes[31]
+	mi := &file_match_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2377,7 +2433,7 @@ func (x *MatchEnded) String() string {
 func (*MatchEnded) ProtoMessage() {}
 
 func (x *MatchEnded) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[31]
+	mi := &file_match_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2390,7 +2446,7 @@ func (x *MatchEnded) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MatchEnded.ProtoReflect.Descriptor instead.
 func (*MatchEnded) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{31}
+	return file_match_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *MatchEnded) GetWinner() string {
@@ -2437,7 +2493,7 @@ type PlayerView struct {
 
 func (x *PlayerView) Reset() {
 	*x = PlayerView{}
-	mi := &file_match_proto_msgTypes[32]
+	mi := &file_match_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2449,7 +2505,7 @@ func (x *PlayerView) String() string {
 func (*PlayerView) ProtoMessage() {}
 
 func (x *PlayerView) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[32]
+	mi := &file_match_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2462,7 +2518,7 @@ func (x *PlayerView) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlayerView.ProtoReflect.Descriptor instead.
 func (*PlayerView) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{32}
+	return file_match_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *PlayerView) GetId() string {
@@ -2545,7 +2601,7 @@ type Error struct {
 
 func (x *Error) Reset() {
 	*x = Error{}
-	mi := &file_match_proto_msgTypes[33]
+	mi := &file_match_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2557,7 +2613,7 @@ func (x *Error) String() string {
 func (*Error) ProtoMessage() {}
 
 func (x *Error) ProtoReflect() protoreflect.Message {
-	mi := &file_match_proto_msgTypes[33]
+	mi := &file_match_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2570,7 +2626,7 @@ func (x *Error) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Error.ProtoReflect.Descriptor instead.
 func (*Error) Descriptor() ([]byte, []int) {
-	return file_match_proto_rawDescGZIP(), []int{33}
+	return file_match_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *Error) GetCode() string {
@@ -2601,7 +2657,7 @@ const file_match_proto_rawDesc = "" +
 	"\fdisplay_name\x18\x03 \x01(\tR\vdisplayName\">\n" +
 	"\x04Room\x12\x1b\n" +
 	"\troom_code\x18\x01 \x01(\tR\broomCode\x12\x19\n" +
-	"\bmatch_id\x18\x02 \x01(\tR\amatchId\"\xa1\x06\n" +
+	"\bmatch_id\x18\x02 \x01(\tR\amatchId\"\xca\x06\n" +
 	"\fClientAction\x12$\n" +
 	"\x04join\x18\x01 \x01(\v2\x0e.match.v1.JoinH\x00R\x04join\x12$\n" +
 	"\x04move\x18\x02 \x01(\v2\x0e.match.v1.MoveH\x00R\x04move\x12'\n" +
@@ -2620,8 +2676,10 @@ const file_match_proto_rawDesc = "" +
 	"\tpick_skin\x18\r \x01(\v2\x12.match.v1.PickSkinH\x00R\bpickSkin\x121\n" +
 	"\tset_owned\x18\x0e \x01(\v2\x12.match.v1.SetOwnedH\x00R\bsetOwned\x12:\n" +
 	"\fcall_meeting\x18\x0f \x01(\v2\x15.match.v1.CallMeetingH\x00R\vcallMeeting\x12>\n" +
-	"\x0eset_task_count\x18\x10 \x01(\v2\x16.match.v1.SetTaskCountH\x00R\fsetTaskCountB\b\n" +
-	"\x06action\"q\n" +
+	"\x0eset_task_count\x18\x10 \x01(\v2\x16.match.v1.SetTaskCountH\x00R\fsetTaskCount\x12'\n" +
+	"\x05leave\x18\x11 \x01(\v2\x0f.match.v1.LeaveH\x00R\x05leaveB\b\n" +
+	"\x06action\"\a\n" +
+	"\x05Leave\"q\n" +
 	"\x04Join\x12\x19\n" +
 	"\bmatch_id\x18\x01 \x01(\tR\amatchId\x12\x1b\n" +
 	"\tplayer_id\x18\x02 \x01(\tR\bplayerId\x12\x1b\n" +
@@ -2793,7 +2851,7 @@ func file_match_proto_rawDescGZIP() []byte {
 }
 
 var file_match_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_match_proto_msgTypes = make([]protoimpl.MessageInfo, 34)
+var file_match_proto_msgTypes = make([]protoimpl.MessageInfo, 35)
 var file_match_proto_goTypes = []any{
 	(Phase)(0),                // 0: match.v1.Phase
 	(Role)(0),                 // 1: match.v1.Role
@@ -2802,81 +2860,83 @@ var file_match_proto_goTypes = []any{
 	(*JoinRoomRequest)(nil),   // 4: match.v1.JoinRoomRequest
 	(*Room)(nil),              // 5: match.v1.Room
 	(*ClientAction)(nil),      // 6: match.v1.ClientAction
-	(*Join)(nil),              // 7: match.v1.Join
-	(*Move)(nil),              // 8: match.v1.Move
-	(*Start)(nil),             // 9: match.v1.Start
-	(*Interact)(nil),          // 10: match.v1.Interact
-	(*Contaminate)(nil),       // 11: match.v1.Contaminate
-	(*Report)(nil),            // 12: match.v1.Report
-	(*CallMeeting)(nil),       // 13: match.v1.CallMeeting
-	(*Vote)(nil),              // 14: match.v1.Vote
-	(*Chat)(nil),              // 15: match.v1.Chat
-	(*Sabotage)(nil),          // 16: match.v1.Sabotage
-	(*Fix)(nil),               // 17: match.v1.Fix
-	(*PickColor)(nil),         // 18: match.v1.PickColor
-	(*PickAccessory)(nil),     // 19: match.v1.PickAccessory
-	(*PickSkin)(nil),          // 20: match.v1.PickSkin
-	(*SetTaskCount)(nil),      // 21: match.v1.SetTaskCount
-	(*SetOwned)(nil),          // 22: match.v1.SetOwned
-	(*ServerEvent)(nil),       // 23: match.v1.ServerEvent
-	(*Snapshot)(nil),          // 24: match.v1.Snapshot
-	(*Emergency)(nil),         // 25: match.v1.Emergency
-	(*SabotageStatus)(nil),    // 26: match.v1.SabotageStatus
-	(*MeetingButton)(nil),     // 27: match.v1.MeetingButton
-	(*OilDrop)(nil),           // 28: match.v1.OilDrop
-	(*TankView)(nil),          // 29: match.v1.TankView
-	(*MyTask)(nil),            // 30: match.v1.MyTask
-	(*TaskProgress)(nil),      // 31: match.v1.TaskProgress
-	(*Meeting)(nil),           // 32: match.v1.Meeting
-	(*ChatMessage)(nil),       // 33: match.v1.ChatMessage
-	(*MatchEnded)(nil),        // 34: match.v1.MatchEnded
-	(*PlayerView)(nil),        // 35: match.v1.PlayerView
-	(*Error)(nil),             // 36: match.v1.Error
+	(*Leave)(nil),             // 7: match.v1.Leave
+	(*Join)(nil),              // 8: match.v1.Join
+	(*Move)(nil),              // 9: match.v1.Move
+	(*Start)(nil),             // 10: match.v1.Start
+	(*Interact)(nil),          // 11: match.v1.Interact
+	(*Contaminate)(nil),       // 12: match.v1.Contaminate
+	(*Report)(nil),            // 13: match.v1.Report
+	(*CallMeeting)(nil),       // 14: match.v1.CallMeeting
+	(*Vote)(nil),              // 15: match.v1.Vote
+	(*Chat)(nil),              // 16: match.v1.Chat
+	(*Sabotage)(nil),          // 17: match.v1.Sabotage
+	(*Fix)(nil),               // 18: match.v1.Fix
+	(*PickColor)(nil),         // 19: match.v1.PickColor
+	(*PickAccessory)(nil),     // 20: match.v1.PickAccessory
+	(*PickSkin)(nil),          // 21: match.v1.PickSkin
+	(*SetTaskCount)(nil),      // 22: match.v1.SetTaskCount
+	(*SetOwned)(nil),          // 23: match.v1.SetOwned
+	(*ServerEvent)(nil),       // 24: match.v1.ServerEvent
+	(*Snapshot)(nil),          // 25: match.v1.Snapshot
+	(*Emergency)(nil),         // 26: match.v1.Emergency
+	(*SabotageStatus)(nil),    // 27: match.v1.SabotageStatus
+	(*MeetingButton)(nil),     // 28: match.v1.MeetingButton
+	(*OilDrop)(nil),           // 29: match.v1.OilDrop
+	(*TankView)(nil),          // 30: match.v1.TankView
+	(*MyTask)(nil),            // 31: match.v1.MyTask
+	(*TaskProgress)(nil),      // 32: match.v1.TaskProgress
+	(*Meeting)(nil),           // 33: match.v1.Meeting
+	(*ChatMessage)(nil),       // 34: match.v1.ChatMessage
+	(*MatchEnded)(nil),        // 35: match.v1.MatchEnded
+	(*PlayerView)(nil),        // 36: match.v1.PlayerView
+	(*Error)(nil),             // 37: match.v1.Error
 }
 var file_match_proto_depIdxs = []int32{
-	7,  // 0: match.v1.ClientAction.join:type_name -> match.v1.Join
-	8,  // 1: match.v1.ClientAction.move:type_name -> match.v1.Move
-	9,  // 2: match.v1.ClientAction.start:type_name -> match.v1.Start
-	10, // 3: match.v1.ClientAction.interact:type_name -> match.v1.Interact
-	11, // 4: match.v1.ClientAction.contaminate:type_name -> match.v1.Contaminate
-	12, // 5: match.v1.ClientAction.report:type_name -> match.v1.Report
-	14, // 6: match.v1.ClientAction.vote:type_name -> match.v1.Vote
-	15, // 7: match.v1.ClientAction.chat:type_name -> match.v1.Chat
-	16, // 8: match.v1.ClientAction.sabotage:type_name -> match.v1.Sabotage
-	17, // 9: match.v1.ClientAction.fix:type_name -> match.v1.Fix
-	18, // 10: match.v1.ClientAction.pick_color:type_name -> match.v1.PickColor
-	19, // 11: match.v1.ClientAction.pick_accessory:type_name -> match.v1.PickAccessory
-	20, // 12: match.v1.ClientAction.pick_skin:type_name -> match.v1.PickSkin
-	22, // 13: match.v1.ClientAction.set_owned:type_name -> match.v1.SetOwned
-	13, // 14: match.v1.ClientAction.call_meeting:type_name -> match.v1.CallMeeting
-	21, // 15: match.v1.ClientAction.set_task_count:type_name -> match.v1.SetTaskCount
-	24, // 16: match.v1.ServerEvent.snapshot:type_name -> match.v1.Snapshot
-	36, // 17: match.v1.ServerEvent.error:type_name -> match.v1.Error
-	34, // 18: match.v1.ServerEvent.match_ended:type_name -> match.v1.MatchEnded
-	0,  // 19: match.v1.Snapshot.phase:type_name -> match.v1.Phase
-	35, // 20: match.v1.Snapshot.players:type_name -> match.v1.PlayerView
-	29, // 21: match.v1.Snapshot.tanks:type_name -> match.v1.TankView
-	1,  // 22: match.v1.Snapshot.my_role:type_name -> match.v1.Role
-	31, // 23: match.v1.Snapshot.my_task_progress:type_name -> match.v1.TaskProgress
-	32, // 24: match.v1.Snapshot.meeting:type_name -> match.v1.Meeting
-	33, // 25: match.v1.Snapshot.chat:type_name -> match.v1.ChatMessage
-	28, // 26: match.v1.Snapshot.oil_drops:type_name -> match.v1.OilDrop
-	30, // 27: match.v1.Snapshot.my_tasks:type_name -> match.v1.MyTask
-	25, // 28: match.v1.Snapshot.emergency:type_name -> match.v1.Emergency
-	26, // 29: match.v1.Snapshot.my_sabotage:type_name -> match.v1.SabotageStatus
-	27, // 30: match.v1.Snapshot.my_meeting:type_name -> match.v1.MeetingButton
-	2,  // 31: match.v1.Meeting.reason:type_name -> match.v1.MeetingReason
-	3,  // 32: match.v1.Match.CreateRoom:input_type -> match.v1.CreateRoomRequest
-	4,  // 33: match.v1.Match.JoinRoom:input_type -> match.v1.JoinRoomRequest
-	6,  // 34: match.v1.Match.Play:input_type -> match.v1.ClientAction
-	5,  // 35: match.v1.Match.CreateRoom:output_type -> match.v1.Room
-	5,  // 36: match.v1.Match.JoinRoom:output_type -> match.v1.Room
-	23, // 37: match.v1.Match.Play:output_type -> match.v1.ServerEvent
-	35, // [35:38] is the sub-list for method output_type
-	32, // [32:35] is the sub-list for method input_type
-	32, // [32:32] is the sub-list for extension type_name
-	32, // [32:32] is the sub-list for extension extendee
-	0,  // [0:32] is the sub-list for field type_name
+	8,  // 0: match.v1.ClientAction.join:type_name -> match.v1.Join
+	9,  // 1: match.v1.ClientAction.move:type_name -> match.v1.Move
+	10, // 2: match.v1.ClientAction.start:type_name -> match.v1.Start
+	11, // 3: match.v1.ClientAction.interact:type_name -> match.v1.Interact
+	12, // 4: match.v1.ClientAction.contaminate:type_name -> match.v1.Contaminate
+	13, // 5: match.v1.ClientAction.report:type_name -> match.v1.Report
+	15, // 6: match.v1.ClientAction.vote:type_name -> match.v1.Vote
+	16, // 7: match.v1.ClientAction.chat:type_name -> match.v1.Chat
+	17, // 8: match.v1.ClientAction.sabotage:type_name -> match.v1.Sabotage
+	18, // 9: match.v1.ClientAction.fix:type_name -> match.v1.Fix
+	19, // 10: match.v1.ClientAction.pick_color:type_name -> match.v1.PickColor
+	20, // 11: match.v1.ClientAction.pick_accessory:type_name -> match.v1.PickAccessory
+	21, // 12: match.v1.ClientAction.pick_skin:type_name -> match.v1.PickSkin
+	23, // 13: match.v1.ClientAction.set_owned:type_name -> match.v1.SetOwned
+	14, // 14: match.v1.ClientAction.call_meeting:type_name -> match.v1.CallMeeting
+	22, // 15: match.v1.ClientAction.set_task_count:type_name -> match.v1.SetTaskCount
+	7,  // 16: match.v1.ClientAction.leave:type_name -> match.v1.Leave
+	25, // 17: match.v1.ServerEvent.snapshot:type_name -> match.v1.Snapshot
+	37, // 18: match.v1.ServerEvent.error:type_name -> match.v1.Error
+	35, // 19: match.v1.ServerEvent.match_ended:type_name -> match.v1.MatchEnded
+	0,  // 20: match.v1.Snapshot.phase:type_name -> match.v1.Phase
+	36, // 21: match.v1.Snapshot.players:type_name -> match.v1.PlayerView
+	30, // 22: match.v1.Snapshot.tanks:type_name -> match.v1.TankView
+	1,  // 23: match.v1.Snapshot.my_role:type_name -> match.v1.Role
+	32, // 24: match.v1.Snapshot.my_task_progress:type_name -> match.v1.TaskProgress
+	33, // 25: match.v1.Snapshot.meeting:type_name -> match.v1.Meeting
+	34, // 26: match.v1.Snapshot.chat:type_name -> match.v1.ChatMessage
+	29, // 27: match.v1.Snapshot.oil_drops:type_name -> match.v1.OilDrop
+	31, // 28: match.v1.Snapshot.my_tasks:type_name -> match.v1.MyTask
+	26, // 29: match.v1.Snapshot.emergency:type_name -> match.v1.Emergency
+	27, // 30: match.v1.Snapshot.my_sabotage:type_name -> match.v1.SabotageStatus
+	28, // 31: match.v1.Snapshot.my_meeting:type_name -> match.v1.MeetingButton
+	2,  // 32: match.v1.Meeting.reason:type_name -> match.v1.MeetingReason
+	3,  // 33: match.v1.Match.CreateRoom:input_type -> match.v1.CreateRoomRequest
+	4,  // 34: match.v1.Match.JoinRoom:input_type -> match.v1.JoinRoomRequest
+	6,  // 35: match.v1.Match.Play:input_type -> match.v1.ClientAction
+	5,  // 36: match.v1.Match.CreateRoom:output_type -> match.v1.Room
+	5,  // 37: match.v1.Match.JoinRoom:output_type -> match.v1.Room
+	24, // 38: match.v1.Match.Play:output_type -> match.v1.ServerEvent
+	36, // [36:39] is the sub-list for method output_type
+	33, // [33:36] is the sub-list for method input_type
+	33, // [33:33] is the sub-list for extension type_name
+	33, // [33:33] is the sub-list for extension extendee
+	0,  // [0:33] is the sub-list for field type_name
 }
 
 func init() { file_match_proto_init() }
@@ -2901,16 +2961,17 @@ func file_match_proto_init() {
 		(*ClientAction_SetOwned)(nil),
 		(*ClientAction_CallMeeting)(nil),
 		(*ClientAction_SetTaskCount)(nil),
+		(*ClientAction_Leave)(nil),
 	}
-	file_match_proto_msgTypes[7].OneofWrappers = []any{
+	file_match_proto_msgTypes[8].OneofWrappers = []any{
 		(*Interact_StationId)(nil),
 		(*Interact_TankSlot)(nil),
 	}
-	file_match_proto_msgTypes[11].OneofWrappers = []any{
+	file_match_proto_msgTypes[12].OneofWrappers = []any{
 		(*Vote_TargetPlayerId)(nil),
 		(*Vote_Skip)(nil),
 	}
-	file_match_proto_msgTypes[20].OneofWrappers = []any{
+	file_match_proto_msgTypes[21].OneofWrappers = []any{
 		(*ServerEvent_Snapshot)(nil),
 		(*ServerEvent_Error)(nil),
 		(*ServerEvent_MatchEnded)(nil),
@@ -2921,7 +2982,7 @@ func file_match_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_match_proto_rawDesc), len(file_match_proto_rawDesc)),
 			NumEnums:      3,
-			NumMessages:   34,
+			NumMessages:   35,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

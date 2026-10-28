@@ -164,6 +164,12 @@ describe('end of match', () => {
     expect(endTitle(null)).toBe('La partida terminó');
   });
 
+  it('says the host left when the room closes without a winner', () => {
+    expect(endSubtitle(null, 'host_left')).toBe(
+      'Quien creó la sala salió, así que la partida se cerró para todos.',
+    );
+  });
+
   it('distinguishes why crew or impostor won in subtitle', () => {
     expect(endSubtitle('crew', 'reservoir_full')).toBe(
       'El embalse se llenó con las tareas 3R.',

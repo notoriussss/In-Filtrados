@@ -136,6 +136,7 @@ export function endSubtitle(
   reason?: EndReason | null,
   impostorCount = 1,
 ): string {
+  if (reason === 'host_left') return RESULT_TEXT.HOST_LEFT_SUB;
   if (!winner) return '';
   if (winner === 'crew') {
     if (reason === 'reservoir_full') {

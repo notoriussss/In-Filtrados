@@ -83,6 +83,8 @@ export function parseClientMessage(raw: string): ClientMessage | null {
       return { type: 'pickSkin', skin: msg.skin };
     case 'refreshShop':
       return { type: 'refreshShop' };
+    case 'leave':
+      return { type: 'leave' };
     case 'ping':
       return { type: 'ping' };
     default:
@@ -133,6 +135,8 @@ export function toGrpcAction(msg: ClientMessage): object | null {
       return { pickAccessory: { accessory: msg.accessory } };
     case 'pickSkin':
       return { pickSkin: { skin: msg.skin } };
+    case 'leave':
+      return { leave: {} };
     // refreshShop no es de match: el gateway lo atiende solo.
     default:
       return null;

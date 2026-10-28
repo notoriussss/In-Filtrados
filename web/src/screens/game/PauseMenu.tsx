@@ -12,7 +12,8 @@ export function PauseMenu(props: {
   onSettings: () => void;
   onLeave: () => void;
 }) {
-  const code = session.loadSession()?.roomCode ?? '';
+  const data = session.loadSession();
+  const code = data?.roomCode ?? '';
   return (
     <div className="overlay-stage">
       <Stage className="scr-pause">
@@ -62,7 +63,9 @@ export function PauseMenu(props: {
             </Button>
           </div>
           <p className="small muted ctr" style={{ marginTop: 22 }}>
-            {PAUSE_TEXT.LEAVE_NOTE}
+            {data?.isCreator
+              ? PAUSE_TEXT.LEAVE_NOTE_HOST
+              : PAUSE_TEXT.LEAVE_NOTE}
           </p>
         </section>
       </Stage>

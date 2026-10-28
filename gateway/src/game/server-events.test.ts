@@ -235,6 +235,19 @@ test('matchEnded keeps winner, impostors and reason', () => {
   });
 });
 
+test('matchEnded without winner is a room closed by the host', () => {
+  const ev: GrpcServerEvent = {
+    event: 'matchEnded',
+    matchEnded: { winner: '', impostorIds: [], reason: 'host_left' },
+  };
+  assert.deepEqual(toServerMessage(ev), {
+    type: 'matchEnded',
+    winner: null,
+    impostorIds: [],
+    reason: 'host_left',
+  });
+});
+
 test('matchEnded with unknown reason drops reason field', () => {
   const ev: GrpcServerEvent = {
     event: 'matchEnded',
