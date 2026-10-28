@@ -1,0 +1,354 @@
+/* Pantalla Cómo jugar (rediseño acorde al estándar de Menú, Ajustes y Unirse).
+   Estilos encapsulados en .scr-help. */
+
+.stage.scr-help {
+  position: relative;
+  overflow: hidden;
+}
+
+.scr-help .help-backdrop {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(8px);
+  background: radial-gradient(
+    ellipse at center,
+    rgba(3, 10, 24, 0.72) 0%,
+    rgba(3, 10, 24, 0.9) 100%
+  );
+  z-index: 1;
+}
+
+/* Modal: un solo color oscuro, sin scroll */
+.scr-help .help-modal {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  transform: translate(-50%, -50%);
+  width: 1240px;
+  height: 820px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  background: #061528;
+  border: 2px solid var(--line-d);
+  border-radius: 14px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85);
+  overflow: hidden;
+}
+
+.scr-help .help-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 50px 18px;
+  flex-shrink: 0;
+}
+
+.scr-help .help-head h2 {
+  font-family: var(--head);
+  font-size: 32px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--aqua);
+  text-shadow: 2px 2px 0 var(--ink);
+  margin: 0;
+}
+
+.scr-help .help-sub {
+  margin: 8px 0 0;
+  font-size: 20px;
+  color: var(--mut);
+}
+
+.scr-help .help-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  color: var(--mut);
+  font-family: var(--head);
+  font-size: 34px;
+  line-height: 1;
+  padding: 0;
+  transition: color 120ms steps(3), transform 120ms steps(3);
+}
+
+.scr-help .help-close-btn:hover {
+  color: #fff;
+  transform: scale(1.15);
+}
+
+/* Tabs clásicas con subrayado */
+.scr-help .help-tabs {
+  display: flex;
+  gap: 36px;
+  padding: 0 50px;
+  border-bottom: 2px solid var(--line-d);
+  flex-shrink: 0;
+}
+
+.scr-help .help-tab {
+  padding: 16px 6px 14px;
+  font-family: var(--head);
+  font-size: 22px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--mut);
+  background: transparent;
+  border: 0;
+  border-bottom: 4px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: all 120ms steps(3);
+}
+
+.scr-help .help-tab:hover {
+  color: #fff;
+  border-bottom-color: rgba(126, 230, 216, 0.45);
+}
+
+.scr-help .help-tab.on {
+  color: var(--aqua);
+  border-bottom-color: var(--aqua);
+  text-shadow: 1px 1px 0 var(--ink);
+}
+
+/* Cuerpo */
+.scr-help .help-body {
+  flex: 1;
+  padding: 40px 50px 24px;
+  overflow: hidden;
+}
+
+.scr-help .help-cols {
+  display: grid;
+  gap: 28px;
+  height: 100%;
+}
+
+.scr-help .help-cols.three {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.scr-help .help-cols.two {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.scr-help .help-card {
+  background: #07192e;
+  border: 1.5px solid var(--line-d);
+  border-radius: 12px;
+  padding: 28px 30px;
+  min-width: 0;
+}
+
+.scr-help .help-card h3 {
+  font-family: var(--head);
+  font-size: 30px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--aqua);
+  text-shadow: 2px 2px 0 var(--ink);
+  margin: 0;
+}
+
+.scr-help .help-card.crew h3 {
+  color: var(--leaf);
+}
+
+.scr-help .help-card.impostor h3 {
+  color: #e74c3c;
+}
+
+.scr-help .help-card .lead {
+  margin: 8px 0 20px;
+  font-size: 21px;
+  color: var(--mut);
+}
+
+.scr-help .help-card p {
+  margin: 0 0 18px;
+  font-size: 23px;
+  line-height: 1.35;
+  color: #e0f2fe;
+}
+
+.scr-help .help-bullet {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-top: 14px;
+  font-size: 22px;
+  line-height: 1.35;
+  color: #e0f2fe;
+}
+
+.scr-help .help-bullet i {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  margin-top: 10px;
+  background: var(--aqua);
+}
+
+.scr-help .help-win {
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1.5px solid rgba(74, 155, 208, 0.18);
+  font-family: var(--head);
+  font-size: 19px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.scr-help .help-card.crew .help-win {
+  color: var(--leaf);
+}
+
+.scr-help .help-card.impostor .help-win {
+  color: #e74c3c;
+}
+
+.scr-help .help-roles-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: 100%;
+}
+
+.scr-help .help-meeting-note {
+  background: #07192e;
+  border: 1.5px solid var(--line-d);
+  border-radius: 12px;
+  padding: 16px 24px;
+  font-size: 20px;
+  line-height: 1.4;
+  color: #e0f2fe;
+}
+
+.scr-help .help-meeting-note b {
+  color: var(--amber, #f59e0b);
+  margin-right: 8px;
+  font-family: var(--head);
+  letter-spacing: 1px;
+}
+
+/* Controles: filas como en Ajustes */
+.scr-help .help-list {
+  background: #07192e;
+  border: 1.5px solid var(--line-d);
+  border-radius: 12px;
+  padding: 10px 32px;
+}
+
+.scr-help .help-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 4px;
+  border-bottom: 1.5px solid rgba(74, 155, 208, 0.18);
+}
+
+.scr-help .help-row:last-child {
+  border-bottom: 0;
+}
+
+.scr-help .help-row b {
+  font-family: var(--head);
+  font-size: 24px;
+  letter-spacing: 1px;
+  color: #fff;
+  text-shadow: 2px 2px 0 var(--ink);
+}
+
+.scr-help .help-keys {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.scr-help .kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 42px;
+  height: 42px;
+  padding: 0 12px;
+  font-family: var(--head);
+  font-size: 22px;
+  color: var(--aqua);
+  background: #0a2139;
+  border: 1.5px solid var(--line-d);
+  border-radius: 6px;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.6);
+  text-shadow: 1px 1px 0 var(--ink);
+}
+
+/* Pie */
+.scr-help .help-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 50px 24px;
+  border-top: 2px solid var(--line-d);
+  background: #040e1b;
+  flex-shrink: 0;
+}
+
+.scr-help .help-btn {
+  padding: 12px 30px;
+  font-family: var(--head);
+  font-size: 22px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--txt);
+  background: #0a2139;
+  border: 2px solid var(--line-d);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 120ms steps(3);
+}
+
+.scr-help .help-btn:hover {
+  border-color: var(--aqua);
+  background: #0e3054;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+/* Barra de atajos (idéntica al resto de pantallas) */
+.stage.scr-help .hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 22px;
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.stage.scr-help .hint span {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--head);
+  font-size: 19px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--mut);
+  text-shadow: 2px 2px 0 var(--ink);
+}
+
+.stage.scr-help .hint .kbd {
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  font-size: 17px;
+  border: 1.5px solid var(--aqua);
+  border-radius: 4px;
+}

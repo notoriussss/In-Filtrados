@@ -27,12 +27,18 @@ export const ACCESS_TEXT = {
   TITLE: 'Entra a la estación',
   LOGIN_TAB: 'Entrar',
   REGISTER_TAB: 'Crear cuenta',
+  NO_ACCOUNT: '¿No tienes cuenta?',
+  CREATE_ONE: 'Crea una',
+  HAVE_ACCOUNT: '¿Ya tienes cuenta?',
+  LOGIN_ACTION: 'Inicia sesión',
   USERNAME: 'Usuario',
   PASSWORD: 'Contraseña',
-  USERNAME_RULE: '3 a 20 caracteres, sin espacios: letras, números y _',
+  USERNAME_RULE:
+    '3 a 20 caracteres: no puede llevar espacios, acentos ni símbolos',
   PASSWORD_RULE: 'Mínimo 8 caracteres',
   // Lo que se le dice al jugador mientras escribe (accountRules.ts).
-  USERNAME_BAD_CHARS: 'Solo letras sin acento, números y _ (sin espacios)',
+  USERNAME_BAD_CHARS:
+    'No puede llevar espacios, acentos ni caracteres especiales',
   usernameTooShort: (min: number) => `Muy corto: mínimo ${min} caracteres`,
   usernameTooLong: (max: number, used: number) =>
     `Muy largo: máximo ${max} caracteres (llevas ${used})`,
@@ -85,12 +91,14 @@ export const JOIN_TEXT = {
     'El código tiene 4 letras y números. ' + 'Pídeselo a quien creó la sala.',
   BACK: 'Volver',
   JOIN: 'Unirme',
+  CONNECTING: 'Conectando…',
   NOT_FOUND: 'No existe una sala con ese código',
   FULL: 'La sala está llena',
 } as const;
 
 export const LOBBY_TEXT = {
   TITLE: 'Sala de espera',
+  ROOM_CODE: 'Código de sala',
   LEAVE: 'Salir',
   COPY: 'Copiar',
   COPIED: 'Copiado',
@@ -170,6 +178,10 @@ export const HELP_TEXT = {
   SABOTAGE: 'Sabotear',
   MENU: 'Menú',
   CLOSE: 'Cerrar',
+  TAB_3R: 'Las 3R',
+  TAB_ROLES: 'Roles',
+  TAB_CONTROLS: 'Controles',
+  BACK: 'Volver',
 } as const;
 
 export const ROLE_TEXT = {
@@ -375,6 +387,7 @@ export const SHOP_TEXT = {
   NOT_ENOUGH: 'No te alcanzan las monedas',
   price: (n: number) => `${n} ◆`,
   bought: (name: string) => `Compraste: ${name}`,
+  unlockedCount: (owned: number, total: number) => `${owned}/${total}`,
   LOADING: 'Cargando la tienda…',
   LOAD_ERROR: 'No se pudo abrir la tienda',
 } as const;

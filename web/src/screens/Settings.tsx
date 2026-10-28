@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Stage } from '../ui/Stage';
-import { Icon, type IconName } from '../ui/Icon';
-import { Button, Chip, Kbd, TitleBar } from '../ui/kit';
+import { Chip, HintBar, Kbd } from '../ui/kit';
 import {
   type Settings as SettingsData,
   applySettings,
@@ -9,19 +8,19 @@ import {
   loadSettings,
   saveSettings,
 } from '../settings';
-import { SETTINGS_TEXT as T } from '../texts';
+import { MENU_TEXT, SETTINGS_TEXT as T } from '../texts';
 import { BACKGROUNDS } from './backgrounds';
+import '../styles/settings.css';
 
 type TabId = 'video' | 'controls' | 'access';
 
-const TABS: { id: TabId; icon: IconName; label: string }[] = [
-  { id: 'video', icon: 'screen', label: T.TAB_VIDEO },
-  { id: 'controls', icon: 'keyboard', label: T.TAB_CONTROLS },
-  { id: 'access', icon: 'eye', label: T.TAB_ACCESS },
+const TABS: { id: TabId; label: string }[] = [
+  { id: 'video', label: T.TAB_VIDEO },
+  { id: 'controls', label: T.TAB_CONTROLS },
+  { id: 'access', label: T.TAB_ACCESS },
 ];
 
-// Settings (maqueta 08-ajustes). Changes preview at once; "Aplicar" keeps
-// them in this browser and "Volver" (or Esc) puts the saved ones back.
+// Settings (maqueta 08-ajustes): rediseñado acorde al menú principal.
 export function Settings(props: { onClose: () => void; overlay?: boolean }) {
   const [saved] = useState(loadSettings);
   const [draft, setDraft] = useState<SettingsData>(saved);
@@ -73,37 +72,50 @@ export function Settings(props: { onClose: () => void; overlay?: boolean }) {
   return (
     <Stage
       className="scr-settings"
-      background={props.overlay ? undefined : BACKGROUNDS.mapBlur}
+      background={props.overlay ? undefined : BACKGROUNDS.hero}
     >
-      <div className="shade dim" />
-      <section
-        className="panel"
-        style={{ left: 260, top: 60, width: 1400, height: 960 }}
-      >
-        <div style={{ padding: '26px 40px' }}>
-          <TitleBar icon="gear" title={T.TITLE}>
-            <Kbd>Esc</Kbd>
-          </TitleBar>
-          <div className="tabs" role="tablist">
-            {TABS.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                role="tab"
-                aria-selected={tab === t.id}
-                className={`tab ${tab === t.id ? 'on' : ''}`}
-                onClick={() => setTab(t.id)}
-              >
-                <Icon
-                  name={t.icon}
-                  palette={tab === t.id ? 'water' : 'light'}
-                  size={24}
-                />
-                {t.label}
-              </button>
-            ))}
+      <div className="settings-backdrop" />
+      <section className="settings-modal" role="dialog" aria-modal="true">
+        <header className="settings-head">
+          <div className="settings-head-title">
+            <h2>{T.TITLE}</h2>
           </div>
-          <div className="well pane" role="tabpanel">
+          <button
+            type="button"
+            className="settings-close-btn"
+            onClick={close}
+            aria-label={T.BACK}
+            title={`${T.BACK} (Esc)`}
+          >
+            ✕
+          </button>
+        </header>
+
+        <nav className="settings-tabs" role="tablist" aria-label={T.TITLE}>
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              id={`tab-${t.id}`}
+              aria-controls={`panel-${t.id}`}
+              aria-selected={tab === t.id}
+              tabIndex={tab === t.id ? 0 : -1}
+              className={`settings-tab ${tab === t.id ? 'on' : ''}`}
+              onClick={() => setTab(t.id)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </nav>
+
+        <div
+          className="settings-body"
+          role="tabpanel"
+          id={`panel-${tab}`}
+          aria-labelledby={`tab-${tab}`}
+        >
+          <div className="settings-pane">
             {tab === 'video' && (
               <Row title={T.SCREEN} sub={T.SCREEN_SUB} last>
                 <Segmented
@@ -116,12 +128,13 @@ export function Settings(props: { onClose: () => void; overlay?: boolean }) {
                   onChange={(v) => setScreenMode(v === 'full')}
                 />
                 {fullscreenFailed && (
-                  <Chip tone="bad" icon="cross">
+                  <Chip tone="bad">
                     {T.FULLSCREEN_BLOCKED}
                   </Chip>
                 )}
               </Row>
             )}
+
             {tab === 'controls' && (
               <>
                 <Row title={T.MOVE}>
@@ -149,6 +162,7 @@ export function Settings(props: { onClose: () => void; overlay?: boolean }) {
                 </Row>
               </>
             )}
+
             {tab === 'access' && (
               <>
                 <Row title={T.HIGH_CONTRAST} sub={T.HIGH_CONTRAST_SUB}>
@@ -168,24 +182,45 @@ export function Settings(props: { onClose: () => void; overlay?: boolean }) {
               </>
             )}
           </div>
-          <p className="small muted" style={{ marginTop: 10 }}>
-            {T.STORED_NOTE}
-          </p>
+          <p className="note-text">{T.STORED_NOTE}</p>
         </div>
-        <div className="settings-foot">
-          <Button variant="sec" icon="left" iconPalette="light" onClick={close}>
+
+        <footer className="settings-foot">
+          <button
+            type="button"
+            className="settings-btn sec"
+            onClick={close}
+          >
             {T.BACK}
-          </Button>
-          <div className="row">
-            <Button variant="sec" onClick={() => change(defaultSettings())}>
+          </button>
+          <div className="settings-actions">
+            <button
+              type="button"
+              className="settings-btn ghost"
+              onClick={() => change(defaultSettings())}
+            >
               {T.RESET}
-            </Button>
-            <Button variant="pri" icon="check" onClick={apply}>
+            </button>
+            <button
+              type="button"
+              className="settings-btn pri"
+              onClick={apply}
+            >
               {T.APPLY}
-            </Button>
+            </button>
           </div>
-        </div>
+        </footer>
       </section>
+
+      {!props.overlay && (
+        <HintBar
+          hints={[
+            ['Tab', MENU_TEXT.HINT_CHOOSE],
+            ['Enter', MENU_TEXT.HINT_ACCEPT],
+            ['Esc', T.BACK],
+          ]}
+        />
+      )}
     </Stage>
   );
 }
@@ -197,12 +232,12 @@ function Row(props: {
   children: React.ReactNode;
 }) {
   return (
-    <div className="sr" style={props.last ? { border: 0 } : undefined}>
-      <div>
+    <div className={`settings-row ${props.last ? 'last' : ''}`}>
+      <div className="settings-row-info">
         <b>{props.title}</b>
         {props.sub && <div className="d">{props.sub}</div>}
       </div>
-      <div className="ctl2">{props.children}</div>
+      <div className="settings-row-ctrl">{props.children}</div>
     </div>
   );
 }
