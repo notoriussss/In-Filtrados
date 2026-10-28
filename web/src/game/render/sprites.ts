@@ -111,6 +111,51 @@ export function jimenaBakedImage(
   return img.complete && img.naturalWidth > 0 ? img : null;
 }
 
+// Fantasmas (web/tools/gen_ghost_sprites.py): el mismo personaje con una
+// cola en lugar de piernas. Cada hoja trae 4 cuadros de la cola ondeando
+// con la cola a la derecha (el fantasma mira a la izquierda) y los mismos 4
+// reflejados (mira a la derecha).
+export const GHOST_FRAMES = 4;
+const GHOST_FRAME_MS = 140; // cuánto dura cada cuadro de la cola
+
+// ghostCellIndex: la celda de la hoja de fantasma que toca en el tiempo t.
+// Con movimiento reducido la cola se queda en el primer cuadro.
+export function ghostCellIndex(
+  t: number,
+  faceRight: boolean,
+  calm: boolean,
+): number {
+  const frame = calm ? 0 : Math.floor(Math.max(t, 0) / GHOST_FRAME_MS);
+  return (frame % GHOST_FRAMES) + (faceRight ? GHOST_FRAMES : 0);
+}
+
+// ghostCell: el rectángulo de esa celda; w y h son los de una celda.
+export function ghostCell(index: number, w: number, h: number) {
+  return { sx: index * w, sy: 0, sw: w, sh: h };
+}
+
+const ghostCache = new Map<string, HTMLImageElement>();
+
+// jimenaGhostImage es la hoja del fantasma de Jimena con su accesorio
+// ya integrado, o null mientras carga o si el color no tiene sprite.
+export function jimenaGhostImage(
+  color: string,
+  accessory?: string,
+): HTMLImageElement | null {
+  const name = SPRITE_COLORS[color.toLowerCase()];
+  if (!name || typeof Image === 'undefined') return null;
+  const id =
+    accessory && accessory !== 'none' ? accessory.toLowerCase() : 'none';
+  const url = `${SPRITES_URL}/ghost/${name}-${id}.png`;
+  let img = ghostCache.get(url);
+  if (!img) {
+    img = new Image();
+    img.src = url;
+    ghostCache.set(url, img);
+  }
+  return img.complete && img.naturalWidth > 0 ? img : null;
+}
+
 // Los 8 colores fijos de match (state.go) y el nombre de su sprite.
 export const SPRITE_COLORS: Record<string, string> = {
   '#e6194b': 'Red',
@@ -195,6 +240,21 @@ export function gotaBodyImage(color: string): HTMLImageElement | null {
   return img.complete && img.naturalWidth > 0 ? img : null;
 }
 
+// gotaGhostImage es la hoja del fantasma de la gota de ese color; el
+// accesorio va aparte, igual que en un vivo.
+export function gotaGhostImage(color: string): HTMLImageElement | null {
+  const hex = color.toLowerCase().replace('#', '');
+  const url = `${GOTA_URL}/ghost/${hex}.png`;
+  if (typeof Image === 'undefined') return null;
+  let img = gotaCache.get(url);
+  if (!img) {
+    img = new Image();
+    img.src = url;
+    gotaCache.set(url, img);
+  }
+  return img.complete && img.naturalWidth > 0 ? img : null;
+}
+
 // gotaAccessoryImage devuelve la hoja de sprites del accesorio.
 export function gotaAccessoryImage(
   accessory: string | undefined,
@@ -218,7 +278,9 @@ export function preloadSprites(): void {
   // Precargar hojas modulares de Gota (cuerpos y accesorios)
   for (const color of Object.keys(SPRITE_COLORS)) {
     gotaBodyImage(color);
+    gotaGhostImage(color);
     jimenaBakedImage(color);
+    jimenaGhostImage(color);
   }
   for (const acc of GOTA_ACCESSORIES) {
     gotaAccessoryImage(acc);

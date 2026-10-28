@@ -7,15 +7,18 @@ import {
   gotaCell,
 } from './playerAnim';
 import { motionIsReduced } from '../../settings';
-import { drawGhost } from './ghostFx';
-import { drawJimena } from './jimenaDraw';
+import { drawJimena, drawJimenaGhost } from './jimenaDraw';
 import { drawPosedSprite } from './spriteDraw';
 import {
   GOTA_CELL_H,
   GOTA_CELL_W,
   accessoryLift,
+  ghostCell,
+  ghostCellIndex,
   gotaAccessoryImage,
   gotaBodyImage,
+  gotaGhostImage,
+  jimenaGhostImage,
   spriteImageOrFront,
 } from './sprites';
 import { drawDust, drawSparkles, drawSweat } from './workFx';
@@ -29,6 +32,7 @@ export const PLAYER_H = GOTA_CELL_H;
 const FEET = 8; // los pies quedan en y + FEET
 const PLAYER_RADIUS = 16;
 const DISCONNECTED_ALPHA = 0.4;
+const GHOST_ALPHA = 0.8; // las hojas de fantasma ya son pálidas
 const GHOST_FLOAT = 3;
 const WORK_BOB = 1.5;
 const SHADOW = 'rgba(2, 8, 20, 0.45)';
@@ -44,61 +48,33 @@ export function topOf(p: PlayerView): number {
   return p.y + FEET - PLAYER_H - lift - (p.alive ? 0 : GHOST_FLOAT * 2);
 }
 
-// bodyOf elige cómo se mueve el cuerpo: fantasma flotando, la pose de
-// la tarea o, con movimiento reducido, solo el rebote suave de antes.
-function bodyOf(
-  p: PlayerView,
-  pose: PlayerPose,
-  now: number,
-  calm: boolean,
-): Pose {
-  if (!p.alive) {
-    const float = GHOST_FLOAT + Math.sin(now / 400) * GHOST_FLOAT;
-    return { ...IDLE_POSE, dy: -float };
-  }
+// Hacia dónde mira cada fantasma (true: derecha); sigue mirando igual
+// cuando se detiene o sube y baja.
+const ghostFacing = new Map<string, boolean>();
+
+// bodyOf elige cómo se mueve el cuerpo: la pose de la tarea o, con
+// movimiento reducido, solo el rebote suave de antes.
+function bodyOf(pose: PlayerPose, now: number, calm: boolean): Pose {
   if (!calm) return pose.body;
   const bob = pose.working ? Math.abs(Math.sin(now / 120)) * WORK_BOB : 0;
   return { ...IDLE_POSE, frame: pose.frame, dy: -bob };
 }
 
-// drawPlayer dibuja un jugador: sombra, sprite gota (cuerpo y accesorio)
-// con su cuadro y pose (PlayerAnimator) y, si es fantasma, flotando y
-// transparente con la fila 1 de la hoja. Mientras carga, un círculo.
-export function drawPlayer(
-  ctx: CanvasRenderingContext2D,
+// paintSprite dibuja al personaje del jugador (Jimena o gota con su
+// accesorio) con su cuadro y pose sobre target; sirve a vivos y a
+// fantasmas. Mientras carga, un círculo.
+function paintSprite(
+  target: CanvasRenderingContext2D,
   p: PlayerView,
-  animator: PlayerAnimator,
+  pose: PlayerPose,
+  body: Pose,
   now: number,
 ): void {
-  const pose = animator.pose(p, now);
-  const ghost = !p.alive;
-  const calm = motionIsReduced();
-  const body = bodyOf(p, pose, now, calm);
-  let alpha = 1;
-  if (!p.connected) alpha = DISCONNECTED_ALPHA;
   const feetY = p.y + FEET;
-
-  ctx.globalAlpha = alpha;
-  if (!ghost) {
-    ctx.fillStyle = SHADOW;
-    ctx.beginPath();
-    ctx.ellipse(
-      p.x + body.dx,
-      feetY - 1,
-      13 * body.shadow,
-      4 * body.shadow,
-      0,
-      0,
-      Math.PI * 2,
-    );
-    ctx.fill();
-  }
-
   const cell = gotaCell(pose, now);
-  const row = ghost ? 1 : 0;
   const srcRect = {
     sx: cell.col * GOTA_CELL_W,
-    sy: row * GOTA_CELL_H,
+    sy: 0,
     sw: GOTA_CELL_W,
     sh: GOTA_CELL_H,
   };
@@ -107,47 +83,105 @@ export function drawPlayer(
   const isGota = skinOf(p.skin) === SKIN_GOTA;
   const bodyImg = isGota ? gotaBodyImage(p.color) : null;
   const accImg = isGota ? gotaAccessoryImage(p.accessory) : null;
+  const box = { x: p.x, feetY, w: PLAYER_W, h: PLAYER_H };
 
-  const paint = (target: CanvasRenderingContext2D) => {
-    if (bodyImg) {
-      const box = { x: p.x, feetY, w: PLAYER_W, h: PLAYER_H };
-      drawPosedSprite(target, bodyImg, box, body, srcRect, cell.flip);
-      if (accImg) {
-        drawPosedSprite(target, accImg, box, body, srcRect, cell.flip);
-      }
-      return;
+  if (bodyImg) {
+    drawPosedSprite(target, bodyImg, box, body, srcRect, cell.flip);
+    if (accImg) {
+      drawPosedSprite(target, accImg, box, body, srcRect, cell.flip);
     }
-    const frame = ghost ? 'front' : body.frame;
-    const jimenaImg = spriteImageOrFront(p.color, frame);
-    if (jimenaImg) {
-      const box = { x: p.x, feetY, w: PLAYER_W, h: PLAYER_H };
-      drawJimena(
-        target,
-        jimenaImg,
-        frame,
-        box,
-        body,
-        p.color,
-        p.accessory,
-      );
-    } else {
-      target.fillStyle = p.color;
-      target.beginPath();
-      target.arc(p.x, p.y + body.dy, PLAYER_RADIUS, 0, Math.PI * 2);
-      target.fill();
-    }
-  };
-
-  if (ghost) {
-    const t = now + phaseOf(p.id);
-    // La hoja Gota ya trae su fila de fantasma: solo Jimena se estiliza.
-    drawGhost(ctx, p.x, feetY, -body.dy, t, calm, !bodyImg, paint);
-  } else {
-    paint(ctx);
+    return;
   }
+  const jimenaImg = spriteImageOrFront(p.color, body.frame);
+  if (jimenaImg) {
+    drawJimena(target, jimenaImg, body.frame, box, body, p.color, p.accessory);
+  } else {
+    target.fillStyle = p.color;
+    target.beginPath();
+    target.arc(p.x, p.y + body.dy, PLAYER_RADIUS, 0, Math.PI * 2);
+    target.fill();
+  }
+}
+
+// drawGhostPlayer dibuja al jugador muerto: su mismo personaje como
+// fantasma (hojas de web/tools/gen_ghost_sprites.py), con la cola
+// ondeando y flotando. Mira hacia donde fue por última vez.
+function drawGhostPlayer(
+  ctx: CanvasRenderingContext2D,
+  p: PlayerView,
+  pose: PlayerPose,
+  now: number,
+  calm: boolean,
+): void {
+  if (pose.heading === 'right') ghostFacing.set(p.id, true);
+  else if (pose.heading === 'left') ghostFacing.set(p.id, false);
+  const t = now + phaseOf(p.id);
+  const float = calm
+    ? GHOST_FLOAT
+    : GHOST_FLOAT + Math.sin(t / 400) * GHOST_FLOAT;
+  const body: Pose = { ...IDLE_POSE, dy: -float };
+  const index = ghostCellIndex(t, ghostFacing.get(p.id) ?? false, calm);
+  const feetY = p.y + FEET;
+  const box = { x: p.x, feetY, w: PLAYER_W, h: PLAYER_H };
+  const alpha = p.connected ? GHOST_ALPHA : DISCONNECTED_ALPHA;
+
+  ctx.globalAlpha = alpha * 0.4;
+  ctx.fillStyle = SHADOW;
+  ctx.beginPath();
+  ctx.ellipse(p.x, feetY - 1, 10, 3, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.globalAlpha = alpha;
+  if (skinOf(p.skin) === SKIN_GOTA) {
+    const sheet = gotaGhostImage(p.color);
+    if (sheet) {
+      const cell = ghostCell(index, GOTA_CELL_W, GOTA_CELL_H);
+      drawPosedSprite(ctx, sheet, box, body, cell);
+      const acc = gotaAccessoryImage(p.accessory);
+      const front = ghostCell(0, GOTA_CELL_W, GOTA_CELL_H);
+      if (acc) drawPosedSprite(ctx, acc, box, body, front);
+    }
+  } else {
+    const sheet = jimenaGhostImage(p.color, p.accessory);
+    if (sheet) drawJimenaGhost(ctx, sheet, box, body, index);
+  }
+  ctx.globalAlpha = 1;
+}
+
+// drawPlayer dibuja un jugador: sombra y personaje con su cuadro y pose
+// (PlayerAnimator); el muerto va por drawGhostPlayer.
+export function drawPlayer(
+  ctx: CanvasRenderingContext2D,
+  p: PlayerView,
+  animator: PlayerAnimator,
+  now: number,
+): void {
+  const pose = animator.pose(p, now);
+  const calm = motionIsReduced();
+  if (!p.alive) {
+    drawGhostPlayer(ctx, p, pose, now, calm);
+    return;
+  }
+  const body = bodyOf(pose, now, calm);
+
+  ctx.globalAlpha = p.connected ? 1 : DISCONNECTED_ALPHA;
+  ctx.fillStyle = SHADOW;
+  ctx.beginPath();
+  ctx.ellipse(
+    p.x + body.dx,
+    p.y + FEET - 1,
+    13 * body.shadow,
+    4 * body.shadow,
+    0,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+
+  paintSprite(ctx, p, pose, body, now);
 
   ctx.globalAlpha = 1;
-  if (ghost || calm || !p.connected) return;
+  if (calm || !p.connected) return;
   drawBodyFx(ctx, p, pose, body, now);
 }
 
