@@ -70,6 +70,7 @@ type savedPlayer struct {
 	Role           matchv1.Role `json:"role"`
 	TankSlot       int          `json:"tank_slot"`
 	AssignedTasks  []string     `json:"assigned_tasks"`
+	TaskOrder      []string     `json:"task_order,omitempty"`
 	TasksCompleted int          `json:"tasks_completed"`
 	// Opcional para que sirvan las instantáneas viejas.
 	LitersSaved int `json:"liters_saved,omitempty"`
@@ -205,6 +206,7 @@ func (r *Room) toSaved() savedRoom {
 			Role:            p.role,
 			TankSlot:        p.tankSlot,
 			AssignedTasks:   tasks,
+			TaskOrder:       p.taskOrder,
 			TasksCompleted:  p.tasksCompleted,
 			LitersSaved:     p.litersSaved,
 			CompletedTasks:  p.completedTasks,
@@ -344,6 +346,7 @@ func Restore(state []byte, m *Map, opts ...Option) (*Room, error) {
 			role:            sp.Role,
 			tankSlot:        sp.TankSlot,
 			assignedTasks:   tasks,
+			taskOrder:       sp.TaskOrder,
 			tasksCompleted:  sp.TasksCompleted,
 			litersSaved:     sp.LitersSaved,
 			completedTasks:  sp.CompletedTasks,

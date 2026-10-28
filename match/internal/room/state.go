@@ -221,6 +221,7 @@ type player struct {
 	tasksCompleted int
 	litersSaved    int // litros que sus tareas sumaron al embalse
 	assignedTasks  map[string]bool
+	taskOrder      []string // todas las asignadas, en el orden del sorteo
 	completedTasks []string // S2-11: para tacharlas en la lista
 	taskStartTick  int64
 	taskStation    string
