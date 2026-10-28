@@ -18,8 +18,8 @@ Añadir minijuegos le da mucha variedad al juego y es barato: solo toca `web/`. 
 
 | Minijuego | Veredicto | Por qué |
 |---|---|---|
-| **Clasificar residuos** (Mesa clasificadora) | ✅ Añadir | Es el mejor. Es el mensaje de Reciclar más claro y encaja perfecto con la estación. Bajar de 6 a **4 residuos**, porque 6 se hace largo para una tarea. Usar residuos relacionados con el agua (botella, bidón, cáscaras, frasco). |
-| **Regular la presión** (Válvula de riego) | ✅ Añadir | Barato, se entiende al instante y es de habilidad. Ningún juego actual es de "clic en el momento justo". Que la zona verde no quede demasiado pequeña al tercer acierto. |
+| **Tratar el agua sucia** (Mesa de tratamiento; antes Clasificar residuos) | ✅ Añadir | Se reconvirtió al agua: clasificar basura no trataba del agua. Son **4 muestras** (sólidos flotantes, lodo, aceite y espuma de detergente) y cada una va a la etapa que la trata (rejilla, decantador, trampa de grasa, biofiltro). Cada etapa lleva el dibujo de lo que trata, así se emparejan sin palabras. |
+| **Regular la presión** (Válvula de riego) | ✅ Añadir | Barato, se entiende al instante y es de habilidad. Ningún juego actual es de "clic en el momento justo". Que la zona verde no quede demasiado pequeña al tercer acierto. Es Reducir porque una presión mal regulada desperdicia agua: cada error revienta la junta de la tubería y deja un charco que crece. |
 | **Llenar sin derramar** (Lavadero) | ✅ Añadir, **pero como Reducir** | Llenar justo lo necesario es *no desperdiciar agua*, o sea Reducir, no Reutilizar. Moverlo a `valve-2` (Válvula de la estación solar). En el lavadero la etiqueta diría "Reutilizar" y no cuadraría. |
 | **Calibrar el pluviómetro** (Cosecha de lluvia) | 🔁 Cambiar | Es un Simon con gotas de colores: es divertido, pero no enseña nada de reutilizar agua. Para la cosecha de lluvia es mejor **Primera lluvia** (abajo). |
 
@@ -79,13 +79,13 @@ Enseña algo real: el *desvío de primer lavado* que se usa en los sistemas de c
 | `filter-1` Filtro de carrizo | Partículas de suciedad (actual) | Reciclar |
 | `filter-2` Filtro de residuos | Partículas de suciedad (actual) | Reciclar |
 | `compost-1` Lombrifiltro | Capas del biofiltro *(extra)* | Reciclar |
-| `sorter-1` Mesa clasificadora | Clasificar residuos | Reciclar |
+| `sorter-1` Mesa de tratamiento | Tratar el agua sucia | Reciclar |
 
 Así cada R tiene 3 juegos distintos y ninguno se repite más de dos veces.
 
 ## Orden sugerido
 
-1. Clasificar residuos
+1. Tratar el agua sucia
 2. Regular la presión
 3. Llenar sin derramar
 4. Primera lluvia

@@ -8,14 +8,14 @@ import {
 import {
   BOARD,
   FLOOR_Y,
-  type WasteBin,
-  type WasteGame,
-  type WasteKind,
-  WASTE_BINS,
-  WASTE_SIZE,
+  type TreatmentBin,
+  type TreatmentGame,
+  type TreatmentKind,
+  TREATMENT_BINS,
+  TREATMENT_SIZE,
 } from '../minigames';
 import { drawDropZone, drawMarchArrow, type ZoneTone } from './dragHelpers';
-import { drawHand, drawTapRing } from './hand';
+import { drawHand } from './hand';
 import { type Scene, type SceneEnv, celebrateK } from './scene';
 import {
   C,
@@ -28,114 +28,146 @@ import {
 } from './pixel';
 import { roomLayer } from './room';
 
-// Reciclar (sorter-1): la mesa clasificadora. Cuatro residuos sobre la
-// mesa y cuatro cajones de colores: cada residuo cae en el cajón de su
-// color. El personaje jala lo que se arrastra y celebra cada acierto.
+// Reciclar (sorter-1): la mesa de tratamiento. Cuatro frascos de agua
+// sucia sobre la mesa y cuatro etapas del tratamiento: cada frasco va a
+// la etapa que lleva el dibujo de lo que trae (sólidos, lodo, aceite o
+// espuma de detergente). El personaje jala lo que se arrastra y celebra
+// cada acierto.
 
 const TABLE = { x: 12, y: 170, w: 176, h: 26 };
-export const SORTER_HERO_X = 194;
+export const TREATMENT_HERO_X = 194;
 
-const WASTE_COLORS: Record<WasteKind, { body: string; hi: string }> = {
-  plastic: { body: C.water, hi: C.waterHi },
-  glass: { body: C.aqua, hi: C.white },
-  organic: { body: C.dirt, hi: C.dirtHi },
-  other: { body: C.grey, hi: C.greyHi },
+// El color de cada etapa del tratamiento.
+const TREATMENT_COLORS: Record<TreatmentKind, { body: string; hi: string }> = {
+  solids: { body: C.metalMid, hi: C.metalHi },
+  mud: { body: C.dirt, hi: C.dirtHi },
+  oil: { body: C.amberLo, hi: C.amber },
+  soap: { body: C.leafLo, hi: C.leaf },
 };
 
-const BOTTLE_ROWS = [
-  '...oooo...',
-  '...obbo...',
-  '...obbo...',
-  '..obbbbo..',
-  '..obbbbo..',
-  '..ohbbbo..',
-  '..obbbbo..',
-  '..obbbbo..',
-  '..obbbbo..',
-  '..obbbbo..',
-  '..obbbbo..',
-  '..obbbbo..',
-  '..obbbbo..',
-  '..obbbbo..',
-  '..oooooo..',
-];
+// El frasco mide 12 px de arte: a escala 1,5 llena su zona de agarre.
+const SAMPLE_SCALE = 1.5;
 
-const JAR_ROWS = [
-  '..oooooo..',
-  '..ommmmo..',
-  '..oooooo..',
-  '..obbbbo..',
-  '..obhhbo..',
-  '..obbbbo..',
-  '..obbbbo..',
-  '..obbbbo..',
-  '..obbbbo..',
-  '..obbbbo..',
-  '..obbbbo..',
-  '..obbbbo..',
-  '..oooooo..',
-];
+// Lo de adentro del frasco (8 de ancho): lo que trae esa agua sucia.
+const SAMPLE_INSIDE: Record<TreatmentKind, string[]> = {
+  solids: [
+    'bbbbbbbb',
+    'bgggbbCb',
+    'bbggbppb',
+    'bbbbbppb',
+    'bbbbbppb',
+    'bbbbbbbb',
+    'bbbbbbbb',
+    'bbbbbbbb',
+    'bbbbbbbb',
+  ],
+  mud: [
+    'dddddddd',
+    'dhddddkd',
+    'dddkdddd',
+    'ddddhddd',
+    'dkdddddd',
+    'dddddkdd',
+    'ddhddddd',
+    'dddkdddd',
+    'dkdddddk',
+  ],
+  oil: [
+    'yyyyyyyy',
+    'yhyyyyhy',
+    'bbbbbbbb',
+    'bbybbbbb',
+    'bbbbbbyb',
+    'bbbbbbbb',
+    'bbbybbbb',
+    'bbbbbbbb',
+    'bbbbbbbb',
+  ],
+  soap: [
+    'wwhwwwhw',
+    'hwwwhwww',
+    'bbwbbbbb',
+    'bbbbbwbb',
+    'bwbbbbbb',
+    'bbbbbbwb',
+    'bbbwbbbb',
+    'bbbbbbbb',
+    'bwbbbbbb',
+  ],
+};
 
-const PEEL_ROWS = [
-  '...oooo...',
-  '..obbbbo..',
-  '.obbbbbbo.',
-  '.obbbhbbo.',
-  'obbbbbbbo.',
-  '.obbbbbo..',
-  '..obbbbo..',
-  '...oooo...',
-];
+const SAMPLE_PALETTE: Record<TreatmentKind, Record<string, string>> = {
+  solids: { b: C.water, g: C.leaf, C: C.coral, p: C.white },
+  mud: { d: C.dirt, h: C.dirtHi, k: C.dirtLo },
+  oil: { b: C.water, y: C.amber, h: C.amberHi },
+  soap: { b: '#b4c4d4', w: C.white, h: C.waterHi },
+};
 
-const SPONGE_ROWS = [
-  '..oooooo..',
-  '.obbbbbbo.',
-  '.obhbhbbo.',
-  '.obbbbbbo.',
-  '.obhbbhbo.',
-  '.obbbbbbo.',
-  '..oooooo..',
-];
+// Frasco de vidrio con tapa de metal alrededor de lo que trae.
+function jarRows(kind: TreatmentKind): string[] {
+  return [
+    '...oooooo...',
+    '...ommmmo...',
+    '..oooooooo..',
+    ...SAMPLE_INSIDE[kind].map((r) => `.o${r}o.`),
+    '.oooooooooo.',
+  ];
+}
 
-const sprites = new Map<WasteKind, HTMLCanvasElement>();
+const sprites = new Map<TreatmentKind, HTMLCanvasElement>();
 
-function wasteSprite(kind: WasteKind): HTMLCanvasElement {
+function sampleSprite(kind: TreatmentKind): HTMLCanvasElement {
   let s = sprites.get(kind);
   if (!s) {
-    const rows =
-      kind === 'plastic'
-        ? BOTTLE_ROWS
-        : kind === 'glass'
-          ? JAR_ROWS
-          : kind === 'organic'
-            ? PEEL_ROWS
-            : SPONGE_ROWS;
-    s = spriteFromRows(rows, {
+    s = spriteFromRows(jarRows(kind), {
       o: C.ink,
-      b: WASTE_COLORS[kind].body,
-      h: WASTE_COLORS[kind].hi,
       m: C.metalMid,
+      ...SAMPLE_PALETTE[kind],
     });
     sprites.set(kind, s);
   }
   return s;
 }
 
-// El símbolo de cada cajón dice la categoría sin palabras.
-const SYMBOL_ROWS: Record<WasteKind, string[]> = {
-  plastic: ['.ww.', 'wwww', 'wwww', 'wwww', '.ww.'],
-  glass: ['wwwwww', '.w..w.', '.w..w.', '.wwww.'],
-  organic: ['..ww..', '.wwww.', '.wwww.', 'wwww..', 'ww....', '.w....'],
-  other: ['w.w.w'],
+// El símbolo de cada etapa es el dibujo de lo que trata: el mismo que
+// trae el frasco que le toca, así se emparejan sin palabras.
+const DROP_ROWS = [
+  '...k...',
+  '..kdk..',
+  '.kdddk.',
+  'kdhdddk',
+  'kdddddk',
+  '.kdddk.',
+];
+
+const SYMBOLS: Record<
+  TreatmentKind,
+  { rows: string[]; palette: Record<string, string> }
+> = {
+  solids: {
+    rows: ['.gg..CC.', 'gggg.pp.', '.gg..pp.', '.....pp.', '.....pp.'],
+    palette: { g: C.leaf, C: C.coral, p: C.white },
+  },
+  mud: {
+    rows: DROP_ROWS,
+    palette: { k: C.dirtLo, d: C.dirt, h: C.dirtHi },
+  },
+  oil: {
+    rows: DROP_ROWS,
+    palette: { k: C.amberLo, d: C.amber, h: C.amberHi },
+  },
+  soap: {
+    rows: ['.ww...ww.', 'w..w.w..w', 'w..w.w..w', '.ww...ww.'],
+    palette: { w: C.white },
+  },
 };
 
-let symbols: Map<WasteKind, HTMLCanvasElement> | null = null;
+const symbols = new Map<TreatmentKind, HTMLCanvasElement>();
 
-function symbolSprite(kind: WasteKind): HTMLCanvasElement {
-  symbols ??= new Map();
+function symbolSprite(kind: TreatmentKind): HTMLCanvasElement {
   let s = symbols.get(kind);
   if (!s) {
-    s = spriteFromRows(SYMBOL_ROWS[kind], { w: C.white });
+    s = spriteFromRows(SYMBOLS[kind].rows, SYMBOLS[kind].palette);
     symbols.set(kind, s);
   }
   return s;
@@ -159,24 +191,32 @@ function drawTable(c: CanvasRenderingContext2D): void {
   }
 }
 
-function drawTray(c: CanvasRenderingContext2D, bin: WasteBin): void {
-  const col = WASTE_COLORS[bin.kind];
+function drawTray(c: CanvasRenderingContext2D, bin: TreatmentBin): void {
+  const col = TREATMENT_COLORS[bin.kind];
   px(c, bin.x - 3, bin.y - 3, bin.w + 6, bin.h + 6, C.metalInk);
   px(c, bin.x - 1, bin.y - 1, bin.w + 2, bin.h + 2, C.metalDark);
   px(c, bin.x + 2, bin.y + bin.h * 0.5, bin.w - 4, bin.h * 0.5 - 4, col.body);
   px(c, bin.x + 2, bin.y + bin.h * 0.5, bin.w - 4, PX, col.hi);
   px(c, bin.x - 1, bin.y + bin.h - 1, bin.w + 2, 5, C.metalInk);
   px(c, bin.x - 1, bin.y + bin.h - 1, bin.w + 2, PX, C.metalHi);
-  stamp(c, symbolSprite(bin.kind), bin.x + bin.w / 2, bin.y + bin.h - 14);
+  // La rejilla de sólidos lleva sus barrotes.
+  if (bin.kind === 'solids') {
+    for (let x = bin.x + 6; x < bin.x + bin.w - 4; x += 8) {
+      px(c, x, bin.y + bin.h * 0.5, PX, bin.h * 0.5 - 4, C.metalInk);
+    }
+  }
+  stamp(c, symbolSprite(bin.kind), bin.x + bin.w / 2, bin.y + 18, {
+    scale: 2,
+  });
 }
 
 type Shown = { x: number; y: number; tilt: number; lift: number };
 
-export class SorterScene implements Scene {
+export class TreatmentScene implements Scene {
   private readonly back = bakeBoard((c) => {
     c.drawImage(roomLayer(), 0, 0, BOARD.w, BOARD.h);
     drawTable(c);
-    for (const bin of WASTE_BINS) drawTray(c, bin);
+    for (const bin of TREATMENT_BINS) drawTray(c, bin);
   });
   private readonly shown: Shown[];
   private cheerAt = -1e9;
@@ -186,7 +226,7 @@ export class SorterScene implements Scene {
   readonly settleMs = 1100;
 
   constructor(
-    private readonly game: WasteGame,
+    private readonly game: TreatmentGame,
     private readonly env: SceneEnv,
   ) {
     this.shown = game.items.map((it) => ({
@@ -238,7 +278,7 @@ export class SorterScene implements Scene {
       const s = this.shown[i];
       if (it.placed) continue;
       if (this.game.dragging === i) {
-        // El residuo sigue al puntero: la lógica actualiza it.x/it.y y
+        // El frasco sigue al puntero: la lógica actualiza it.x/it.y y
         // el dibujo tiene que usar esa misma posición.
         s.x = it.x;
         s.y = it.y;
@@ -262,10 +302,10 @@ export class SorterScene implements Scene {
     }
     if (g.dragging !== null) {
       const it = g.items[g.dragging];
-      const left = it.x + WASTE_SIZE / 2 < SORTER_HERO_X;
+      const left = it.x + TREATMENT_SIZE / 2 < TREATMENT_HERO_X;
       hero.lookAt(left ? 'left' : 'right');
       const reach = clamp01(
-        Math.abs(it.x + WASTE_SIZE / 2 - SORTER_HERO_X) / 110,
+        Math.abs(it.x + TREATMENT_SIZE / 2 - TREATMENT_HERO_X) / 110,
       );
       const s = Math.sin(now / 130);
       hero.drive(
@@ -300,15 +340,15 @@ export class SorterScene implements Scene {
     );
   }
 
-  // Mientras se arrastra: el cajón bajo el residuo se enciende; verde si
-  // es el suyo, rojo si no.
+  // Mientras se arrastra: la etapa bajo el frasco se enciende; verde si
+  // es la suya, roja si no.
   private drawZones(ctx: CanvasRenderingContext2D, now: number): void {
     const g = this.game;
     if (g.dragging === null) return;
     const it = g.items[g.dragging];
-    const cx = it.x + WASTE_SIZE / 2;
-    const cy = it.y + WASTE_SIZE / 2;
-    for (const bin of WASTE_BINS) {
+    const cx = it.x + TREATMENT_SIZE / 2;
+    const cy = it.y + TREATMENT_SIZE / 2;
+    for (const bin of TREATMENT_BINS) {
       const over =
         cx >= bin.x - 6 &&
         cx <= bin.x + bin.w + 6 &&
@@ -321,18 +361,18 @@ export class SorterScene implements Scene {
     }
   }
 
-  // Los ya clasificados se ven dentro de su cajón.
+  // Los ya tratados se ven dentro de su etapa.
   private drawPlaced(ctx: CanvasRenderingContext2D): void {
     const g = this.game;
     for (const it of g.items) {
       if (!it.placed) continue;
-      const bin = WASTE_BINS.find((b) => b.kind === it.kind);
+      const bin = TREATMENT_BINS.find((b) => b.kind === it.kind);
       if (!bin) continue;
       stamp(
         ctx,
-        wasteSprite(it.kind),
+        sampleSprite(it.kind),
         bin.x + bin.w / 2,
-        bin.y + bin.h * 0.62,
+        bin.y + bin.h * 0.66,
       );
     }
   }
@@ -344,9 +384,10 @@ export class SorterScene implements Scene {
       const s = this.shown[i];
       stamp(
         ctx,
-        wasteSprite(it.kind),
-        s.x + WASTE_SIZE / 2,
-        s.y + WASTE_SIZE / 2,
+        sampleSprite(it.kind),
+        s.x + TREATMENT_SIZE / 2,
+        s.y + TREATMENT_SIZE / 2,
+        { scale: SAMPLE_SCALE },
       );
     }
   }
@@ -356,16 +397,22 @@ export class SorterScene implements Scene {
     if (g.dragging === null) return;
     const s = this.shown[g.dragging];
     const it = g.items[g.dragging];
-    const cx = s.x + WASTE_SIZE / 2;
-    const cy = s.y + WASTE_SIZE / 2;
+    const cx = s.x + TREATMENT_SIZE / 2;
+    const cy = s.y + TREATMENT_SIZE / 2;
     ctx.globalAlpha = 0.3;
-    stamp(ctx, wasteSprite(it.kind), cx + 6, cy + 10, { angle: s.tilt });
+    stamp(ctx, sampleSprite(it.kind), cx + 6, cy + 10, {
+      angle: s.tilt,
+      scale: SAMPLE_SCALE,
+    });
     ctx.globalAlpha = 1;
-    stamp(ctx, wasteSprite(it.kind), cx, cy - 2 * s.lift, { angle: s.tilt });
+    stamp(ctx, sampleSprite(it.kind), cx, cy - 2 * s.lift, {
+      angle: s.tilt,
+      scale: SAMPLE_SCALE,
+    });
   }
 
-  // La mano señala el residuo que toca y, hasta el primer acierto, la
-  // flecha de su color muestra a qué cajón va.
+  // La mano señala el frasco que toca y, hasta el primer acierto, la
+  // flecha de su color muestra a qué etapa va.
   private drawHint(ctx: CanvasRenderingContext2D, now: number): void {
     const g = this.game;
     if (g.dragging !== null || g.done) return;
@@ -373,9 +420,9 @@ export class SorterScene implements Scene {
     if (i < 0) return;
     const it = g.items[i];
     const s = this.shown[i];
-    const sx = s.x + WASTE_SIZE / 2;
-    const sy = s.y + WASTE_SIZE / 2;
-    const bin = WASTE_BINS.find((b) => b.kind === it.kind);
+    const sx = s.x + TREATMENT_SIZE / 2;
+    const sy = s.y + TREATMENT_SIZE / 2;
+    const bin = TREATMENT_BINS.find((b) => b.kind === it.kind);
     if (bin && !this.touched) {
       drawMarchArrow(
         ctx,
@@ -383,13 +430,11 @@ export class SorterScene implements Scene {
         { x: bin.x + bin.w / 2, y: bin.y + bin.h / 2 },
         now,
         this.env.calm,
-        WASTE_COLORS[it.kind].body,
+        TREATMENT_COLORS[it.kind].body,
       );
     }
     const press = this.env.calm ? 1 : 0.5 + 0.5 * Math.sin(now / 240);
-    drawHand(ctx, sx - 4, sy - 10, press);
-    if (!this.touched) {
-      drawTapRing(ctx, sx, sy, this.env.calm ? 0.3 : (now % 900) / 900);
-    }
+    // La mano queda debajo del frasco y solo lo señala: nunca lo tapa.
+    drawHand(ctx, sx + 14, sy + 24, press);
   }
 }

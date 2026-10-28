@@ -921,10 +921,10 @@ Sin esta tarea tampoco se puede verificar S2-13 jugando (completar 3 tareas y ve
     1. **Reducir (cerrar fuga, `leak-1`):** girar una válvula manteniendo presionado el clic hasta llenar una barra.
     2. **Reutilizar (agua gris, `greywater-1`):** arrastrar 3 cubetas al tanque.
     3. **Reciclar (filtrar, `filter-1` y `filter-2`):** hacer clic en 4 partículas de suciedad que flotan en el agua.
-    4. **Reducir (regular la presión, `valve-1`):** presionar el botón cuando la aguja pasa por la franja verde; 3 aciertos y la franja se encoge.
+    4. **Reducir (regular la presión, `valve-1`):** presionar el botón cuando la aguja pasa por la franja verde; 3 aciertos y la franja se encoge. Cada error revienta la junta de la tubería y deja un charco que crece (el agua que se desperdicia).
     5. **Reducir (llenar sin derramar, `valve-2`):** sostener el grifo y soltar cuando el agua pase la marca; cruzar el borde derrama y el vaso vuelve a empezar. 3 vasos.
     6. **Reutilizar (primera lluvia, `rain-1` y `rain-2`):** las gotas sucias de la primera lluvia (de 1 a 3, al azar por semilla) van al desvío y las limpias al barril; un clic cambia la compuerta de lado. 6 gotas limpias.
-    7. **Reciclar (clasificar residuos, `sorter-1`):** arrastrar 4 residuos al cajón de su color.
+    7. **Reciclar (tratar el agua sucia, `sorter-1`, Mesa de tratamiento):** arrastrar 4 frascos de agua sucia (sólidos, lodo, aceite y espuma de detergente) a la etapa que los trata; cada etapa lleva el dibujo de lo que trata.
     8. **Reutilizar (¿sirve para regar?, `greywater-2`):** arrastrar 4 recipientes a Regar o a Tratar según su origen.
     9. **Reducir (sellar la fuga, `leak-2`):** clic en las grietas que se abren solas para ponerles cinta; se sellan 5.
     10. **Reciclar (capas del biofiltro, `compost-1`, Lombrifiltro):** arrastrar las bolsas en orden (grava, arena, carbón), dos rondas; al cerrar cada ronda el agua sucia baja por las capas y se junta limpia.

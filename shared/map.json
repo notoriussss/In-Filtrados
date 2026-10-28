@@ -2305,7 +2305,7 @@
     {
       "id": "sorter-1",
       "type": "recycle",
-      "name": "Mesa clasificadora",
+      "name": "Mesa de tratamiento",
       "room": "ecopunto",
       "x": 1556,
       "y": 1552,

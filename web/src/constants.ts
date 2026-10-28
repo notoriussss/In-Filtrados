@@ -169,7 +169,7 @@ export const TASK_TEXT = {
     'filter-1': 'Reciclar: filtra el agua',
     'filter-2': 'Reciclar: filtra el agua',
     'compost-1': 'Reciclar: filtra en capas',
-    'sorter-1': 'Reciclar: clasifica los residuos',
+    'sorter-1': 'Reciclar: trata el agua sucia',
   } as Record<string, string>,
   ROW: (type: string, zone: string) => `${type} · ${zone}`,
   UNKNOWN_ZONE: 'Zona desconocida',

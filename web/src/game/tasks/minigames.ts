@@ -58,7 +58,7 @@ const STATION_GAMES: Record<string, () => Minigame> = {
   'rain-2': () => new FirstRainGame(),
   'greywater-2': () => new WateringGame(),
   'compost-1': () => new BiofilterGame(),
-  'sorter-1': () => new WasteGame(),
+  'sorter-1': () => new TreatmentGame(),
 };
 
 // Dos números a partir de uno, para repartir al azar sin guardar nada:
@@ -304,35 +304,37 @@ export class ParticlesGame extends BaseGame implements Minigame {
 // eventos con los tres juegos de arriba. Los que se agarran y se
 // arrastran siguen el mismo esqueleto de BucketsGame.
 
-// Reciclar (sorter-1, Mesa clasificadora): clasificar 4 residuos en los
-// cajones de la mesa. Cada residuo va con su color; errar de cajón
-// devuelve el residuo a su lugar.
-export const WASTE_COUNT = 4;
-export const WASTE_SIZE = 34;
-export type WasteKind = 'plastic' | 'glass' | 'organic' | 'other';
-export const WASTE_KINDS: readonly WasteKind[] = [
-  'plastic',
-  'glass',
-  'organic',
-  'other',
+// Reciclar (sorter-1, Mesa de tratamiento): tratar 4 muestras de agua
+// sucia. Cada frasco trae algo distinto (sólidos flotantes, lodo, aceite
+// o espuma de detergente) y va a la etapa que lo trata: rejilla,
+// decantador, trampa de grasa o biofiltro. Cada etapa lleva el dibujo de
+// lo que trata. Errar de etapa devuelve el frasco a su lugar.
+export const TREATMENT_COUNT = 4;
+export const TREATMENT_SIZE = 40;
+export type TreatmentKind = 'solids' | 'mud' | 'oil' | 'soap';
+export const TREATMENT_KINDS: readonly TreatmentKind[] = [
+  'solids',
+  'mud',
+  'oil',
+  'soap',
 ];
-export type WasteBin = {
-  kind: WasteKind;
+export type TreatmentBin = {
+  kind: TreatmentKind;
   x: number;
   y: number;
   w: number;
   h: number;
 };
-export const WASTE_BINS: readonly WasteBin[] = [
-  { kind: 'plastic', x: 196, y: 56, w: 72, h: 50 },
-  { kind: 'glass', x: 278, y: 56, w: 72, h: 50 },
-  { kind: 'organic', x: 196, y: 122, w: 72, h: 50 },
-  { kind: 'other', x: 278, y: 122, w: 72, h: 50 },
+export const TREATMENT_BINS: readonly TreatmentBin[] = [
+  { kind: 'solids', x: 196, y: 56, w: 72, h: 50 },
+  { kind: 'mud', x: 278, y: 56, w: 72, h: 50 },
+  { kind: 'oil', x: 196, y: 122, w: 72, h: 50 },
+  { kind: 'soap', x: 278, y: 122, w: 72, h: 50 },
 ];
-const WASTE_HOME_Y = 136; // sobre la mesa
+const TREATMENT_HOME_Y = 130; // sobre la mesa
 
-export type WasteItem = {
-  kind: WasteKind;
+export type TreatmentItem = {
+  kind: TreatmentKind;
   x: number; // esquina superior izquierda
   y: number;
   homeX: number;
@@ -340,7 +342,7 @@ export type WasteItem = {
   placed: boolean;
 };
 
-// Baraja los cuatro residuos con el generador que le pasen. Así cada
+// Baraja los cuatro frascos con el generador que le pasen. Así cada
 // partida empieza con otro orden, pero las pruebas pueden fijar la
 // secuencia.
 function shuffle<T>(list: readonly T[], rnd: () => number): T[] {
@@ -352,12 +354,12 @@ function shuffle<T>(list: readonly T[], rnd: () => number): T[] {
   return out;
 }
 
-function shuffleKinds(rnd: () => number): WasteKind[] {
-  return shuffle(WASTE_KINDS, rnd);
+function shuffleKinds(rnd: () => number): TreatmentKind[] {
+  return shuffle(TREATMENT_KINDS, rnd);
 }
 
-export class WasteGame extends BaseGame implements Minigame {
-  readonly items: WasteItem[] = [];
+export class TreatmentGame extends BaseGame implements Minigame {
+  readonly items: TreatmentItem[] = [];
   dragging: number | null = null;
   elapsed = 0;
   private grabDx = 0;
@@ -366,13 +368,13 @@ export class WasteGame extends BaseGame implements Minigame {
   constructor(rnd: () => number = Math.random) {
     super();
     shuffleKinds(rnd).forEach((kind, i) => {
-      const x = 24 + i * 42;
+      const x = 18 + i * 42;
       this.items.push({
         kind,
         x,
-        y: WASTE_HOME_Y,
+        y: TREATMENT_HOME_Y,
         homeX: x,
-        homeY: WASTE_HOME_Y,
+        homeY: TREATMENT_HOME_Y,
         placed: false,
       });
     });
@@ -383,11 +385,11 @@ export class WasteGame extends BaseGame implements Minigame {
   }
 
   get done(): boolean {
-    return this.placed === WASTE_COUNT && this.elapsed >= MIN_GAME_MS;
+    return this.placed === TREATMENT_COUNT && this.elapsed >= MIN_GAME_MS;
   }
 
   progress(): number {
-    return this.placed / WASTE_COUNT;
+    return this.placed / TREATMENT_COUNT;
   }
 
   pointerDown(p: Point): void {
@@ -395,9 +397,9 @@ export class WasteGame extends BaseGame implements Minigame {
       (it) =>
         !it.placed &&
         p.x >= it.x &&
-        p.x <= it.x + WASTE_SIZE &&
+        p.x <= it.x + TREATMENT_SIZE &&
         p.y >= it.y &&
-        p.y <= it.y + WASTE_SIZE,
+        p.y <= it.y + TREATMENT_SIZE,
     );
     if (i < 0) return;
     this.dragging = i;
@@ -413,16 +415,16 @@ export class WasteGame extends BaseGame implements Minigame {
     it.y = p.y - this.grabDy;
   }
 
-  // Al soltar: si el centro cae en su cajón, cuenta; en otro cajón o en
+  // Al soltar: si el centro cae en su etapa, cuenta; en otra etapa o en
   // la mesa, vuelve a su lugar.
   pointerUp(): void {
     if (this.dragging === null) return;
     const i = this.dragging;
     const it = this.items[i];
     this.dragging = null;
-    const cx = it.x + WASTE_SIZE / 2;
-    const cy = it.y + WASTE_SIZE / 2;
-    const bin = WASTE_BINS.find(
+    const cx = it.x + TREATMENT_SIZE / 2;
+    const cy = it.y + TREATMENT_SIZE / 2;
+    const bin = TREATMENT_BINS.find(
       (b) =>
         cx >= b.x && cx <= b.x + b.w && cy >= b.y && cy <= b.y + b.h,
     );

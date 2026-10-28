@@ -37,12 +37,12 @@ import {
   SealGame,
   VALVE_FILL_MS,
   ValveGame,
-  WasteGame,
-  type WasteKind,
-  WASTE_BINS,
-  WASTE_COUNT,
-  WASTE_KINDS,
-  WASTE_SIZE,
+  TreatmentGame,
+  type TreatmentKind,
+  TREATMENT_BINS,
+  TREATMENT_COUNT,
+  TREATMENT_KINDS,
+  TREATMENT_SIZE,
   WateringGame,
   type WaterKind,
   WATERING_COUNT,
@@ -69,7 +69,7 @@ describe('createMinigame', () => {
     expect(createMinigame('reuse', 'rain-2')).toBeInstanceOf(FirstRainGame);
     expect(createMinigame('reuse', 'greywater-2')).toBeInstanceOf(WateringGame);
     expect(createMinigame('recycle', 'compost-1')).toBeInstanceOf(BiofilterGame);
-    expect(createMinigame('recycle', 'sorter-1')).toBeInstanceOf(WasteGame);
+    expect(createMinigame('recycle', 'sorter-1')).toBeInstanceOf(TreatmentGame);
   });
 
   it('keeps the type game as fallback for the rest of the stations', () => {
@@ -242,18 +242,18 @@ describe('ParticlesGame', () => {
 
 // ─── Minijuegos por estación ────────────────────────────────────────────
 
-describe('WasteGame', () => {
-  const center = (g: WasteGame, i: number) => ({
-    x: g.items[i].x + WASTE_SIZE / 2,
-    y: g.items[i].y + WASTE_SIZE / 2,
+describe('TreatmentGame', () => {
+  const center = (g: TreatmentGame, i: number) => ({
+    x: g.items[i].x + TREATMENT_SIZE / 2,
+    y: g.items[i].y + TREATMENT_SIZE / 2,
   });
-  const findItem = (g: WasteGame, kind: WasteKind) =>
+  const findItem = (g: TreatmentGame, kind: TreatmentKind) =>
     g.items.find((it) => it.kind === kind)!;
-  const findBin = (kind: WasteKind) =>
-    WASTE_BINS.find((bin) => bin.kind === kind)!;
+  const findBin = (kind: TreatmentKind) =>
+    TREATMENT_BINS.find((bin) => bin.kind === kind)!;
 
-  it('moves the residue with the pointer while it is held', () => {
-    const g = new WasteGame(() => 0);
+  it('moves the sample jar with the pointer while it is held', () => {
+    const g = new TreatmentGame(() => 0);
     const it = g.items[0];
     g.pointerDown({ x: it.x + 5, y: it.y + 7 });
     g.pointerMove({ x: 120, y: 80 });
@@ -262,13 +262,13 @@ describe('WasteGame', () => {
     expect(it.y).toBe(73);
   });
 
-  it('sorts a residue into its matching bin', () => {
-    const g = new WasteGame(() => 0);
-    const it = findItem(g, 'plastic');
-    const bin = findBin('plastic');
+  it('treats a sample in the stage that matches it', () => {
+    const g = new TreatmentGame(() => 0);
+    const it = findItem(g, 'solids');
+    const bin = findBin('solids');
     g.pointerDown({
-      x: it.x + WASTE_SIZE / 2,
-      y: it.y + WASTE_SIZE / 2,
+      x: it.x + TREATMENT_SIZE / 2,
+      y: it.y + TREATMENT_SIZE / 2,
     });
     g.pointerMove({ x: bin.x + bin.w / 2, y: bin.y + bin.h / 2 });
     g.pointerUp();
@@ -277,14 +277,14 @@ describe('WasteGame', () => {
     expect(g.progress()).toBe(0.25);
   });
 
-  it('sends a residue in the wrong bin back to the table', () => {
-    const g = new WasteGame(() => 0);
-    const it = findItem(g, 'glass');
+  it('sends a sample in the wrong stage back to the table', () => {
+    const g = new TreatmentGame(() => 0);
+    const it = findItem(g, 'mud');
     const home = { x: it.x, y: it.y };
-    const bin = findBin('organic');
+    const bin = findBin('oil');
     g.pointerDown({
-      x: it.x + WASTE_SIZE / 2,
-      y: it.y + WASTE_SIZE / 2,
+      x: it.x + TREATMENT_SIZE / 2,
+      y: it.y + TREATMENT_SIZE / 2,
     });
     g.pointerMove({ x: bin.x + bin.w / 2, y: bin.y + bin.h / 2 });
     g.pointerUp();
@@ -292,31 +292,31 @@ describe('WasteGame', () => {
     expect({ x: it.x, y: it.y }).toEqual(home);
   });
 
-  it('is done after every residue, but not before 3 s', () => {
-    const g = new WasteGame(() => 0);
+  it('is done after every sample, but not before 3 s', () => {
+    const g = new TreatmentGame(() => 0);
     g.items.forEach((it, i) => {
       const bin = findBin(it.kind);
       g.pointerDown(center(g, i));
       g.pointerMove({ x: bin.x + bin.w / 2, y: bin.y + bin.h / 2 });
       g.pointerUp();
     });
-    expect(g.placed).toBe(WASTE_COUNT);
+    expect(g.placed).toBe(TREATMENT_COUNT);
     expect(g.done).toBe(false);
     g.step(MIN_GAME_MS);
     expect(g.done).toBe(true);
   });
 
-  it('deals the residues in a different order each game', () => {
-    const a = new WasteGame(() => 0);
-    const b = new WasteGame(() => 0.99);
+  it('deals the samples in a different order each game', () => {
+    const a = new TreatmentGame(() => 0);
+    const b = new TreatmentGame(() => 0.99);
     expect(a.items.map((it) => it.kind).sort()).toEqual(
-      [...WASTE_KINDS].sort(),
+      [...TREATMENT_KINDS].sort(),
     );
-    expect(new Set(a.items.map((it) => it.kind)).size).toBe(WASTE_COUNT);
+    expect(new Set(a.items.map((it) => it.kind)).size).toBe(TREATMENT_COUNT);
     expect(a.items.map((it) => it.kind)).not.toEqual(
       b.items.map((it) => it.kind),
     );
-    expect(a.items.map((it) => it.homeX)).toEqual([24, 66, 108, 150]);
+    expect(a.items.map((it) => it.homeX)).toEqual([18, 60, 102, 144]);
   });
 });
 
