@@ -9,6 +9,13 @@ var (
 	errSpawn    = errors.New("spawn must be inside the world and off the walls")
 )
 
+// Error sent to the player whose set_task_count is out of range.
+const (
+	ErrCodeInvalidTaskCount = "INVALID_TASK_COUNT"
+	errMsgInvalidTaskCount  = "La cantidad de tareas debe estar " +
+		"entre %d y %d"
+)
+
 // Prefixes that wrap the read and parse errors of LoadMap.
 const (
 	msgReadMap  = "read map"

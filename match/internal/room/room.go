@@ -29,32 +29,33 @@ type Room struct {
 	phase   matchv1.Phase
 	tick    int64
 
-	creatorID     string
-	publisher     events.Publisher
-	store         MatchStore
-	matchDuration time.Duration
-	startedAt     time.Time
-	participants  []PlayerInfo
-	tanks         []*tank
-	rnd           io.Reader // azar de los roles: crypto/rand
-	startTick     int64
-	eventLog      EventLog
-	reservoir     int32 // S2-04
-	eventHistory  []LogEntry
-	meeting       *meetingState
-	chat          []chatEntry
-	oilDrops      []*oilDrop        // S2-12
-	cleanupDelay  time.Duration     // S2-06
-	onCleanup     func(code string) // S2-06
-	endedAt       time.Time         // S2-06
-	ended         *matchv1.ServerEvent
-	done          chan struct{}
-	grace         time.Duration    // S3-01
-	snapshots     SnapshotSaver    // S3-02
-	savedKey      string           // fase de la última instantánea
-	savedTick     int64            // tick de la última instantánea
-	seenChat      map[string]bool  // S3-04: client_msg_id de la partida
-	now           func() time.Time // S3-01: reloj, cambiable en tests
+	creatorID      string
+	tasksPerPlayer int // 4 a 8; lo elige el creador en LOBBY
+	publisher      events.Publisher
+	store          MatchStore
+	matchDuration  time.Duration
+	startedAt      time.Time
+	participants   []PlayerInfo
+	tanks          []*tank
+	rnd            io.Reader // azar de los roles: crypto/rand
+	startTick      int64
+	eventLog       EventLog
+	reservoir      int32 // S2-04
+	eventHistory   []LogEntry
+	meeting        *meetingState
+	chat           []chatEntry
+	oilDrops       []*oilDrop        // S2-12
+	cleanupDelay   time.Duration     // S2-06
+	onCleanup      func(code string) // S2-06
+	endedAt        time.Time         // S2-06
+	ended          *matchv1.ServerEvent
+	done           chan struct{}
+	grace          time.Duration    // S3-01
+	snapshots      SnapshotSaver    // S3-02
+	savedKey       string           // fase de la última instantánea
+	savedTick      int64            // tick de la última instantánea
+	seenChat       map[string]bool  // S3-04: client_msg_id de la partida
+	now            func() time.Time // S3-01: reloj, cambiable en tests
 
 	joins   chan Join
 	leaves  chan Leave
@@ -79,23 +80,24 @@ type Room struct {
 
 func NewRoom(code string, matchID string, m *Map, opts ...Option) *Room {
 	r := &Room{
-		Code:          code,
-		MatchID:       matchID,
-		m:             m,
-		players:       make(map[string]*player),
-		names:         make(map[string]string),
-		phase:         matchv1.Phase_LOBBY,
-		matchDuration: defaultMatchDuration,
-		cleanupDelay:  defaultCleanupDelay,
-		grace:         defaultGracePeriod,
-		now:           time.Now,
-		done:          make(chan struct{}),
-		joins:         make(chan Join),
-		leaves:        make(chan Leave),
-		actions:       make(chan PlayerAction, actionBuffer),
-		nameCh:        make(chan Name),
-		seenChat:      make(map[string]bool),
-		rnd:           rand.Reader,
+		Code:           code,
+		MatchID:        matchID,
+		m:              m,
+		players:        make(map[string]*player),
+		names:          make(map[string]string),
+		phase:          matchv1.Phase_LOBBY,
+		matchDuration:  defaultMatchDuration,
+		tasksPerPlayer: defaultTasksPerPlayer,
+		cleanupDelay:   defaultCleanupDelay,
+		grace:          defaultGracePeriod,
+		now:            time.Now,
+		done:           make(chan struct{}),
+		joins:          make(chan Join),
+		leaves:         make(chan Leave),
+		actions:        make(chan PlayerAction, actionBuffer),
+		nameCh:         make(chan Name),
+		seenChat:       make(map[string]bool),
+		rnd:            rand.Reader,
 	}
 	for _, opt := range opts {
 		opt(r)
@@ -230,6 +232,8 @@ func (r *Room) handleAction(a PlayerAction) {
 		r.handleFix(p, a.FixPointID)
 	case a.PickColor:
 		r.pickColor(p, a.Color)
+	case a.SetTaskCount:
+		r.setTaskCount(a.PlayerID, p, a.TaskCount)
 	case a.PickAccessory:
 		r.pickAccessory(p, a.Accessory)
 	case a.PickSkin:
@@ -912,6 +916,8 @@ func (r *Room) sendTo(p *player, s sharedState) {
 		Emergency:    s.emergency,
 		MySabotage:   r.sabotageView(p),
 		MyMeeting:    r.meetingButtonView(),
+
+		TasksPerPlayer: int32(r.tasksPerPlayer),
 	}
 	ev := &matchv1.ServerEvent{
 		Event: &matchv1.ServerEvent_Snapshot{

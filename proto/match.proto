@@ -46,6 +46,8 @@ message ClientAction {
     SetOwned      set_owned      = 14;
     // Convocar una reunión desde la mesa del mirador.
     CallMeeting   call_meeting   = 15;
+    // Elegir cuántas tareas hace cada jugador (solo el creador, en LOBBY).
+    SetTaskCount  set_task_count = 16;
   }
 }
 message Join {
@@ -120,6 +122,12 @@ message PickAccessory {
 message PickSkin {
   string skin = 1;
 }
+// SetTaskCount: solo el creador y solo en LOBBY. tasks_per_player debe estar
+// entre 4 y 8; fuera de ese rango match responde un Error INVALID_TASK_COUNT
+// y deja el valor como estaba. Sin elegir, son 6.
+message SetTaskCount {
+  int32 tasks_per_player = 1;
+}
 // SetOwned: reemplaza lo comprado de quien lo manda (tras una compra).
 message SetOwned {
   repeated string items = 1;
@@ -173,6 +181,9 @@ message Snapshot {
   SabotageStatus my_sabotage = 16;
   // Mesa: estado de la mesa de reuniones; vacío fuera de PLAYING.
   MeetingButton  my_meeting  = 17;
+  // Tareas que hace cada jugador (cuidador o impostor); 4 a 8, por
+  // defecto 6. Se ve en LOBBY para que todos sepan qué eligió el creador.
+  int32          tasks_per_player = 18;
 }
 // Emergency: tubería rota o vapor en la planta (S3-05).
 message Emergency {

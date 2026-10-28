@@ -21,24 +21,25 @@ const saveEveryTicks = 40
 // que dura menos de 2 s (acciones a medias, la tarea en curso) no se
 // guarda: al volver, el jugador solo tiene que empezarla de nuevo.
 type savedRoom struct {
-	Code         string            `json:"code"`
-	MatchID      string            `json:"match_id"`
-	CreatorID    string            `json:"creator_id"`
-	Phase        matchv1.Phase     `json:"phase"`
-	Tick         int64             `json:"tick"`
-	StartTick    int64             `json:"start_tick"`
-	StartedAt    time.Time         `json:"started_at"`
-	Order        int               `json:"order"`
-	Reservoir    int32             `json:"reservoir"`
-	Names        map[string]string `json:"names"`
-	Participants []PlayerInfo      `json:"participants"`
-	Players      []savedPlayer     `json:"players"`
-	Tanks        []savedTank       `json:"tanks"`
-	Meeting      *savedMeeting     `json:"meeting,omitempty"`
-	Chat         []savedChat       `json:"chat"`
-	OilDrops     []savedOilDrop    `json:"oil_drops"`
-	EventHistory []LogEntry        `json:"event_history"`
-	SeenChat     []string          `json:"seen_chat"`
+	Code           string            `json:"code"`
+	MatchID        string            `json:"match_id"`
+	CreatorID      string            `json:"creator_id"`
+	TasksPerPlayer int               `json:"tasks_per_player,omitempty"`
+	Phase          matchv1.Phase     `json:"phase"`
+	Tick           int64             `json:"tick"`
+	StartTick      int64             `json:"start_tick"`
+	StartedAt      time.Time         `json:"started_at"`
+	Order          int               `json:"order"`
+	Reservoir      int32             `json:"reservoir"`
+	Names          map[string]string `json:"names"`
+	Participants   []PlayerInfo      `json:"participants"`
+	Players        []savedPlayer     `json:"players"`
+	Tanks          []savedTank       `json:"tanks"`
+	Meeting        *savedMeeting     `json:"meeting,omitempty"`
+	Chat           []savedChat       `json:"chat"`
+	OilDrops       []savedOilDrop    `json:"oil_drops"`
+	EventHistory   []LogEntry        `json:"event_history"`
+	SeenChat       []string          `json:"seen_chat"`
 	// S3-05: opcionales para que sirvan las instantáneas viejas.
 	Emergency       *savedEmergency `json:"emergency,omitempty"`
 	SabotageReadyAt int64           `json:"sabotage_ready_at,omitempty"`
@@ -153,18 +154,19 @@ func (r *Room) maybeSave() {
 
 func (r *Room) toSaved() savedRoom {
 	s := savedRoom{
-		Code:         r.Code,
-		MatchID:      r.MatchID,
-		CreatorID:    r.creatorID,
-		Phase:        r.phase,
-		Tick:         r.tick,
-		StartTick:    r.startTick,
-		StartedAt:    r.startedAt,
-		Order:        r.order,
-		Reservoir:    r.reservoir,
-		Names:        r.names,
-		Participants: r.participants,
-		EventHistory: r.eventHistory,
+		Code:           r.Code,
+		MatchID:        r.MatchID,
+		CreatorID:      r.creatorID,
+		TasksPerPlayer: r.tasksPerPlayer,
+		Phase:          r.phase,
+		Tick:           r.tick,
+		StartTick:      r.startTick,
+		StartedAt:      r.startedAt,
+		Order:          r.order,
+		Reservoir:      r.reservoir,
+		Names:          r.names,
+		Participants:   r.participants,
+		EventHistory:   r.eventHistory,
 
 		SabotageReadyAt:  r.sabotageReadyAt,
 		PipesUsed:        r.pipesUsed,
@@ -266,6 +268,9 @@ func Restore(state []byte, m *Map, opts ...Option) (*Room, error) {
 	}
 	r := NewRoom(s.Code, s.MatchID, m, opts...)
 	r.creatorID = s.CreatorID
+	if validTaskCount(s.TasksPerPlayer) {
+		r.tasksPerPlayer = s.TasksPerPlayer
+	}
 	r.phase = s.Phase
 	if r.phase == matchv1.Phase_ENDED {
 		return nil, fmt.Errorf("partida ya terminada")
