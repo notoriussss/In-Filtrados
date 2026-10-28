@@ -2,7 +2,7 @@ import type { Activity, PlayerView } from '@in-filtrados/messages';
 
 // Animaciones en el mapa de lo que hace cada jugador (PlayerView.activity).
 // Cada tarea de las 3R tiene la suya, así desde lejos se distingue quién
-// cierra una fuga, quién junta agua y quién filtra. Limpiar y contaminar
+// cierra una fuga, quién junta agua y quién filtra. Contaminar
 // un tanque se ven igual a propósito: estar junto a un tanque no prueba
 // nada (docs/design/game-plan.md, pistas).
 
@@ -251,7 +251,7 @@ function drawFilter(
   ctx.restore();
 }
 
-// Tanque (limpiar o contaminar): ondas en el agua alrededor de los pies
+// Tanque (contaminar): ondas en el agua alrededor de los pies
 // y un cucharón que revuelve en círculos con espuma. Igual para los dos.
 function drawTankWork(
   ctx: CanvasRenderingContext2D,

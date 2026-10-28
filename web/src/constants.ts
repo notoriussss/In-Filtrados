@@ -71,7 +71,6 @@ export const END_TEXT = {
 // S2-09: botón de acción contextual, embalse y aviso del tanque.
 export const ACTION_TEXT = {
   TASK: 'Hacer tarea',
-  CLEAN: 'Limpiar',
   REPORT: 'Reportar',
   CONTAMINATE: 'Contaminar',
   // S3-05: arreglar una emergencia.
@@ -94,7 +93,6 @@ export const GAME_RULES = {
   TASK_RANGE: 40,
   REPORT_RANGE: 80,
   CONTAMINATE_MS: 3000,
-  CLEAN_MS: 2000,
   // match exige 60 ticks desde que recibe el inicio; con latencia
   // irregular 3000 ms justos a veces le llegan como 59 y la rechaza.
   TASK_MS: 3000 + 150,

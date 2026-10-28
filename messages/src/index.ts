@@ -27,7 +27,9 @@ export type ClientMessage =
   // players qué tienes y se lo pasa a match.
   | { type: 'refreshShop' };
 
-// interact: hacer una tarea en una estación o limpiar un tanque.
+// interact: hacer una tarea en una estación. Con tankSlot (lo que mandaban
+// los clientes viejos para limpiar un tanque) el servidor lo ignora: los
+// tanques no se limpian.
 // completed se manda al terminar el minijuego (S2-04).
 export type InteractMessage =
   | { type: 'interact'; stationId: string; completed?: boolean }

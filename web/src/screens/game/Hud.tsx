@@ -34,7 +34,6 @@ const ACTION_SLOT: Record<
   { label: string; icon: IconName; palette: IconPalette }
 > = {
   task: { label: HUD_TEXT.USE, icon: 'tap', palette: 'ink' },
-  clean: { label: HUD_TEXT.CLEAN, icon: 'drop', palette: 'water' },
   report: { label: HUD_TEXT.REPORT, icon: 'eye', palette: 'amber' },
   contaminate: { label: HUD_TEXT.CONTAMINATE, icon: 'oil', palette: 'coral' },
   fix: { label: HUD_TEXT.FIX, icon: 'gear', palette: 'amber' },

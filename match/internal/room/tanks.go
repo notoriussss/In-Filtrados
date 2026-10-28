@@ -25,23 +25,8 @@ func (r *Room) startContaminate(id string, p *player, slot int32) {
 	}
 }
 
-// startClean empieza a limpiar el tanque slot, propio o ajeno. Solo el
-// impostor limpia: los tripulantes no pueden limpiar ningún tanque.
-func (r *Room) startClean(p *player, slot int32) {
-	if r.phase != matchv1.Phase_PLAYING ||
-		p.role != matchv1.Role_IMPOSTOR {
-		return
-	}
-	t := r.tankAt(slot)
-	if t == nil || t.contamination == 0 || !r.canWorkOn(p, t) {
-		return
-	}
-	p.pending = &tankAction{
-		kind:      LogClean,
-		slot:      slot,
-		ticksLeft: cleanTicks,
-	}
-}
+// Nadie limpia tanques: la contaminación nunca baja, así que el daño del
+// impostor es permanente.
 
 // canWorkOn: el tanque sigue vivo y el jugador está quieto y cerca.
 func (r *Room) canWorkOn(p *player, t *tank) bool {
@@ -79,8 +64,6 @@ func (r *Room) stepAction(id string, p *player) {
 		p.nextContaminate = r.tick + contaminateCooldown
 		r.addContamination(t, contaminateAmount)
 		r.startOilTrail(p)
-	case LogClean:
-		t.contamination = max(t.contamination-cleanAmount, 0)
 	}
 	r.logEvent(id, kind, t.slot)
 }

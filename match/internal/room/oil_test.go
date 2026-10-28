@@ -80,21 +80,6 @@ func TestOilDropsExpireAfterFifteenSeconds(t *testing.T) {
 	}
 }
 
-func TestCleaningDropsNoOil(t *testing.T) {
-	r, _ := playingRoom(t)
-	r.tankAt(2).contamination = contaminateAmount
-	placeAt(r, "imp", 2)
-	clean(r, "imp", 2)
-	tickN(r, cleanTicks+1)
-
-	if level(r, 2) == contaminateAmount {
-		t.Fatalf("la limpieza no terminó")
-	}
-	if len(r.oilDrops) != 0 {
-		t.Fatalf("limpiar no deja gotas: %d", len(r.oilDrops))
-	}
-}
-
 func TestSnapshotCarriesOilDrops(t *testing.T) {
 	r, _ := playingRoom(t)
 	contaminateDone(t, r)

@@ -159,7 +159,7 @@ function hopPose(t: number): Pose {
   };
 }
 
-// Tanque (limpiar o contaminar): revuelve con todo el cuerpo, en círculo.
+// Tanque (contaminar): revuelve con todo el cuerpo, en círculo.
 // Igual para los dos a propósito (docs/design/game-plan.md, pistas).
 function stirPose(t: number): Pose {
   const a = t / 260;

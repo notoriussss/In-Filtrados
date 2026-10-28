@@ -12,7 +12,7 @@ import type {
 import type { GameMap } from '../map';
 import { ACTION_TEXT, GAME_RULES } from '../constants';
 
-export type ActionKind = 'task' | 'clean' | 'report' | 'contaminate' | 'fix';
+export type ActionKind = 'task' | 'report' | 'contaminate' | 'fix';
 
 export type Action = {
   kind: ActionKind;
@@ -28,8 +28,8 @@ export type Action = {
 // contextAction devuelve la acción para lo que tiene cerca el jugador, con
 // esta prioridad: arreglar la emergencia activa (S3-05), reportar un
 // tanque muerto, contaminar (solo el impostor junto a un tanque ajeno),
-// limpiar (solo el impostor: los tripulantes no limpian tanques) y hacer
-// tarea. null si no hay nada.
+// y hacer tarea. Nadie limpia tanques: el daño es permanente. null si no
+// hay nada.
 // reported son los tanques que ya tuvieron reunión: no se reportan otra
 // vez y no deben tapar lo que haya cerca.
 export function contextAction(
@@ -111,19 +111,6 @@ export function contextAction(
           tankSlot: target.slot,
         };
       }
-
-      const dirty = nearestTank(
-        GAME_RULES.TANK_RANGE,
-        (t) => !t.dead && t.contamination > 0,
-      );
-      if (dirty) {
-        return {
-          kind: 'clean',
-          label: ACTION_TEXT.CLEAN,
-          enabled: true,
-          tankSlot: dirty.slot,
-        };
-      }
     }
   }
 
@@ -159,8 +146,6 @@ export function actionMessage(action: Action): ClientMessage {
       return { type: 'report', tankSlot: action.tankSlot! };
     case 'contaminate':
       return { type: 'contaminate', tankSlot: action.tankSlot! };
-    case 'clean':
-      return { type: 'interact', tankSlot: action.tankSlot! };
     case 'task':
       return { type: 'interact', stationId: action.stationId! };
     case 'fix':
@@ -173,8 +158,6 @@ export function holdDuration(kind: ActionKind): number {
   switch (kind) {
     case 'contaminate':
       return GAME_RULES.CONTAMINATE_MS;
-    case 'clean':
-      return GAME_RULES.CLEAN_MS;
     case 'task':
       return GAME_RULES.TASK_MS;
     case 'fix':

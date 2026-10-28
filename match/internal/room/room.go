@@ -218,10 +218,6 @@ func (r *Room) handleAction(a PlayerAction) {
 		if r.phase == matchv1.Phase_PLAYING {
 			r.startContaminate(a.PlayerID, p, a.TankSlot)
 		}
-	case a.Clean:
-		if r.phase == matchv1.Phase_PLAYING {
-			r.startClean(p, a.TankSlot)
-		}
 	case a.Sabotage:
 		r.handleSabotage(p, a.SabotageKind)
 	case a.Fix:

@@ -108,7 +108,7 @@ En la semana 2 se agregan mensajes; se agregan aquí, nunca se duplican en `web`
 ```ts
 // Navegador → gateway (además de join, move y start)
   | { type: 'interact'; stationId: string; completed?: boolean } // tarea
-  | { type: 'interact'; tankSlot: number }                        // limpiar tanque (solo el impostor)
+  | { type: 'interact'; tankSlot: number }                        // ya no hace nada: los tanques no se limpian
   | { type: 'contaminate'; tankSlot: number }                     // solo el impostor
   | { type: 'report'; tankSlot: number }                          // tanque muerto
   | { type: 'vote'; targetPlayerId: string | null }               // null = saltar
@@ -699,7 +699,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 #### S2-01 — Contrato v1 del juego (`proto/` y `messages/`)
 
 **Pasos:**
-1. Nuevas acciones en `ClientAction` y `ClientMessage`: `Start`, `Interact { station_id }` (hacer tarea o limpiar tanque), `Contaminate { tank_slot }`, `Report { tank_slot }`, `Vote { target_player_id | skip }` y `Chat { client_msg_id, text }`.
+1. Nuevas acciones en `ClientAction` y `ClientMessage`: `Start`, `Interact { station_id }` (hacer tarea; sobre un tanque ya no hace nada), `Contaminate { tank_slot }`, `Report { tank_slot }`, `Vote { target_player_id | skip }` y `Chat { client_msg_id, text }`.
 2. Nuevos campos en `Snapshot`: `tanks[] { slot, owner_id, contamination (0 a 100), dead }`, `reservoir` (0 a 100), `my_role` (solo el del destinatario), `my_task_progress`, `meeting { reporter_id, tank_slot, votes_cast, ends_at_tick }` y `chat[]` (últimos 30 mensajes).
 3. Nuevo evento `MatchEnded { winner, impostor_id }`.
 4. Ver el rol del impostor **solo en su propio snapshot**: el gateway jamás debe recibir el rol de otros.
@@ -720,17 +720,17 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
 
 ---
 
-#### S2-03 — Tanques, contaminación y limpieza (`match/`)
+#### S2-03 — Tanques y contaminación (`match/`)
 
 **Pasos:**
 1. Cada tanque tiene `contamination` de 0 a 100.
-2. `Contaminate`: solo el impostor, a 40 unidades o menos del tanque. Requiere quedarse quieto **3 segundos** (60 ticks); si se mueve, se cancela. Al terminar, suma 35 puntos de contaminación. Tiempo de espera de 20 s entre contaminaciones.
+2. `Contaminate`: solo el impostor, a 40 unidades o menos del tanque. Requiere quedarse quieto **3 segundos** (60 ticks); si se mueve, se cancela. Al terminar, suma 50 puntos de contaminación: dos contaminaciones matan un tanque. Tiempo de espera de 20 s entre contaminaciones.
 3. El tanque del impostor sube solo 1 punto cada 5 segundos, para que no se vea siempre limpio. Nunca pasa de 99 (ni por esa subida ni por la tubería): el impostor no puede quedar fuera por su propio tanque.
-4. Limpiar (`Interact` sobre un tanque ajeno o propio): solo el impostor, para fingir que ayuda; los tripulantes no pueden limpiar ningún tanque. Resta 15 puntos, requiere 2 segundos quieto.
+4. **Nadie limpia tanques, ni los tripulantes ni el impostor:** la contaminación nunca baja, el daño es permanente. Un `Interact` sobre un tanque (lo que mandaban los clientes viejos para limpiar) se ignora; el campo `tank_slot` sigue en el contrato para no romper a nadie.
 5. Si un tanque llega a 100: `dead = true`, su dueño queda `alive = false` (fantasma: sigue moviéndose y haciendo tareas, pero no vota ni habla en la reunión).
-6. Cada contaminación, limpieza o paso a 40 unidades de un tanque se anota en `event_log (match_id, tick, player_id, kind, tank_slot)`.
+6. Cada contaminación o paso a 40 unidades de un tanque se anota en `event_log (match_id, tick, player_id, kind, tank_slot)`.
 
-**Criterio de verificación:** tests que comprueban: (a) un tripulante no puede contaminar, (b) moverse a mitad de los 3 segundos cancela, (c) el tiempo de espera de 20 s se respeta, (d) 3 contaminaciones sin limpiar matan el tanque y convierten al dueño en fantasma. En el juego, el impostor contamina un tanque y todos ven subir la barra.
+**Criterio de verificación:** tests que comprueban: (a) un tripulante no puede contaminar, (b) moverse a mitad de los 3 segundos cancela, (c) el tiempo de espera de 20 s se respeta, (d) 2 contaminaciones matan el tanque, y (e) la contaminación nunca baja y convierten al dueño en fantasma. En el juego, el impostor contamina un tanque y todos ven subir la barra.
 
 ---
 
@@ -815,7 +815,7 @@ para el mismo usuario responde 429.
 **Pasos:**
 1. Dibujar cada tanque del huerto con una barra de contaminación (verde a café según el valor) y el nombre del dueño. Muerto: gris con una planta marchita.
 2. Indicador del embalse arriba de la pantalla, de 0 a 100 %.
-3. Botón de acción contextual (tecla `E`) que cambia según lo que haya cerca: "Hacer tarea", "Reportar" o, si eres impostor, "Contaminar" y "Limpiar".
+3. Botón de acción contextual (tecla `E`) que cambia según lo que haya cerca: "Hacer tarea", "Reportar" o, si eres impostor, "Contaminar".
 4. Barra de progreso circular durante las acciones que requieren quedarse quieto.
 5. Aviso al dueño: "¡Tu tanque se está contaminando!" cuando su tanque sube, sin decir quién.
 

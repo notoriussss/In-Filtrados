@@ -21,13 +21,11 @@ const (
 	noTank           = -1 // jugadores que llegaron después del último tanque
 
 	// S2-03: tanques (los tiempos van en ticks de 50 ms).
-	tankRange           = 56  // unidades para contaminar, limpiar o visitar
+	tankRange           = 56  // unidades para contaminar o visitar
 	maxContamination    = 100 // a 100 el tanque muere
 	contaminateTicks    = 60  // 3 s quieto
-	contaminateAmount   = 35
+	contaminateAmount   = 50  // dos contaminaciones matan un tanque
 	contaminateCooldown = 400 // 20 s entre contaminaciones
-	cleanTicks          = 40  // 2 s quieto
-	cleanAmount         = 15
 	impostorDriftTicks  = 100 // el tanque del impostor sube solo cada 5 s
 	impostorDriftAmount = 1
 
@@ -123,13 +121,12 @@ type Name struct {
 }
 
 // PlayerAction es la última acción que mandó un jugador: moverse, empezar,
-// contaminar, limpiar, hacer tarea, reportar, votar o chatear.
+// contaminar, hacer tarea, reportar, votar o chatear.
 type PlayerAction struct {
 	PlayerID     string
 	DX, DY       int32
 	Start        bool
 	Contaminate  bool
-	Clean        bool
 	TankSlot     int32
 	InteractTask bool
 	StationID    string
@@ -169,7 +166,7 @@ type PlayerAction struct {
 
 // isMove: la acción solo cambia la dirección (un Move).
 func (a PlayerAction) isMove() bool {
-	return !a.Start && !a.Contaminate && !a.Clean && !a.InteractTask &&
+	return !a.Start && !a.Contaminate && !a.InteractTask &&
 		!a.Report && !a.Vote && !a.Chat && !a.Sabotage && !a.Fix &&
 		!a.PickColor && !a.PickAccessory && !a.PickSkin && !a.SetOwned
 }
@@ -242,7 +239,7 @@ type chatEntry struct {
 // tankAction es contaminar o limpiar: termina cuando pasan ticksLeft
 // ticks sin que el jugador se mueva.
 type tankAction struct {
-	kind      string // LogContaminate o LogClean
+	kind      string // LogContaminate
 	slot      int32
 	ticksLeft int
 }

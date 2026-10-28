@@ -101,12 +101,12 @@ Además de los eventos aleatorios, el impostor puede disparar sabotajes desde un
 La jugada clásica es **sabotear y contaminar a la vez**: mientras todos corren a la tubería, el impostor va al tanque de alguien. Eso da material para la reunión ("¿por qué no estabas en la tubería?").
 
 ### Eliminación
-- **Por contaminación:** cada tanque de riego tiene una barra del 0 al 100 %. Si llega a 100 %, los cultivos de ese jugador mueren y queda eliminado. Los tripulantes no pueden limpiar tanques, ni el suyo ni los ajenos: solo el impostor limpia, para fingir que ayuda o bajar el suyo.
+- **Por contaminación:** cada tanque de riego tiene una barra del 0 al 100 %. Si llega a 100 %, los cultivos de ese jugador mueren y queda eliminado. **Nadie puede limpiar un tanque, ni los tripulantes ni el impostor:** el daño es permanente. Dos contaminaciones bastan para matar un tanque.
 - **Por votación:** en una reunión se discute por el chat y se vota para expulsar a alguien.
 - **Los eliminados quedan como fantasmas** y siguen haciendo tareas, así nadie se aburre.
 
 ### Pistas para descubrir al impostor
-1. **Cercanía visible:** contaminar toma tiempo y se ve. Pero cualquiera pasa junto a los tanques camino a sus tareas, y el impostor también limpia para disimular, así que estar cerca no prueba nada por sí solo.
+1. **Cercanía visible:** contaminar toma tiempo y se ve. Pero cualquiera pasa junto a los tanques camino a sus tareas, así que estar cerca no prueba nada por sí solo.
 2. **Gotas de aceite:** después de contaminar, el impostor deja gotas de aceite del color de su personaje durante unos 15 segundos.
 3. **Tanque arruinado y reporte:** quien encuentra un tanque contaminado al 100 % lo reporta y se abre la reunión. La reunión **no** muestra quiénes pasaron por el tanque (se quitó para que nadie se acuse por ese dato); todos aparecen en la Mesa de reuniones, en el mirador del centro.
 4. **Alerta al dueño** (opcional): "¡tu tanque está siendo contaminado!", sin decir por quién.

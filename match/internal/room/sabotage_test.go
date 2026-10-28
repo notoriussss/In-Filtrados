@@ -340,17 +340,6 @@ func TestActivityShowsWhatEachPlayerDoes(t *testing.T) {
 	if r.activityOf(imp) != activityTank {
 		t.Error("contaminar: activity debe ser la del tanque")
 	}
-	// Solo el impostor limpia; se ve igual que contaminar.
-	imp.pending = nil
-	target.contamination = 10
-	r.handleAction(PlayerAction{
-		PlayerID: "imp",
-		Clean:    true,
-		TankSlot: target.slot,
-	})
-	if r.activityOf(imp) != activityTank {
-		t.Error("contaminar y limpiar deben verse igual")
-	}
 
 	sabotage(r, "imp", emergencySteam)
 	standAt(r, "crew1", "steam-valve")

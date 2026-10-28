@@ -149,7 +149,9 @@ export const HELP_TEXT = {
   RECYCLE_2: 'Toca la suciedad que flota hasta dejarla limpia.',
   ROLES: 'Roles',
   CREW: 'Cuidador',
-  CREW_TEXT: 'Haz tus 4 tareas, limpia los tanques y vota en las reuniones.',
+  CREW_TEXT:
+    'Haz tus 4 tareas, vigila los tanques y vota en las reuniones. ' +
+    'Lo que se contamina no se limpia.',
   CREW_WIN: 'Ganan: embalse lleno o infiltrado expulsado',
   IMPOSTOR: 'Infiltrado',
   IMPOSTOR_TEXT:
@@ -195,7 +197,6 @@ export const HUD_TEXT = {
   MAP: 'Mapa',
   MEETING_POINT: 'Reunión',
   USE: 'Usar',
-  CLEAN: 'Limpiar',
   REPORT: 'Reportar',
   CONTAMINATE: 'Contaminar',
   FIX: 'Arreglar',

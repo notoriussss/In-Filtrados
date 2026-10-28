@@ -67,14 +67,12 @@ describe('contextAction', () => {
     expect(contextAction(me, 'CREW', dirty, map, 0, 0)).toBeNull();
   });
 
-  it('never offers Limpiar to a crewmate, only to the impostor', () => {
-    const own = player('crew', 410, 100);
-    const dirty = [tank(0, 'impostor', 20), tank(1, 'crew', 35)];
-    expect(contextAction(own, 'CREW', dirty, map, 0, 0)).toBeNull();
+  it('never offers to clean a tank: the damage is permanent', () => {
+    const dirty = [tank(0, 'impostor', 20), tank(1, 'crew', 50)];
+    const crew = player('crew', 410, 100);
+    expect(contextAction(crew, 'CREW', dirty, map, 0, 0)).toBeNull();
     const imp = player('impostor', 100, 110);
-    const a = contextAction(imp, 'IMPOSTOR', dirty, map, 0, 0);
-    expect(a?.kind).toBe('clean');
-    expect(a?.tankSlot).toBe(0);
+    expect(contextAction(imp, 'IMPOSTOR', dirty, map, 0, 0)).toBeNull();
   });
 
   it('does not let the impostor contaminate their own tank', () => {
@@ -204,7 +202,6 @@ describe('tankRose', () => {
 describe('holdDuration', () => {
   it('returns correct durations for each kind', () => {
     expect(holdDuration('contaminate')).toBe(GAME_RULES.CONTAMINATE_MS);
-    expect(holdDuration('clean')).toBe(GAME_RULES.CLEAN_MS);
     expect(holdDuration('task')).toBe(GAME_RULES.TASK_MS);
     expect(holdDuration('report')).toBe(0);
   });
