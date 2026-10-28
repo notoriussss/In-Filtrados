@@ -65,6 +65,8 @@ type savedPlayer struct {
 	TankSlot       int          `json:"tank_slot"`
 	AssignedTasks  []string     `json:"assigned_tasks"`
 	TasksCompleted int          `json:"tasks_completed"`
+	// Opcional para que sirvan las instantáneas viejas.
+	LitersSaved int `json:"liters_saved,omitempty"`
 	// S2-11: opcional para que sirvan las instantáneas viejas.
 	CompletedTasks  []string `json:"completed_tasks,omitempty"`
 	NextContaminate int64    `json:"next_contaminate"`
@@ -192,6 +194,7 @@ func (r *Room) toSaved() savedRoom {
 			TankSlot:        p.tankSlot,
 			AssignedTasks:   tasks,
 			TasksCompleted:  p.tasksCompleted,
+			LitersSaved:     p.litersSaved,
 			CompletedTasks:  p.completedTasks,
 			NextContaminate: p.nextContaminate,
 			NextChatTick:    p.nextChatTick,
@@ -315,6 +318,7 @@ func Restore(state []byte, m *Map, opts ...Option) (*Room, error) {
 			tankSlot:        sp.TankSlot,
 			assignedTasks:   tasks,
 			tasksCompleted:  sp.TasksCompleted,
+			litersSaved:     sp.LitersSaved,
 			completedTasks:  sp.CompletedTasks,
 			nextContaminate: sp.NextContaminate,
 			nextChatTick:    sp.NextChatTick,

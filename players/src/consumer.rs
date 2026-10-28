@@ -53,6 +53,10 @@ pub struct PlayerResult {
     pub player_id: Uuid,
     pub role: String,
     pub harvest: i32,
+    /// Litros que sus tareas sumaron al embalse. Opcional: los eventos
+    /// viejos no lo traen y cuentan 0.
+    #[serde(default)]
+    pub liters_saved: i32,
 }
 
 /// Qué hacer con el mensaje después de procesarlo.
@@ -126,8 +130,9 @@ pub async fn save_results(
 
         let inserted = sqlx::query(
             "INSERT INTO results
-               (match_id, player_id, role, won, harvest, coins_earned)
-             VALUES ($1, $2, $3, $4, $5, $6)
+               (match_id, player_id, role, won, harvest, coins_earned,
+                liters_saved)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)
              ON CONFLICT (match_id, player_id) DO NOTHING",
         )
         .bind(event.match_id)
@@ -136,6 +141,7 @@ pub async fn save_results(
         .bind(won)
         .bind(player.harvest)
         .bind(coins)
+        .bind(player.liters_saved)
         .execute(&mut *tx)
         .await?
         .rows_affected();
@@ -450,6 +456,41 @@ mod tests {
         assert_eq!(stats(&pool, impostor).await, (10 + WIN_BONUS, 1, 1));
         assert_eq!(impostor_stats(&pool, impostor).await, (1, 1));
         assert_eq!(stats(&pool, crew).await, (25, 1, 0));
+    }
+
+    /// `liters_saved` del evento queda guardado en `results`; un evento
+    /// sin ese campo (de antes) cuenta 0.
+    #[tokio::test]
+    async fn stores_the_liters_saved_of_each_player() {
+        let Some(pool) = test_pool().await else {
+            return;
+        };
+        let with = new_player(&pool).await;
+        let without = new_player(&pool).await;
+        let match_id = Uuid::new_v4();
+        let body = format!(
+            r#"{{"event_id":"{}","match_id":"{match_id}","winner":"crew",
+            "players":[
+              {{"player_id":"{with}","role":"crew","harvest":5,
+                "liters_saved":700}},
+              {{"player_id":"{without}","role":"crew","harvest":5}}]}}"#,
+            Uuid::new_v4()
+        );
+
+        assert_eq!(handle_message(&pool, body.as_bytes()).await, Outcome::Ack);
+
+        for (player, expected) in [(with, 700), (without, 0)] {
+            let liters: i32 = sqlx::query_scalar(
+                "SELECT liters_saved FROM results
+                 WHERE match_id = $1 AND player_id = $2",
+            )
+            .bind(match_id)
+            .bind(player)
+            .fetch_one(&pool)
+            .await
+            .unwrap();
+            assert_eq!(liters, expected);
+        }
     }
 
     #[tokio::test]

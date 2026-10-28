@@ -76,6 +76,7 @@ pub struct RankingRow {
     pub wins_as_impostor: i32,
     pub harvest: i32,
     pub coins_earned: i32,
+    pub liters_saved: i32,
 }
 
 /// `limit` pedido por el cliente: 0, negativo o pasado del máximo es el
@@ -89,18 +90,19 @@ pub fn ranking_limit(requested: i32) -> i32 {
 }
 
 /// Todos los jugadores, de más a menos victorias; a igualdad gana quien
-/// necesitó menos partidas y luego el nombre. La cosecha y las monedas
-/// ganadas salen de `results`, así que no bajan al gastar en la tienda.
+/// necesitó menos partidas y luego el nombre. La cosecha, las monedas
+/// ganadas y los litros ahorrados salen de `results`, así que no bajan al gastar en la tienda.
 pub async fn get_ranking(
     pool: &PgPool,
     limit: i32,
 ) -> Result<Vec<RankingRow>, ProfileError> {
     let rows =
-        sqlx::query_as::<_, (Uuid, String, i32, i32, i32, i32, i32, i32)>(
+        sqlx::query_as::<_, (Uuid, String, i32, i32, i32, i32, i32, i32, i32)>(
             "SELECT p.id, p.username, p.matches_played, p.wins,
                 p.times_impostor, p.wins_as_impostor,
                 COALESCE(SUM(r.harvest), 0)::INT4,
-                COALESCE(SUM(r.coins_earned), 0)::INT4
+                COALESCE(SUM(r.coins_earned), 0)::INT4,
+                COALESCE(SUM(r.liters_saved), 0)::INT4
          FROM players p
          LEFT JOIN results r ON r.player_id = p.id
          GROUP BY p.id
@@ -124,6 +126,7 @@ pub async fn get_ranking(
                 wins_as_impostor,
                 harvest,
                 coins_earned,
+                liters_saved,
             )| RankingRow {
                 player_id,
                 username,
@@ -133,6 +136,7 @@ pub async fn get_ranking(
                 wins_as_impostor,
                 harvest,
                 coins_earned,
+                liters_saved,
             },
         )
         .collect())

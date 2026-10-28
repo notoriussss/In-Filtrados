@@ -555,10 +555,11 @@ func (r *Room) finishMatch(winner string) {
 		results := make([]events.PlayerResult, 0, len(r.players))
 		for id, p := range r.players {
 			results = append(results, events.PlayerResult{
-				PlayerID: id,
-				Role:     roleName(p.role),
-				Ejected:  p.ejected,
-				Harvest:  r.calculateHarvest(p),
+				PlayerID:    id,
+				Role:        roleName(p.role),
+				Ejected:     p.ejected,
+				Harvest:     r.calculateHarvest(p),
+				LitersSaved: p.litersSaved,
 			})
 		}
 		sort.Slice(results, func(i, j int) bool {

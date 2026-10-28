@@ -116,6 +116,7 @@ func (r *Room) completeTask(playerID string, p *player, stationID string) {
 
 	points := taskPoints[s.Type]
 	if points > 0 {
+		p.litersSaved += int(points * litersPerPoint)
 		r.updateReservoir()
 
 		if r.publisher != nil {

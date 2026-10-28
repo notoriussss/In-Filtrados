@@ -97,6 +97,8 @@ type PlayerResult struct {
 	Role     string `json:"role"`
 	Ejected  bool   `json:"ejected"`
 	Harvest  int    `json:"harvest"`
+	// Litros que sus tareas sumaron al embalse (el impostor no suma).
+	LitersSaved int `json:"liters_saved"`
 }
 
 // NewMatchStarted arma el evento con un `event_id` nuevo.

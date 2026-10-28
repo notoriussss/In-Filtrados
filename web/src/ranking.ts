@@ -10,8 +10,8 @@ export type RankingEntry = {
   wins: number;
   timesImpostor: number;
   winsAsImpostor: number;
-  harvest: number; // litros cosechados en todas sus partidas
   coinsEarned: number;
+  litersSaved: number; // litros que sus tareas sumaron al embalse
 };
 
 export type RankingResponse = { entries: RankingEntry[] };
@@ -21,7 +21,7 @@ export type SortKey =
   | 'rate'
   | 'matches'
   | 'impostor'
-  | 'harvest'
+  | 'liters'
   | 'coins';
 
 // winRate: victorias entre partidas, de 0 a 1 (0 si aún no juega).
@@ -42,7 +42,7 @@ const VALUE: Record<SortKey, (e: RankingEntry) => number> = {
   rate: winRate,
   matches: (e) => e.matchesPlayed,
   impostor: (e) => e.winsAsImpostor,
-  harvest: (e) => e.harvest,
+  liters: (e) => e.litersSaved,
   coins: (e) => e.coinsEarned,
 };
 

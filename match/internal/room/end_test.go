@@ -305,6 +305,35 @@ func TestHarvestFormula(t *testing.T) {
 	}
 }
 
+// TestFinishedEventCarriesLitersSaved: match.finished trae los litros que
+// sumó cada jugador, para el ranking de players.
+func TestFinishedEventCarriesLitersSaved(t *testing.T) {
+	pub := &fakePublisher{}
+	store := &fakeStore{}
+	players := []string{"crew1", "crew2", "imp"}
+	impMap := map[string]bool{"imp": true}
+	r := setupPlayingRoom(t, players, impMap, pub, store)
+
+	r.players["crew1"].litersSaved = 700
+	r.players["imp"].litersSaved = 0
+
+	r.reservoir = 100
+	r.step()
+
+	evs := waitForEvents(t, pub, events.RoutingKeyFinished, 1)
+	mf := evs[0].payload.(events.MatchFinished)
+	liters := make(map[string]int)
+	for _, p := range mf.Players {
+		liters[p.PlayerID] = p.LitersSaved
+	}
+	if liters["crew1"] != 700 {
+		t.Errorf("crew1 litros esperados 700, got %d", liters["crew1"])
+	}
+	if liters["crew2"] != 0 || liters["imp"] != 0 {
+		t.Errorf("crew2 e imp no suman litros: %v", liters)
+	}
+}
+
 // TestMatchEndedBroadcastOnEventOut: verifica que los streams gRPC reciben
 // el evento MatchEnded con winner y la lista de impostor_ids.
 func TestMatchEndedBroadcastOnEventOut(t *testing.T) {

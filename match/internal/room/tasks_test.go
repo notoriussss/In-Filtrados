@@ -183,6 +183,9 @@ func TestCrewTaskSuccess(t *testing.T) {
 	if p.tasksCompleted != 1 {
 		t.Errorf("tasksCompleted debe ser 1, obtuvo %d", p.tasksCompleted)
 	}
+	if p.litersSaved != 300 {
+		t.Errorf("litersSaved debe ser 300, obtuvo %d", p.litersSaved)
+	}
 	// El embalse es el avance de la tripulación: leak-1 (reduce, 3) de
 	// leak-1 + rain-1 (3 + 4) es 3/7, o sea 42 %.
 	if r.reservoir != 42 {

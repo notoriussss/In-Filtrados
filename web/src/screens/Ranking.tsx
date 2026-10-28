@@ -21,7 +21,7 @@ const MATCHES: Column = { key: 'matches', label: T.MATCHES };
 const WINS: Column = { key: 'wins', label: T.WINS };
 const RATE: Column = { key: 'rate', label: T.RATE };
 const IMPOSTOR: Column = { key: 'impostor', label: T.IMPOSTOR };
-const HARVEST: Column = { key: 'harvest', label: T.HARVEST };
+const LITERS: Column = { key: 'liters', label: T.LITERS };
 const COINS: Column = { key: 'coins', label: T.COINS };
 
 // Ranking: todos los jugadores con sus estadísticas. Por defecto de más a
@@ -112,8 +112,8 @@ export function Ranking(props: {
                 {head(RATE)}
                 <th className="num">{T.CREW}</th>
                 {head(IMPOSTOR)}
-                {head(HARVEST)}
                 {head(COINS)}
+                {head(LITERS)}
               </tr>
             </thead>
             <tbody>
@@ -139,8 +139,8 @@ export function Ranking(props: {
                     <td className="num">
                       {T.ratio(r.winsAsImpostor, r.timesImpostor)}
                     </td>
-                    <td className="num">{T.liters(r.harvest)}</td>
                     <td className="num">{r.coinsEarned}</td>
+                    <td className="num">{T.liters(r.litersSaved)}</td>
                   </tr>
                 );
               })}

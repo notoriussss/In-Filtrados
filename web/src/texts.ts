@@ -375,7 +375,7 @@ export const RANKING_TEXT = {
   RATE: '% victorias',
   CREW: 'Cuidador',
   IMPOSTOR: 'Infiltrado',
-  HARVEST: 'Cosecha',
+  LITERS: 'Litros ahorrados',
   COINS: 'Monedas ganadas',
   YOU: '(tú)',
   SORT_BY: 'Ordenar por',

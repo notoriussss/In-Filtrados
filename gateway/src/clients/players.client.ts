@@ -48,6 +48,7 @@ export class RankingEntryReply {
   @ApiProperty() winsAsImpostor!: number;
   @ApiProperty() harvest!: number;
   @ApiProperty() coinsEarned!: number;
+  @ApiProperty() litersSaved!: number;
 }
 
 export class RankingReply {

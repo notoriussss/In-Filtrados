@@ -185,7 +185,7 @@ players[].skin: 'jimena' | 'gota';       // 'jimena' es el personaje de inicio
 | `GET /api/me` | — (header `Authorization: Bearer <token>`) | `200 { playerId, username, coins, matchesPlayed, wins, timesImpostor, winsAsImpostor }` (las dos últimas desde S2-07) |
 | `GET /api/shop` | — | `200 { coins, items: [{ id, kind: 'character' \| 'accessory', price, owned }] }` (tienda: lo que se compra con monedas) |
 | `POST /api/shop/buy` | `{ itemId }` | `200` igual que `GET /api/shop`, con la compra hecha. `404` si el artículo no existe, `409` si ya lo tiene o no le alcanzan las monedas |
-| `GET /api/ranking` | — | `200 { entries: [{ playerId, username, matchesPlayed, wins, timesImpostor, winsAsImpostor, harvest, coinsEarned }] }`: todos los jugadores (hasta 100), de más a menos victorias; a igualdad, menos partidas y luego el nombre. `harvest` y `coinsEarned` suman todas sus partidas |
+| `GET /api/ranking` | — | `200 { entries: [{ playerId, username, matchesPlayed, wins, timesImpostor, winsAsImpostor, harvest, coinsEarned, litersSaved }] }`: todos los jugadores (hasta 100), de más a menos victorias; a igualdad, menos partidas y luego el nombre. `harvest` (puntos de cosecha), `coinsEarned` y `litersSaved` (litros que sus tareas sumaron al embalse) suman todas sus partidas; las partidas de antes de `litersSaved` cuentan 0 |
 | `POST /api/rooms` | — | `201 { roomCode, matchId }` |
 | `POST /api/rooms/:roomCode/join` | — | `200 { roomCode, matchId }` |
 
@@ -199,7 +199,7 @@ El WebSocket se abre en `/ws?token=<token>`.
 | Routing key | Lo publica | Contenido |
 |---|---|---|
 | `match.started` | `match` | `{ event_id, match_id, room_code, started_at, player_ids[] }` |
-| `match.finished` | `match` | `{ event_id, match_id, finished_at, winner: "crew" \| "impostor", players: [{ player_id, role, ejected, harvest }] }` |
+| `match.finished` | `match` | `{ event_id, match_id, finished_at, winner: "crew" \| "impostor", players: [{ player_id, role, ejected, harvest, liters_saved }] }` (`liters_saved` es opcional: los eventos anteriores no lo traen y cuentan 0) |
 | `task.completed` | `match` (semana 2) | `{ event_id, match_id, player_id, task_type, liters_saved }` |
 | `player.ejected` | `match` (semana 2) | `{ event_id, match_id, player_id, was_impostor }` |
 | `player.disconnected` | `match` (S3-04) | `{ event_id, match_id, player_id, display_name, grace_seconds, grace_ends_at, at }` |
