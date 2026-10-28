@@ -349,9 +349,14 @@ func TestMatchEndedBroadcastOnEventOut(t *testing.T) {
 	outB := make(chan *matchv1.ServerEvent, 16)
 	r.addPlayer(Join{PlayerID: "c1", Out: outA})
 	r.addPlayer(Join{PlayerID: "imp", Out: outB})
+	r.addPlayer(Join{
+		PlayerID: "c2",
+		Out:      make(chan *matchv1.ServerEvent, 16),
+	})
 	r.startMatch("c1")
 
 	r.players["c1"].role = matchv1.Role_CREW
+	r.players["c2"].role = matchv1.Role_CREW
 	r.players["imp"].role = matchv1.Role_IMPOSTOR
 
 	r.reservoir = 100
@@ -420,6 +425,10 @@ func TestRoomMemoryCleanupAfterDelay(t *testing.T) {
 	r.addPlayer(Join{PlayerID: "c1", Out: outA})
 	outB := make(chan *matchv1.ServerEvent, 16)
 	r.addPlayer(Join{PlayerID: "c2", Out: outB})
+	r.addPlayer(Join{
+		PlayerID: "c3",
+		Out:      make(chan *matchv1.ServerEvent, 16),
+	})
 	r.startMatch("c1")
 
 	// Terminar partida

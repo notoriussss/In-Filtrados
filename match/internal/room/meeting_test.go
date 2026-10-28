@@ -783,12 +783,13 @@ func TestPlayerEjectedEventPublished(t *testing.T) {
 		WithCreator("crew1"),
 		WithPublisher(pub),
 	)
-	for _, id := range []string{"crew1", "imp"} {
+	for _, id := range []string{"crew1", "crew2", "imp"} {
 		out := make(chan *matchv1.ServerEvent, 1)
 		r.addPlayer(Join{PlayerID: id, Out: out})
 	}
 	r.startMatch("crew1")
 	r.players["crew1"].role = matchv1.Role_CREW
+	r.players["crew2"].role = matchv1.Role_CREW
 	r.players["imp"].role = matchv1.Role_IMPOSTOR
 
 	t0 := r.tankAt(0)
@@ -805,6 +806,11 @@ func TestPlayerEjectedEventPublished(t *testing.T) {
 
 	r.handleAction(PlayerAction{
 		PlayerID:     "crew1",
+		Vote:         true,
+		VoteTargetID: "imp",
+	})
+	r.handleAction(PlayerAction{
+		PlayerID:     "crew2",
 		Vote:         true,
 		VoteTargetID: "imp",
 	})

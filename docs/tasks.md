@@ -523,7 +523,7 @@ Una tarea solo está terminada cuando, además de su criterio de verificación:
    ```
    Se aplica al arrancar con `golang-migrate`.
 2. `publisher.go`: conexión a RabbitMQ con `amqp091-go`, declara el exchange `game.events` (sección 0.7) y expone `Publish(ctx, routingKey string, payload any) error`, con mensajes persistentes y **publisher confirms**. Si RabbitMQ no está, reintenta conectar cada 2 segundos sin tumbar el servicio.
-3. La sala pasa de `LOBBY` a `PLAYING` cuando el creador manda una acción `Start` (agregarla al proto) con al menos 2 jugadores. En ese momento inserta en `matches` y `participants` y publica `match.started`.
+3. La sala pasa de `LOBBY` a `PLAYING` cuando el creador manda una acción `Start` (agregarla al proto) con al menos 3 jugadores. En ese momento inserta en `matches` y `participants` y publica `match.started`.
 4. **Regla temporal de la semana 1:** la partida termina sola a los 3 minutos con `winner: "crew"` y `harvest: 0`. Se guarda `ended_at` y se publica `match.finished`. Es solo para que `players` y `monitor` tengan eventos reales; en la semana 2 se reemplaza.
 
 **Criterio de verificación:** jugar una partida de 3 minutos con 2 jugadores. Al terminar, `SELECT * FROM matches` en `match-db` muestra la fila con `ended_at` y `winner`, y en la consola de RabbitMQ la cola `monitor.all` recibió exactamente 1 `match.started` y 1 `match.finished` con el formato de la sección 0.7. Con RabbitMQ apagado, el servicio sigue funcionando y el `/health` dice `"rabbitmq": "fail: ..."`.

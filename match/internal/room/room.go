@@ -498,7 +498,7 @@ func (r *Room) inMatch() bool {
 }
 
 // startMatch pasa la sala a PLAYING: guarda la partida y publica el evento.
-// Solo lo acepta el creador, en LOBBY y con al menos 2 jugadores conectados.
+// Solo lo acepta el creador, en LOBBY y con al menos 3 jugadores conectados.
 func (r *Room) startMatch(playerID string) {
 	if r.phase != matchv1.Phase_LOBBY {
 		return
