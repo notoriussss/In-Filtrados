@@ -7,7 +7,7 @@ import {
   accessoryName,
   colorName,
 } from '../ui/Gota';
-import { Button, Chip } from '../ui/kit';
+import { HintBar } from '../ui/kit';
 import { api } from '../api';
 import { session } from '../session';
 import {
@@ -26,6 +26,7 @@ import {
 import { ERROR_MESSAGES } from '../constants';
 import { SHOP_TEXT as T } from '../texts';
 import { BACKGROUNDS } from './backgrounds';
+import '../styles/shop.css';
 
 type Tab = 'characters' | AccessoryCategory;
 
@@ -63,19 +64,34 @@ type TileProps = {
   price: number;
   on: boolean;
   focused: boolean;
+  noAcc?: boolean;
   onClick: () => void;
   preview: ReactNode;
 };
 
 function Tile(props: TileProps) {
   const cls = [
-    'wd-tile',
+    'shop-card',
     props.locked ? 'locked' : '',
     props.on ? 'on' : '',
     props.focused ? 'focus' : '',
+    props.noAcc ? 'no-acc' : '',
   ]
     .filter(Boolean)
     .join(' ');
+
+  const tagClass = props.on
+    ? 'shop-card-tag on'
+    : props.locked
+      ? 'shop-card-tag price'
+      : 'shop-card-tag owned';
+
+  const tagText = props.on
+    ? T.EQUIPPED
+    : props.locked
+      ? T.price(props.price)
+      : T.OWNED;
+
   return (
     <button
       type="button"
@@ -88,18 +104,18 @@ function Tile(props: TileProps) {
       aria-pressed={props.focused || props.on}
       onClick={props.onClick}
     >
-      <span className="wd-prev">{props.preview}</span>
-      <span className="wd-name">{props.label}</span>
-      <span className="wd-tag">
-        {props.on ? '✓' : props.locked ? T.price(props.price) : ''}
-      </span>
+      <div className="shop-card-top">
+        {!props.noAcc && <span className={tagClass}>{tagText}</span>}
+      </div>
+      <div className="shop-card-prev">{props.preview}</div>
+      <span className="shop-card-name">{props.label}</span>
     </button>
   );
 }
 
-// Tienda y vestidor: a la izquierda lo que se puede llevar, por pestañas;
-// a la derecha tu personaje de cuerpo completo con eso puesto. Lo que ya
-// es tuyo se pone al tocarlo; lo bloqueado se mira y se compra con monedas.
+// Tienda y vestidor de escenario abierto: riel vertical de categorías a la
+// izquierda, personaje de cuerpo completo sobre pedestal circular al centro,
+// y rejilla de vestidor a la derecha.
 export function Shop(props: {
   onClose: () => void;
   onUnauthorized: () => void;
@@ -153,8 +169,7 @@ export function Shop(props: {
     saveCosmetics(next);
   };
 
-  // Lo que muestra el personaje de la derecha: lo que se mira o, si no se
-  // mira nada, lo que se lleva puesto.
+  // Lo que muestra el personaje central: lo que se mira o lo que lleva puesto.
   const look: Cosmetics = {
     skin: focus?.kind === 'char' ? focus.skin : eq.skin,
     color: focus?.kind === 'char' ? focus.color : eq.color,
@@ -163,7 +178,7 @@ export function Shop(props: {
   const lookAcc = look.accessory || NONE;
 
   // Qué falta comprar para llevar eso puesto: primero la gota del color y
-  // después el accesorio. Se compra de a una cosa.
+  // después el accesorio.
   const toBuy = !ownsChar(look.skin, look.color)
     ? gotaItemId(look.color)
     : !ownsAcc(lookAcc)
@@ -175,6 +190,7 @@ export function Shop(props: {
     setNotice('');
     if (ownsChar(skin, color)) equip({ ...eq, skin, color });
   };
+
   const pickAcc = (id: string) => {
     setFocus({ kind: 'acc', id });
     setNotice('');
@@ -189,7 +205,6 @@ export function Shop(props: {
       const next = await api.buyItem(data.token, toBuy);
       setShop(next);
       setNotice(T.bought(itemName(toBuy)));
-      // Lo comprado se lleva puesto de una vez, si ya está todo.
       const have = ownedIds(next);
       if (ownsChar(look.skin, look.color, have) && ownsAcc(lookAcc, have)) {
         equip({
@@ -212,7 +227,30 @@ export function Shop(props: {
     toBuy === null &&
     look.skin === eq.skin &&
     look.color === eq.color &&
-    look.accessory === eq.accessory;
+    (look.accessory || '') === (eq.accessory || '');
+
+  const accLabel =
+    lookAcc === NONE
+      ? T.NO_ACCESSORY
+      : (ACCESSORIES.find((a) => a.id === lookAcc)?.name ?? lookAcc);
+
+  const categoryProgress = (t: Tab): string => {
+    if (t === 'characters') {
+      const total = SERVER_COLORS.length * 2;
+      const gotaOwned = SERVER_COLORS.filter((c) =>
+        ownsChar(SKIN_GOTA, c),
+      ).length;
+      return T.unlockedCount(SERVER_COLORS.length + gotaOwned, total);
+    }
+    const items = ACCESSORY_CATEGORIES[t];
+    const unlocked = items.filter((id) => ownsAcc(id)).length;
+    return T.unlockedCount(unlocked, items.length);
+  };
+
+  const activeTabLabel =
+    TABS.find((t) => t.id === tab)?.label ?? T.TAB_CHARACTERS;
+  const activeItemLabel =
+    tab === 'characters' ? skinLabel(look.skin, look.color) : accLabel;
 
   const grid =
     tab === 'characters'
@@ -230,7 +268,7 @@ export function Shop(props: {
                 focus.color === color
               }
               onClick={() => pickChar(skin, color)}
-              preview={<Gota color={color} skin={skin} scale={2.8} portrait />}
+              preview={<Gota color={color} skin={skin} scale={2.3} portrait />}
             />
           )),
         )
@@ -242,16 +280,17 @@ export function Shop(props: {
             price={priceOf(shop, id)}
             on={(eq.accessory || NONE) === id}
             focused={focus?.kind === 'acc' && focus.id === id}
+            noAcc={id === NONE}
             onClick={() => pickAcc(id)}
             preview={
               id === NONE ? (
-                <span className="wd-none">✕</span>
+                <span className="shop-none-glyph">✕</span>
               ) : (
                 <Gota
-                  color={eq.color}
-                  skin={eq.skin}
+                  color={look.color}
+                  skin={look.skin}
                   accessory={id}
-                  scale={tab === 'body' ? 1.7 : 2.8}
+                  scale={tab === 'body' ? 1.55 : 2.15}
                   portrait={tab !== 'body'}
                 />
               )
@@ -259,89 +298,126 @@ export function Shop(props: {
           />
         ));
 
-  const accLabel =
-    lookAcc === NONE
-      ? T.NO_ACCESSORY
-      : (ACCESSORIES.find((a) => a.id === lookAcc)?.name ?? lookAcc);
-
   return (
     <Stage className="scr-shop" background={BACKGROUNDS.mapBlur}>
-      <div className="shade dim" />
-      <div className="wd-top">
-        <div className="row">
-          <Button variant="sec" small icon="left" onClick={props.onClose}>
+      <div className="shop-vignette" />
+
+      {/* BARRA SUPERIOR */}
+      <header className="shop-header">
+        <div className="shop-header-left">
+          <button
+            type="button"
+            className="shop-back-btn"
+            onClick={props.onClose}
+          >
             {T.BACK}
-          </Button>
-          <span className="h2 screen-title">{T.TITLE}</span>
+          </button>
         </div>
-        <div className="row">
+
+        <div className="shop-header-right">
           {notice && (
-            <Chip tone="ok" big icon="check">
+            <div className="shop-feedback-pill ok" role="status">
               {notice}
-            </Chip>
+            </div>
           )}
           {error && (
-            <Chip tone="bad" big icon="cross">
+            <div className="shop-feedback-pill bad" role="alert">
               {error}
-            </Chip>
+            </div>
           )}
-          <Chip tone="info" big icon="drop">
-            {T.COINS}: <b>{shop ? coins : '—'}</b>
-          </Chip>
+          <div className="shop-coins-pill">
+            <span>{T.COINS}</span>
+            <strong className="shop-coins-val">
+              {shop ? T.price(coins) : '—'}
+            </strong>
+          </div>
         </div>
+      </header>
+
+      {/* ESCENARIO PRINCIPAL DE 3 ZONAS */}
+      <div className="shop-main">
+        {/* 1. RIEL VERTICAL DE CATEGORÍAS */}
+        <nav className="shop-cat-rail" role="tablist" aria-label={T.TITLE}>
+          {TABS.map((t) => {
+            const isActive = tab === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                className={`shop-cat-tab ${isActive ? 'active' : ''}`}
+                onClick={() => setTab(t.id)}
+              >
+                <span className="shop-cat-label">{t.label}</span>
+                <span className="shop-cat-count">{categoryProgress(t.id)}</span>
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* 2. ESCENARIO CENTRAL DEL PERSONAJE */}
+        <section className="shop-hero-stage">
+          <div className="shop-pedestal-zone">
+            <div className="shop-ring-outer" />
+            <div className="shop-ring-inner" />
+            <div className="shop-floor-shadow" />
+            <div className="shop-hero-figure">
+              <Gota
+                color={look.color}
+                skin={look.skin}
+                accessory={lookAcc === NONE ? '' : lookAcc}
+                scale={7.2}
+                animate
+              />
+            </div>
+          </div>
+
+          <div className="shop-hero-footer">
+            <strong className="shop-preview-title">
+              {skinLabel(look.skin, look.color)}
+            </strong>
+            <span className="shop-preview-sub">{accLabel}</span>
+
+            <div className="shop-cta-wrap">
+              {toBuy ? (
+                <button
+                  type="button"
+                  className={`shop-cta-btn ${affordable ? 'buy' : 'locked'}`}
+                  disabled={!affordable || busy}
+                  onClick={buy}
+                >
+                  {affordable
+                    ? `${T.BUY} ${itemName(toBuy)} · ${T.price(price)}`
+                    : `${T.NOT_ENOUGH} (${T.price(price)})`}
+                </button>
+              ) : (
+                <div className="shop-cta-badge">
+                  {equipped ? T.EQUIPPED : T.OWNED}
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* 3. PANEL DE GUARDARROPA A LA DERECHA */}
+        <section className="shop-wardrobe-col">
+          <header className="shop-wardrobe-header">
+            <div className="shop-wardrobe-heading">
+              <span className="shop-wardrobe-cat">{activeTabLabel}</span>
+              <span className="shop-wardrobe-dot">·</span>
+              <span className="shop-wardrobe-item">{activeItemLabel}</span>
+            </div>
+          </header>
+
+          <div className="shop-grid-scroll">
+            <div className="shop-grid">{grid}</div>
+            {!shop && <p className="shop-loading-note">{T.LOADING}</p>}
+          </div>
+        </section>
       </div>
 
-      <nav className="wd-tabs" role="tablist" aria-label={T.TITLE}>
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            role="tab"
-            aria-selected={tab === t.id}
-            className={`wd-tab ${tab === t.id ? 'on' : ''}`}
-            onClick={() => setTab(t.id)}
-          >
-            {t.label}
-          </button>
-        ))}
-      </nav>
-
-      <section className="panel wd-grid-panel">
-        <div className="wd-grid">{grid}</div>
-        {!shop && <p className="muted wd-foot">{T.LOADING}</p>}
-      </section>
-
-      <section className="panel wd-stage-panel">
-        <div className="wd-figure">
-          <div className="wd-plank" />
-          <Gota
-            color={look.color}
-            skin={look.skin}
-            accessory={look.accessory}
-            scale={9}
-            animate
-          />
-        </div>
-        <b className="wd-title">{skinLabel(look.skin, look.color)}</b>
-        <span className="muted wd-sub">{accLabel}</span>
-        <div className="wd-action">
-          {toBuy ? (
-            <Button
-              variant={affordable ? 'pri' : 'sec'}
-              disabled={!affordable || busy}
-              onClick={buy}
-            >
-              {affordable
-                ? `${T.BUY} ${itemName(toBuy)} · ${T.price(price)}`
-                : `${T.NOT_ENOUGH} (${T.price(price)})`}
-            </Button>
-          ) : (
-            <Chip tone="ok" big icon="check">
-              {equipped ? T.EQUIPPED : T.OWNED}
-            </Chip>
-          )}
-        </div>
-      </section>
+      <HintBar hints={[['Esc', T.BACK]]} />
     </Stage>
   );
 }

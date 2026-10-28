@@ -371,6 +371,7 @@ export const SHOP_TEXT = {
   NOT_ENOUGH: 'No te alcanzan las monedas',
   price: (n: number) => `${n} ◆`,
   bought: (name: string) => `Compraste: ${name}`,
+  unlockedCount: (owned: number, total: number) => `${owned}/${total}`,
   LOADING: 'Cargando la tienda…',
   LOAD_ERROR: 'No se pudo abrir la tienda',
 } as const;
