@@ -2233,7 +2233,7 @@
     {
       "id": "greywater-2",
       "type": "reuse",
-      "name": "Agua gris del laboratorio",
+      "name": "Ducha del laboratorio",
       "room": "laboratorio",
       "x": 1040,
       "y": 232,

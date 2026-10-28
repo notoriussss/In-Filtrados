@@ -37,14 +37,14 @@ Añadir minijuegos le da mucha variedad al juego y es barato: solo toca `web/`. 
 
 Enseña algo real: el *desvío de primer lavado* que se usa en los sistemas de cosecha de lluvia.
 
-### ¿Sirve para regar? (Reutilizar)
-**Estación:** `greywater-2` (Agua gris del laboratorio).
+### Agua de la ducha (Reutilizar)
+**Estación:** `greywater-2` (Ducha del laboratorio; antes ¿Sirve para regar?).
 
-1. Aparece un recipiente con agua y un dibujo de su origen: agua de lavar verduras, de enjuagar ropa, con aceite de cocina, con cloro.
-2. El jugador lo arrastra a **Regar** o a **Tratar**.
-3. Si falla, vuelve al centro.
+1. La ducha sale mientras se calienta y esa agua se va por el desagüe.
+2. Se arrastra un balde debajo del chorro; se llena solo mientras esté ahí.
+3. Lleno, se lleva a la planta marchita y se riega; la planta revive un poco. El balde vuelve vacío.
 
-**Se completa al:** acertar 4 recipientes. Es el mismo esquema de arrastre que *Clasificar residuos*, así que se reutiliza casi todo el código.
+**Se completa al:** regar con 2 baldes. Reemplaza a ¿Sirve para regar?, que obligaba a adivinar de qué agua venía cada objeto y no se entendía sin explicación.
 
 ### Sellar la fuga (Reducir)
 **Estación:** `leak-2` (Fuga del ecotaller).
@@ -93,7 +93,7 @@ Enseña algo real: el *desvío de primer lavado* que se usa en los sistemas de c
 | `rain-1` Colector de lluvia | Primera lluvia *(extra)* | Reutilizar |
 | `rain-2` Cosecha de lluvia | Primera lluvia *(extra)* | Reutilizar |
 | `greywater-1` Lavadero comunitario | Cubetas de agua gris (actual) | Reutilizar |
-| `greywater-2` Agua gris del laboratorio | ¿Sirve para regar? *(extra)* | Reutilizar |
+| `greywater-2` Ducha del laboratorio | Agua de la ducha *(extra)* | Reutilizar |
 | `filter-1` Filtro de carrizo | Partículas de suciedad (actual) | Reciclar |
 | `filter-2` Arroyo del ecopunto | Limpiar el arroyo *(extra)* | Reciclar |
 | `compost-1` Purificador de agua | Jarra filtrante *(extra)* | Reciclar |
@@ -107,7 +107,7 @@ Así cada R tiene 3 juegos distintos y ninguno se repite más de dos veces.
 2. Regular la presión
 3. Llenar sin derramar
 4. Primera lluvia
-5. ¿Sirve para regar? (sale casi gratis después de Clasificar residuos)
+5. Agua de la ducha
 6. Sellar la fuga
 7. Jarra filtrante y limpiar el arroyo
 

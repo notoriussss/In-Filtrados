@@ -50,13 +50,14 @@ import {
   PIPES_COLS,
   PIPES_GRID,
   PIPES_TILE,
-  WateringGame,
-  type WaterKind,
-  WATERING_COUNT,
-  WATERING_HOME,
-  WATERING_PLOT,
-  WATERING_SIZE,
-  WATERING_TREAT,
+  ShowerBucketGame,
+  SHOWER_BUCKET,
+  SHOWER_BUCKET_HOME,
+  SHOWER_FILL_MS,
+  SHOWER_FLOOR_Y,
+  SHOWER_PLANT,
+  SHOWER_ROUNDS,
+  SHOWER_ZONE,
   hash01,
   createMinigame,
 } from './minigames';
@@ -74,7 +75,7 @@ describe('createMinigame', () => {
     expect(createMinigame('reduce', 'leak-2')).toBeInstanceOf(SealGame);
     expect(createMinigame('reuse', 'rain-1')).toBeInstanceOf(FirstRainGame);
     expect(createMinigame('reuse', 'rain-2')).toBeInstanceOf(FirstRainGame);
-    expect(createMinigame('reuse', 'greywater-2')).toBeInstanceOf(WateringGame);
+    expect(createMinigame('reuse', 'greywater-2')).toBeInstanceOf(ShowerBucketGame);
     expect(createMinigame('recycle', 'compost-1')).toBeInstanceOf(JugFilterGame);
     expect(createMinigame('recycle', 'sorter-1')).toBeInstanceOf(PipesGame);
     expect(createMinigame('recycle', 'filter-2')).toBeInstanceOf(StreamGame);
@@ -591,66 +592,84 @@ describe('FirstRainGame', () => {
   });
 });
 
-describe('WateringGame', () => {
-  const home = {
-    x: WATERING_HOME.x + WATERING_SIZE / 2,
-    y: WATERING_HOME.y + WATERING_SIZE / 2,
+describe('ShowerBucketGame', () => {
+  const center = (g: ShowerBucketGame) => ({
+    x: g.bucket.x + SHOWER_BUCKET.w / 2,
+    y: g.bucket.y + SHOWER_BUCKET.h / 2,
+  });
+  // Lleva el balde a un punto (por su centro) y lo suelta.
+  const dropAt = (g: ShowerBucketGame, x: number, y: number) => {
+    g.pointerDown(center(g));
+    g.pointerMove({ x, y });
+    g.pointerUp();
+  };
+  const shower = {
+    x: SHOWER_ZONE.x + SHOWER_ZONE.w / 2,
+    y: SHOWER_ZONE.y + SHOWER_ZONE.h / 2,
+  };
+  const plant = {
+    x: SHOWER_PLANT.x + SHOWER_PLANT.w / 2,
+    y: SHOWER_PLANT.y + SHOWER_PLANT.h / 2,
   };
 
-  it('releases a container dropped outside the boxes back home', () => {
-    const g = new WateringGame();
-    expect(g.current).toBe(0);
-    g.pointerDown(home);
-    g.pointerUp();
-    expect(g.items[0].placed).toBe(false);
-    expect({ x: g.items[0].x, y: g.items[0].y }).toEqual(WATERING_HOME);
+  it('starts empty, away from the shower', () => {
+    const g = new ShowerBucketGame();
+    expect(g.fill).toBe(0);
+    expect(g.underShower).toBe(false);
+    g.step(SHOWER_FILL_MS);
+    expect(g.fill).toBe(0);
   });
 
-  it('counts the right box and sends the wrong one back', () => {
-    const g = new WateringGame();
-    const box = (kind: WaterKind) =>
-      kind === 'water' ? WATERING_PLOT : WATERING_TREAT;
-    const drop = (kind: WaterKind) => {
-      g.pointerDown(home);
-      g.pointerMove({ x: box(kind).x + 40, y: box(kind).y + 40 });
-      g.pointerUp();
-    };
-    for (let i = 0; i < WATERING_COUNT; i++) {
-      const kind = g.items[i].kind;
-      // La caja contraria está mal: vuelve a la mesa.
-      drop(kind === 'water' ? 'treat' : 'water');
-      expect(g.items[i].placed).toBe(false);
-      // Su caja está bien.
-      drop(kind);
-      expect(g.items[i].placed).toBe(true);
+  it('fills only while the bucket is under the shower', () => {
+    const g = new ShowerBucketGame();
+    dropAt(g, shower.x, shower.y);
+    expect(g.underShower).toBe(true);
+    g.step(SHOWER_FILL_MS / 2);
+    expect(g.fill).toBeCloseTo(0.5, 1);
+    // Se lo lleva: deja de llenarse y conserva lo que tenía.
+    dropAt(g, 200, 120);
+    const kept = g.fill;
+    g.step(SHOWER_FILL_MS);
+    expect(g.fill).toBe(kept);
+  });
+
+  it('leaves the bucket on the floor when released away from the plant', () => {
+    const g = new ShowerBucketGame();
+    dropAt(g, 200, 100);
+    expect(g.bucket.y).toBe(SHOWER_FLOOR_Y);
+  });
+
+  it('does not water with a bucket that is not full', () => {
+    const g = new ShowerBucketGame();
+    dropAt(g, shower.x, shower.y);
+    g.step(SHOWER_FILL_MS / 2);
+    dropAt(g, plant.x, plant.y);
+    expect(g.poured).toBe(0);
+    expect(g.drainEvents().some((e) => e.type === 'drop-out')).toBe(true);
+  });
+
+  it('waters the plant with a full bucket and starts over empty', () => {
+    const g = new ShowerBucketGame();
+    dropAt(g, shower.x, shower.y);
+    g.step(SHOWER_FILL_MS);
+    expect(g.full).toBe(true);
+    dropAt(g, plant.x, plant.y);
+    expect(g.poured).toBe(1);
+    expect(g.fill).toBe(0);
+    expect(g.bucket).toEqual(SHOWER_BUCKET_HOME);
+  });
+
+  it('is done after every bucket, but not before 3 s', () => {
+    const g = new ShowerBucketGame();
+    for (let i = 0; i < SHOWER_ROUNDS; i++) {
+      dropAt(g, shower.x, shower.y);
+      g.step(SHOWER_FILL_MS);
+      dropAt(g, plant.x, plant.y);
     }
-    expect(g.placed).toBe(WATERING_COUNT);
-    expect(g.done).toBe(false);
+    expect(g.poured).toBe(SHOWER_ROUNDS);
+    expect(g.progress()).toBe(1);
     g.step(MIN_GAME_MS);
     expect(g.done).toBe(true);
-  });
-
-  it('deals two of each kind, never the same origin twice', () => {
-    for (let seed = 1; seed <= 30; seed++) {
-      let n = seed * 13;
-      const g = new WateringGame(() => hash01(n++));
-      const kinds = g.items.map((i) => i.kind);
-      expect(kinds.filter((k) => k === 'water').length).toBe(2);
-      expect(kinds.filter((k) => k === 'treat').length).toBe(2);
-      expect(new Set(g.items.map((i) => i.origin)).size).toBe(
-        WATERING_COUNT,
-      );
-    }
-  });
-
-  it('deals different objects from game to game', () => {
-    const deals = new Set<string>();
-    for (let i = 0; i < 30; i++) {
-      deals.add(
-        new WateringGame().items.map((it) => it.origin).join(),
-      );
-    }
-    expect(deals.size).toBeGreaterThan(5);
   });
 });
 

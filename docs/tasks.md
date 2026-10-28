@@ -938,7 +938,7 @@ Sin esta tarea tampoco se puede verificar S2-13 jugando (completar 3 tareas y ve
     5. **Reducir (llenar sin derramar, `valve-2`):** sostener el grifo y soltar cuando el agua pase la marca; cruzar el borde derrama y el vaso vuelve a empezar. 3 vasos.
     6. **Reutilizar (primera lluvia, `rain-1` y `rain-2`):** las gotas sucias de la primera lluvia (de 1 a 3, al azar por semilla) van al desvío y las limpias al barril; un clic cambia la compuerta de lado. 6 gotas limpias.
     7. **Reciclar (conectar las tuberías, `sorter-1`, Tuberías del ecopunto):** girar con clic los tramos de tubería para llevar el agua limpia de la fuente al tanque; el recorrido cambia en cada partida.
-    8. **Reutilizar (¿sirve para regar?, `greywater-2`):** arrastrar 4 recipientes a Regar o a Tratar según su origen.
+    8. **Reutilizar (agua de la ducha, `greywater-2`, Ducha del laboratorio):** la ducha sale mientras se calienta y el agua se pierde por el desagüe: arrastrar el balde debajo, esperar a que se llene y llevarlo a regar la planta marchita; dos baldes.
     9. **Reducir (sellar la fuga, `leak-2`):** clic en las grietas que se abren solas para ponerles cinta; se sellan 5.
     10. **Reciclar (jarra filtrante, `compost-1`, Purificador de agua):** arrastrar el balde de agua turbia a la jarra, esperar a que baje por el filtro y hacer clic en la llave para llenar el vaso; dos vasos.
     11. **Reciclar (limpiar el arroyo, `filter-2`, Arroyo del ecopunto):** sacar con un clic la basura que baja flotando antes de que llegue a la reja de la toma; 6 basuras.

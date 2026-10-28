@@ -56,7 +56,7 @@ const STATION_GAMES: Record<string, () => Minigame> = {
   'leak-2': () => new SealGame(),
   'rain-1': () => new FirstRainGame(),
   'rain-2': () => new FirstRainGame(),
-  'greywater-2': () => new WateringGame(),
+  'greywater-2': () => new ShowerBucketGame(),
   'filter-2': () => new StreamGame(),
   'compost-1': () => new JugFilterGame(),
   'sorter-1': () => new PipesGame(),
@@ -923,145 +923,109 @@ export class FirstRainGame extends BaseGame implements Minigame {
   }
 }
 
-// Reutilizar (greywater-2, Agua gris del laboratorio): ¿sirve para
-// regar? Aparece un objeto de donde viene el agua y se arrastra a Regar o
-// a Tratar. Errar lo devuelve a la mesa. Cada partida saca al azar dos
-// orígenes de cada tipo, así que casi nunca se repiten.
-export const WATERING_COUNT = 4;
-export const WATERING_SIZE = 48;
-export type WaterKind = 'water' | 'treat';
-export type WaterOrigin =
-  | 'tomato'
-  | 'carrot'
-  | 'shirt'
-  | 'rice'
-  | 'oil'
-  | 'bleach'
-  | 'fuel'
-  | 'pasta';
-// El agua de lavar verduras, enjuagar ropa o lavar arroz sirve para
-// regar; con aceite, cloro, combustible o sal (agua de cocer pasta), hay
-// que tratarla.
-export const WATERING_ORIGINS: readonly {
-  id: WaterOrigin;
-  kind: WaterKind;
-}[] = [
-  { id: 'tomato', kind: 'water' },
-  { id: 'carrot', kind: 'water' },
-  { id: 'shirt', kind: 'water' },
-  { id: 'rice', kind: 'water' },
-  { id: 'oil', kind: 'treat' },
-  { id: 'bleach', kind: 'treat' },
-  { id: 'fuel', kind: 'treat' },
-  { id: 'pasta', kind: 'treat' },
-];
-export const WATERING_HOME = { x: 156, y: 116 }; // sobre la mesa del centro
-export const WATERING_PLOT = { x: 20, y: 140, w: 92, h: 88 }; // regar
-export const WATERING_TREAT = { x: 248, y: 140, w: 92, h: 88 }; // tratar
+// Reutilizar (greywater-2, Ducha del laboratorio): agua de la ducha. La
+// ducha sale mientras se calienta y esa agua se pierde por el desagüe: se
+// pone el balde debajo, se llena y se lleva a regar la planta marchita.
+// Dos baldes. El balde se llena mientras esté bajo la ducha, lo suelten o
+// no; en cualquier otro lado se queda en el piso.
+export const SHOWER_ROUNDS = 2;
+export const SHOWER_FILL_MS = 1800; // lo que tarda en llenarse
+export const SHOWER_BUCKET = { w: 44, h: 40 };
+export const SHOWER_FLOOR_Y = 188; // y del balde apoyado en el piso
+export const SHOWER_BUCKET_HOME = { x: 120, y: SHOWER_FLOOR_Y };
+export const SHOWER_X = 84; // por dónde cae el chorro
+export const SHOWER_ZONE = { x: 56, y: 150, w: 56, h: 78 }; // bajo el chorro
+export const SHOWER_PLANT = { x: 262, y: 120, w: 84, h: 108 }; // la planta
 
-export type WaterItem = {
-  index: number;
-  origin: WaterOrigin;
-  kind: WaterKind;
-  x: number; // esquina superior izquierda
-  y: number;
-  homeX: number;
-  homeY: number;
-  placed: boolean;
-};
-
-export class WateringGame extends BaseGame implements Minigame {
-  readonly items: WaterItem[] = [];
-  dragging: number | null = null;
+export class ShowerBucketGame extends BaseGame implements Minigame {
+  bucket = { x: SHOWER_BUCKET_HOME.x, y: SHOWER_BUCKET_HOME.y };
+  fill = 0; // 0 vacío, 1 lleno
+  poured = 0; // baldes ya regados
+  dragging = false;
   elapsed = 0;
   private grabDx = 0;
   private grabDy = 0;
 
-  constructor(rnd: () => number = Math.random) {
-    super();
-    const pick = (kind: WaterKind) =>
-      shuffle(
-        WATERING_ORIGINS.filter((o) => o.kind === kind),
-        rnd,
-      ).slice(0, WATERING_COUNT / 2);
-    shuffle([...pick('water'), ...pick('treat')], rnd).forEach((o, i) => {
-      this.items.push({
-        index: i,
-        origin: o.id,
-        kind: o.kind,
-        x: WATERING_HOME.x,
-        y: WATERING_HOME.y,
-        homeX: WATERING_HOME.x,
-        homeY: WATERING_HOME.y,
-        placed: false,
-      });
-    });
-  }
-
-  get placed(): number {
-    return this.items.filter((i) => i.placed).length;
-  }
-
   get done(): boolean {
-    return this.placed === WATERING_COUNT && this.elapsed >= MIN_GAME_MS;
+    return this.poured === SHOWER_ROUNDS && this.elapsed >= MIN_GAME_MS;
+  }
+
+  get full(): boolean {
+    return this.fill >= 1;
+  }
+
+  // El balde está bajo la ducha: su centro cae dentro de la zona.
+  get underShower(): boolean {
+    return inRect(
+      this.bucket.x + SHOWER_BUCKET.w / 2,
+      this.bucket.y + SHOWER_BUCKET.h / 2,
+      SHOWER_ZONE,
+    );
   }
 
   progress(): number {
-    return this.placed / WATERING_COUNT;
-  }
-
-  // Solo se puede agarrar el recipiente que toca: aparecen de a uno.
-  get current(): number {
-    return this.items.findIndex((i) => !i.placed);
+    return Math.min(1, (this.poured + this.fill) / SHOWER_ROUNDS);
   }
 
   pointerDown(p: Point): void {
-    const i = this.current;
-    if (i < 0) return;
-    const it = this.items[i];
+    const B = this.bucket;
     const inside =
-      p.x >= it.x &&
-      p.x <= it.x + WATERING_SIZE &&
-      p.y >= it.y &&
-      p.y <= it.y + WATERING_SIZE;
+      p.x >= B.x &&
+      p.x <= B.x + SHOWER_BUCKET.w &&
+      p.y >= B.y &&
+      p.y <= B.y + SHOWER_BUCKET.h;
     if (!inside) return;
-    this.dragging = i;
-    this.grabDx = p.x - it.x;
-    this.grabDy = p.y - it.y;
-    this.events.push({ type: 'grab', x: p.x, y: p.y, index: i });
+    this.dragging = true;
+    this.grabDx = p.x - B.x;
+    this.grabDy = p.y - B.y;
+    this.events.push({ type: 'grab', x: p.x, y: p.y });
   }
 
   pointerMove(p: Point): void {
-    if (this.dragging === null) return;
-    const it = this.items[this.dragging];
-    it.x = p.x - this.grabDx;
-    it.y = p.y - this.grabDy;
+    if (!this.dragging) return;
+    this.bucket.x = Math.min(
+      Math.max(p.x - this.grabDx, 0),
+      BOARD.w - SHOWER_BUCKET.w,
+    );
+    this.bucket.y = Math.min(
+      Math.max(p.y - this.grabDy, 40),
+      SHOWER_FLOOR_Y,
+    );
   }
 
-  // Al soltar: en el recipiente correcto cuenta; en el otro, o fuera,
-  // vuelve a la mesa.
+  // Al soltar: lleno y sobre la planta, se riega y el balde vuelve vacío a
+  // su sitio; en cualquier otro lado el balde cae al piso y ahí se queda.
   pointerUp(): void {
-    if (this.dragging === null) return;
-    const i = this.dragging;
-    const it = this.items[i];
-    this.dragging = null;
-    const cx = it.x + WATERING_SIZE / 2;
-    const cy = it.y + WATERING_SIZE / 2;
-    const inPlot = inRect(cx, cy, WATERING_PLOT);
-    const inTreat = inRect(cx, cy, WATERING_TREAT);
-    it.x = it.homeX;
-    it.y = it.homeY;
-    const kind: WaterKind = inPlot ? 'water' : 'treat';
-    if ((inPlot || inTreat) && it.kind === kind) {
-      it.placed = true;
-      this.events.push({ type: 'drop-in', x: cx, y: cy, index: i });
+    if (!this.dragging) return;
+    this.dragging = false;
+    const cx = this.bucket.x + SHOWER_BUCKET.w / 2;
+    const cy = this.bucket.y + SHOWER_BUCKET.h / 2;
+    if (this.full && inRect(cx, cy, SHOWER_PLANT)) {
+      this.poured += 1;
+      this.fill = 0;
+      this.bucket = { ...SHOWER_BUCKET_HOME };
+      this.events.push({
+        type: 'drop-in',
+        x: cx,
+        y: cy,
+        index: this.poured - 1,
+      });
       return;
     }
-    this.events.push({ type: 'drop-out', x: it.x, y: it.y, index: i });
+    this.bucket.y = SHOWER_FLOOR_Y;
+    if (inRect(cx, cy, SHOWER_PLANT)) {
+      // Sobre la planta pero vacío: todavía no hay nada que regar.
+      this.events.push({ type: 'drop-out', x: cx, y: cy, index: this.poured });
+      return;
+    }
+    this.events.push({ type: 'release' });
   }
 
   step(dtMs: number): void {
     this.elapsed += dtMs;
+    if (this.underShower && !this.full) {
+      this.fill = Math.min(1, this.fill + dtMs / SHOWER_FILL_MS);
+    }
   }
 }
 

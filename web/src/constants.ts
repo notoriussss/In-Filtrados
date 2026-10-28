@@ -164,7 +164,7 @@ export const TASK_TEXT = {
     'rain-1': 'Reutilizar: primera lluvia',
     'rain-2': 'Reutilizar: primera lluvia',
     'greywater-1': 'Reutilizar: guarda el agua gris',
-    'greywater-2': 'Reutilizar: ¿sirve para regar?',
+    'greywater-2': 'Reutilizar: agua de la ducha',
     'filter-1': 'Reciclar: filtra el agua',
     'filter-2': 'Reciclar: limpia el arroyo',
     'compost-1': 'Reciclar: jarra filtrante',
