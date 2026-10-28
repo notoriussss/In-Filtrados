@@ -38,6 +38,12 @@ button:disabled { cursor: default; opacity: .55; transform: none !important; }
   box-shadow: -6px 0 0 0 #9cc3d6, 6px 0 0 0 #9cc3d6, 0 -6px 0 0 #9cc3d6, 0 6px 0 0 #9cc3d6; }
 .hud .alert.calm { background: var(--pan); animation: none;
   box-shadow: -6px 0 0 0 var(--line), 6px 0 0 0 var(--line), 0 -6px 0 0 var(--line), 0 6px 0 0 var(--line); }
+.hud .alert.ghost { background: #1b1a3a; animation: none;
+  box-shadow: -6px 0 0 0 #7ee6d8, 6px 0 0 0 #7ee6d8, 0 -6px 0 0 #7ee6d8, 0 6px 0 0 #7ee6d8; }
+.hud .alert.ghost .tx span { color: #bfe9ff; }
+@keyframes alert-float { 0%, 100% { transform: translateY(2px); opacity: .75; } 50% { transform: translateY(-5px); opacity: 1; } }
+.hud .alert.ghost .px-icon { animation: alert-float 1.8s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .hud .alert.ghost .px-icon { animation: none; } }
 .hud .slotk:disabled { opacity: .45; }
 .hud .slotk .cd { position: absolute; right: 6px; top: 6px; font-family: var(--body); font-size: 22px; color: var(--amber); }
 .hud .slotk.danger { box-shadow: -4px 0 0 0 #b34545, 4px 0 0 0 #b34545, 0 -4px 0 0 #b34545, 0 4px 0 0 #b34545; }

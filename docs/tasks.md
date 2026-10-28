@@ -875,6 +875,7 @@ para el mismo usuario responde 429.
 4. Barra de progreso circular durante las acciones que requieren quedarse quieto.
 5. ~~Aviso al dueño "¡Tu tanque se está contaminando!"~~ (quitado: el dueño no recibe aviso cuando su tanque sube; descubrir un tanque contaminado es la pista del juego).
 
+6. Fantasmas: **solo hacen sus tareas**; no reportan, no convocan, no votan, no escriben y no dañan tanques (`match` rechaza reportar y convocar con `REPORT_NOT_ALIVE` y el botón E no aparece para un jugador muerto). Cada fantasma es su mismo personaje (la Jimena o la gota de su color, con su accesorio) con una cola de fantasma que se curva en lugar de las piernas, flotando y con la cola ondeando en 4 cuadros. Son sprites dibujados a mano y horneados con `web/tools/gen_ghost_sprites.py` en `public/assets/characters/jimena/ghost` y `gota/ghost`; el navegador solo elige la celda. Cuando el tanque propio llega a 0 y el jugador pasa a fantasma, el HUD muestra un aviso "Tu tanque llegó a 0".
 **Criterio de verificación:** en una partida de 3, el impostor ve "Contaminar" junto a un tanque ajeno y los tripulantes no. Al contaminar, todos ven la barra subir; el dueño no recibe aviso.
 
 ---

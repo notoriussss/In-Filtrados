@@ -209,6 +209,8 @@ export const HUD_TEXT = {
   CREW: 'Cuidador',
   IMPOSTOR: 'Infiltrado',
   GHOST: 'Fantasma',
+  TANK_EMPTY: 'Tu tanque llegó a 0',
+  TANK_EMPTY_HINT: 'Eres un fantasma: sigue con tus tareas',
   MY_TANK: 'Tanque',
   NO_TANK: 'sin tanque',
   MAP: 'Mapa',
