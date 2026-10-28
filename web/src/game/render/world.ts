@@ -26,7 +26,6 @@ import {
   drawStationMarks,
   drawTag,
   drawTankGrime,
-  drawTankToxic,
 } from './effects';
 import { renderActivities } from './activityFx';
 import { FixEffects } from './fixFx';
@@ -195,16 +194,15 @@ export class WorldRenderer {
       items.push({
         depth: at.y + fr.h - 8,
         draw: () => {
-          blit(ctx, this.assets.tanksAtlas, fr, at.x, at.y);
+          const polluted = tank.dead && this.assets.pollutedTank;
+          if (polluted) ctx.drawImage(polluted, at.x, at.y);
+          else blit(ctx, this.assets.tanksAtlas, fr, at.x, at.y);
           drawTankGrime(
             ctx,
             { x: at.x, y: at.y, w: fr.w, h: fr.h },
             tank.contamination,
             tank.dead,
           );
-          if (tank.dead) {
-            drawTankToxic(ctx, { x: at.x, y: at.y, w: fr.w, h: fr.h });
-          }
         },
       });
     }

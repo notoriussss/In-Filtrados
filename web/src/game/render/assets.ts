@@ -1,6 +1,9 @@
 // Carga de los assets del mapa Estación Manglar Verde
 // (public/assets/map/manglar-verde, del paquete de diseño v3): el suelo,
-// la luz de noche, los props con su atlas y los 11 niveles del tanque.
+// la luz de noche, los props con su atlas, los 11 niveles del tanque y
+// el tanque contaminado que se arma a partir de ellos.
+
+import { buildPollutedTank } from './pollutedTank';
 
 export const MAP_ASSETS_URL = '/assets/map/manglar-verde';
 
@@ -26,6 +29,8 @@ export type MapAssets = {
   tanksAtlas: HTMLImageElement;
   // Nivel de agua limpia (0 a 100, de 10 en 10) → cuadro del atlas.
   tankFrames: Map<number, Frame>;
+  // Tanque contaminado al 100 %; null si no se pudo armar.
+  pollutedTank: HTMLCanvasElement | null;
   minimap: HTMLImageElement;
 };
 
@@ -107,6 +112,7 @@ async function load(onProgress?: (done: number) => void): Promise<MapAssets> {
     props: propsJson.props,
     tanksAtlas,
     tankFrames,
+    pollutedTank: buildPollutedTank(tanksAtlas, tankFrames),
     minimap,
   };
 }
