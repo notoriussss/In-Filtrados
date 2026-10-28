@@ -22,7 +22,6 @@ import {
   actionMessage,
   contextAction,
   holdDuration,
-  tankRose,
 } from './actions';
 import { DirectionInput, isTyping } from './input';
 import { TaskSession } from './tasks/taskSession';
@@ -62,7 +61,6 @@ export type GameState = {
   action: Action | null; // botón USAR del HUD
   holding: boolean;
   minigame: OpenMinigame | null;
-  tankAlertUntil: number; // ms; aviso "tu tanque se está contaminando"
   pendingChat: string[]; // textos que esperan conexión
   notFound: boolean; // la partida ya no existe (volver al menú)
   unauthorized: boolean;
@@ -89,7 +87,6 @@ export class GameSession {
     action: null,
     holding: false,
     minigame: null,
-    tankAlertUntil: 0,
     pendingChat: [],
     notFound: false,
     unauthorized: false,
@@ -310,18 +307,13 @@ export class GameSession {
   private onSnapshot(msg: Snapshot): void {
     const now = performance.now();
     this.interpolator.push(msg.tick, msg.players, now);
-    const prev = this.state.snapshot;
     const patch: Partial<GameState> = { snapshot: msg };
-    if (prev && tankRose(prev.tanks, msg.tanks, this.opts.meId, msg.myRole)) {
-      patch.tankAlertUntil = now + GAME_RULES.TANK_ALERT_MS;
-    }
     if (msg.meeting) this.reportedTanks.add(msg.meeting.tankSlot);
     if (this.state.matchDown) {
       patch.matchDown = false; // match volvió (S3-02)
       const { dx, dy } = this.input.current();
       if (dx !== 0 || dy !== 0) this.send({ type: 'move', dx, dy });
     }
-    if (msg.phase !== 'PLAYING') patch.tankAlertUntil = 0;
     this.chatQueue.onSnapshot(msg, now);
     patch.pendingChat = this.chatQueue.waiting().map((c) => c.text);
     this.set(patch);

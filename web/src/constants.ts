@@ -69,7 +69,7 @@ export const END_TEXT = {
   BACK_TO_LOBBY: 'Volver a la sala',
 } as const;
 
-// S2-09: botón de acción contextual, embalse y aviso del tanque.
+// S2-09: botón de acción contextual y embalse.
 export const ACTION_TEXT = {
   TASK: 'Hacer tarea',
   REPORT: 'Reportar',
@@ -87,7 +87,6 @@ export const ACTION_TEXT = {
 
 export const HUD_TEXT = {
   reservoir: (pct: number) => `Embalse ${pct} %`,
-  TANK_ALERT: '¡Tu tanque se está contaminando!',
 } as const;
 
 // Espejo de las reglas de match/internal/room/state.go (S2-03, S2-04).
@@ -104,8 +103,6 @@ export const GAME_RULES = {
   CONTAMINATE_COOLDOWN_MS: 20000,
   // El tanque del impostor sube 1 punto solo cada 5 s: eso no es una
   // contaminación y no debe avisar.
-  TANK_ALERT_MIN_RISE: 2,
-  TANK_ALERT_MS: 3000,
   // S3-05: emergencias y visión limitada.
   FIX_RANGE: 48,
   STEAM_FIX_MS: 2000 + 150,

@@ -5,7 +5,6 @@ import {
   actionMessage,
   contextAction,
   holdDuration,
-  tankRose,
 } from './actions';
 import type { GameMap } from '../map';
 import { ACTION_TEXT, GAME_RULES, HUD_TEXT } from '../constants';
@@ -279,35 +278,6 @@ describe('HoldAction', () => {
     expect(hold.done(1000 + GAME_RULES.CONTAMINATE_MS)).toBe(true);
     expect(hold.sameTarget(a)).toBe(true);
     expect(hold.sameTarget(null)).toBe(false);
-  });
-});
-
-describe('tankRose', () => {
-  it('warns when the tank is contaminated', () => {
-    const next = [tank(0, 'impostor'), tank(1, 'crew', 35)];
-    expect(tankRose(tanks, next, 'crew')).toBe(true);
-    expect(tankRose(tanks, next, 'impostor')).toBe(false);
-  });
-
-  it('ignores the 1-point drift of the impostor tank', () => {
-    const next = [tank(0, 'impostor', 1), tank(1, 'crew')];
-    expect(tankRose(tanks, next, 'impostor')).toBe(false);
-  });
-
-  it('never warns when player is IMPOSTOR even if contamination rises', () => {
-    const next = [tank(0, 'impostor', 35), tank(1, 'crew')];
-    expect(tankRose(tanks, next, 'impostor', 'IMPOSTOR')).toBe(false);
-  });
-
-  it('returns false when tank is missing in previous or next', () => {
-    expect(tankRose([], tanks, 'crew')).toBe(false);
-    expect(tankRose(tanks, [], 'crew')).toBe(false);
-  });
-
-  it('ignores cleaning', () => {
-    const before = [tank(1, 'crew', 35)];
-    const after = [tank(1, 'crew', 20)];
-    expect(tankRose(before, after, 'crew')).toBe(false);
   });
 });
 
