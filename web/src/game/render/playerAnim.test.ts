@@ -1,6 +1,7 @@
 import type { PlayerView } from '@in-filtrados/messages';
 import { describe, expect, it } from 'vitest';
 import {
+  ASCEND_MS,
   PlayerAnimator,
   STEP_MS,
   VERTICAL_STEP_MS,
@@ -210,3 +211,31 @@ describe('gotaCell', () => {
   });
 });
 
+describe('PlayerAnimator, paso a fantasma', () => {
+  const body = (alive: boolean) =>
+    ({ id: 'p1', x: 100, y: 100, alive }) as PlayerView;
+
+  it('does not animate someone who stays alive', () => {
+    const anim = new PlayerAnimator();
+    expect(anim.pose(body(true), 0).ascend).toBeNull();
+    expect(anim.pose(body(true), 500).ascend).toBeNull();
+  });
+
+  it('starts at 0 when a living player dies and runs for ASCEND_MS', () => {
+    const anim = new PlayerAnimator();
+    anim.pose(body(true), 0);
+    expect(anim.pose(body(false), 1000).ascend).toBe(0);
+    const half = anim.pose(body(false), 1000 + ASCEND_MS / 2).ascend;
+    expect(half).toBeCloseTo(0.5, 2);
+    expect(anim.pose(body(false), 1000 + ASCEND_MS - 1).ascend).toBeLessThan(1);
+    expect(anim.pose(body(false), 1000 + ASCEND_MS).ascend).toBeNull();
+    // Ya es fantasma de siempre: no se repite.
+    expect(anim.pose(body(false), 1000 + ASCEND_MS + 500).ascend).toBeNull();
+  });
+
+  it('does not animate someone first seen already dead', () => {
+    const anim = new PlayerAnimator();
+    expect(anim.pose(body(false), 0).ascend).toBeNull();
+    expect(anim.pose(body(false), 300).ascend).toBeNull();
+  });
+});

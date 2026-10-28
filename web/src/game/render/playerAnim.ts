@@ -39,6 +39,8 @@ export const MIN_WORK_MS = 1500;
 // Los snapshots pueden perder la actividad un instante; no se corta el
 // movimiento por eso.
 const ACTIVITY_GRACE_MS = 200;
+// Cuánto dura la transición de jugador a fantasma.
+export const ASCEND_MS = 1400;
 
 type Work = { activity: Activity; since: number; lastSeen: number };
 
@@ -51,6 +53,8 @@ type State = {
   walkStart: number;
   work: Work | null;
   celebrateAt: number | null;
+  alive: boolean;
+  ascendAt: number | null; // cuándo se vio pasar a fantasma
 };
 
 export type PlayerPose = {
@@ -59,6 +63,8 @@ export type PlayerPose = {
   body: Pose; // inclinación, aplastamiento y salto sobre el cuadro
   working: Activity | null;
   celebrate: number | null; // 0 a 1 durante el brinco de alegría
+  // 0 a 1 mientras el jugador se vuelve fantasma (ASCEND_MS); si no, null.
+  ascend?: number | null;
   heading?: Heading;
   stepIndex?: number;
 };
@@ -187,9 +193,16 @@ export class PlayerAnimator {
         walkStart: now,
         work: null,
         celebrateAt: null,
+        alive: p.alive,
+        ascendAt: null,
       };
       this.states.set(p.id, s);
     }
+    // Solo se anima a quien se vio vivo y dejó de estarlo: quien ya
+    // llega como fantasma (o al entrar a una partida) no se transforma.
+    if (s.alive && !p.alive) s.ascendAt = now;
+    s.alive = p.alive;
+    const ascend = this.ascension(s, now);
     const dt = now - s.at;
     if (dt > 0) {
       const dx = p.x - s.x;
@@ -215,6 +228,7 @@ export class PlayerAnimator {
         body,
         working: s.work ? s.work.activity : null,
         celebrate,
+        ascend,
         heading: s.heading,
       };
     }
@@ -229,9 +243,19 @@ export class PlayerAnimator {
       body: { ...IDLE_POSE, frame },
       working: null,
       celebrate: null,
+      ascend,
       heading: s.heading,
       stepIndex,
     };
+  }
+
+  // ascension: de 0 a 1 mientras dura la transición a fantasma.
+  private ascension(s: State, now: number): number | null {
+    if (s.ascendAt === null) return null;
+    const k = (now - s.ascendAt) / ASCEND_MS;
+    if (k < 1) return Math.max(k, 0);
+    s.ascendAt = null;
+    return null;
   }
 
   // trackWork lleva cuándo empezó y terminó la tarea, para entrar al
