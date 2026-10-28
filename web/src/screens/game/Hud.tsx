@@ -303,16 +303,28 @@ function Minimap(props: { snap: Snapshot; meId: string; now: number }) {
     !!snap.myMeeting &&
     snap.myMeeting.callsLeft > 0 &&
     snap.tick >= snap.myMeeting.readyAtTick;
+  const myTank = snap.tanks.find((t) => t.ownerId === meId);
+  const tankSpot = myTank
+    ? gameMap.tanks.find((t) => t.slot === myTank.slot)
+    : undefined;
   return (
     <section className="panel glass mini" aria-label={HUD_TEXT.MAP}>
       <div className="lab">
         <span>{HUD_TEXT.MAP.toUpperCase()}</span>
-        {meeting && (
-          <span className="mm-key">
-            <i />
-            {HUD_TEXT.MEETING_POINT.toUpperCase()}
-          </span>
-        )}
+        <span className="mm-keys">
+          {myTank && tankSpot && (
+            <span className="mm-key tank">
+              <i />
+              {HUD_TEXT.MY_TANK.toUpperCase()}
+            </span>
+          )}
+          {meeting && (
+            <span className="mm-key">
+              <i />
+              {HUD_TEXT.MEETING_POINT.toUpperCase()}
+            </span>
+          )}
+        </span>
       </div>
       <div className="map-box">
         <img src="/assets/map/manglar-verde/minimap.png" alt="" />
@@ -337,6 +349,13 @@ function Minimap(props: { snap: Snapshot; meId: string; now: number }) {
             className={`dot meet ${meetingReady ? 'ready' : ''}`}
             title={meeting.name}
             style={pos(meeting.x, meeting.y)}
+          />
+        )}
+        {myTank && tankSpot && (
+          <span
+            className={`dot tank ${myTank.dead ? 'dead' : ''}`}
+            title={HUD_TEXT.MY_TANK}
+            style={pos(tankSpot.x, tankSpot.y)}
           />
         )}
         {me && <span className="dot me" style={pos(me.x, me.y)} />}
