@@ -35,66 +35,163 @@ import { roomLayer } from './room';
 
 const TABLE = { x: 140, y: 170, w: 80, h: 26 };
 export const WATERING_HERO_X = 126;
-const GREY = '#8a9aa6';
-
-// Recipiente con agua gris, igual para los cuatro.
+// Frasco con agua gris: el color y lo que flota arriba dependen del
+// origen (F y f son lo que flota).
 const CUP_ROWS = [
-  '.oooooooo.',
-  '.o......o.',
-  '.oLLLLLLo.',
-  '.oLLLLLLo.',
-  '.oLLLLLLo.',
-  '.oLLLLLLo.',
-  '.oLLLLLLo.',
-  '.oooooooo.',
+  '.oooooooooo.',
+  '.oFfFfFfFfo.',
+  '.oLLLLLLLLo.',
+  '.oLLLLLLLLo.',
+  '.oLLLLLLLLo.',
+  '.oLLLLLLLLo.',
+  '.oLLLLLLLLo.',
+  '.oooooooooo.',
 ];
 
-// El dibujo del origen, sobre el recipiente: el jugador decide.
-const ORIGIN_ROWS: string[][] = [
-  // Agua de lavar verduras: una hoja.
-  [
-    '....ww....',
-    '...wwww...',
-    '..wwwwww..',
-    '..wwwwww..',
-    '...wwww...',
-    '....ww....',
-  ],
-  // Agua de enjuagar ropa: una camiseta.
-  [
-    '.ww....ww.',
-    'wwww..wwww',
-    'wwwwwwwwww',
-    '.wwwwwwww.',
-    '..wwwwww..',
-    '..wwwwww..',
-  ],
-  // Con aceite de cocina: una gota.
-  [
-    '....ww....',
-    '....ww....',
-    '...wwww...',
-    '..wwwwww..',
-    '..wwwwww..',
-    '..wwwwww..',
-    '...wwww...',
-  ],
-  // Con cloro: una botella.
-  [
-    '....ww....',
-    '...wwww...',
-    '...wwww...',
-    '..wwwwww..',
-    '..whhhww..',
-    '..wwwwww..',
-    '..wwwwww..',
-  ],
-];
-const ORIGIN_COLORS = [C.leaf, C.coral, C.amber, C.white];
+type Look = { rows: string[]; palette: Record<string, string> };
 
-const originSprites = ORIGIN_ROWS.map((rows, i) =>
-  spriteFromRows(rows, { w: ORIGIN_COLORS[i], h: C.ink }),
+// Cada recipiente se dibuja con su origen, a color, para que se
+// reconozca sin leer nada: tomate (verduras), camiseta (ropa), botella de
+// aceite y botella de cloro con su «!».
+const ORIGINS: Look[] = [
+  {
+    rows: [
+      '......gg......',
+      '....ggGGgg....',
+      '.....gGGg.....',
+      '...oooooooo...',
+      '..orrrrrrrro..',
+      '.orrhhrrrrrro.',
+      '.orhhrrrrrrro.',
+      '.orrrrrrrrrro.',
+      '.orrrrrrrrrro.',
+      '.orrrrrrrrrro.',
+      '..orrrrrrrro..',
+      '...oooooooo...',
+    ],
+    palette: {
+      o: C.ink,
+      r: C.coral,
+      h: C.coralHi,
+      g: C.leaf,
+      G: C.leafLo,
+    },
+  },
+  {
+    rows: [
+      '..oooo..oooo..',
+      '.oBBBBooBBBBo.',
+      'oBBBBBBBBBBBBo',
+      'ooBBBBBBBBBBoo',
+      '.oBwwwwwwwwBo.',
+      '.oBBBBBBBBBBo.',
+      '.oBwwwwwwwwBo.',
+      '.oBBBBBBBBBBo.',
+      '.oBBBBBBBBBBo.',
+      '.oooooooooooo.',
+    ],
+    palette: { o: C.ink, B: C.water, w: C.white },
+  },
+  {
+    rows: [
+      '.....oooo.....',
+      '.....ommo.....',
+      '.....oyyo.....',
+      '.....oyyo.....',
+      '....oyhyyo....',
+      '...oyhyyyyo...',
+      '...oyyyyyyo...',
+      '...owwddwwo...',
+      '...owwddwwo...',
+      '...oyyyyyyo...',
+      '...oyyyyyyo...',
+      '...oooooooo...',
+    ],
+    palette: {
+      o: C.ink,
+      m: '#8a5a2c',
+      y: C.amber,
+      h: C.amberHi,
+      w: C.white,
+      d: '#8a5a2c',
+    },
+  },
+  {
+    rows: [
+      '....oooooo....',
+      '....occcco....',
+      '.....owwo.....',
+      '....owwwwo....',
+      '...owwwwwwo...',
+      '...orrrrrro...',
+      '...orrwwrro...',
+      '...orrwwrro...',
+      '...orrrrrro...',
+      '...orrwwrro...',
+      '...owwwwwwo...',
+      '...owwwwwwo...',
+      '...oooooooo...',
+    ],
+    palette: { o: C.ink, c: C.water, w: C.white, r: C.coral },
+  },
+];
+
+// El agua de cada frasco: murky con hojitas, jabonosa, con aceite
+// flotando y verdosa por el cloro.
+const WATER_LOOKS: Record<string, string>[] = [
+  { L: '#9aa890', F: C.leaf, f: C.leafLo },
+  { L: '#b4c4d4', F: C.white, f: C.waterHi },
+  { L: '#8a9aa6', F: C.amber, f: C.amberHi },
+  { L: '#9ad6c8', F: '#c8ff7a', f: '#9ad6c8' },
+];
+
+const originSprites = ORIGINS.map((o) =>
+  spriteFromRows(o.rows, o.palette),
 );
+const cupSprites = WATER_LOOKS.map((w) =>
+  spriteFromRows(CUP_ROWS, { o: C.ink, ...w }),
+);
+
+// Iconos de las dos cajas: una planta que se riega y un embudo que trata.
+const SPROUT_ROWS = [
+  '.gg...gg.',
+  'gggg.gggg',
+  '.gggGggg.',
+  '....G....',
+  '....G....',
+  '..GGGGG..',
+];
+const FUNNEL_ROWS = [
+  'wwwwwwwww',
+  '.wwwwwww.',
+  '..wwwww..',
+  '...www...',
+  '....w....',
+  '..d.w.d..',
+  '..d...d..',
+];
+const sproutSprite = spriteFromRows(SPROUT_ROWS, {
+  g: C.leaf,
+  G: C.leafLo,
+});
+const funnelSprite = spriteFromRows(FUNNEL_ROWS, {
+  w: C.white,
+  d: C.waterHi,
+});
+
+// Placa con su icono: verde para regar, ámbar para tratar.
+function drawPlaque(
+  c: CanvasRenderingContext2D,
+  cx: number,
+  cy: number,
+  icon: HTMLCanvasElement,
+  edge: string,
+): void {
+  px(c, cx - 24, cy - 20, 48, 40, C.ink);
+  px(c, cx - 22, cy - 18, 44, 36, edge);
+  px(c, cx - 20, cy - 16, 40, 32, C.wallHi);
+  stamp(c, icon, cx, cy, { scale: 2 });
+}
 
 function drawPot(c: CanvasRenderingContext2D): void {
   const p = WATERING_PLOT;
@@ -110,6 +207,7 @@ function drawPot(c: CanvasRenderingContext2D): void {
   px(c, p.x + p.w / 2 + 3, p.y - 12, 10, 6, C.leaf);
   px(c, p.x + p.w / 2 - 10, p.y - 6, 6, PX, C.leafHi);
   px(c, p.x + p.w / 2 + 5, p.y - 10, 6, PX, C.leafHi);
+  drawPlaque(c, p.x + p.w / 2, p.y + 50, sproutSprite, C.leaf);
 }
 
 // Caja de tratamiento: embudo, rejilla y luz.
@@ -127,6 +225,7 @@ function drawTreat(c: CanvasRenderingContext2D): void {
     px(c, t.x + 12, y, t.w - 24, PX, C.metalInk);
   }
   px(c, t.x + t.w - 18, t.y + 18, 8, 6, C.amber);
+  drawPlaque(c, t.x + t.w / 2, t.y + 52, funnelSprite, C.amber);
 }
 
 export class WateringScene implements Scene {
@@ -148,6 +247,7 @@ export class WateringScene implements Scene {
     left: boolean;
     x: number;
     y: number;
+    index: number;
   }[] = [];
   private readonly shown = {
     x: WATERING_HOME.x,
@@ -196,6 +296,7 @@ export class WateringScene implements Scene {
           left: e.x < BOARD.w / 2,
           x: e.x,
           y: e.y,
+          index: e.index,
         });
         this.cheerAt = now;
         this.touched = true;
@@ -317,15 +418,18 @@ export class WateringScene implements Scene {
     if (it.placed) return;
     const cx = this.shown.x + WATERING_SIZE / 2;
     const cy = this.shown.y + WATERING_SIZE / 2;
-    stamp(ctx, cupSprite(), cx, cy - 2 * this.shown.lift, {
+    stamp(ctx, cupSprites[i], cx, cy - 2 * this.shown.lift, {
       angle: this.shown.tilt,
     });
-    // Cartel del origen sobre el recipiente, con una leve ola.
+    // Cartel del origen sobre el recipiente, con una leve ola: el dibujo
+    // a color es lo que el jugador usa para decidir.
     const bob = this.env.calm ? 0 : Math.sin(now / 320) * 1.5;
-    px(ctx, cx - 14, cy - 44 + bob, 28, 24, C.metalInk);
-    px(ctx, cx - 12, cy - 42 + bob, 24, 20, C.wallHi);
-    px(ctx, cx - 12, cy - 42 + bob, 24, PX, C.lineHi);
-    stamp(ctx, originSprites[i], cx, cy - 32 + bob);
+    const top = Math.max(2, cy - 56 + bob);
+    px(ctx, cx - 22, top, 44, 38, C.ink);
+    px(ctx, cx - 20, top + 2, 40, 34, C.wallHi);
+    px(ctx, cx - 20, top + 2, 40, PX, C.lineHi);
+    px(ctx, cx - 2, top + 38, 4, 4, C.ink);
+    stamp(ctx, originSprites[i], cx, top + 19);
   }
 
   // El acertado vuela hasta su caja y se vacía ahí.
@@ -345,7 +449,7 @@ export class WateringScene implements Scene {
         (target.y + target.h * 0.6 - gh.y) * k -
         Math.sin(Math.PI * k) * 22;
       ctx.globalAlpha = 1 - t * 0.4;
-      stamp(ctx, cupSprite(), x, y, { angle: k * 3 });
+      stamp(ctx, cupSprites[gh.index], x, y, { angle: k * 3 });
       ctx.globalAlpha = 1;
     }
   }
@@ -355,7 +459,7 @@ export class WateringScene implements Scene {
     const g = this.game;
     if (g.dragging !== null || g.done || this.game.current < 0) return;
     const press = this.env.calm ? 1 : 0.5 + 0.5 * Math.sin(now / 240);
-    drawHand(ctx, this.shown.x - 6, this.shown.y + 6, press);
+    drawHand(ctx, this.shown.x - 8, this.shown.y + 12, press);
     if (!this.touched) {
       drawTapRing(
         ctx,
@@ -365,14 +469,4 @@ export class WateringScene implements Scene {
       );
     }
   }
-}
-
-let cup: HTMLCanvasElement | null = null;
-
-function cupSprite(): HTMLCanvasElement {
-  cup ??= spriteFromRows(CUP_ROWS, {
-    o: C.ink,
-    L: GREY,
-  });
-  return cup;
 }
