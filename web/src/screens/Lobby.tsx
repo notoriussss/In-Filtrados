@@ -354,7 +354,7 @@ export function Lobby(props: {
                           color={myColor}
                           accessory={a.id}
                           skin={mySkin}
-                          scale={1.25}
+                          scale={1.05}
                           portrait
                         />
                       </button>
@@ -413,7 +413,7 @@ export function Lobby(props: {
                         color={displayColor}
                         accessory={displayAcc}
                         skin={displaySkin}
-                        scale={1.45}
+                        scale={0.88}
                         portrait
                       />
                     </div>
