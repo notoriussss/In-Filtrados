@@ -1,59 +1,76 @@
 import { describe, expect, it } from 'vitest';
-import { gameMap, type Rect } from './map';
+import { gameMap, meetingMarker, type Rect, zoneRoom } from './map';
 
-const inside = (r: Rect, x: number, y: number) => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h;
+const inside = (r: Rect, x: number, y: number) =>
+  x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h;
 
+// shared/map.json es «Estación Manglar Verde» del paquete de diseño v3
+// (docs/design/in-filtrados-ui-v3/mapas/ecologico-manglar-verde).
 describe('shared/map.json', () => {
-  it('is a 1600 x 1200 world', () => {
-    expect(gameMap.width).toBe(1600);
-    expect(gameMap.height).toBe(1200);
-  });
-
-  it('has the stream ring plus the 7 zones of the game plan', () => {
-    expect(gameMap.zones.map((z) => z.id)).toEqual([
-      'stream',
-      'reservoir',
-      'rooftops',
-      'plaza',
-      'treatment',
-      'pumps',
-      'garden',
-      'laundry',
-    ]);
+  it('is the 2752 x 1824 Manglar Verde map', () => {
+    expect(gameMap.id).toBe('manglar-verde');
+    expect(gameMap.width).toBe(2752);
+    expect(gameMap.height).toBe(1824);
   });
 
   it('keeps every wall, zone, station and tank inside the world', () => {
+    const world = { x: 0, y: 0, w: gameMap.width, h: gameMap.height };
     for (const r of [...gameMap.walls, ...gameMap.zones]) {
-      expect(r.x >= 0 && r.y >= 0 && r.x + r.w <= gameMap.width && r.y + r.h <= gameMap.height).toBe(true);
+      expect(
+        r.x >= 0 &&
+          r.y >= 0 &&
+          r.x + r.w <= gameMap.width &&
+          r.y + r.h <= gameMap.height,
+      ).toBe(true);
     }
-    for (const p of [...gameMap.stations, ...gameMap.tanks, gameMap.spawn]) {
-      expect(inside({ x: 0, y: 0, w: gameMap.width, h: gameMap.height }, p.x, p.y)).toBe(true);
-    }
+    const points = [
+      ...gameMap.stations,
+      ...gameMap.tanks,
+      ...gameMap.fixPoints,
+      gameMap.spawn,
+    ];
+    for (const p of points) expect(inside(world, p.x, p.y)).toBe(true);
   });
 
-  it('spawns players in the plaza', () => {
-    const plaza = gameMap.zones.find((z) => z.id === 'plaza')!;
-    expect(inside(plaza, gameMap.spawn.x, gameMap.spawn.y)).toBe(true);
+  it('spawns players on the mirador', () => {
+    const mirador = gameMap.zones.filter((z) => zoneRoom(z) === 'mirador');
+    expect(
+      mirador.some((z) => inside(z, gameMap.spawn.x, gameMap.spawn.y)),
+    ).toBe(true);
   });
 
-  it('has 10 tank slots, all in the garden', () => {
-    const garden = gameMap.zones.find((z) => z.id === 'garden')!;
+  it('has the meeting point where everyone gathers', () => {
+    expect(meetingMarker(gameMap)).toMatchObject({ x: 1328, y: 912 });
+  });
+
+  it('has 4 stations of each R, each one in a room of the map', () => {
+    const count = (type: string) =>
+      gameMap.stations.filter((s) => s.type === type).length;
+    expect([count('reduce'), count('reuse'), count('recycle')]).toEqual([
+      4, 4, 4,
+    ]);
+    const rooms = new Set(gameMap.zones.map(zoneRoom));
+    for (const s of gameMap.stations) expect(rooms.has(s.room!)).toBe(true);
+  });
+
+  it('puts every tank in a different room', () => {
+    const roomOf = (x: number, y: number) =>
+      gameMap.zones
+        .filter((z) => x >= z.x && x < z.x + z.w && y >= z.y && y < z.y + z.h)
+        .map(zoneRoom)[0];
+    const rooms = gameMap.tanks.map((t) => roomOf(t.x, t.y));
+    expect(rooms.every(Boolean)).toBe(true);
+    expect(new Set(rooms).size).toBe(gameMap.tanks.length);
+  });
+
+  it('has 10 tank slots and the 3 sabotage fix points', () => {
     expect(gameMap.tanks.map((t) => t.slot)).toEqual([
       0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
     ]);
-    for (const tank of gameMap.tanks) {
-      expect(inside(garden, tank.x, tank.y)).toBe(true);
-    }
-  });
-
-  it('crosses the canal only through 3 bridges', () => {
-    // Walk a horizontal line through the middle of the canal and count the open stretches.
-    const canalY = 660;
-    const blocked = (x: number) => gameMap.walls.some((w) => inside(w, x, canalY));
-    let gaps = 0;
-    for (let x = 0; x < gameMap.width; x++) {
-      if (!blocked(x) && blocked(x - 1)) gaps++;
-    }
-    expect(gaps).toBe(3);
+    expect(gameMap.fixPoints.map((f) => f.kind).sort()).toEqual([
+      'pipe',
+      'pipe',
+      'steam',
+    ]);
   });
 });

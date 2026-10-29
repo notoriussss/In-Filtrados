@@ -27,7 +27,7 @@ Fecha: 3 de octubre de 2026.
 ## 2. Componentes
 
 ```
- Navegador (web: TypeScript + canvas, servido por nginx)
+ Navegador (web: React + canvas en TypeScript, servido por nginx)
         │  WebSocket
         ▼
  Gateway (NestJS / TypeScript)
@@ -92,6 +92,8 @@ Se eligió NestJS sobre FastAPI para el gateway porque:
 
 Si alguien del equipo domina más Python que NestJS, se puede cambiar el gateway a FastAPI y la arquitectura queda igual.
 
+**Dentro de web: React para las pantallas, canvas para el mundo.** Los menús, el HUD, la reunión y el resultado son interfaz de documento (formularios, listas, botones, texto que cambia con el snapshot). Hacerlos a mano con `document.createElement` acumulaba estado repetido y código difícil de mantener, así que se escriben como componentes React en TSX. El mundo (mapa, personajes, tanques, efectos y visión) sigue en un solo `<canvas>` que dibuja `GameSession` a 60 fps; React nunca re-renderiza por cada cuadro. El puente es un store (`web/src/game/session.ts`) que expone el último snapshot con `subscribe`/`getState` y React lo lee con `useSyncExternalStore`. Las pantallas siguen las maquetas de `docs/design/in-filtrados-ui-v3` (dirección B-noche): se maquetan en un escenario de 1920 × 1080 y se escalan a la ventana. No hay router ni librería de estado: la navegación es un `switch` en `App.tsx`.
+
 ### D8. Python como monitor
 El monitor es un microservicio con trabajo propio:
 1. **Salud:** consulta cada pocos segundos el `/health` del gateway, Go, Rust, las dos bases de datos y RabbitMQ.
@@ -150,7 +152,8 @@ service Match {
   // Stream bidireccional: el jugador manda acciones, Go devuelve el estado
   rpc Play(stream Action) returns (stream State);
 }
-// Action: moverse, hacer tarea, contaminar, sabotear, reportar, votar
+// Action: moverse, hacer tarea, contaminar, sabotear, reportar, votar,
+//         convocar una reunión desde la mesa
 // State: posiciones, nivel de cada tanque, embalse, sabotaje activo, fase
 ```
 
@@ -180,7 +183,7 @@ match/
 |---|---|
 | `matches` | id, sala, inicio, fin, ganador (tripulantes o impostor) |
 | `participants` | quién jugó cada partida, su rol y si fue expulsado |
-| `event_log` | eventos importantes (contaminó, reportó, votó). Sirve para mostrar en la reunión los últimos 3 que pasaron por un tanque |
+| `event_log` | eventos importantes (contaminó, reportó, votó). Registro de auditoría; la reunión ya no muestra quiénes pasaron por un tanque (se quitó `meeting.lastVisitors` del contrato) |
 
 **Eventos que publica en RabbitMQ:** `match.started`, `match.finished` (con id de partida, jugadores, cosecha y resultado), `sabotage` y `ejection`.
 
@@ -222,7 +225,7 @@ players/
 | Tabla | Para qué |
 |---|---|
 | `players` | id, nombre, hash de la contraseña, monedas |
-| `upgrades` | qué mejoras y atuendos compró cada jugador |
+| `purchases` | llave `(player_id, item_id)`: lo que compró cada jugador en la tienda (gotas y accesorios) y a qué precio |
 | `results` | llave `(match_id, player_id)`: cosecha y monedas ganadas en cada partida |
 
 **Cómo guarda un resultado sin duplicarlo (D5):** al recibir `match.finished`, en una sola transacción hace `INSERT INTO results ... ON CONFLICT DO NOTHING` y solo si se insertó la fila suma las monedas. Después confirma el mensaje a RabbitMQ (ack). Si el mensaje llega dos veces, la segunda no hace nada.
@@ -305,13 +308,16 @@ in-filtrados/
 ├── messages/                   tipos TypeScript de los mensajes WebSocket
 │   └── src/index.ts            (los usan web y gateway)
 │
-├── web/                        juego en el navegador (TypeScript + canvas, Vite)
+├── web/                        juego en el navegador (React + canvas, Vite)
 │   ├── src/
-│   │   ├── main.ts
-│   │   ├── canvas/             dibujo del mapa, personajes y efectos
+│   │   ├── main.tsx, App.tsx   arranque y navegación entre pantallas
+│   │   ├── game/               GameSession, acciones, minijuegos y render/
+│   │   │   └── render/         dibujo del mapa, personajes, efectos y visión
 │   │   ├── net/                WebSocket con reconexión automática
-│   │   └── screens/             login, sala de espera, partida, reunión
-│   ├── public/                 sprites y sonidos
+│   │   ├── screens/            pantallas React (acceso, menú, sala, partida)
+│   │   ├── ui/                 kit B-noche: panel, botón, chip, íconos, gota
+│   │   └── styles/             CSS del kit y de las pantallas
+│   ├── public/assets/          mapa, sprites, íconos y fondos
 │   ├── nginx.conf
 │   └── Dockerfile              compila con Vite y sirve con nginx
 │

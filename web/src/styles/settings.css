@@ -1,0 +1,429 @@
+/* Modal de ajustes (rediseño acorde al estilo del menú principal y acceso).
+   No altera clases globales fuera de .scr-settings. */
+
+.stage.scr-settings {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Telón de fondo con desenfoque suave sobre el mirador del menú */
+.scr-settings .settings-backdrop {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(8px);
+  background: radial-gradient(
+    ellipse at center,
+    rgba(3, 10, 24, 0.72) 0%,
+    rgba(3, 10, 24, 0.9) 100%
+  );
+  z-index: 1;
+}
+
+/* Contenedor modal centrado: altura generosa para ver todo holgadamente */
+.scr-settings .settings-modal {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  transform: translate(-50%, -50%);
+  width: 1240px;
+  height: 820px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  background: #061528;
+  border: 2px solid var(--line-d);
+  border-radius: 14px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85);
+  overflow: hidden;
+}
+
+/* Cabecera del modal: con título y botón de cierre con equis */
+.scr-settings .settings-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 50px 18px;
+  background: #061528;
+  flex-shrink: 0;
+}
+
+.scr-settings .settings-head-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.scr-settings .settings-head-title h2 {
+  font-family: var(--head);
+  font-size: 32px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--aqua);
+  text-shadow: 2px 2px 0 var(--ink);
+  margin: 0;
+}
+
+/* Botón equis para cerrar: sin recuadro, limpia y más grande */
+.scr-settings .settings-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  color: var(--mut);
+  font-family: var(--head);
+  font-size: 34px;
+  line-height: 1;
+  padding: 0;
+  transition: color 120ms steps(3), transform 120ms steps(3);
+}
+
+.scr-settings .settings-close-btn:hover {
+  color: #fff;
+  transform: scale(1.15);
+}
+
+/* Pestañas (Tabs clásicas y sencillas con indicador de subrayado) */
+.scr-settings .settings-tabs {
+  display: flex;
+  gap: 36px;
+  padding: 0 50px;
+  border-bottom: 2px solid var(--line-d);
+  background: #061528;
+  flex-shrink: 0;
+}
+
+.scr-settings .settings-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 6px 14px;
+  font-family: var(--head);
+  font-size: 22px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--mut);
+  background: transparent;
+  border: 0;
+  border-bottom: 4px solid transparent;
+  cursor: pointer;
+  box-shadow: none;
+  margin-bottom: -2px;
+  transition: all 120ms steps(3);
+}
+
+.scr-settings .settings-tab:hover {
+  color: #fff;
+  border-bottom-color: rgba(126, 230, 216, 0.45);
+}
+
+.scr-settings .settings-tab.on {
+  color: var(--aqua);
+  background: transparent;
+  border-bottom: 4px solid var(--aqua);
+  text-shadow: 1px 1px 0 var(--ink);
+}
+
+/* Panel central de contenido sin scroll */
+.scr-settings .settings-modal,
+.scr-settings .settings-body {
+  overflow: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scr-settings .settings-modal::-webkit-scrollbar,
+.scr-settings .settings-body::-webkit-scrollbar {
+  display: none;
+}
+
+.scr-settings .settings-body {
+  flex: 1;
+  padding: 32px 50px 24px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  background: #061528;
+}
+
+.scr-settings .settings-pane {
+  background: #07192e;
+  border: 1.5px solid var(--line-d);
+  border-radius: 12px;
+  padding: 10px 32px;
+}
+
+.scr-settings .settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 4px;
+  border-bottom: 1.5px solid rgba(74, 155, 208, 0.18);
+}
+
+.scr-settings .settings-row.last {
+  border-bottom: 0;
+}
+
+.scr-settings .settings-row-info b {
+  display: block;
+  font-family: var(--head);
+  font-size: 24px;
+  letter-spacing: 1px;
+  color: #fff;
+  text-shadow: 2px 2px 0 var(--ink);
+}
+
+.scr-settings .settings-row-info .d {
+  font-size: 19px;
+  color: var(--mut);
+  margin-top: 4px;
+  line-height: 1.25;
+}
+
+.scr-settings .settings-row-ctrl {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+/* Selector Segmentado (Ventana / Pantalla completa) */
+.scr-settings .seg {
+  display: inline-flex;
+  gap: 6px;
+  padding: 5px;
+  background: #040e1b;
+  border: 1.5px solid var(--line-d);
+  border-radius: 8px;
+}
+
+.scr-settings .seg button {
+  padding: 10px 26px 8px;
+  font-family: var(--head);
+  font-size: 21px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--mut);
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 120ms steps(3);
+}
+
+.scr-settings .seg button:hover {
+  color: #fff;
+}
+
+.scr-settings .seg button.on {
+  color: #fff;
+  background: #0f3d6c;
+  border: 1px solid var(--aqua);
+  box-shadow: none;
+  text-shadow: 1px 1px 0 var(--ink);
+}
+
+/* Switch Toggle (Interruptores de accesibilidad) sin fluorescencia */
+.scr-settings button.tog {
+  width: 68px;
+  height: 36px;
+  border-radius: 18px;
+  border: 2px solid var(--line-d);
+  background: #040e1b;
+  position: relative;
+  cursor: pointer;
+  padding: 0;
+  box-shadow: none;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease;
+}
+
+.scr-settings button.tog::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--line-d);
+  transition:
+    left 180ms ease,
+    background 180ms ease;
+}
+
+.scr-settings button.tog.on {
+  background: #0e3f28;
+  border-color: #27ae60;
+  box-shadow: none;
+}
+
+.scr-settings button.tog.on::after {
+  left: 36px;
+  background: var(--leaf);
+  box-shadow: none;
+}
+
+/* Teclas en panel de controles */
+.scr-settings .key,
+.scr-settings .kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 42px;
+  height: 42px;
+  padding: 0 12px;
+  font-family: var(--head);
+  font-size: 22px;
+  color: var(--aqua);
+  background: #0a2139;
+  border: 1.5px solid var(--line-d);
+  border-radius: 6px;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.6);
+  text-shadow: 1px 1px 0 var(--ink);
+}
+
+.scr-settings .note-text {
+  font-size: 20px;
+  color: var(--mut);
+  margin: 20px 0 0 8px;
+}
+
+/* Pie del modal con acciones fijadas al fondo del modal */
+.scr-settings .settings-foot {
+  position: relative !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 20px 50px 24px !important;
+  border-top: 2px solid var(--line-d) !important;
+  background: #040e1b !important;
+  flex-shrink: 0 !important;
+  margin-top: auto !important;
+  box-sizing: border-box !important;
+}
+
+.scr-settings .settings-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 30px;
+  font-family: var(--head);
+  font-size: 22px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border-radius: 9px;
+  cursor: pointer;
+  box-shadow: none;
+  transition: all 120ms steps(3);
+}
+
+.scr-settings .settings-btn.sec {
+  color: var(--txt);
+  background: #0a2139;
+  border: 2px solid var(--line-d);
+}
+
+.scr-settings .settings-btn.sec:hover {
+  border-color: var(--aqua);
+  background: #0e3054;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.scr-settings .settings-btn.ghost {
+  color: var(--mut);
+  background: #081a2f;
+  border: 1.5px solid var(--line-d);
+}
+
+.scr-settings .settings-btn.ghost:hover {
+  color: #fff;
+  background: #0e3054;
+  border-color: var(--aqua);
+  transform: translateY(-2px);
+}
+
+.scr-settings .settings-btn.pri {
+  color: #fff;
+  background: #145a32;
+  border: 2px solid #27ae60;
+  box-shadow: none;
+  text-shadow: 2px 2px 0 var(--ink);
+}
+
+.scr-settings .settings-btn.pri:hover {
+  background: #196f3d;
+  border-color: var(--leaf);
+  transform: translateY(-2px);
+}
+
+.scr-settings .settings-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+/* Barra inferior de referencias / atajos (idéntica a Main Menu y Access) */
+.stage.scr-settings .hint {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 22px;
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.stage.scr-settings .hint::after {
+  content: '';
+  position: absolute;
+  left: 20%;
+  right: 20%;
+  bottom: -8px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--line-d) 50%,
+    transparent
+  );
+  opacity: 0.5;
+}
+
+.stage.scr-settings .hint span {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--head);
+  font-size: 19px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--mut);
+  text-shadow: 2px 2px 0 var(--ink);
+}
+
+.stage.scr-settings .hint .kbd {
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  display: inline-grid;
+  place-items: center;
+  font-family: var(--head);
+  font-size: 17px;
+  color: var(--aqua);
+  background: #0a2139;
+  border: 1.5px solid var(--aqua);
+  border-radius: 4px;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.6);
+}

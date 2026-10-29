@@ -1,0 +1,98 @@
+{
+  "dia": {
+    "tags": [
+      {
+        "name": "Samuel",
+        "self": true,
+        "ghost": false,
+        "color": "#3cb44b",
+        "x": 960,
+        "y": 496
+      },
+      {
+        "name": "Mateo",
+        "self": false,
+        "ghost": false,
+        "color": "#e6194b",
+        "x": 704,
+        "y": 240
+      },
+      {
+        "name": "Ari",
+        "self": false,
+        "ghost": false,
+        "color": "#ffe119",
+        "x": 1280,
+        "y": 240
+      },
+      {
+        "name": "Rocío",
+        "self": false,
+        "ghost": false,
+        "color": "#4363d8",
+        "x": 832,
+        "y": 816
+      },
+      {
+        "name": "Santi",
+        "self": false,
+        "ghost": false,
+        "color": "#f58231",
+        "x": 1152,
+        "y": 752
+      },
+      {
+        "name": "Maru",
+        "self": false,
+        "ghost": true,
+        "color": "#f032e6",
+        "x": 640,
+        "y": 880
+      }
+    ],
+    "cam": [
+      848,
+      430
+    ]
+  },
+  "noche": {
+    "tags": [
+      {
+        "name": "Samuel",
+        "self": true,
+        "ghost": false,
+        "color": "#3cb44b",
+        "x": 960,
+        "y": 496
+      },
+      {
+        "name": "Ari",
+        "self": false,
+        "ghost": false,
+        "color": "#ffe119",
+        "x": 1024,
+        "y": 176
+      },
+      {
+        "name": "Valen",
+        "self": false,
+        "ghost": false,
+        "color": "#911eb4",
+        "x": 1280,
+        "y": 944
+      },
+      {
+        "name": "Santi",
+        "self": false,
+        "ghost": false,
+        "color": "#f58231",
+        "x": 704,
+        "y": 112
+      }
+    ],
+    "cam": [
+      1520,
+      142
+    ]
+  }
+}

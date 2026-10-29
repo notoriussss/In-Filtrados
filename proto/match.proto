@@ -33,12 +33,40 @@ message ClientAction {
     Report      report      = 6;
     Vote        vote        = 7;
     Chat        chat        = 8;
+    // S3-05: sabotajes del impostor y arreglos de emergencias.
+    Sabotage    sabotage    = 9;
+    Fix         fix         = 10;
+    // Elegir color en la sala de espera.
+    PickColor     pick_color     = 11;
+    // Elegir accesorio en la sala de espera.
+    PickAccessory pick_accessory = 12;
+    // Elegir personaje (jimena o gota) en la sala de espera.
+    PickSkin      pick_skin      = 13;
+    // Lo que el jugador tiene comprado; solo lo manda el gateway.
+    SetOwned      set_owned      = 14;
+    // Convocar una reunión desde la mesa del mirador.
+    CallMeeting   call_meeting   = 15;
+    // Elegir cuántas tareas hace cada jugador (solo el creador, en LOBBY).
+    SetTaskCount  set_task_count = 16;
+    // Elegir cuántos infiltrados hay (solo el creador, en LOBBY).
+    SetImpostorCount set_impostor_count = 18;
+    // Elegir cuántos minutos dura la partida (solo el creador, en LOBBY).
+    SetMatchDuration set_match_duration = 19;
+    // Salir a propósito de la sala (distinto de perder la conexión).
+    Leave         leave          = 17;
   }
 }
+// Leave: el jugador toca "Salir". Si es el creador, la sala se cierra para
+// todos con la razón "host_left"; de otro jugador no cambia nada (su lugar
+// se guarda en la gracia como siempre).
+message Leave {}
 message Join {
   string match_id   = 1;
   string player_id  = 2;
   int64  last_tick  = 3;
+  // Artículos comprados del jugador (ids de players.proto ShopItem). Los
+  // pone el gateway con lo que dice players, nunca el navegador.
+  repeated string owned = 4;
 }
 message Move {
   int32 dx = 1;
@@ -64,6 +92,9 @@ message Contaminate {
 message Report {
   int32 tank_slot = 1;
 }
+// CallMeeting: convocar una reunión desde la mesa del mirador. La valida
+// match: fase, distancia, espera y convocatorias restantes.
+message CallMeeting {}
 // Vote: votar por un jugador o saltar el voto (S2-05).
 message Vote {
   oneof choice {
@@ -75,6 +106,54 @@ message Vote {
 message Chat {
   string client_msg_id = 1;
   string text          = 2;
+}
+
+// Sabotage: solo el impostor; kind es "pipe" (tubería rota) o "steam"
+// (vapor en la planta). Se ve idéntico a una emergencia aleatoria (S3-05).
+message Sabotage {
+  string kind = 1;
+}
+// Fix: arreglar la emergencia activa en un punto de reparación de
+// shared/map.json (fixPoints). Hay que quedarse quieto junto al punto.
+message Fix {
+  string point_id = 1;
+}
+// PickColor: solo en LOBBY. match lo acepta si es uno de los 8 colores y
+// ningún otro jugador conectado lo tiene; si no, lo ignora.
+message PickColor {
+  string color = 1;
+}
+// PickAccessory: solo en LOBBY. match lo acepta si es un accesorio válido.
+message PickAccessory {
+  string accessory = 1;
+}
+// PickSkin: solo en LOBBY. "jimena" siempre; "gota" solo si el jugador
+// compró la gota de su color actual ("gota-<color sin #>").
+message PickSkin {
+  string skin = 1;
+}
+// SetTaskCount: solo el creador y solo en LOBBY. tasks_per_player debe estar
+// entre 4 y 8; fuera de ese rango match responde un Error INVALID_TASK_COUNT
+// y deja el valor como estaba. Sin elegir, son 6.
+message SetTaskCount {
+  int32 tasks_per_player = 1;
+}
+// SetImpostorCount: solo el creador y solo en LOBBY. impostors va de 1 a
+// (jugadores - 1) / 2, con 1 como mínimo; fuera de ese rango match responde un
+// Error INVALID_IMPOSTOR_COUNT y deja el valor como estaba. Sin elegir, son 2
+// con 7 jugadores o más y 1 con menos.
+message SetImpostorCount {
+  int32 impostors = 1;
+}
+// SetMatchDuration: solo el creador y solo en LOBBY. minutes debe estar entre
+// 4 y 12; fuera de ese rango match responde un Error INVALID_MATCH_DURATION y
+// deja el valor como estaba. Sin elegir, son 8.
+message SetMatchDuration {
+  int32 minutes = 1;
+}
+// SetOwned: reemplaza lo comprado de quien lo manda (tras una compra).
+message SetOwned {
+  repeated string items = 1;
 }
 
 message ServerEvent {
@@ -118,6 +197,42 @@ message Snapshot {
   // Igual que my_role, nunca viajan las de otro jugador.
   repeated MyTask my_tasks       = 13;
   string          my_active_task = 14;
+  // S3-05: emergencia activa, sea sabotaje o evento aleatorio (se ven
+  // igual). Vacío si no hay ninguna.
+  Emergency      emergency   = 15;
+  // S3-05: solo en el snapshot del impostor (vacío para el resto).
+  SabotageStatus my_sabotage = 16;
+  // Mesa: estado de la mesa de reuniones; vacío fuera de PLAYING.
+  MeetingButton  my_meeting  = 17;
+  // Tareas que hace cada jugador (cuidador o impostor); 4 a 8, por
+  // defecto 6. Se ve en LOBBY para que todos sepan qué eligió el creador.
+  int32          tasks_per_player = 18;
+  // Infiltrados de la partida (ya recortados al máximo de los jugadores que
+  // hay) y minutos que dura. Se ven en LOBBY.
+  int32          impostors     = 19;
+  int32          match_minutes = 20;
+  // Tick en que se acaba el tiempo y ganan los infiltrados (reason
+  // "timeout"). 0 en LOBBY y ENDED. El reloj se detiene en las reuniones
+  // (el fin se corre un tick por cada tick de reunión) y en la pausa
+  // (el tick no avanza). Lo que falta es match_ends_at_tick - tick, a 20
+  // ticks por segundo.
+  int64          match_ends_at_tick = 21;
+}
+// Emergency: tubería rota o vapor en la planta (S3-05).
+message Emergency {
+  string          kind         = 1; // "pipe" o "steam"
+  int64           ends_at_tick = 2; // pipe: si llega, tanques +20; steam: 0
+  repeated string held_points  = 3; // puntos con alguien arreglando ahora
+}
+// SabotageStatus: cuándo puede volver a sabotear el impostor (S3-05).
+message SabotageStatus {
+  int64 ready_at_tick = 1; // espera compartida de 40 s
+  int32 pipes_left    = 2; // la tubería se rompe máximo 2 veces
+}
+// MeetingButton: estado de la mesa para el destinatario.
+message MeetingButton {
+  int64 ready_at_tick = 1; // próximo tick en que se puede convocar
+  int32 calls_left    = 2; // convocatorias que quedan en la partida
 }
 // OilDrop: gota del rastro del impostor tras contaminar (S2-12).
 message OilDrop {
@@ -131,6 +246,7 @@ message TankView {
   string owner_id      = 2;
   int32  contamination = 3; // 0 a 100
   bool   dead          = 4;
+  bool   reported      = 5; // dead que ya tuvo su reunión
 }
 // MyTask: una estación asignada al jugador y si ya la completó (S2-11).
 message MyTask {
@@ -141,15 +257,21 @@ message TaskProgress {
   int32 completed = 1;
   int32 total     = 2;
 }
+enum MeetingReason {
+  MEETING_REASON_REPORT    = 0; // alguien reportó un tanque muerto
+  MEETING_REASON_EMERGENCY = 1; // alguien convocó desde la mesa
+}
 message Meeting {
   string          reporter_id   = 1;
-  int32           tank_slot     = 2;
-  repeated string last_visitors = 3; // últimos 3 jugadores distintos
+  int32           tank_slot     = 2; // -1 si la reunión fue convocada
+  reserved 3; // last_visitors: la reunión ya no dice quién pasó por el tanque
+  reserved "last_visitors";
   repeated string votes_cast    = 4; // quién ya votó, nunca por quién
   int64           ends_at_tick  = 5;
   bool            voting_closed = 6; // true durante los 5 s de resultado
   string          ejected_id    = 7; // vacío si nadie salió
   bool            was_impostor  = 8; // solo vale si ejected_id no está vacío
+  MeetingReason   reason        = 9;
 }
 message ChatMessage {
   string id        = 1; // client_msg_id
@@ -158,9 +280,12 @@ message ChatMessage {
   int64  tick      = 4;
 }
 // MatchEnded: fin de la partida. impostor_ids tiene 2 con 7 o más jugadores.
+// reason indica el motivo ("reservoir_full", "impostors_ejected",
+// "tanks_contaminated", "timeout").
 message MatchEnded {
   string          winner       = 1; // "crew" o "impostor"
   repeated string impostor_ids = 2;
+  string          reason       = 3;
 }
 message PlayerView {
   string id        = 1;
@@ -170,6 +295,14 @@ message PlayerView {
   float  y         = 5;
   bool   connected = 6;
   bool   alive     = 7;
+  // Lo que está haciendo ahora, para animarlo en el mapa: "" (nada),
+  // "reduce", "reuse" o "recycle" (tarea), "tank" (limpiar o
+  // contaminar: se ven igual) o "fix" (arreglar una emergencia).
+  string activity  = 8;
+  // Accesorio del personaje gota (vacío si no lleva ninguno).
+  string accessory = 9;
+  // Personaje: "jimena" (el de inicio) o "gota" (comprado).
+  string skin = 10;
 }
 message Error {
   string code    = 1;

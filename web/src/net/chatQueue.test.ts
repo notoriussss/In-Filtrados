@@ -19,13 +19,23 @@ function meeting(chatIds: string[], phase: Snapshot['phase'] = 'MEETING') {
     waitingFor: [],
     myTasks: [],
     myActiveTask: null,
+    emergency: null,
+    mySabotage: null,
+    myMeeting: null,
+    tasksPerPlayer: 6,
+    impostors: 1,
+    matchMinutes: 8,
+    matchEndsAtTick: 0,
   } as Snapshot;
 }
 
 function setup() {
   const sent: ClientMessage[] = [];
   let n = 0;
-  const q = new ChatQueue((m) => sent.push(m), () => `id-${++n}`);
+  const q = new ChatQueue(
+    (m) => sent.push(m),
+    () => `id-${++n}`,
+  );
   const ids = () =>
     sent.map((m) => (m.type === 'chat' ? m.clientMsgId : m.type));
   return { q, sent, ids };

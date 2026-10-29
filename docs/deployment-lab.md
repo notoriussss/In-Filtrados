@@ -1,13 +1,14 @@
 # In-Filtrados: despliegue en la red del laboratorio
 
 Complementa a `architecture.md`. Ese documento describe **qué** hace cada servicio; este describe **dónde** corre cada uno y **cómo** se conectan las máquinas en el laboratorio.
+La lista de pasos del día, con las imágenes de `develop` y el firewall filtrado por IP de origen, está en `deployment-lab-runbook.md`.
 Fecha: 4 de octubre de 2026 (revisión 2).
 
 > Convención: igual que en `architecture.md`, los nombres de archivos, variables y servicios van en inglés. La explicación va en español.
 
 **Cambios de la revisión 2:**
 - Los nodos servidor son **las 5 laptops del equipo con Docker**; los PCs del laboratorio solo son clientes. La ejecución nativa en los PCs del laboratorio pasa a ser el último recurso.
-- La sala se **pausa cuando se desconecta cualquier jugador**, y el periodo de gracia deja de ser de 90 s fijos (sección 9).
+- La sala se **pausa solo cuando se desconecta el host** (quien creó la sala); si se va otro jugador la partida sigue y él conserva su lugar. El periodo de gracia deja de ser de 90 s fijos (sección 9).
 - `web` conserva su propio nginx, como en `architecture.md` y `tasks.md`; el gateway no sirve archivos estáticos.
 
 ---
@@ -241,12 +242,12 @@ Es la prueba del profesor: quitar el cable de red y, al reconectarlo, el juego s
 1. **Heartbeat propio:** quitar el cable **no cierra** la conexión TCP; queda abierta a medias durante minutos. Por eso el navegador y el gateway se mandan un ping cada 2 s y dan la conexión por caída si pasan 5 s sin respuesta. Entre servicios se usa el keepalive de gRPC con los mismos tiempos.
 2. **JWT validado localmente:** el gateway y `match` validan el token con la clave pública, sin llamar a `players`. Así, si N3 se cae, nadie pierde la partida ni la posibilidad de reconectarse.
 3. **Outbox en `match`:** si RabbitMQ no confirma la publicación de un evento (o está caído), este se persiste en la tabla `outbox` de PostgreSQL #1. Un publicador reintenta periódicamente y en orden los eventos pendientes, y los borra una vez confirmados (patrón Outbox). Si N4 no está, los eventos esperan en N2 y salen al volver.
-4. **Pausa por cualquier desconexión:** la sala se pausa en cuanto **un** jugador se desconecta, no solo cuando se van todos. Los relojes, la contaminación y los votos se congelan. Al volver el jugador, todo está exactamente igual. Es más simple que mantener la partida corriendo con un jugador quieto, y es lo que el profe espera ver.
-5. **Gracia configurable:** mientras la sala está pausada, el jugador desconectado conserva su lugar durante `RECONNECT_GRACE_SECONDS` (10 minutos en el laboratorio). Solo al vencer pasa a fantasma y la sala sigue sin él, para que alguien que se fue de verdad no trabe la partida para siempre. Esto reemplaza los 90 s fijos de `architecture.md`, 6.1.
+4. **Pausa solo si se va el host:** si se desconecta un jugador cualquiera, la partida **sigue** sin él: queda quieto en su lugar, en una reunión su voto cuenta como `skip` y al volver recibe la foto completa. Si el que se desconecta es el **host** (el creador de la sala), la sala se pausa: los relojes, la contaminación y los votos se congelan hasta que vuelve, y todo queda exactamente igual.
+5. **Gracia configurable:** el jugador desconectado (sea o no el host) conserva su lugar durante `RECONNECT_GRACE_SECONDS` (10 minutos en el laboratorio). Solo al vencer pasa a fantasma y la sala sigue sin él, para que alguien que se fue de verdad no trabe la partida para siempre. Esto reemplaza los 90 s fijos de `architecture.md`, 6.1.
 
 | Se desconecta | Qué ven los jugadores | Qué pasa por dentro | Al reconectar |
 |---|---|---|---|
-| **Un PC cliente** | Ese jugador ve "Reconectando…" en ≤5 s; los demás ven "Partida en pausa: esperando a X" | `match` lo marca `disconnected` y pausa la sala | Manda `Resume`, recibe la foto completa y la sala se reanuda |
+| **Un PC cliente** | Ese jugador ve "Reconectando…" en ≤5 s; los demás siguen jugando (si es el host, ven "Partida en pausa: esperando a X") | `match` lo marca `disconnected` y le guarda el lugar; solo pausa la sala si es el host | Manda `Resume`, recibe la foto completa y vuelve a jugar (si era el host, la sala se reanuda) |
 | **N1 (edge)** | Todos ven "Reconectando…" | Los streams `Play` hacia N2 se cortan; `match` marca a todos como desconectados y pausa la sala | Los navegadores se reconectan a N1 y el gateway reabre `Play` con `Resume` |
 | **N2 (match)** | Todos ven "Partida en pausa" | El gateway detecta que el stream cayó y reintenta con espera creciente; los WebSocket siguen abiertos | Si `match` siguió vivo, retoma con el estado en memoria; si se reinició, restaura la última instantánea (≤2 s perdidos) |
 | **N3 (players)** | Nada en la partida; login y perfil dicen "servicio no disponible" | El Circuit Breaker del gateway se abre; `match.finished` espera en la cola de N4 | Rust consume lo pendiente y suma las monedas una sola vez (D5) |
@@ -257,7 +258,7 @@ Es la prueba del profesor: quitar el cable de red y, al reconectarlo, el juego s
 
 | Prueba | Qué se espera |
 |---|---|
-| Quitar el cable de un PC cliente 2 minutos | "Reconectando…" en ≤5 s; los demás en pausa; vuelve a la misma posición sin recargar y la partida sigue igual |
+| Quitar el cable de un PC cliente 2 minutos | "Reconectando…" en ≤5 s; los demás siguen jugando (en pausa si era el host); vuelve a su lugar sin recargar |
 | Recargar la página a mitad de partida | Vuelve a la partida sin iniciar sesión otra vez |
 | Quitar el cable de N1 2 minutos | Todos en "Reconectando…", la partida no avanza y luego sigue igual |
 | `docker compose restart match` en N2 | La partida vuelve desde la última instantánea |
@@ -292,7 +293,7 @@ Estos documentos **no se han editado todavía**; quien tome cada cambio lo hace 
 | Documento | Cambio |
 |---|---|
 | `architecture.md`, D9 | Reemplazar "una VM en la nube" por este despliegue; la nube queda como opción si la competencia es fuera del laboratorio |
-| `architecture.md`, sección 6 | Agregar heartbeat, JWT local, outbox, pausa por cualquier desconexión y gracia configurable |
+| `architecture.md`, sección 6 | Agregar heartbeat, JWT local, outbox, pausa solo si se desconecta el host y gracia configurable |
 | `architecture.md`, sección 4 | Sumar Transactional Outbox a los patrones de respaldo |
 | `team-plan.md` y `tasks.md`, semana 1 | S1-23 cambia de "desplegar en la nube" a "un `compose` por nodo y `lab.env`"; prueba previa del laboratorio el lunes 5 |
 | `team-plan.md` y `tasks.md`, semana 2 | Ensayo de despliegue en 5 laptops en el laboratorio el viernes 16 |

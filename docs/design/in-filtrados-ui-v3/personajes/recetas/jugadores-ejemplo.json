@@ -1,0 +1,77 @@
+{
+  "_nota": "Recetas del generador (codigo/in-filtrados-personajes.js). color = el que asigna el servidor al jugador; outfit null = ropa automática (versión oscura del color).",
+  "jugadores": [
+    {
+      "jugador": 0,
+      "nombre": "Mateo",
+      "color": "#e6194b",
+      "outfit": null,
+      "accessory": "gorra",
+      "accessoryColor": null,
+      "face": "neutral"
+    },
+    {
+      "jugador": 1,
+      "nombre": "Luna",
+      "color": "#3cb44b",
+      "outfit": null,
+      "accessory": "brote",
+      "accessoryColor": null,
+      "face": "happy"
+    },
+    {
+      "jugador": 2,
+      "nombre": "Ari",
+      "color": "#ffe119",
+      "outfit": null,
+      "accessory": "audifonos",
+      "accessoryColor": null,
+      "face": "neutral"
+    },
+    {
+      "jugador": 3,
+      "nombre": "Rocío",
+      "color": "#4363d8",
+      "outfit": null,
+      "accessory": "flor",
+      "accessoryColor": null,
+      "face": "happy"
+    },
+    {
+      "jugador": 4,
+      "nombre": "Santi",
+      "color": "#f58231",
+      "outfit": null,
+      "accessory": "paja",
+      "accessoryColor": null,
+      "face": "smug"
+    },
+    {
+      "jugador": 5,
+      "nombre": "Valen",
+      "color": "#911eb4",
+      "outfit": null,
+      "accessory": "lentes",
+      "accessoryColor": null,
+      "face": "neutral"
+    },
+    {
+      "jugador": 6,
+      "nombre": "Nico",
+      "color": "#46f0f0",
+      "outfit": null,
+      "accessory": "visor",
+      "accessoryColor": null,
+      "face": "surprised"
+    },
+    {
+      "jugador": 7,
+      "nombre": "Maru",
+      "color": "#f032e6",
+      "outfit": null,
+      "accessory": "bufanda",
+      "accessoryColor": null,
+      "face": "happy"
+    }
+  ]
+}

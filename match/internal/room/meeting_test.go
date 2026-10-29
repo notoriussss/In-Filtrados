@@ -163,28 +163,6 @@ func TestReportSuccessfulTeleportsAndSetsMeeting(t *testing.T) {
 		t.Errorf("tankSlot debe ser 0, got %d", r.meeting.tankSlot)
 	}
 
-	// Comprobar últimos 3 visitantes distintos
-	// (del más reciente al más antiguo)
-	expectedVisitors := []string{"crew1", "imp", "crew2"}
-	if len(r.meeting.lastVisitors) != len(expectedVisitors) {
-		t.Fatalf(
-			"esperaba %d visitantes, got %d: %v",
-			len(expectedVisitors),
-			len(r.meeting.lastVisitors),
-			r.meeting.lastVisitors,
-		)
-	}
-	for i, v := range expectedVisitors {
-		if r.meeting.lastVisitors[i] != v {
-			t.Errorf(
-				"visitante en [%d] esperaba %s, got %s",
-				i,
-				v,
-				r.meeting.lastVisitors[i],
-			)
-		}
-	}
-
 	// Comprobar teletransporte: todos deben estar detenidos (dx=0, dy=0)
 	for id, pl := range r.players {
 		if pl.dx != 0 || pl.dy != 0 {
@@ -200,8 +178,167 @@ func TestReportSuccessfulTeleportsAndSetsMeeting(t *testing.T) {
 	if view.ReporterId != "crew1" || view.TankSlot != 0 {
 		t.Errorf("meetingView campos incorrectos: %+v", view)
 	}
+	if view.Reason != matchv1.MeetingReason_MEETING_REASON_REPORT {
+		t.Errorf("Reason incorrecto: %v", view.Reason)
+	}
 	if view.EndsAtTick != r.tick+meetingVotingTicks {
 		t.Errorf("EndsAtTick incorrecto: %d", view.EndsAtTick)
+	}
+}
+
+func readyToCall(t *testing.T) *Room {
+	t.Helper()
+	r := playingRoomWithDeadTank(t)
+	r.tick = r.startTick + meetingCallGraceTicks
+	p := r.players["crew1"]
+	center := r.m.MeetingPoint()
+	p.view.X = float32(center.X)
+	p.view.Y = float32(center.Y)
+	return r
+}
+
+func TestCallMeetingStartsEmergencyAtTable(t *testing.T) {
+	r := readyToCall(t)
+	button := r.meetingButtonView()
+	if button == nil || button.CallsLeft != meetingCallsMax {
+		t.Fatalf("estado inicial de la mesa incorrecto: %+v", button)
+	}
+
+	r.handleAction(PlayerAction{
+		PlayerID:    "crew1",
+		CallMeeting: true,
+	})
+
+	if r.phase != matchv1.Phase_MEETING {
+		t.Fatalf("debe cambiar a MEETING, fase actual %v", r.phase)
+	}
+	if r.meeting == nil {
+		t.Fatal("meeting no debe ser nil")
+	}
+	if r.meeting.reason !=
+		matchv1.MeetingReason_MEETING_REASON_EMERGENCY {
+		t.Errorf("reason incorrecto: %v", r.meeting.reason)
+	}
+	if r.meeting.tankSlot != -1 {
+		t.Errorf("tankSlot debe ser -1, got %d", r.meeting.tankSlot)
+	}
+	if r.meetingCallsUsed != 1 {
+		t.Errorf("debe gastar una convocatoria, usadas %d", r.meetingCallsUsed)
+	}
+	if r.meetingReadyAt != r.tick+meetingCallCooldownTicks {
+		t.Errorf("cooldown incorrecto: %d", r.meetingReadyAt)
+	}
+
+	view := r.meetingView()
+	if view == nil || view.Reason !=
+		matchv1.MeetingReason_MEETING_REASON_EMERGENCY {
+		t.Errorf("meetingView sin motivo de emergencia: %+v", view)
+	}
+	if r.meetingButtonView() != nil {
+		t.Error("durante la reunión no debe haber botón")
+	}
+}
+
+func TestCallMeetingRequiresDistance(t *testing.T) {
+	r := readyToCall(t)
+	center := r.m.MeetingPoint()
+	p := r.players["crew1"]
+	p.view.X = float32(center.X + meetingCallRange + 1)
+	p.view.Y = float32(center.Y)
+
+	r.handleAction(PlayerAction{
+		PlayerID:    "crew1",
+		CallMeeting: true,
+	})
+
+	if r.phase != matchv1.Phase_PLAYING {
+		t.Error("no se puede convocar desde lejos")
+	}
+	if r.meetingCallsUsed != 0 {
+		t.Error("no debe gastar una convocatoria")
+	}
+}
+
+func TestCallMeetingRequiresAlivePlayer(t *testing.T) {
+	r := readyToCall(t)
+	r.players["crew1"].view.Alive = false
+
+	r.handleAction(PlayerAction{
+		PlayerID:    "crew1",
+		CallMeeting: true,
+	})
+
+	if r.phase != matchv1.Phase_PLAYING {
+		t.Error("un fantasma no puede convocar")
+	}
+}
+
+func TestCallMeetingHasCooldownAndLimit(t *testing.T) {
+	r := readyToCall(t)
+
+	r.handleAction(PlayerAction{PlayerID: "crew1", CallMeeting: true})
+	if r.meetingCallsUsed != 1 {
+		t.Fatalf("primera convocatoria: %d", r.meetingCallsUsed)
+	}
+
+	// Mismo tick: el cooldown la rechaza.
+	r.phase = matchv1.Phase_PLAYING
+	r.meeting = nil
+	r.handleAction(PlayerAction{PlayerID: "crew1", CallMeeting: true})
+	if r.meetingCallsUsed != 1 {
+		t.Error("el cooldown debe impedir la segunda")
+	}
+
+	// Pasa el cooldown: segunda y última.
+	r.tick = r.meetingReadyAt
+	r.handleAction(PlayerAction{PlayerID: "crew1", CallMeeting: true})
+	if r.meetingCallsUsed != 2 {
+		t.Fatalf("segunda convocatoria: %d", r.meetingCallsUsed)
+	}
+
+	r.phase = matchv1.Phase_PLAYING
+	r.meeting = nil
+	r.tick = r.meetingReadyAt
+	r.handleAction(PlayerAction{PlayerID: "crew1", CallMeeting: true})
+	if r.meetingCallsUsed != 2 {
+		t.Error("no puede haber una tercera convocatoria")
+	}
+}
+
+func TestCallMeetingWaitsForGracePeriod(t *testing.T) {
+	r := playingRoomWithDeadTank(t)
+	p := r.players["crew1"]
+	center := r.m.MeetingPoint()
+	p.view.X = float32(center.X)
+	p.view.Y = float32(center.Y)
+
+	r.handleAction(PlayerAction{PlayerID: "crew1", CallMeeting: true})
+
+	if r.phase != matchv1.Phase_PLAYING {
+		t.Error("no se puede convocar antes de la gracia")
+	}
+}
+
+func TestMeetingSpotsAreFreeOnSharedMap(t *testing.T) {
+	m, err := LoadMap(sharedMapPath)
+	if err != nil {
+		t.Fatalf("no se pudo cargar el mapa: %v", err)
+	}
+	r := &Room{m: m}
+	center := m.MeetingPoint()
+	for total := 2; total <= 10; total++ {
+		for slot := 0; slot < total; slot++ {
+			x, y := r.meetingSpot(slot, total, center)
+			if m.blocked(x, y) {
+				t.Errorf(
+					"punto %d/%d bloqueado en (%.1f, %.1f)",
+					slot,
+					total,
+					x,
+					y,
+				)
+			}
+		}
 	}
 }
 
@@ -646,12 +783,13 @@ func TestPlayerEjectedEventPublished(t *testing.T) {
 		WithCreator("crew1"),
 		WithPublisher(pub),
 	)
-	for _, id := range []string{"crew1", "imp"} {
+	for _, id := range []string{"crew1", "crew2", "imp"} {
 		out := make(chan *matchv1.ServerEvent, 1)
 		r.addPlayer(Join{PlayerID: id, Out: out})
 	}
 	r.startMatch("crew1")
 	r.players["crew1"].role = matchv1.Role_CREW
+	r.players["crew2"].role = matchv1.Role_CREW
 	r.players["imp"].role = matchv1.Role_IMPOSTOR
 
 	t0 := r.tankAt(0)
@@ -668,6 +806,11 @@ func TestPlayerEjectedEventPublished(t *testing.T) {
 
 	r.handleAction(PlayerAction{
 		PlayerID:     "crew1",
+		Vote:         true,
+		VoteTargetID: "imp",
+	})
+	r.handleAction(PlayerAction{
+		PlayerID:     "crew2",
 		Vote:         true,
 		VoteTargetID: "imp",
 	})
@@ -930,27 +1073,6 @@ func TestFullMeetingCycleIntegration(t *testing.T) {
 	}
 	if r.meeting == nil {
 		t.Fatal("meeting no debe ser nil")
-	}
-
-	// Verificar visitantes del snapshot
-	view := r.meetingView()
-	expectedVisitors := []string{"crew1", "imp", "crew2"}
-	if len(view.LastVisitors) != len(expectedVisitors) {
-		t.Fatalf(
-			"esperaba %d visitantes, got %d",
-			len(expectedVisitors),
-			len(view.LastVisitors),
-		)
-	}
-	for i, v := range expectedVisitors {
-		if view.LastVisitors[i] != v {
-			t.Errorf(
-				"visitante %d esperaba %s, got %s",
-				i,
-				v,
-				view.LastVisitors[i],
-			)
-		}
 	}
 
 	// 4. Chat durante reunion

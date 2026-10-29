@@ -20,6 +20,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
 
 	"github.com/notoriussss/in-filtrados/match/gen/matchv1"
 	matchdb "github.com/notoriussss/in-filtrados/match/internal/db"
@@ -35,6 +36,16 @@ const migrationsDir = "migrations"
 
 // restoreTimeout limita la lectura de instantáneas al arrancar.
 const restoreTimeout = 5 * time.Second
+
+// Keepalive de gRPC (docs/deployment-lab.md, 9.1). El gateway manda un
+// ping cada 2 s; match acepta pings cada 1 s (por defecto, gRPC corta con
+// too_many_pings a quien hace ping más de una vez cada 5 min) y además
+// hace los suyos para notar en ~5 s a un gateway que quedó a medias.
+const (
+	keepaliveMinTime = 1 * time.Second
+	keepaliveTime    = 2 * time.Second
+	keepaliveTimeout = 3 * time.Second
+)
 
 // defaultGraceSeconds es el periodo de gracia sin RECONNECT_GRACE_SECONDS.
 const defaultGraceSeconds = 90
@@ -106,7 +117,16 @@ func main() {
 	// así el primer Join de cada jugador ya encuentra su sala.
 	restoreRooms(ctx, store, server)
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(
+		grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
+			MinTime:             keepaliveMinTime,
+			PermitWithoutStream: true,
+		}),
+		grpc.KeepaliveParams(keepalive.ServerParameters{
+			Time:    keepaliveTime,
+			Timeout: keepaliveTimeout,
+		}),
+	)
 	matchv1.RegisterMatchServer(grpcServer, server)
 	go func() {
 		log.Printf("match gRPC listening on :%s", grpcPort)

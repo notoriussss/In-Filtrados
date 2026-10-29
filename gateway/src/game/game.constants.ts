@@ -37,6 +37,15 @@ export const MAX_STATION_ID_LENGTH = 64;
 export const MAX_PLAYER_ID_LENGTH = 64;
 export const MAX_CLIENT_MSG_ID_LENGTH = 64; // un UUID tiene 36
 export const MAX_CHAT_LENGTH = 200; // caracteres, igual que match
+// S3-05: sabotajes y puntos de reparación.
+export const EMERGENCY_KINDS: readonly unknown[] = ['pipe', 'steam'];
+export const MAX_FIX_POINT_ID_LENGTH = 64;
+// Elegir color en la sala: un color CSS como "#4363d8".
+export const MAX_COLOR_LENGTH = 16;
+// Elegir accesorio en la sala: id como "straw-hat", "headphones".
+export const MAX_ACCESSORY_LENGTH = 32;
+// Elegir personaje en la sala: "jimena" o "gota".
+export const MAX_SKIN_LENGTH = 16;
 
 // S3-02: espera entre intentos de reabrir Play si match no responde.
 export const PLAY_RETRY_DELAYS_MS: readonly number[] = [
@@ -48,6 +57,11 @@ export const PLAY_RETRY_MAX_MS = 10_000;
 export const CHAT_IDS_PER_MATCH = 500;
 export const CHAT_DEDUPE_MATCHES = 200;
 export const CHAT_IN_FLIGHT_MS = 3000;
+
+// Heartbeat (deployment-lab.md, 9.1): el navegador manda ping cada 2 s;
+// si pasan 5 s sin ningún mensaje, el gateway corta el WebSocket.
+export const HEARTBEAT_TIMEOUT_MS = 5_000;
+export const HEARTBEAT_CHECK_MS = 1_000;
 
 // WebSocket close codes used by the gateway.
 export const WS_CLOSE_CODES = {

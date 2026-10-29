@@ -12,6 +12,15 @@ export const CLOSE_REPLACED = 4002;
 const RETRY_DELAYS_MS = [500, 1000, 2000, 4000, 8000];
 const RETRY_DELAY_MAX_MS = 10000;
 
+// Heartbeat (deployment-lab.md, 9.1): quitar el cable no cierra el
+// WebSocket, así que el navegador manda ping cada 2 s y da la conexión
+// por caída si pasan 5 s sin recibir nada. Un socket que no abre en 5 s
+// también se da por caído (un host apagado deja el SYN colgado).
+export const HEARTBEAT_INTERVAL_MS = 2000;
+export const HEARTBEAT_TIMEOUT_MS = 5000;
+export const CONNECT_TIMEOUT_MS = 5000;
+const WATCHDOG_MS = 1000;
+
 // attempt starts at 1.
 export function reconnectDelay(attempt: number): number {
   return RETRY_DELAYS_MS[attempt - 1] ?? RETRY_DELAY_MAX_MS;
@@ -28,10 +37,7 @@ export interface SocketLike {
   send(data: string): void;
   close(code?: number): void;
   addEventListener(type: 'open', fn: () => void): void;
-  addEventListener(
-    type: 'message',
-    fn: (e: { data: unknown }) => void,
-  ): void;
+  addEventListener(type: 'message', fn: (e: { data: unknown }) => void): void;
   addEventListener(type: 'close', fn: (e: { code: number }) => void): void;
 }
 
@@ -44,6 +50,10 @@ export type GameSocketOptions = {
   createSocket?: (url: string) => SocketLike;
   setTimer?: (fn: () => void, ms: number) => unknown;
   clearTimer?: (timer: unknown) => void;
+  // Reloj e intervalo del heartbeat; las pruebas pasan unos falsos.
+  now?: () => number;
+  setInterval?: (fn: () => void, ms: number) => unknown;
+  clearInterval?: (timer: unknown) => void;
 };
 
 const OPEN = 1;
@@ -57,6 +67,10 @@ export class GameSocket {
   private timer: unknown = null;
   private closed = false;
   private lastTick = 0;
+  private watchdog: unknown = null;
+  private openedAt = 0; // cuándo se creó el socket actual
+  private lastSeen = 0; // último mensaje recibido
+  private lastPing = 0;
   private readonly messageHandlers: ((msg: ServerMessage) => void)[] = [];
   private readonly statusHandlers: ((status: SocketStatus) => void)[] = [];
 
@@ -85,19 +99,22 @@ export class GameSocket {
   close(): void {
     this.closed = true;
     this.cancelRetry();
+    this.stopWatchdog();
     const ws = this.ws;
     this.ws = null;
     ws?.close(CLOSE_NORMAL);
   }
 
   private open(): void {
-    const ws = this.createSocket(
-      this.opts.url ?? socketUrl(this.opts.token),
-    );
+    const ws = this.createSocket(this.opts.url ?? socketUrl(this.opts.token));
     this.ws = ws;
+    this.openedAt = this.now();
+    this.startWatchdog();
 
     ws.addEventListener('open', () => {
       if (ws !== this.ws) return;
+      this.lastSeen = this.now();
+      this.lastPing = this.lastSeen;
       this.send({
         type: 'join',
         matchId: session.loadSession()?.matchId || this.opts.matchId,
@@ -114,6 +131,8 @@ export class GameSocket {
       } catch {
         return;
       }
+      this.lastSeen = this.now();
+      if (msg.type === 'pong') return; // solo sirve de heartbeat
       if (msg.type === 'snapshot') {
         this.attempt = 0;
         this.lastTick = msg.tick;
@@ -125,6 +144,7 @@ export class GameSocket {
       // A socket we already replaced or closed on purpose says nothing.
       if (ws !== this.ws || this.closed) return;
       this.ws = null;
+      this.stopWatchdog();
       if (e.code === CLOSE_UNAUTHORIZED) {
         this.closed = true;
         session.clearSession();
@@ -144,6 +164,58 @@ export class GameSocket {
     });
   }
 
+  // drop da por caído al socket actual sin esperar su 'close', que con
+  // la red cortada puede tardar minutos, y reintenta como siempre. Los
+  // eventos que lleguen después del socket viejo se ignoran.
+  private drop(): void {
+    const ws = this.ws;
+    this.ws = null;
+    this.stopWatchdog();
+    ws?.close();
+    this.scheduleRetry();
+  }
+
+  // startWatchdog revisa cada segundo el socket actual: si no abre a
+  // tiempo o deja de recibir, lo da por caído; si no, manda el ping.
+  private startWatchdog(): void {
+    this.stopWatchdog();
+    const setInterval =
+      this.opts.setInterval ??
+      ((fn, ms) => globalThis.setInterval(fn, ms));
+    this.watchdog = setInterval(() => this.checkAlive(), WATCHDOG_MS);
+  }
+
+  private stopWatchdog(): void {
+    if (this.watchdog === null) return;
+    const clearInterval =
+      this.opts.clearInterval ??
+      ((timer) => globalThis.clearInterval(timer as number));
+    clearInterval(this.watchdog);
+    this.watchdog = null;
+  }
+
+  private checkAlive(): void {
+    const ws = this.ws;
+    if (!ws || this.closed) return;
+    const now = this.now();
+    if (ws.readyState !== OPEN) {
+      if (now - this.openedAt >= CONNECT_TIMEOUT_MS) this.drop();
+      return;
+    }
+    if (now - this.lastSeen >= HEARTBEAT_TIMEOUT_MS) {
+      this.drop();
+      return;
+    }
+    if (now - this.lastPing >= HEARTBEAT_INTERVAL_MS) {
+      this.lastPing = now;
+      this.send({ type: 'ping' });
+    }
+  }
+
+  private now(): number {
+    return (this.opts.now ?? Date.now)();
+  }
+
   private scheduleRetry(): void {
     this.attempt++;
     this.emitStatus({ state: 'reconnecting', attempt: this.attempt });
@@ -158,8 +230,7 @@ export class GameSocket {
   private cancelRetry(): void {
     if (this.timer === null) return;
     const clearTimer =
-      this.opts.clearTimer ??
-      ((timer) => window.clearTimeout(timer as number));
+      this.opts.clearTimer ?? ((timer) => window.clearTimeout(timer as number));
     clearTimer(this.timer);
     this.timer = null;
   }

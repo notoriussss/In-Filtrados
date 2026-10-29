@@ -1,0 +1,8331 @@
+{
+  "compressionlevel": -1,
+  "height": 57,
+  "width": 86,
+  "tilewidth": 32,
+  "tileheight": 32,
+  "infinite": false,
+  "orientation": "orthogonal",
+  "renderorder": "right-down",
+  "type": "map",
+  "version": "1.10",
+  "tiledversion": "1.10.2",
+  "nextlayerid": 10,
+  "nextobjectid": 488,
+  "layers": [
+    {
+      "id": 1,
+      "name": "suelo",
+      "type": "imagelayer",
+      "image": "capas/suelo.png",
+      "opacity": 1,
+      "visible": true,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "id": 2,
+      "name": "props (y-sort por baseY)",
+      "type": "objectgroup",
+      "draworder": "index",
+      "opacity": 1,
+      "visible": true,
+      "x": 0,
+      "y": 0,
+      "objects": [
+        {
+          "id": 1,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "bush",
+          "x": 280,
+          "y": 132,
+          "width": 48,
+          "height": 38,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/bush.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 128
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "pinetree",
+          "x": 2412,
+          "y": 132,
+          "width": 104,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/pinetree.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 128
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "bush",
+          "x": 696,
+          "y": 164,
+          "width": 48,
+          "height": 38,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/bush.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 160
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "plant-s",
+          "x": 864,
+          "y": 164,
+          "width": 32,
+          "height": 46,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/plant-s.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 160
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "rocks",
+          "x": 1552,
+          "y": 164,
+          "width": 64,
+          "height": 42,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/rocks.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 160
+            }
+          ]
+        },
+        {
+          "id": 6,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "pinetree",
+          "x": 12,
+          "y": 196,
+          "width": 104,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/pinetree.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 192
+            }
+          ]
+        },
+        {
+          "id": 7,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "plant-l",
+          "x": 472,
+          "y": 196,
+          "width": 48,
+          "height": 86,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/plant-l.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 192
+            }
+          ]
+        },
+        {
+          "id": 8,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "console",
+          "x": 1116,
+          "y": 196,
+          "width": 136,
+          "height": 96,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/console.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 192
+            }
+          ]
+        },
+        {
+          "id": 9,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "terrarium",
+          "x": 1244,
+          "y": 196,
+          "width": 72,
+          "height": 88,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/terrarium.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 192
+            }
+          ]
+        },
+        {
+          "id": 10,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "battery",
+          "x": 1560,
+          "y": 196,
+          "width": 48,
+          "height": 84,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/battery.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 192
+            }
+          ]
+        },
+        {
+          "id": 11,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "battery",
+          "x": 1592,
+          "y": 196,
+          "width": 48,
+          "height": 84,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/battery.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 192
+            }
+          ]
+        },
+        {
+          "id": 12,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "battery",
+          "x": 1624,
+          "y": 196,
+          "width": 48,
+          "height": 84,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/battery.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 192
+            }
+          ]
+        },
+        {
+          "id": 13,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "valve",
+          "x": 1756,
+          "y": 196,
+          "width": 72,
+          "height": 104,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/valve.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 192
+            }
+          ]
+        },
+        {
+          "id": 14,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "bush",
+          "x": 2040,
+          "y": 196,
+          "width": 48,
+          "height": 38,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/bush.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 192
+            }
+          ]
+        },
+        {
+          "id": 15,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "seedtable",
+          "x": 508,
+          "y": 228,
+          "width": 104,
+          "height": 74,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/seedtable.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 224
+            }
+          ]
+        },
+        {
+          "id": 16,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "seedtable",
+          "x": 668,
+          "y": 228,
+          "width": 104,
+          "height": 74,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/seedtable-v2.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 224
+            }
+          ]
+        },
+        {
+          "id": 17,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "fridge",
+          "x": 1306,
+          "y": 228,
+          "width": 44,
+          "height": 90,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/fridge.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 224
+            }
+          ]
+        },
+        {
+          "id": 18,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "rocks",
+          "x": 2160,
+          "y": 228,
+          "width": 64,
+          "height": 42,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/rocks.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 224
+            }
+          ]
+        },
+        {
+          "id": 19,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "solarpanel",
+          "x": 1532,
+          "y": 260,
+          "width": 104,
+          "height": 92,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/solarpanel.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 256
+            }
+          ]
+        },
+        {
+          "id": 20,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "solarpanel",
+          "x": 1724,
+          "y": 260,
+          "width": 104,
+          "height": 92,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/solarpanel.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 256
+            }
+          ]
+        },
+        {
+          "id": 21,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "pinetree",
+          "x": 2156,
+          "y": 260,
+          "width": 104,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/pinetree.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 256
+            }
+          ]
+        },
+        {
+          "id": 22,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "tree",
+          "x": 2368,
+          "y": 260,
+          "width": 128,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/tree.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 256
+            }
+          ]
+        },
+        {
+          "id": 23,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "rainstation",
+          "x": 408,
+          "y": 292,
+          "width": 80,
+          "height": 118,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/rainstation.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 288
+            }
+          ]
+        },
+        {
+          "id": 24,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "lamp",
+          "x": 1921,
+          "y": 292,
+          "width": 30,
+          "height": 78,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/lamp.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 288
+            }
+          ]
+        },
+        {
+          "id": 25,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "bush",
+          "x": 2104,
+          "y": 292,
+          "width": 48,
+          "height": 38,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/bush-v2.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 288
+            }
+          ]
+        },
+        {
+          "id": 26,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "pinetree",
+          "x": 2316,
+          "y": 292,
+          "width": 104,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/pinetree.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 288
+            }
+          ]
+        },
+        {
+          "id": 27,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "pinetree",
+          "x": 2508,
+          "y": 292,
+          "width": 104,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/pinetree.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 288
+            }
+          ]
+        },
+        {
+          "id": 28,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "pinetree",
+          "x": 12,
+          "y": 324,
+          "width": 104,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/pinetree.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 320
+            }
+          ]
+        },
+        {
+          "id": 29,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "rocks",
+          "x": 2192,
+          "y": 324,
+          "width": 64,
+          "height": 42,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/rocks.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 320
+            }
+          ]
+        },
+        {
+          "id": 30,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "rocks",
+          "x": 2256,
+          "y": 324,
+          "width": 64,
+          "height": 42,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/rocks.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 320
+            }
+          ]
+        },
+        {
+          "id": 31,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "tree",
+          "x": 64,
+          "y": 356,
+          "width": 128,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/tree.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 352
+            }
+          ]
+        },
+        {
+          "id": 32,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "bush",
+          "x": 2264,
+          "y": 356,
+          "width": 48,
+          "height": 38,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/bush-v2.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 352
+            }
+          ]
+        },
+        {
+          "id": 33,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "seedtable",
+          "x": 412,
+          "y": 388,
+          "width": 104,
+          "height": 74,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/seedtable-v3.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 384
+            }
+          ]
+        },
+        {
+          "id": 34,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "seedtable",
+          "x": 700,
+          "y": 388,
+          "width": 104,
+          "height": 74,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/seedtable-v2.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 384
+            }
+          ]
+        },
+        {
+          "id": 35,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "greywater",
+          "x": 980,
+          "y": 388,
+          "width": 88,
+          "height": 108,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/greywater.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 384
+            }
+          ]
+        },
+        {
+          "id": 36,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "ecobench",
+          "x": 1212,
+          "y": 388,
+          "width": 104,
+          "height": 78,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/ecobench.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 384
+            }
+          ]
+        },
+        {
+          "id": 37,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "solarpanel",
+          "x": 1660,
+          "y": 388,
+          "width": 104,
+          "height": 92,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/solarpanel.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 384
+            }
+          ]
+        },
+        {
+          "id": 38,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "solarpanel",
+          "x": 1788,
+          "y": 388,
+          "width": 104,
+          "height": 92,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/solarpanel.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 384
+            }
+          ]
+        },
+        {
+          "id": 39,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "tree",
+          "x": 2528,
+          "y": 388,
+          "width": 128,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/tree.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 384
+            }
+          ]
+        },
+        {
+          "id": 40,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "tower",
+          "x": 824,
+          "y": 420,
+          "width": 48,
+          "height": 104,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/tower.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 416
+            }
+          ]
+        },
+        {
+          "id": 41,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "tower",
+          "x": 856,
+          "y": 420,
+          "width": 48,
+          "height": 104,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/tower.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 416
+            }
+          ]
+        },
+        {
+          "id": 42,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "stool",
+          "x": 1250,
+          "y": 420,
+          "width": 28,
+          "height": 38,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/stool.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 416
+            }
+          ]
+        },
+        {
+          "id": 43,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "plant-l",
+          "x": 1304,
+          "y": 420,
+          "width": 48,
+          "height": 86,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/plant-l.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 416
+            }
+          ]
+        },
+        {
+          "id": 44,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "rocks",
+          "x": 1840,
+          "y": 420,
+          "width": 64,
+          "height": 42,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/rocks.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 416
+            }
+          ]
+        },
+        {
+          "id": 45,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "pinetree",
+          "x": 2476,
+          "y": 420,
+          "width": 104,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/pinetree.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 416
+            }
+          ]
+        },
+        {
+          "id": 46,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "pinetree",
+          "x": 44,
+          "y": 452,
+          "width": 104,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/pinetree.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 448
+            }
+          ]
+        },
+        {
+          "id": 47,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "lamp",
+          "x": 2017,
+          "y": 452,
+          "width": 30,
+          "height": 78,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/lamp.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 448
+            }
+          ]
+        },
+        {
+          "id": 48,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "pinetree",
+          "x": 2476,
+          "y": 452,
+          "width": 104,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/pinetree.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 448
+            }
+          ]
+        },
+        {
+          "id": 49,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "pinetree",
+          "x": -20,
+          "y": 484,
+          "width": 104,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/pinetree.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 480
+            }
+          ]
+        },
+        {
+          "id": 50,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "tree",
+          "x": 0,
+          "y": 484,
+          "width": 128,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/tree-v2.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 480
+            }
+          ]
+        },
+        {
+          "id": 51,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "crate",
+          "x": 2106,
+          "y": 484,
+          "width": 44,
+          "height": 42,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/crate.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 480
+            }
+          ]
+        },
+        {
+          "id": 52,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "bush",
+          "x": 2488,
+          "y": 484,
+          "width": 48,
+          "height": 38,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/bush-v2.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 480
+            }
+          ]
+        },
+        {
+          "id": 53,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "rocks",
+          "x": 2448,
+          "y": 548,
+          "width": 64,
+          "height": 42,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/rocks.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 544
+            }
+          ]
+        },
+        {
+          "id": 54,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "plant-s",
+          "x": 1344,
+          "y": 580,
+          "width": 32,
+          "height": 46,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/plant-s.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 576
+            }
+          ]
+        },
+        {
+          "id": 55,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "pinetree",
+          "x": 2508,
+          "y": 580,
+          "width": 104,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/pinetree.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 576
+            }
+          ]
+        },
+        {
+          "id": 56,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "plant-l",
+          "x": 952,
+          "y": 612,
+          "width": 48,
+          "height": 86,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/plant-l.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 608
+            }
+          ]
+        },
+        {
+          "id": 57,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "rocks",
+          "x": 2512,
+          "y": 612,
+          "width": 64,
+          "height": 42,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/rocks.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 608
+            }
+          ]
+        },
+        {
+          "id": 58,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "battery",
+          "x": 280,
+          "y": 644,
+          "width": 48,
+          "height": 84,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/battery.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 640
+            }
+          ]
+        },
+        {
+          "id": 59,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "battery",
+          "x": 312,
+          "y": 644,
+          "width": 48,
+          "height": 84,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/battery.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 640
+            }
+          ]
+        },
+        {
+          "id": 60,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "waterwheel",
+          "x": 404,
+          "y": 644,
+          "width": 120,
+          "height": 136,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/waterwheel.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 640
+            }
+          ]
+        },
+        {
+          "id": 61,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "rail",
+          "x": 924,
+          "y": 644,
+          "width": 104,
+          "height": 48,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/rail.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 640
+            }
+          ]
+        },
+        {
+          "id": 62,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "rail",
+          "x": 1020,
+          "y": 644,
+          "width": 104,
+          "height": 48,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/rail.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 640
+            }
+          ]
+        },
+        {
+          "id": 63,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "post-lamp",
+          "x": 1056,
+          "y": 644,
+          "width": 32,
+          "height": 108,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/post-lamp.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 640
+            }
+          ]
+        },
+        {
+          "id": 64,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "rail",
+          "x": 1116,
+          "y": 644,
+          "width": 104,
+          "height": 48,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/rail.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 640
+            }
+          ]
+        },
+        {
+          "id": 65,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "bench",
+          "x": 1404,
+          "y": 644,
+          "width": 104,
+          "height": 46,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/bench.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 640
+            }
+          ]
+        },
+        {
+          "id": 66,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "rail",
+          "x": 1404,
+          "y": 644,
+          "width": 104,
+          "height": 48,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/rail.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 640
+            }
+          ]
+        },
+        {
+          "id": 67,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "rail",
+          "x": 1500,
+          "y": 644,
+          "width": 104,
+          "height": 48,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/rail.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 640
+            }
+          ]
+        },
+        {
+          "id": 68,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "post-lamp",
+          "x": 1504,
+          "y": 644,
+          "width": 32,
+          "height": 108,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/post-lamp.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 640
+            }
+          ]
+        },
+        {
+          "id": 69,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "rail",
+          "x": 1596,
+          "y": 644,
+          "width": 104,
+          "height": 48,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/rail.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 640
+            }
+          ]
+        },
+        {
+          "id": 70,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "bush",
+          "x": 2488,
+          "y": 644,
+          "width": 48,
+          "height": 38,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/bush-v2.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 640
+            }
+          ]
+        },
+        {
+          "id": 71,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "pinetree",
+          "x": 2508,
+          "y": 644,
+          "width": 104,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/pinetree.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 640
+            }
+          ]
+        },
+        {
+          "id": 72,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "tree",
+          "x": -32,
+          "y": 676,
+          "width": 128,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/tree-v2.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 672
+            }
+          ]
+        },
+        {
+          "id": 73,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "leak",
+          "x": 276,
+          "y": 740,
+          "width": 120,
+          "height": 80,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/leak.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 736
+            }
+          ]
+        },
+        {
+          "id": 74,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "pump",
+          "x": 472,
+          "y": 740,
+          "width": 112,
+          "height": 72,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/pump.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 736
+            }
+          ]
+        },
+        {
+          "id": 75,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "tree",
+          "x": 2496,
+          "y": 740,
+          "width": 128,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/tree-v2.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 736
+            }
+          ]
+        },
+        {
+          "id": 76,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "pinetree",
+          "x": 2540,
+          "y": 740,
+          "width": 104,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/pinetree.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 736
+            }
+          ]
+        },
+        {
+          "id": 77,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "tree",
+          "x": -32,
+          "y": 772,
+          "width": 128,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/tree-v2.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 768
+            }
+          ]
+        },
+        {
+          "id": 78,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "bush",
+          "x": 120,
+          "y": 772,
+          "width": 48,
+          "height": 38,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/bush.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 768
+            }
+          ]
+        },
+        {
+          "id": 79,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "tree",
+          "x": -32,
+          "y": 804,
+          "width": 128,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/tree-v2.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 800
+            }
+          ]
+        },
+        {
+          "id": 80,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "tree",
+          "x": 0,
+          "y": 804,
+          "width": 128,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/tree-v2.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 800
+            }
+          ]
+        },
+        {
+          "id": 81,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "pinetree",
+          "x": 2572,
+          "y": 804,
+          "width": 104,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/pinetree.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 800
+            }
+          ]
+        },
+        {
+          "id": 82,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "telescope",
+          "x": 1210,
+          "y": 836,
+          "width": 44,
+          "height": 78,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/telescope.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 832
+            }
+          ]
+        },
+        {
+          "id": 83,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "plant-l",
+          "x": 1400,
+          "y": 836,
+          "width": 48,
+          "height": 86,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/plant-l.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 832
+            }
+          ]
+        },
+        {
+          "id": 84,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "pinetree",
+          "x": 2540,
+          "y": 836,
+          "width": 104,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/pinetree.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 832
+            }
+          ]
+        },
+        {
+          "id": 85,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "chair",
+          "x": 1279,
+          "y": 868,
+          "width": 34,
+          "height": 46,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/chair.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 864
+            }
+          ]
+        },
+        {
+          "id": 86,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "chair",
+          "x": 1311,
+          "y": 868,
+          "width": 34,
+          "height": 46,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/chair.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 864
+            }
+          ]
+        },
+        {
+          "id": 87,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "chair",
+          "x": 1247,
+          "y": 900,
+          "width": 34,
+          "height": 46,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/chair-v2.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 896
+            }
+          ]
+        },
+        {
+          "id": 88,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "chair",
+          "x": 1343,
+          "y": 900,
+          "width": 34,
+          "height": 46,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/chair-v3.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 896
+            }
+          ]
+        },
+        {
+          "id": 89,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "post-lamp",
+          "x": 896,
+          "y": 932,
+          "width": 32,
+          "height": 108,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/post-lamp.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 928
+            }
+          ]
+        },
+        {
+          "id": 90,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "chair",
+          "x": 1247,
+          "y": 932,
+          "width": 34,
+          "height": 46,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/chair-v2.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 928
+            }
+          ]
+        },
+        {
+          "id": 91,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "table-r",
+          "x": 1272,
+          "y": 932,
+          "width": 80,
+          "height": 64,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/table-r.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 928
+            }
+          ]
+        },
+        {
+          "id": 92,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "chair",
+          "x": 1343,
+          "y": 932,
+          "width": 34,
+          "height": 46,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/chair-v3.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 928
+            }
+          ]
+        },
+        {
+          "id": 93,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "post-lamp",
+          "x": 1728,
+          "y": 932,
+          "width": 32,
+          "height": 108,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/post-lamp.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 928
+            }
+          ]
+        },
+        {
+          "id": 94,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "chair",
+          "x": 1279,
+          "y": 964,
+          "width": 34,
+          "height": 46,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/chair-v4.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 960
+            }
+          ]
+        },
+        {
+          "id": 95,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "chair",
+          "x": 1311,
+          "y": 964,
+          "width": 34,
+          "height": 46,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/chair-v4.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 960
+            }
+          ]
+        },
+        {
+          "id": 96,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "crate",
+          "x": 314,
+          "y": 996,
+          "width": 44,
+          "height": 42,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/crate.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 992
+            }
+          ]
+        },
+        {
+          "id": 97,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "bin",
+          "x": 416,
+          "y": 996,
+          "width": 32,
+          "height": 42,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/bin.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 992
+            }
+          ]
+        },
+        {
+          "id": 98,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "tree",
+          "x": 2560,
+          "y": 996,
+          "width": 128,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/tree-v2.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 992
+            }
+          ]
+        },
+        {
+          "id": 99,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "workbench",
+          "x": 276,
+          "y": 1028,
+          "width": 120,
+          "height": 92,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/workbench.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1024
+            }
+          ]
+        },
+        {
+          "id": 100,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "workbench",
+          "x": 404,
+          "y": 1028,
+          "width": 120,
+          "height": 92,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/workbench.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1024
+            }
+          ]
+        },
+        {
+          "id": 101,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "post-lamp",
+          "x": 1216,
+          "y": 1028,
+          "width": 32,
+          "height": 108,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/post-lamp.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1024
+            }
+          ]
+        },
+        {
+          "id": 102,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "post-lamp",
+          "x": 1408,
+          "y": 1028,
+          "width": 32,
+          "height": 108,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/post-lamp.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1024
+            }
+          ]
+        },
+        {
+          "id": 103,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "post-lamp",
+          "x": 1728,
+          "y": 1060,
+          "width": 32,
+          "height": 108,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/post-lamp.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1056
+            }
+          ]
+        },
+        {
+          "id": 104,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "rocks",
+          "x": 112,
+          "y": 1092,
+          "width": 64,
+          "height": 42,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/rocks.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1088
+            }
+          ]
+        },
+        {
+          "id": 105,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "post-lamp",
+          "x": 896,
+          "y": 1092,
+          "width": 32,
+          "height": 108,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/post-lamp.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1088
+            }
+          ]
+        },
+        {
+          "id": 106,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "tree",
+          "x": 2560,
+          "y": 1092,
+          "width": 128,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/tree.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1088
+            }
+          ]
+        },
+        {
+          "id": 107,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "leak",
+          "x": 276,
+          "y": 1124,
+          "width": 120,
+          "height": 80,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/leak.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1120
+            }
+          ]
+        },
+        {
+          "id": 108,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "greywater",
+          "x": 436,
+          "y": 1124,
+          "width": 88,
+          "height": 108,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/greywater.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1120
+            }
+          ]
+        },
+        {
+          "id": 109,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "woodpile",
+          "x": 604,
+          "y": 1124,
+          "width": 72,
+          "height": 60,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/woodpile.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1120
+            }
+          ]
+        },
+        {
+          "id": 110,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "rocks",
+          "x": 2448,
+          "y": 1124,
+          "width": 64,
+          "height": 42,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/rocks.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1120
+            }
+          ]
+        },
+        {
+          "id": 111,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "bush",
+          "x": 120,
+          "y": 1156,
+          "width": 48,
+          "height": 38,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/bush-v2.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1152
+            }
+          ]
+        },
+        {
+          "id": 112,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "pump",
+          "x": 2008,
+          "y": 1156,
+          "width": 112,
+          "height": 72,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/pump-v2.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1152
+            }
+          ]
+        },
+        {
+          "id": 113,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "rainstation",
+          "x": 2104,
+          "y": 1156,
+          "width": 80,
+          "height": 118,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/rainstation.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1152
+            }
+          ]
+        },
+        {
+          "id": 114,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "valve",
+          "x": 2204,
+          "y": 1156,
+          "width": 72,
+          "height": 104,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/valve.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1152
+            }
+          ]
+        },
+        {
+          "id": 115,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "bush",
+          "x": 88,
+          "y": 1188,
+          "width": 48,
+          "height": 38,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/bush.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1184
+            }
+          ]
+        },
+        {
+          "id": 116,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "plant-s",
+          "x": 1408,
+          "y": 1188,
+          "width": 32,
+          "height": 46,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/plant-s.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1184
+            }
+          ]
+        },
+        {
+          "id": 117,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "plant-l",
+          "x": 1656,
+          "y": 1188,
+          "width": 48,
+          "height": 86,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/plant-l.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1184
+            }
+          ]
+        },
+        {
+          "id": 118,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "pinetree",
+          "x": -20,
+          "y": 1220,
+          "width": 104,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/pinetree.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1216
+            }
+          ]
+        },
+        {
+          "id": 119,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "tree",
+          "x": 0,
+          "y": 1220,
+          "width": 128,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/tree.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1216
+            }
+          ]
+        },
+        {
+          "id": 120,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "post-lamp",
+          "x": 1056,
+          "y": 1220,
+          "width": 32,
+          "height": 108,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/post-lamp.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1216
+            }
+          ]
+        },
+        {
+          "id": 121,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "bench",
+          "x": 1372,
+          "y": 1220,
+          "width": 104,
+          "height": 46,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/bench.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1216
+            }
+          ]
+        },
+        {
+          "id": 122,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "post-lamp",
+          "x": 1504,
+          "y": 1220,
+          "width": 32,
+          "height": 108,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/post-lamp.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1216
+            }
+          ]
+        },
+        {
+          "id": 123,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "barrel",
+          "x": 670,
+          "y": 1252,
+          "width": 36,
+          "height": 48,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/barrel.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1248
+            }
+          ]
+        },
+        {
+          "id": 124,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "pinetree",
+          "x": 2572,
+          "y": 1252,
+          "width": 104,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/pinetree.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1248
+            }
+          ]
+        },
+        {
+          "id": 125,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "pinetree",
+          "x": -20,
+          "y": 1284,
+          "width": 104,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/pinetree.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1280
+            }
+          ]
+        },
+        {
+          "id": 126,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "tree",
+          "x": 2528,
+          "y": 1284,
+          "width": 128,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/tree-v2.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1280
+            }
+          ]
+        },
+        {
+          "id": 127,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "pinetree",
+          "x": 2572,
+          "y": 1284,
+          "width": 104,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/pinetree.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1280
+            }
+          ]
+        },
+        {
+          "id": 128,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "bush",
+          "x": 216,
+          "y": 1348,
+          "width": 48,
+          "height": 38,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/bush-v2.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1344
+            }
+          ]
+        },
+        {
+          "id": 129,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "pinetree",
+          "x": 2540,
+          "y": 1348,
+          "width": 104,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/pinetree.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1344
+            }
+          ]
+        },
+        {
+          "id": 130,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "tree",
+          "x": 2560,
+          "y": 1348,
+          "width": 128,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/tree-v2.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1344
+            }
+          ]
+        },
+        {
+          "id": 131,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "tree",
+          "x": -32,
+          "y": 1380,
+          "width": 128,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/tree.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1376
+            }
+          ]
+        },
+        {
+          "id": 132,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "pinetree",
+          "x": 76,
+          "y": 1380,
+          "width": 104,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/pinetree.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1376
+            }
+          ]
+        },
+        {
+          "id": 133,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "rocks",
+          "x": 624,
+          "y": 1380,
+          "width": 64,
+          "height": 42,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/rocks.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1376
+            }
+          ]
+        },
+        {
+          "id": 134,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "rocks",
+          "x": 784,
+          "y": 1380,
+          "width": 64,
+          "height": 42,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/rocks.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1376
+            }
+          ]
+        },
+        {
+          "id": 135,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "bush",
+          "x": 2552,
+          "y": 1380,
+          "width": 48,
+          "height": 38,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/bush.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1376
+            }
+          ]
+        },
+        {
+          "id": 136,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "tree",
+          "x": 2560,
+          "y": 1380,
+          "width": 128,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/tree.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1376
+            }
+          ]
+        },
+        {
+          "id": 137,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "pinetree",
+          "x": 76,
+          "y": 1412,
+          "width": 104,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/pinetree.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1408
+            }
+          ]
+        },
+        {
+          "id": 138,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "rocks",
+          "x": 752,
+          "y": 1412,
+          "width": 64,
+          "height": 42,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/rocks.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1408
+            }
+          ]
+        },
+        {
+          "id": 139,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "recyclebins",
+          "x": 1788,
+          "y": 1412,
+          "width": 104,
+          "height": 64,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/recyclebins.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1408
+            }
+          ]
+        },
+        {
+          "id": 140,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "reedbed",
+          "x": 412,
+          "y": 1444,
+          "width": 72,
+          "height": 64,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/reedbed.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1440
+            }
+          ]
+        },
+        {
+          "id": 141,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "reedbed",
+          "x": 700,
+          "y": 1444,
+          "width": 72,
+          "height": 64,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/reedbed.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1440
+            }
+          ]
+        },
+        {
+          "id": 142,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "wormbin",
+          "x": 988,
+          "y": 1444,
+          "width": 72,
+          "height": 60,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/wormbin.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1440
+            }
+          ]
+        },
+        {
+          "id": 143,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "wormbin",
+          "x": 1212,
+          "y": 1444,
+          "width": 72,
+          "height": 60,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/wormbin.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1440
+            }
+          ]
+        },
+        {
+          "id": 144,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "compost",
+          "x": 1298,
+          "y": 1444,
+          "width": 60,
+          "height": 64,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/compost.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1440
+            }
+          ]
+        },
+        {
+          "id": 145,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "beehive",
+          "x": 2008,
+          "y": 1444,
+          "width": 48,
+          "height": 64,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/beehive.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1440
+            }
+          ]
+        },
+        {
+          "id": 146,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "beehive",
+          "x": 2040,
+          "y": 1444,
+          "width": 48,
+          "height": 64,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/beehive.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1440
+            }
+          ]
+        },
+        {
+          "id": 147,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "beehive",
+          "x": 2232,
+          "y": 1444,
+          "width": 48,
+          "height": 64,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/beehive.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1440
+            }
+          ]
+        },
+        {
+          "id": 148,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "beehive",
+          "x": 2264,
+          "y": 1444,
+          "width": 48,
+          "height": 64,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/beehive.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1440
+            }
+          ]
+        },
+        {
+          "id": 149,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "stump",
+          "x": 2334,
+          "y": 1444,
+          "width": 36,
+          "height": 38,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/stump.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1440
+            }
+          ]
+        },
+        {
+          "id": 150,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "filterstation",
+          "x": 1720,
+          "y": 1476,
+          "width": 80,
+          "height": 126,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/filterstation.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1472
+            }
+          ]
+        },
+        {
+          "id": 151,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "filterstation",
+          "x": 568,
+          "y": 1508,
+          "width": 80,
+          "height": 126,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/filterstation.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1504
+            }
+          ]
+        },
+        {
+          "id": 152,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "sorttable",
+          "x": 1532,
+          "y": 1508,
+          "width": 104,
+          "height": 78,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/sorttable.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1504
+            }
+          ]
+        },
+        {
+          "id": 153,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "flowerbed",
+          "x": 2108,
+          "y": 1508,
+          "width": 104,
+          "height": 48,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/flowerbed.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1504
+            }
+          ]
+        },
+        {
+          "id": 154,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "reedbed",
+          "x": 412,
+          "y": 1540,
+          "width": 72,
+          "height": 64,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/reedbed.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1536
+            }
+          ]
+        },
+        {
+          "id": 155,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "compost",
+          "x": 1234,
+          "y": 1540,
+          "width": 60,
+          "height": 64,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/compost.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1536
+            }
+          ]
+        },
+        {
+          "id": 156,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "bush",
+          "x": 2552,
+          "y": 1540,
+          "width": 48,
+          "height": 38,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/bush-v2.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1536
+            }
+          ]
+        },
+        {
+          "id": 157,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "valve",
+          "x": 2172,
+          "y": 1572,
+          "width": 72,
+          "height": 104,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/valve.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1568
+            }
+          ]
+        },
+        {
+          "id": 158,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "beehive",
+          "x": 2328,
+          "y": 1572,
+          "width": 48,
+          "height": 64,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/beehive.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1568
+            }
+          ]
+        },
+        {
+          "id": 159,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "reedbed",
+          "x": 444,
+          "y": 1604,
+          "width": 72,
+          "height": 64,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/reedbed.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1600
+            }
+          ]
+        },
+        {
+          "id": 160,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "stump",
+          "x": 638,
+          "y": 1604,
+          "width": 36,
+          "height": 38,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/stump.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1600
+            }
+          ]
+        },
+        {
+          "id": 161,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "beehive",
+          "x": 2040,
+          "y": 1604,
+          "width": 48,
+          "height": 64,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/beehive.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1600
+            }
+          ]
+        },
+        {
+          "id": 162,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "beehive",
+          "x": 2264,
+          "y": 1604,
+          "width": 48,
+          "height": 64,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/beehive.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1600
+            }
+          ]
+        },
+        {
+          "id": 163,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "pinetree",
+          "x": 44,
+          "y": 1636,
+          "width": 104,
+          "height": 158,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/pinetree.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1632
+            }
+          ]
+        },
+        {
+          "id": 164,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "stump",
+          "x": 702,
+          "y": 1636,
+          "width": 36,
+          "height": 38,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/stump.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1632
+            }
+          ]
+        },
+        {
+          "id": 165,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "woodpile",
+          "x": 1052,
+          "y": 1636,
+          "width": 72,
+          "height": 60,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/woodpile.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1632
+            }
+          ]
+        },
+        {
+          "id": 166,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "sacks",
+          "x": 1176,
+          "y": 1636,
+          "width": 48,
+          "height": 42,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/sacks.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1632
+            }
+          ]
+        },
+        {
+          "id": 167,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "barrel",
+          "x": 1502,
+          "y": 1636,
+          "width": 36,
+          "height": 48,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/barrel-v2.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1632
+            }
+          ]
+        },
+        {
+          "id": 168,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "crate",
+          "x": 1530,
+          "y": 1636,
+          "width": 44,
+          "height": 42,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/crate.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1632
+            }
+          ]
+        },
+        {
+          "id": 169,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "bin",
+          "x": 1664,
+          "y": 1636,
+          "width": 32,
+          "height": 42,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/bin-v2.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1632
+            }
+          ]
+        },
+        {
+          "id": 170,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "bush",
+          "x": 1976,
+          "y": 1636,
+          "width": 48,
+          "height": 38,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/bush-v2.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1632
+            }
+          ]
+        },
+        {
+          "id": 171,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "reedbed",
+          "x": 60,
+          "y": 1700,
+          "width": 72,
+          "height": 64,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/reedbed.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1696
+            }
+          ]
+        },
+        {
+          "id": 172,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "reedbed",
+          "x": 220,
+          "y": 1700,
+          "width": 72,
+          "height": 64,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/reedbed.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1696
+            }
+          ]
+        },
+        {
+          "id": 173,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "reedbed",
+          "x": 380,
+          "y": 1700,
+          "width": 72,
+          "height": 64,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/reedbed.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1696
+            }
+          ]
+        },
+        {
+          "id": 174,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "reedbed",
+          "x": 700,
+          "y": 1700,
+          "width": 72,
+          "height": 64,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/reedbed.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1696
+            }
+          ]
+        },
+        {
+          "id": 175,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "reedbed",
+          "x": 860,
+          "y": 1700,
+          "width": 72,
+          "height": 64,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/reedbed.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1696
+            }
+          ]
+        },
+        {
+          "id": 176,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "reedbed",
+          "x": 1020,
+          "y": 1700,
+          "width": 72,
+          "height": 64,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/reedbed.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1696
+            }
+          ]
+        },
+        {
+          "id": 177,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "reedbed",
+          "x": 1180,
+          "y": 1700,
+          "width": 72,
+          "height": 64,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/reedbed.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1696
+            }
+          ]
+        },
+        {
+          "id": 178,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "reedbed",
+          "x": 1340,
+          "y": 1700,
+          "width": 72,
+          "height": 64,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/reedbed.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1696
+            }
+          ]
+        },
+        {
+          "id": 179,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "reedbed",
+          "x": 1660,
+          "y": 1700,
+          "width": 72,
+          "height": 64,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/reedbed.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1696
+            }
+          ]
+        },
+        {
+          "id": 180,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "reedbed",
+          "x": 1820,
+          "y": 1700,
+          "width": 72,
+          "height": 64,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/reedbed.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1696
+            }
+          ]
+        },
+        {
+          "id": 181,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "reedbed",
+          "x": 1980,
+          "y": 1700,
+          "width": 72,
+          "height": 64,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/reedbed.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1696
+            }
+          ]
+        },
+        {
+          "id": 182,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "reedbed",
+          "x": 2140,
+          "y": 1700,
+          "width": 72,
+          "height": 64,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/reedbed.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1696
+            }
+          ]
+        },
+        {
+          "id": 183,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "reedbed",
+          "x": 2300,
+          "y": 1700,
+          "width": 72,
+          "height": 64,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/reedbed.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1696
+            }
+          ]
+        },
+        {
+          "id": 184,
+          "rotation": 0,
+          "visible": true,
+          "type": "",
+          "name": "reedbed",
+          "x": 2620,
+          "y": 1700,
+          "width": 72,
+          "height": 64,
+          "properties": [
+            {
+              "name": "sprite",
+              "type": "string",
+              "value": "props/sprites/reedbed.png"
+            },
+            {
+              "name": "baseY",
+              "type": "int",
+              "value": 1696
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "name": "sólidos (map.json walls)",
+      "type": "objectgroup",
+      "draworder": "topdown",
+      "opacity": 0.55,
+      "visible": true,
+      "x": 0,
+      "y": 0,
+      "objects": [
+        {
+          "id": 185,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-0",
+          "x": 0,
+          "y": 0,
+          "width": 2752,
+          "height": 128
+        },
+        {
+          "id": 186,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-1",
+          "x": 0,
+          "y": 128,
+          "width": 480,
+          "height": 32
+        },
+        {
+          "id": 187,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-2",
+          "x": 896,
+          "y": 128,
+          "width": 672,
+          "height": 32
+        },
+        {
+          "id": 188,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-3",
+          "x": 1824,
+          "y": 128,
+          "width": 928,
+          "height": 32
+        },
+        {
+          "id": 189,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-4",
+          "x": 0,
+          "y": 160,
+          "width": 448,
+          "height": 32
+        },
+        {
+          "id": 190,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-5",
+          "x": 896,
+          "y": 160,
+          "width": 96,
+          "height": 96
+        },
+        {
+          "id": 191,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-6",
+          "x": 1312,
+          "y": 160,
+          "width": 224,
+          "height": 32
+        },
+        {
+          "id": 192,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-7",
+          "x": 1856,
+          "y": 160,
+          "width": 896,
+          "height": 32
+        },
+        {
+          "id": 193,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-8",
+          "x": 0,
+          "y": 192,
+          "width": 416,
+          "height": 32
+        },
+        {
+          "id": 194,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-9",
+          "x": 1344,
+          "y": 192,
+          "width": 160,
+          "height": 32
+        },
+        {
+          "id": 195,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-10",
+          "x": 1888,
+          "y": 192,
+          "width": 864,
+          "height": 32
+        },
+        {
+          "id": 196,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-11",
+          "x": 0,
+          "y": 224,
+          "width": 384,
+          "height": 160
+        },
+        {
+          "id": 197,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-12",
+          "x": 1376,
+          "y": 224,
+          "width": 128,
+          "height": 32
+        },
+        {
+          "id": 198,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-13",
+          "x": 1920,
+          "y": 224,
+          "width": 832,
+          "height": 32
+        },
+        {
+          "id": 199,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-14",
+          "x": 2048,
+          "y": 256,
+          "width": 704,
+          "height": 64
+        },
+        {
+          "id": 200,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-15",
+          "x": 1920,
+          "y": 320,
+          "width": 64,
+          "height": 128
+        },
+        {
+          "id": 201,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-16",
+          "x": 2048,
+          "y": 320,
+          "width": 704,
+          "height": 128
+        },
+        {
+          "id": 202,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-17",
+          "x": 896,
+          "y": 352,
+          "width": 96,
+          "height": 96
+        },
+        {
+          "id": 203,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-18",
+          "x": 1376,
+          "y": 352,
+          "width": 128,
+          "height": 96
+        },
+        {
+          "id": 204,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-19",
+          "x": 0,
+          "y": 384,
+          "width": 416,
+          "height": 32
+        },
+        {
+          "id": 205,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-20",
+          "x": 0,
+          "y": 416,
+          "width": 448,
+          "height": 32
+        },
+        {
+          "id": 206,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-21",
+          "x": 0,
+          "y": 448,
+          "width": 544,
+          "height": 96
+        },
+        {
+          "id": 207,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-22",
+          "x": 640,
+          "y": 448,
+          "width": 448,
+          "height": 96
+        },
+        {
+          "id": 208,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-23",
+          "x": 1184,
+          "y": 448,
+          "width": 352,
+          "height": 96
+        },
+        {
+          "id": 209,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-24",
+          "x": 1632,
+          "y": 448,
+          "width": 352,
+          "height": 96
+        },
+        {
+          "id": 210,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-25",
+          "x": 2272,
+          "y": 448,
+          "width": 480,
+          "height": 32
+        },
+        {
+          "id": 211,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-26",
+          "x": 2304,
+          "y": 480,
+          "width": 448,
+          "height": 32
+        },
+        {
+          "id": 212,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-27",
+          "x": 2336,
+          "y": 512,
+          "width": 416,
+          "height": 32
+        },
+        {
+          "id": 213,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-28",
+          "x": 0,
+          "y": 544,
+          "width": 352,
+          "height": 32
+        },
+        {
+          "id": 214,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-29",
+          "x": 704,
+          "y": 544,
+          "width": 192,
+          "height": 32
+        },
+        {
+          "id": 215,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-30",
+          "x": 1760,
+          "y": 544,
+          "width": 224,
+          "height": 32
+        },
+        {
+          "id": 216,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-31",
+          "x": 2368,
+          "y": 544,
+          "width": 384,
+          "height": 608
+        },
+        {
+          "id": 217,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-32",
+          "x": 0,
+          "y": 576,
+          "width": 320,
+          "height": 32
+        },
+        {
+          "id": 218,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-33",
+          "x": 704,
+          "y": 576,
+          "width": 160,
+          "height": 32
+        },
+        {
+          "id": 219,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-34",
+          "x": 1792,
+          "y": 576,
+          "width": 192,
+          "height": 32
+        },
+        {
+          "id": 220,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-35",
+          "x": 0,
+          "y": 608,
+          "width": 288,
+          "height": 32
+        },
+        {
+          "id": 221,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-36",
+          "x": 704,
+          "y": 608,
+          "width": 128,
+          "height": 128
+        },
+        {
+          "id": 222,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-37",
+          "x": 1824,
+          "y": 608,
+          "width": 160,
+          "height": 160
+        },
+        {
+          "id": 223,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-38",
+          "x": 0,
+          "y": 640,
+          "width": 256,
+          "height": 224
+        },
+        {
+          "id": 224,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-39",
+          "x": 928,
+          "y": 640,
+          "width": 352,
+          "height": 128
+        },
+        {
+          "id": 225,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-40",
+          "x": 1376,
+          "y": 640,
+          "width": 352,
+          "height": 128
+        },
+        {
+          "id": 226,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-41",
+          "x": 928,
+          "y": 768,
+          "width": 320,
+          "height": 32
+        },
+        {
+          "id": 227,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-42",
+          "x": 1408,
+          "y": 768,
+          "width": 320,
+          "height": 32
+        },
+        {
+          "id": 228,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-43",
+          "x": 928,
+          "y": 800,
+          "width": 288,
+          "height": 32
+        },
+        {
+          "id": 229,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-44",
+          "x": 1440,
+          "y": 800,
+          "width": 288,
+          "height": 32
+        },
+        {
+          "id": 230,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-45",
+          "x": 704,
+          "y": 832,
+          "width": 128,
+          "height": 32
+        },
+        {
+          "id": 231,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-46",
+          "x": 928,
+          "y": 832,
+          "width": 256,
+          "height": 32
+        },
+        {
+          "id": 232,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-47",
+          "x": 1472,
+          "y": 832,
+          "width": 256,
+          "height": 32
+        },
+        {
+          "id": 233,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-48",
+          "x": 0,
+          "y": 864,
+          "width": 832,
+          "height": 96
+        },
+        {
+          "id": 234,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-49",
+          "x": 928,
+          "y": 864,
+          "width": 224,
+          "height": 96
+        },
+        {
+          "id": 235,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-50",
+          "x": 1504,
+          "y": 864,
+          "width": 224,
+          "height": 96
+        },
+        {
+          "id": 236,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-51",
+          "x": 1824,
+          "y": 864,
+          "width": 160,
+          "height": 320
+        },
+        {
+          "id": 237,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-52",
+          "x": 0,
+          "y": 960,
+          "width": 256,
+          "height": 192
+        },
+        {
+          "id": 238,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-53",
+          "x": 928,
+          "y": 960,
+          "width": 256,
+          "height": 32
+        },
+        {
+          "id": 239,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-54",
+          "x": 1472,
+          "y": 960,
+          "width": 256,
+          "height": 32
+        },
+        {
+          "id": 240,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-55",
+          "x": 928,
+          "y": 992,
+          "width": 288,
+          "height": 32
+        },
+        {
+          "id": 241,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-56",
+          "x": 1440,
+          "y": 992,
+          "width": 288,
+          "height": 32
+        },
+        {
+          "id": 242,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-57",
+          "x": 928,
+          "y": 1024,
+          "width": 320,
+          "height": 32
+        },
+        {
+          "id": 243,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-58",
+          "x": 1408,
+          "y": 1024,
+          "width": 320,
+          "height": 32
+        },
+        {
+          "id": 244,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-59",
+          "x": 704,
+          "y": 1056,
+          "width": 128,
+          "height": 128
+        },
+        {
+          "id": 245,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-60",
+          "x": 928,
+          "y": 1056,
+          "width": 352,
+          "height": 96
+        },
+        {
+          "id": 246,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-61",
+          "x": 1376,
+          "y": 1056,
+          "width": 352,
+          "height": 96
+        },
+        {
+          "id": 247,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-62",
+          "x": 0,
+          "y": 1152,
+          "width": 288,
+          "height": 32
+        },
+        {
+          "id": 248,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-63",
+          "x": 2336,
+          "y": 1152,
+          "width": 416,
+          "height": 32
+        },
+        {
+          "id": 249,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-64",
+          "x": 0,
+          "y": 1184,
+          "width": 320,
+          "height": 32
+        },
+        {
+          "id": 250,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-65",
+          "x": 704,
+          "y": 1184,
+          "width": 160,
+          "height": 32
+        },
+        {
+          "id": 251,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-66",
+          "x": 1792,
+          "y": 1184,
+          "width": 192,
+          "height": 32
+        },
+        {
+          "id": 252,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-67",
+          "x": 2304,
+          "y": 1184,
+          "width": 448,
+          "height": 32
+        },
+        {
+          "id": 253,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-68",
+          "x": 0,
+          "y": 1216,
+          "width": 352,
+          "height": 32
+        },
+        {
+          "id": 254,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-69",
+          "x": 704,
+          "y": 1216,
+          "width": 192,
+          "height": 32
+        },
+        {
+          "id": 255,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-70",
+          "x": 1760,
+          "y": 1216,
+          "width": 224,
+          "height": 32
+        },
+        {
+          "id": 256,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-71",
+          "x": 2272,
+          "y": 1216,
+          "width": 480,
+          "height": 32
+        },
+        {
+          "id": 257,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-72",
+          "x": 0,
+          "y": 1248,
+          "width": 512,
+          "height": 96
+        },
+        {
+          "id": 258,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-73",
+          "x": 576,
+          "y": 1248,
+          "width": 512,
+          "height": 96
+        },
+        {
+          "id": 259,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-74",
+          "x": 1184,
+          "y": 1248,
+          "width": 384,
+          "height": 96
+        },
+        {
+          "id": 260,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-75",
+          "x": 1664,
+          "y": 1248,
+          "width": 448,
+          "height": 96
+        },
+        {
+          "id": 261,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-76",
+          "x": 2208,
+          "y": 1248,
+          "width": 544,
+          "height": 96
+        },
+        {
+          "id": 262,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-77",
+          "x": 0,
+          "y": 1344,
+          "width": 384,
+          "height": 224
+        },
+        {
+          "id": 263,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-78",
+          "x": 864,
+          "y": 1344,
+          "width": 128,
+          "height": 128
+        },
+        {
+          "id": 264,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-79",
+          "x": 1376,
+          "y": 1344,
+          "width": 128,
+          "height": 256
+        },
+        {
+          "id": 265,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-80",
+          "x": 1888,
+          "y": 1344,
+          "width": 96,
+          "height": 128
+        },
+        {
+          "id": 266,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-81",
+          "x": 2336,
+          "y": 1344,
+          "width": 416,
+          "height": 32
+        },
+        {
+          "id": 267,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-82",
+          "x": 2368,
+          "y": 1376,
+          "width": 384,
+          "height": 32
+        },
+        {
+          "id": 268,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-83",
+          "x": 2400,
+          "y": 1408,
+          "width": 352,
+          "height": 32
+        },
+        {
+          "id": 269,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-84",
+          "x": 2432,
+          "y": 1440,
+          "width": 320,
+          "height": 128
+        },
+        {
+          "id": 270,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-85",
+          "x": 0,
+          "y": 1568,
+          "width": 416,
+          "height": 32
+        },
+        {
+          "id": 271,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-86",
+          "x": 864,
+          "y": 1568,
+          "width": 128,
+          "height": 32
+        },
+        {
+          "id": 272,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-87",
+          "x": 1888,
+          "y": 1568,
+          "width": 96,
+          "height": 32
+        },
+        {
+          "id": 273,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-88",
+          "x": 2400,
+          "y": 1568,
+          "width": 352,
+          "height": 32
+        },
+        {
+          "id": 274,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-89",
+          "x": 0,
+          "y": 1600,
+          "width": 448,
+          "height": 32
+        },
+        {
+          "id": 275,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-90",
+          "x": 864,
+          "y": 1600,
+          "width": 160,
+          "height": 32
+        },
+        {
+          "id": 276,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-91",
+          "x": 1344,
+          "y": 1600,
+          "width": 160,
+          "height": 32
+        },
+        {
+          "id": 277,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-92",
+          "x": 1856,
+          "y": 1600,
+          "width": 128,
+          "height": 32
+        },
+        {
+          "id": 278,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-93",
+          "x": 2368,
+          "y": 1600,
+          "width": 384,
+          "height": 32
+        },
+        {
+          "id": 279,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-94",
+          "x": 0,
+          "y": 1632,
+          "width": 480,
+          "height": 32
+        },
+        {
+          "id": 280,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-95",
+          "x": 864,
+          "y": 1632,
+          "width": 192,
+          "height": 32
+        },
+        {
+          "id": 281,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-96",
+          "x": 1312,
+          "y": 1632,
+          "width": 192,
+          "height": 32
+        },
+        {
+          "id": 282,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-97",
+          "x": 1824,
+          "y": 1632,
+          "width": 160,
+          "height": 32
+        },
+        {
+          "id": 283,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-98",
+          "x": 2336,
+          "y": 1632,
+          "width": 416,
+          "height": 32
+        },
+        {
+          "id": 284,
+          "rotation": 0,
+          "visible": true,
+          "type": "wall",
+          "name": "pared-99",
+          "x": 0,
+          "y": 1664,
+          "width": 2752,
+          "height": 160
+        },
+        {
+          "id": 285,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "seedtable-100",
+          "x": 514,
+          "y": 205,
+          "width": 92,
+          "height": 17
+        },
+        {
+          "id": 286,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "seedtable-101",
+          "x": 674,
+          "y": 205,
+          "width": 92,
+          "height": 17
+        },
+        {
+          "id": 287,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "seedtable-102",
+          "x": 706,
+          "y": 365,
+          "width": 92,
+          "height": 17
+        },
+        {
+          "id": 288,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "seedtable-103",
+          "x": 418,
+          "y": 365,
+          "width": 92,
+          "height": 17
+        },
+        {
+          "id": 289,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "tower-104",
+          "x": 866,
+          "y": 397,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 290,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "tower-105",
+          "x": 834,
+          "y": 397,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 291,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "rainstation-106",
+          "x": 418,
+          "y": 269,
+          "width": 60,
+          "height": 17
+        },
+        {
+          "id": 292,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "plant-l-107",
+          "x": 482,
+          "y": 173,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 293,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "console-108",
+          "x": 1122,
+          "y": 173,
+          "width": 124,
+          "height": 17
+        },
+        {
+          "id": 294,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "terrarium-109",
+          "x": 1250,
+          "y": 173,
+          "width": 60,
+          "height": 17
+        },
+        {
+          "id": 295,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "fridge-110",
+          "x": 1314,
+          "y": 205,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 296,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "ecobench-111",
+          "x": 1218,
+          "y": 365,
+          "width": 92,
+          "height": 17
+        },
+        {
+          "id": 297,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "greywater-112",
+          "x": 994,
+          "y": 365,
+          "width": 60,
+          "height": 17
+        },
+        {
+          "id": 298,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "plant-l-113",
+          "x": 1314,
+          "y": 397,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 299,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "battery-114",
+          "x": 1570,
+          "y": 173,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 300,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "battery-115",
+          "x": 1602,
+          "y": 173,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 301,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "battery-116",
+          "x": 1634,
+          "y": 173,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 302,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "solarpanel-117",
+          "x": 1538,
+          "y": 237,
+          "width": 92,
+          "height": 17
+        },
+        {
+          "id": 303,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "solarpanel-118",
+          "x": 1730,
+          "y": 237,
+          "width": 92,
+          "height": 17
+        },
+        {
+          "id": 304,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "solarpanel-119",
+          "x": 1666,
+          "y": 365,
+          "width": 92,
+          "height": 17
+        },
+        {
+          "id": 305,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "solarpanel-120",
+          "x": 1794,
+          "y": 365,
+          "width": 92,
+          "height": 17
+        },
+        {
+          "id": 306,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "valve-121",
+          "x": 1762,
+          "y": 173,
+          "width": 60,
+          "height": 17
+        },
+        {
+          "id": 307,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "pump-122",
+          "x": 2018,
+          "y": 1133,
+          "width": 92,
+          "height": 17
+        },
+        {
+          "id": 308,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "rainstation-123",
+          "x": 2114,
+          "y": 1133,
+          "width": 60,
+          "height": 17
+        },
+        {
+          "id": 309,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "valve-124",
+          "x": 2210,
+          "y": 1133,
+          "width": 60,
+          "height": 17
+        },
+        {
+          "id": 310,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "waterwheel-125",
+          "x": 418,
+          "y": 603,
+          "width": 92,
+          "height": 35
+        },
+        {
+          "id": 311,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "battery-126",
+          "x": 290,
+          "y": 621,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 312,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "battery-127",
+          "x": 322,
+          "y": 621,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 313,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "leak-128",
+          "x": 290,
+          "y": 717,
+          "width": 92,
+          "height": 17
+        },
+        {
+          "id": 314,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "pump-129",
+          "x": 482,
+          "y": 717,
+          "width": 92,
+          "height": 17
+        },
+        {
+          "id": 315,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "workbench-130",
+          "x": 290,
+          "y": 1005,
+          "width": 92,
+          "height": 17
+        },
+        {
+          "id": 316,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "workbench-131",
+          "x": 418,
+          "y": 1005,
+          "width": 92,
+          "height": 17
+        },
+        {
+          "id": 317,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "woodpile-132",
+          "x": 610,
+          "y": 1101,
+          "width": 60,
+          "height": 17
+        },
+        {
+          "id": 318,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "leak-133",
+          "x": 290,
+          "y": 1101,
+          "width": 92,
+          "height": 17
+        },
+        {
+          "id": 319,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "greywater-134",
+          "x": 450,
+          "y": 1101,
+          "width": 60,
+          "height": 17
+        },
+        {
+          "id": 320,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "barrel-135",
+          "x": 674,
+          "y": 1229,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 321,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "reedbed-136",
+          "x": 418,
+          "y": 1421,
+          "width": 60,
+          "height": 17
+        },
+        {
+          "id": 322,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "reedbed-137",
+          "x": 706,
+          "y": 1421,
+          "width": 60,
+          "height": 17
+        },
+        {
+          "id": 323,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "reedbed-138",
+          "x": 418,
+          "y": 1517,
+          "width": 60,
+          "height": 17
+        },
+        {
+          "id": 324,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "reedbed-139",
+          "x": 450,
+          "y": 1581,
+          "width": 60,
+          "height": 17
+        },
+        {
+          "id": 325,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "filterstation-140",
+          "x": 578,
+          "y": 1485,
+          "width": 60,
+          "height": 17
+        },
+        {
+          "id": 326,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "stump-141",
+          "x": 642,
+          "y": 1581,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 327,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "stump-142",
+          "x": 706,
+          "y": 1613,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 328,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "wormbin-143",
+          "x": 994,
+          "y": 1421,
+          "width": 60,
+          "height": 17
+        },
+        {
+          "id": 329,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "wormbin-144",
+          "x": 1218,
+          "y": 1421,
+          "width": 60,
+          "height": 17
+        },
+        {
+          "id": 330,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "compost-145",
+          "x": 1314,
+          "y": 1421,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 331,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "compost-146",
+          "x": 1250,
+          "y": 1517,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 332,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "woodpile-147",
+          "x": 1058,
+          "y": 1613,
+          "width": 60,
+          "height": 17
+        },
+        {
+          "id": 333,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "sacks-148",
+          "x": 1186,
+          "y": 1613,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 334,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "recyclebins-149",
+          "x": 1794,
+          "y": 1389,
+          "width": 92,
+          "height": 17
+        },
+        {
+          "id": 335,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "sorttable-150",
+          "x": 1538,
+          "y": 1485,
+          "width": 92,
+          "height": 17
+        },
+        {
+          "id": 336,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "filterstation-151",
+          "x": 1730,
+          "y": 1453,
+          "width": 60,
+          "height": 17
+        },
+        {
+          "id": 337,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "barrel-152",
+          "x": 1506,
+          "y": 1613,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 338,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "crate-153",
+          "x": 1538,
+          "y": 1613,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 339,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "bin-154",
+          "x": 1666,
+          "y": 1613,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 340,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "beehive-155",
+          "x": 2018,
+          "y": 1421,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 341,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "beehive-156",
+          "x": 2050,
+          "y": 1421,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 342,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "beehive-157",
+          "x": 2242,
+          "y": 1421,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 343,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "beehive-158",
+          "x": 2274,
+          "y": 1421,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 344,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "beehive-159",
+          "x": 2050,
+          "y": 1581,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 345,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "beehive-160",
+          "x": 2274,
+          "y": 1581,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 346,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "beehive-161",
+          "x": 2338,
+          "y": 1549,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 347,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "flowerbed-162",
+          "x": 2114,
+          "y": 1485,
+          "width": 92,
+          "height": 17
+        },
+        {
+          "id": 348,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "valve-163",
+          "x": 2178,
+          "y": 1549,
+          "width": 60,
+          "height": 17
+        },
+        {
+          "id": 349,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "bush-164",
+          "x": 1986,
+          "y": 1613,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 350,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "stump-165",
+          "x": 2338,
+          "y": 1421,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 351,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "table-r-166",
+          "x": 1282,
+          "y": 891,
+          "width": 60,
+          "height": 35
+        },
+        {
+          "id": 352,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "telescope-167",
+          "x": 1218,
+          "y": 813,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 353,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "post-lamp-168",
+          "x": 1218,
+          "y": 1005,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 354,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "post-lamp-169",
+          "x": 1410,
+          "y": 1005,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 355,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "plant-l-170",
+          "x": 1410,
+          "y": 813,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 356,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "post-lamp-171",
+          "x": 898,
+          "y": 909,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 357,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "post-lamp-172",
+          "x": 898,
+          "y": 1069,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 358,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "post-lamp-173",
+          "x": 1730,
+          "y": 909,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 359,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "post-lamp-174",
+          "x": 1730,
+          "y": 1037,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 360,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "post-lamp-175",
+          "x": 1058,
+          "y": 621,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 361,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "post-lamp-176",
+          "x": 1506,
+          "y": 621,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 362,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "post-lamp-177",
+          "x": 1058,
+          "y": 1197,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 363,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "post-lamp-178",
+          "x": 1506,
+          "y": 1197,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 364,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "bench-179",
+          "x": 1410,
+          "y": 621,
+          "width": 92,
+          "height": 17
+        },
+        {
+          "id": 365,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "bench-180",
+          "x": 1378,
+          "y": 1197,
+          "width": 92,
+          "height": 17
+        },
+        {
+          "id": 366,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "plant-l-181",
+          "x": 962,
+          "y": 589,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 367,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "plant-l-182",
+          "x": 1666,
+          "y": 1165,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 368,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "plant-s-183",
+          "x": 1346,
+          "y": 557,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 369,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "plant-s-184",
+          "x": 1410,
+          "y": 1165,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 370,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "bush-185",
+          "x": 706,
+          "y": 141,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 371,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "plant-s-186",
+          "x": 866,
+          "y": 141,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 372,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "crate-187",
+          "x": 2114,
+          "y": 461,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 373,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "crate-188",
+          "x": 322,
+          "y": 973,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 374,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "bin-189",
+          "x": 418,
+          "y": 973,
+          "width": 28,
+          "height": 17
+        },
+        {
+          "id": 375,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "tank-1-190",
+          "x": 2060,
+          "y": 528,
+          "width": 72,
+          "height": 44
+        },
+        {
+          "id": 376,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "tank-6-191",
+          "x": 2220,
+          "y": 528,
+          "width": 72,
+          "height": 44
+        },
+        {
+          "id": 377,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "tank-2-192",
+          "x": 2060,
+          "y": 656,
+          "width": 72,
+          "height": 44
+        },
+        {
+          "id": 378,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "tank-7-193",
+          "x": 2220,
+          "y": 656,
+          "width": 72,
+          "height": 44
+        },
+        {
+          "id": 379,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "tank-3-194",
+          "x": 2060,
+          "y": 784,
+          "width": 72,
+          "height": 44
+        },
+        {
+          "id": 380,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "tank-8-195",
+          "x": 2220,
+          "y": 784,
+          "width": 72,
+          "height": 44
+        },
+        {
+          "id": 381,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "tank-4-196",
+          "x": 2060,
+          "y": 912,
+          "width": 72,
+          "height": 44
+        },
+        {
+          "id": 382,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "tank-9-197",
+          "x": 2220,
+          "y": 912,
+          "width": 72,
+          "height": 44
+        },
+        {
+          "id": 383,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "tank-5-198",
+          "x": 2060,
+          "y": 1040,
+          "width": 72,
+          "height": 44
+        },
+        {
+          "id": 384,
+          "rotation": 0,
+          "visible": true,
+          "type": "prop",
+          "name": "tank-10-199",
+          "x": 2220,
+          "y": 1040,
+          "width": 72,
+          "height": 44
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "name": "zonas",
+      "type": "objectgroup",
+      "draworder": "topdown",
+      "opacity": 0.45,
+      "visible": true,
+      "x": 0,
+      "y": 0,
+      "objects": [
+        {
+          "id": 385,
+          "rotation": 0,
+          "visible": true,
+          "type": "hall",
+          "name": "malecon",
+          "x": 896,
+          "y": 544,
+          "width": 864,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Malecón"
+            }
+          ]
+        },
+        {
+          "id": 386,
+          "rotation": 0,
+          "visible": true,
+          "type": "hall",
+          "name": "malecon#2",
+          "x": 864,
+          "y": 576,
+          "width": 928,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Malecón"
+            }
+          ]
+        },
+        {
+          "id": 387,
+          "rotation": 0,
+          "visible": true,
+          "type": "hall",
+          "name": "malecon#3",
+          "x": 832,
+          "y": 608,
+          "width": 992,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Malecón"
+            }
+          ]
+        },
+        {
+          "id": 388,
+          "rotation": 0,
+          "visible": true,
+          "type": "hall",
+          "name": "malecon#4",
+          "x": 832,
+          "y": 640,
+          "width": 96,
+          "height": 512,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Malecón"
+            }
+          ]
+        },
+        {
+          "id": 389,
+          "rotation": 0,
+          "visible": true,
+          "type": "hall",
+          "name": "malecon#5",
+          "x": 1728,
+          "y": 640,
+          "width": 96,
+          "height": 512,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Malecón"
+            }
+          ]
+        },
+        {
+          "id": 390,
+          "rotation": 0,
+          "visible": true,
+          "type": "hall",
+          "name": "malecon#6",
+          "x": 832,
+          "y": 1152,
+          "width": 992,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Malecón"
+            }
+          ]
+        },
+        {
+          "id": 391,
+          "rotation": 0,
+          "visible": true,
+          "type": "hall",
+          "name": "malecon#7",
+          "x": 864,
+          "y": 1184,
+          "width": 928,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Malecón"
+            }
+          ]
+        },
+        {
+          "id": 392,
+          "rotation": 0,
+          "visible": true,
+          "type": "hall",
+          "name": "malecon#8",
+          "x": 896,
+          "y": 1216,
+          "width": 864,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Malecón"
+            }
+          ]
+        },
+        {
+          "id": 393,
+          "rotation": 0,
+          "visible": true,
+          "type": "plaza",
+          "name": "mirador",
+          "x": 1248,
+          "y": 768,
+          "width": 160,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Mirador de la laguna"
+            }
+          ]
+        },
+        {
+          "id": 394,
+          "rotation": 0,
+          "visible": true,
+          "type": "plaza",
+          "name": "mirador#2",
+          "x": 1216,
+          "y": 800,
+          "width": 224,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Mirador de la laguna"
+            }
+          ]
+        },
+        {
+          "id": 395,
+          "rotation": 0,
+          "visible": true,
+          "type": "plaza",
+          "name": "mirador#3",
+          "x": 1184,
+          "y": 832,
+          "width": 288,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Mirador de la laguna"
+            }
+          ]
+        },
+        {
+          "id": 396,
+          "rotation": 0,
+          "visible": true,
+          "type": "plaza",
+          "name": "mirador#4",
+          "x": 1152,
+          "y": 864,
+          "width": 352,
+          "height": 96,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Mirador de la laguna"
+            }
+          ]
+        },
+        {
+          "id": 397,
+          "rotation": 0,
+          "visible": true,
+          "type": "plaza",
+          "name": "mirador#5",
+          "x": 1184,
+          "y": 960,
+          "width": 288,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Mirador de la laguna"
+            }
+          ]
+        },
+        {
+          "id": 398,
+          "rotation": 0,
+          "visible": true,
+          "type": "plaza",
+          "name": "mirador#6",
+          "x": 1216,
+          "y": 992,
+          "width": 224,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Mirador de la laguna"
+            }
+          ]
+        },
+        {
+          "id": 399,
+          "rotation": 0,
+          "visible": true,
+          "type": "plaza",
+          "name": "mirador#7",
+          "x": 1248,
+          "y": 1024,
+          "width": 160,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Mirador de la laguna"
+            }
+          ]
+        },
+        {
+          "id": 400,
+          "rotation": 0,
+          "visible": true,
+          "type": "bridge",
+          "name": "puente",
+          "x": 1280,
+          "y": 640,
+          "width": 96,
+          "height": 128,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Puente"
+            }
+          ]
+        },
+        {
+          "id": 401,
+          "rotation": 0,
+          "visible": true,
+          "type": "bridge",
+          "name": "puente#2",
+          "x": 1280,
+          "y": 1056,
+          "width": 96,
+          "height": 96,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Puente"
+            }
+          ]
+        },
+        {
+          "id": 402,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "vivero",
+          "x": 480,
+          "y": 128,
+          "width": 416,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Vivero de semillas"
+            }
+          ]
+        },
+        {
+          "id": 403,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "vivero#2",
+          "x": 448,
+          "y": 160,
+          "width": 448,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Vivero de semillas"
+            }
+          ]
+        },
+        {
+          "id": 404,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "vivero#3",
+          "x": 416,
+          "y": 192,
+          "width": 480,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Vivero de semillas"
+            }
+          ]
+        },
+        {
+          "id": 405,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "vivero#4",
+          "x": 384,
+          "y": 224,
+          "width": 512,
+          "height": 160,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Vivero de semillas"
+            }
+          ]
+        },
+        {
+          "id": 406,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "vivero#5",
+          "x": 416,
+          "y": 384,
+          "width": 480,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Vivero de semillas"
+            }
+          ]
+        },
+        {
+          "id": 407,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "vivero#6",
+          "x": 448,
+          "y": 416,
+          "width": 448,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Vivero de semillas"
+            }
+          ]
+        },
+        {
+          "id": 408,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "laboratorio",
+          "x": 992,
+          "y": 160,
+          "width": 320,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Laboratorio de biodiversidad"
+            }
+          ]
+        },
+        {
+          "id": 409,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "laboratorio#2",
+          "x": 992,
+          "y": 192,
+          "width": 352,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Laboratorio de biodiversidad"
+            }
+          ]
+        },
+        {
+          "id": 410,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "laboratorio#3",
+          "x": 992,
+          "y": 224,
+          "width": 384,
+          "height": 224,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Laboratorio de biodiversidad"
+            }
+          ]
+        },
+        {
+          "id": 411,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "solar",
+          "x": 1568,
+          "y": 128,
+          "width": 256,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Estación solar"
+            }
+          ]
+        },
+        {
+          "id": 412,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "solar#2",
+          "x": 1536,
+          "y": 160,
+          "width": 320,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Estación solar"
+            }
+          ]
+        },
+        {
+          "id": 413,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "solar#3",
+          "x": 1504,
+          "y": 192,
+          "width": 384,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Estación solar"
+            }
+          ]
+        },
+        {
+          "id": 414,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "solar#4",
+          "x": 1504,
+          "y": 224,
+          "width": 416,
+          "height": 224,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Estación solar"
+            }
+          ]
+        },
+        {
+          "id": 415,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "cisternas",
+          "x": 1984,
+          "y": 448,
+          "width": 288,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Patio de cisternas"
+            }
+          ]
+        },
+        {
+          "id": 416,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "cisternas#2",
+          "x": 1984,
+          "y": 480,
+          "width": 320,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Patio de cisternas"
+            }
+          ]
+        },
+        {
+          "id": 417,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "cisternas#3",
+          "x": 1984,
+          "y": 512,
+          "width": 352,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Patio de cisternas"
+            }
+          ]
+        },
+        {
+          "id": 418,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "cisternas#4",
+          "x": 1984,
+          "y": 544,
+          "width": 384,
+          "height": 608,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Patio de cisternas"
+            }
+          ]
+        },
+        {
+          "id": 419,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "cisternas#5",
+          "x": 1984,
+          "y": 1152,
+          "width": 352,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Patio de cisternas"
+            }
+          ]
+        },
+        {
+          "id": 420,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "cisternas#6",
+          "x": 1984,
+          "y": 1184,
+          "width": 320,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Patio de cisternas"
+            }
+          ]
+        },
+        {
+          "id": 421,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "cisternas#7",
+          "x": 1984,
+          "y": 1216,
+          "width": 288,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Patio de cisternas"
+            }
+          ]
+        },
+        {
+          "id": 422,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "humedal",
+          "x": 384,
+          "y": 1344,
+          "width": 480,
+          "height": 224,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Humedal de fitodepuración"
+            }
+          ]
+        },
+        {
+          "id": 423,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "humedal#2",
+          "x": 416,
+          "y": 1568,
+          "width": 448,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Humedal de fitodepuración"
+            }
+          ]
+        },
+        {
+          "id": 424,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "humedal#3",
+          "x": 448,
+          "y": 1600,
+          "width": 416,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Humedal de fitodepuración"
+            }
+          ]
+        },
+        {
+          "id": 425,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "humedal#4",
+          "x": 480,
+          "y": 1632,
+          "width": 384,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Humedal de fitodepuración"
+            }
+          ]
+        },
+        {
+          "id": 426,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "compost",
+          "x": 992,
+          "y": 1344,
+          "width": 384,
+          "height": 256,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Compostaje y lombricultura"
+            }
+          ]
+        },
+        {
+          "id": 427,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "compost#2",
+          "x": 1024,
+          "y": 1600,
+          "width": 320,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Compostaje y lombricultura"
+            }
+          ]
+        },
+        {
+          "id": 428,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "compost#3",
+          "x": 1056,
+          "y": 1632,
+          "width": 256,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Compostaje y lombricultura"
+            }
+          ]
+        },
+        {
+          "id": 429,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "ecopunto",
+          "x": 1504,
+          "y": 1344,
+          "width": 384,
+          "height": 256,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Ecopunto de reciclaje"
+            }
+          ]
+        },
+        {
+          "id": 430,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "ecopunto#2",
+          "x": 1504,
+          "y": 1600,
+          "width": 352,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Ecopunto de reciclaje"
+            }
+          ]
+        },
+        {
+          "id": 431,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "ecopunto#3",
+          "x": 1504,
+          "y": 1632,
+          "width": 320,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Ecopunto de reciclaje"
+            }
+          ]
+        },
+        {
+          "id": 432,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "bombeo",
+          "x": 352,
+          "y": 544,
+          "width": 352,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Casa de bombeo solar"
+            }
+          ]
+        },
+        {
+          "id": 433,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "bombeo#2",
+          "x": 320,
+          "y": 576,
+          "width": 384,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Casa de bombeo solar"
+            }
+          ]
+        },
+        {
+          "id": 434,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "bombeo#3",
+          "x": 288,
+          "y": 608,
+          "width": 416,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Casa de bombeo solar"
+            }
+          ]
+        },
+        {
+          "id": 435,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "bombeo#4",
+          "x": 256,
+          "y": 640,
+          "width": 448,
+          "height": 224,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Casa de bombeo solar"
+            }
+          ]
+        },
+        {
+          "id": 436,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "ecotaller",
+          "x": 256,
+          "y": 960,
+          "width": 448,
+          "height": 192,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Ecotaller"
+            }
+          ]
+        },
+        {
+          "id": 437,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "ecotaller#2",
+          "x": 288,
+          "y": 1152,
+          "width": 416,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Ecotaller"
+            }
+          ]
+        },
+        {
+          "id": 438,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "ecotaller#3",
+          "x": 320,
+          "y": 1184,
+          "width": 384,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Ecotaller"
+            }
+          ]
+        },
+        {
+          "id": 439,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "ecotaller#4",
+          "x": 352,
+          "y": 1216,
+          "width": 352,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Ecotaller"
+            }
+          ]
+        },
+        {
+          "id": 440,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "apiario",
+          "x": 1984,
+          "y": 1344,
+          "width": 352,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Apiario y mirador"
+            }
+          ]
+        },
+        {
+          "id": 441,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "apiario#2",
+          "x": 1984,
+          "y": 1376,
+          "width": 384,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Apiario y mirador"
+            }
+          ]
+        },
+        {
+          "id": 442,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "apiario#3",
+          "x": 1984,
+          "y": 1408,
+          "width": 416,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Apiario y mirador"
+            }
+          ]
+        },
+        {
+          "id": 443,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "apiario#4",
+          "x": 1984,
+          "y": 1440,
+          "width": 448,
+          "height": 128,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Apiario y mirador"
+            }
+          ]
+        },
+        {
+          "id": 444,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "apiario#5",
+          "x": 1984,
+          "y": 1568,
+          "width": 416,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Apiario y mirador"
+            }
+          ]
+        },
+        {
+          "id": 445,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "apiario#6",
+          "x": 1984,
+          "y": 1600,
+          "width": 384,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Apiario y mirador"
+            }
+          ]
+        },
+        {
+          "id": 446,
+          "rotation": 0,
+          "visible": true,
+          "type": "room",
+          "name": "apiario#7",
+          "x": 1984,
+          "y": 1632,
+          "width": 352,
+          "height": 32,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Apiario y mirador"
+            }
+          ]
+        },
+        {
+          "id": 447,
+          "rotation": 0,
+          "visible": true,
+          "type": "duct",
+          "name": "tunel-oeste",
+          "x": 512,
+          "y": 1248,
+          "width": 64,
+          "height": 96,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Túnel de raíces oeste"
+            }
+          ]
+        },
+        {
+          "id": 448,
+          "rotation": 0,
+          "visible": true,
+          "type": "duct",
+          "name": "tunel-este",
+          "x": 1920,
+          "y": 256,
+          "width": 128,
+          "height": 64,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Túnel de raíces este"
+            }
+          ]
+        },
+        {
+          "id": 449,
+          "rotation": 0,
+          "visible": true,
+          "type": "duct",
+          "name": "tunel-este#2",
+          "x": 1984,
+          "y": 320,
+          "width": 64,
+          "height": 128,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Túnel de raíces este"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "puertas",
+      "type": "objectgroup",
+      "draworder": "topdown",
+      "opacity": 0.8,
+      "visible": true,
+      "x": 0,
+      "y": 0,
+      "objects": [
+        {
+          "id": 450,
+          "rotation": 0,
+          "visible": true,
+          "type": "door",
+          "name": "puerta-1",
+          "x": 1088,
+          "y": 448,
+          "width": 96,
+          "height": 96
+        },
+        {
+          "id": 451,
+          "rotation": 0,
+          "visible": true,
+          "type": "door",
+          "name": "puerta-2",
+          "x": 1536,
+          "y": 448,
+          "width": 96,
+          "height": 96
+        },
+        {
+          "id": 452,
+          "rotation": 0,
+          "visible": true,
+          "type": "door",
+          "name": "puerta-3",
+          "x": 896,
+          "y": 256,
+          "width": 96,
+          "height": 96
+        },
+        {
+          "id": 453,
+          "rotation": 0,
+          "visible": true,
+          "type": "door",
+          "name": "puerta-4",
+          "x": 1376,
+          "y": 256,
+          "width": 128,
+          "height": 96
+        },
+        {
+          "id": 454,
+          "rotation": 0,
+          "visible": true,
+          "type": "door",
+          "name": "puerta-5",
+          "x": 704,
+          "y": 736,
+          "width": 128,
+          "height": 96
+        },
+        {
+          "id": 455,
+          "rotation": 0,
+          "visible": true,
+          "type": "door",
+          "name": "puerta-6",
+          "x": 704,
+          "y": 960,
+          "width": 128,
+          "height": 96
+        },
+        {
+          "id": 456,
+          "rotation": 0,
+          "visible": true,
+          "type": "door",
+          "name": "puerta-7",
+          "x": 1824,
+          "y": 768,
+          "width": 160,
+          "height": 96
+        },
+        {
+          "id": 457,
+          "rotation": 0,
+          "visible": true,
+          "type": "door",
+          "name": "puerta-8",
+          "x": 1088,
+          "y": 1248,
+          "width": 96,
+          "height": 96
+        },
+        {
+          "id": 458,
+          "rotation": 0,
+          "visible": true,
+          "type": "door",
+          "name": "puerta-9",
+          "x": 1568,
+          "y": 1248,
+          "width": 96,
+          "height": 96
+        },
+        {
+          "id": 459,
+          "rotation": 0,
+          "visible": true,
+          "type": "door",
+          "name": "puerta-10",
+          "x": 864,
+          "y": 1472,
+          "width": 128,
+          "height": 96
+        },
+        {
+          "id": 460,
+          "rotation": 0,
+          "visible": true,
+          "type": "door",
+          "name": "puerta-11",
+          "x": 1888,
+          "y": 1472,
+          "width": 96,
+          "height": 96
+        },
+        {
+          "id": 461,
+          "rotation": 0,
+          "visible": true,
+          "type": "door",
+          "name": "puerta-12",
+          "x": 2112,
+          "y": 1248,
+          "width": 96,
+          "height": 96
+        },
+        {
+          "id": 462,
+          "rotation": 0,
+          "visible": true,
+          "type": "door",
+          "name": "puerta-13",
+          "x": 544,
+          "y": 448,
+          "width": 96,
+          "height": 96
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "estaciones",
+      "type": "objectgroup",
+      "draworder": "topdown",
+      "opacity": 1,
+      "visible": true,
+      "x": 0,
+      "y": 0,
+      "objects": [
+        {
+          "id": 463,
+          "rotation": 0,
+          "visible": true,
+          "type": "reuse",
+          "name": "rain-2",
+          "x": 464,
+          "y": 336,
+          "point": true,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Cosecha de lluvia"
+            },
+            {
+              "name": "sala",
+              "type": "string",
+              "value": "vivero"
+            }
+          ]
+        },
+        {
+          "id": 464,
+          "rotation": 0,
+          "visible": true,
+          "type": "reuse",
+          "name": "greywater-2",
+          "x": 1040,
+          "y": 400,
+          "point": true,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Agua gris del laboratorio"
+            },
+            {
+              "name": "sala",
+              "type": "string",
+              "value": "laboratorio"
+            }
+          ]
+        },
+        {
+          "id": 465,
+          "rotation": 0,
+          "visible": true,
+          "type": "reduce",
+          "name": "valve-2",
+          "x": 1776,
+          "y": 208,
+          "point": true,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Válvula de la estación solar"
+            },
+            {
+              "name": "sala",
+              "type": "string",
+              "value": "solar"
+            }
+          ]
+        },
+        {
+          "id": 466,
+          "rotation": 0,
+          "visible": true,
+          "type": "reuse",
+          "name": "rain-1",
+          "x": 2128,
+          "y": 1200,
+          "point": true,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Colector de lluvia"
+            },
+            {
+              "name": "sala",
+              "type": "string",
+              "value": "cisternas"
+            }
+          ]
+        },
+        {
+          "id": 467,
+          "rotation": 0,
+          "visible": true,
+          "type": "reduce",
+          "name": "leak-1",
+          "x": 336,
+          "y": 784,
+          "point": true,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Fuga en la tubería"
+            },
+            {
+              "name": "sala",
+              "type": "string",
+              "value": "bombeo"
+            }
+          ]
+        },
+        {
+          "id": 468,
+          "rotation": 0,
+          "visible": true,
+          "type": "reduce",
+          "name": "leak-2",
+          "x": 336,
+          "y": 1168,
+          "point": true,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Fuga del ecotaller"
+            },
+            {
+              "name": "sala",
+              "type": "string",
+              "value": "ecotaller"
+            }
+          ]
+        },
+        {
+          "id": 469,
+          "rotation": 0,
+          "visible": true,
+          "type": "reuse",
+          "name": "greywater-1",
+          "x": 496,
+          "y": 1168,
+          "point": true,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Lavadero comunitario"
+            },
+            {
+              "name": "sala",
+              "type": "string",
+              "value": "ecotaller"
+            }
+          ]
+        },
+        {
+          "id": 470,
+          "rotation": 0,
+          "visible": true,
+          "type": "recycle",
+          "name": "filter-1",
+          "x": 592,
+          "y": 1552,
+          "point": true,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Filtro de carrizo"
+            },
+            {
+              "name": "sala",
+              "type": "string",
+              "value": "humedal"
+            }
+          ]
+        },
+        {
+          "id": 471,
+          "rotation": 0,
+          "visible": true,
+          "type": "recycle",
+          "name": "compost-1",
+          "x": 1264,
+          "y": 1584,
+          "point": true,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Compostera"
+            },
+            {
+              "name": "sala",
+              "type": "string",
+              "value": "compost"
+            }
+          ]
+        },
+        {
+          "id": 472,
+          "rotation": 0,
+          "visible": true,
+          "type": "recycle",
+          "name": "sorter-1",
+          "x": 1584,
+          "y": 1552,
+          "point": true,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Mesa clasificadora"
+            },
+            {
+              "name": "sala",
+              "type": "string",
+              "value": "ecopunto"
+            }
+          ]
+        },
+        {
+          "id": 473,
+          "rotation": 0,
+          "visible": true,
+          "type": "recycle",
+          "name": "filter-2",
+          "x": 1744,
+          "y": 1520,
+          "point": true,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Filtro de residuos"
+            },
+            {
+              "name": "sala",
+              "type": "string",
+              "value": "ecopunto"
+            }
+          ]
+        },
+        {
+          "id": 474,
+          "rotation": 0,
+          "visible": true,
+          "type": "reduce",
+          "name": "valve-1",
+          "x": 2192,
+          "y": 1616,
+          "point": true,
+          "properties": [
+            {
+              "name": "nombre",
+              "type": "string",
+              "value": "Válvula de riego"
+            },
+            {
+              "name": "sala",
+              "type": "string",
+              "value": "apiario"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "name": "tanques",
+      "type": "objectgroup",
+      "draworder": "topdown",
+      "opacity": 1,
+      "visible": true,
+      "x": 0,
+      "y": 0,
+      "objects": [
+        {
+          "id": 475,
+          "rotation": 0,
+          "visible": true,
+          "type": "tank",
+          "name": "slot-0",
+          "x": 2096,
+          "y": 552,
+          "point": true,
+          "properties": [
+            {
+              "name": "slot",
+              "type": "int",
+              "value": 0
+            }
+          ]
+        },
+        {
+          "id": 476,
+          "rotation": 0,
+          "visible": true,
+          "type": "tank",
+          "name": "slot-1",
+          "x": 2096,
+          "y": 680,
+          "point": true,
+          "properties": [
+            {
+              "name": "slot",
+              "type": "int",
+              "value": 1
+            }
+          ]
+        },
+        {
+          "id": 477,
+          "rotation": 0,
+          "visible": true,
+          "type": "tank",
+          "name": "slot-2",
+          "x": 2096,
+          "y": 808,
+          "point": true,
+          "properties": [
+            {
+              "name": "slot",
+              "type": "int",
+              "value": 2
+            }
+          ]
+        },
+        {
+          "id": 478,
+          "rotation": 0,
+          "visible": true,
+          "type": "tank",
+          "name": "slot-3",
+          "x": 2096,
+          "y": 936,
+          "point": true,
+          "properties": [
+            {
+              "name": "slot",
+              "type": "int",
+              "value": 3
+            }
+          ]
+        },
+        {
+          "id": 479,
+          "rotation": 0,
+          "visible": true,
+          "type": "tank",
+          "name": "slot-4",
+          "x": 2096,
+          "y": 1064,
+          "point": true,
+          "properties": [
+            {
+              "name": "slot",
+              "type": "int",
+              "value": 4
+            }
+          ]
+        },
+        {
+          "id": 480,
+          "rotation": 0,
+          "visible": true,
+          "type": "tank",
+          "name": "slot-5",
+          "x": 2256,
+          "y": 552,
+          "point": true,
+          "properties": [
+            {
+              "name": "slot",
+              "type": "int",
+              "value": 5
+            }
+          ]
+        },
+        {
+          "id": 481,
+          "rotation": 0,
+          "visible": true,
+          "type": "tank",
+          "name": "slot-6",
+          "x": 2256,
+          "y": 680,
+          "point": true,
+          "properties": [
+            {
+              "name": "slot",
+              "type": "int",
+              "value": 6
+            }
+          ]
+        },
+        {
+          "id": 482,
+          "rotation": 0,
+          "visible": true,
+          "type": "tank",
+          "name": "slot-7",
+          "x": 2256,
+          "y": 808,
+          "point": true,
+          "properties": [
+            {
+              "name": "slot",
+              "type": "int",
+              "value": 7
+            }
+          ]
+        },
+        {
+          "id": 483,
+          "rotation": 0,
+          "visible": true,
+          "type": "tank",
+          "name": "slot-8",
+          "x": 2256,
+          "y": 936,
+          "point": true,
+          "properties": [
+            {
+              "name": "slot",
+              "type": "int",
+              "value": 8
+            }
+          ]
+        },
+        {
+          "id": 484,
+          "rotation": 0,
+          "visible": true,
+          "type": "tank",
+          "name": "slot-9",
+          "x": 2256,
+          "y": 1064,
+          "point": true,
+          "properties": [
+            {
+              "name": "slot",
+              "type": "int",
+              "value": 9
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "name": "marcadores",
+      "type": "objectgroup",
+      "draworder": "topdown",
+      "opacity": 1,
+      "visible": true,
+      "x": 0,
+      "y": 0,
+      "objects": [
+        {
+          "id": 485,
+          "rotation": 0,
+          "visible": true,
+          "type": "marker",
+          "name": "monitor",
+          "x": 1168,
+          "y": 240,
+          "point": true
+        },
+        {
+          "id": 486,
+          "rotation": 0,
+          "visible": true,
+          "type": "marker",
+          "name": "reunion",
+          "x": 1328,
+          "y": 912,
+          "point": true
+        },
+        {
+          "id": 487,
+          "rotation": 0,
+          "visible": true,
+          "type": "spawn",
+          "name": "spawn",
+          "x": 1328,
+          "y": 1008,
+          "point": true
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "name": "luz de noche (multiplicar)",
+      "type": "imagelayer",
+      "image": "capas/luz-noche.png",
+      "opacity": 1,
+      "visible": false,
+      "x": 0,
+      "y": 0
+    }
+  ],
+  "tilesets": []
+}

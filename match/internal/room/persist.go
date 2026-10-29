@@ -21,37 +21,60 @@ const saveEveryTicks = 40
 // que dura menos de 2 s (acciones a medias, la tarea en curso) no se
 // guarda: al volver, el jugador solo tiene que empezarla de nuevo.
 type savedRoom struct {
-	Code         string            `json:"code"`
-	MatchID      string            `json:"match_id"`
-	CreatorID    string            `json:"creator_id"`
-	Phase        matchv1.Phase     `json:"phase"`
-	Tick         int64             `json:"tick"`
-	StartTick    int64             `json:"start_tick"`
-	StartedAt    time.Time         `json:"started_at"`
-	Order        int               `json:"order"`
-	Reservoir    int32             `json:"reservoir"`
-	Names        map[string]string `json:"names"`
-	Participants []PlayerInfo      `json:"participants"`
-	Players      []savedPlayer     `json:"players"`
-	Tanks        []savedTank       `json:"tanks"`
-	Meeting      *savedMeeting     `json:"meeting,omitempty"`
-	Chat         []savedChat       `json:"chat"`
-	OilDrops     []savedOilDrop    `json:"oil_drops"`
-	EventHistory []LogEntry        `json:"event_history"`
-	SeenChat     []string          `json:"seen_chat"`
+	Code           string            `json:"code"`
+	MatchID        string            `json:"match_id"`
+	CreatorID      string            `json:"creator_id"`
+	TasksPerPlayer int               `json:"tasks_per_player,omitempty"`
+	Impostors      int               `json:"impostors,omitempty"`
+	MatchMinutes   int               `json:"match_minutes,omitempty"`
+	Phase          matchv1.Phase     `json:"phase"`
+	Tick           int64             `json:"tick"`
+	StartTick      int64             `json:"start_tick"`
+	MeetingTicks   int64             `json:"meeting_ticks,omitempty"`
+	StartedAt      time.Time         `json:"started_at"`
+	Order          int               `json:"order"`
+	Reservoir      int32             `json:"reservoir"`
+	Names          map[string]string `json:"names"`
+	Participants   []PlayerInfo      `json:"participants"`
+	Players        []savedPlayer     `json:"players"`
+	Tanks          []savedTank       `json:"tanks"`
+	Meeting        *savedMeeting     `json:"meeting,omitempty"`
+	Chat           []savedChat       `json:"chat"`
+	OilDrops       []savedOilDrop    `json:"oil_drops"`
+	EventHistory   []LogEntry        `json:"event_history"`
+	SeenChat       []string          `json:"seen_chat"`
+	// S3-05: opcionales para que sirvan las instantáneas viejas.
+	Emergency       *savedEmergency `json:"emergency,omitempty"`
+	SabotageReadyAt int64           `json:"sabotage_ready_at,omitempty"`
+	PipesUsed       int             `json:"pipes_used,omitempty"`
+	NextRandomAt    int64           `json:"next_random_at,omitempty"`
+	// Mesa: estado de la mesa de reuniones.
+	MeetingReadyAt   int64 `json:"meeting_ready_at,omitempty"`
+	MeetingCallsUsed int   `json:"meeting_calls_used,omitempty"`
+}
+
+type savedEmergency struct {
+	Kind     string `json:"kind"`
+	EndsAt   int64  `json:"ends_at"`
+	Sabotage bool   `json:"sabotage"`
 }
 
 type savedPlayer struct {
 	ID             string       `json:"id"`
 	Name           string       `json:"name"`
 	Color          string       `json:"color"`
+	Skin           string       `json:"skin,omitempty"`
+	Accessory      string       `json:"accessory,omitempty"`
 	X              float32      `json:"x"`
 	Y              float32      `json:"y"`
 	Alive          bool         `json:"alive"`
 	Role           matchv1.Role `json:"role"`
 	TankSlot       int          `json:"tank_slot"`
 	AssignedTasks  []string     `json:"assigned_tasks"`
+	TaskOrder      []string     `json:"task_order,omitempty"`
 	TasksCompleted int          `json:"tasks_completed"`
+	// Opcional para que sirvan las instantáneas viejas.
+	LitersSaved int `json:"liters_saved,omitempty"`
 	// S2-11: opcional para que sirvan las instantáneas viejas.
 	CompletedTasks  []string `json:"completed_tasks,omitempty"`
 	NextContaminate int64    `json:"next_contaminate"`
@@ -72,15 +95,15 @@ type savedTank struct {
 }
 
 type savedMeeting struct {
-	ReporterID   string               `json:"reporter_id"`
-	TankSlot     int32                `json:"tank_slot"`
-	LastVisitors []string             `json:"last_visitors"`
-	Votes        map[string]savedVote `json:"votes"`
-	VotingEndsAt int64                `json:"voting_ends_at"`
-	ResultEndsAt int64                `json:"result_ends_at"`
-	VotingClosed bool                 `json:"voting_closed"`
-	EjectedID    string               `json:"ejected_id"`
-	WasImpostor  bool                 `json:"was_impostor"`
+	ReporterID   string                `json:"reporter_id"`
+	TankSlot     int32                 `json:"tank_slot"`
+	Reason       matchv1.MeetingReason `json:"reason,omitempty"`
+	Votes        map[string]savedVote  `json:"votes"`
+	VotingEndsAt int64                 `json:"voting_ends_at"`
+	ResultEndsAt int64                 `json:"result_ends_at"`
+	VotingClosed bool                  `json:"voting_closed"`
+	EjectedID    string                `json:"ejected_id"`
+	WasImpostor  bool                  `json:"was_impostor"`
 }
 
 type savedVote struct {
@@ -135,18 +158,35 @@ func (r *Room) maybeSave() {
 
 func (r *Room) toSaved() savedRoom {
 	s := savedRoom{
-		Code:         r.Code,
-		MatchID:      r.MatchID,
-		CreatorID:    r.creatorID,
-		Phase:        r.phase,
-		Tick:         r.tick,
-		StartTick:    r.startTick,
-		StartedAt:    r.startedAt,
-		Order:        r.order,
-		Reservoir:    r.reservoir,
-		Names:        r.names,
-		Participants: r.participants,
-		EventHistory: r.eventHistory,
+		Code:           r.Code,
+		MatchID:        r.MatchID,
+		CreatorID:      r.creatorID,
+		TasksPerPlayer: r.tasksPerPlayer,
+		Impostors:      r.impostors,
+		MatchMinutes:   int(r.matchDuration / time.Minute),
+		Phase:          r.phase,
+		Tick:           r.tick,
+		StartTick:      r.startTick,
+		MeetingTicks:   r.meetingTicks,
+		StartedAt:      r.startedAt,
+		Order:          r.order,
+		Reservoir:      r.reservoir,
+		Names:          r.names,
+		Participants:   r.participants,
+		EventHistory:   r.eventHistory,
+
+		SabotageReadyAt:  r.sabotageReadyAt,
+		PipesUsed:        r.pipesUsed,
+		NextRandomAt:     r.nextRandomAt,
+		MeetingReadyAt:   r.meetingReadyAt,
+		MeetingCallsUsed: r.meetingCallsUsed,
+	}
+	if e := r.emergency; e != nil {
+		s.Emergency = &savedEmergency{
+			Kind:     e.kind,
+			EndsAt:   e.endsAt,
+			Sabotage: e.sabotage,
+		}
 	}
 	for id := range r.seenChat {
 		s.SeenChat = append(s.SeenChat, id)
@@ -160,13 +200,17 @@ func (r *Room) toSaved() savedRoom {
 			ID:              id,
 			Name:            p.view.Name,
 			Color:           p.view.Color,
+			Skin:            p.view.Skin,
+			Accessory:       p.view.Accessory,
 			X:               p.view.X,
 			Y:               p.view.Y,
 			Alive:           p.view.Alive,
 			Role:            p.role,
 			TankSlot:        p.tankSlot,
 			AssignedTasks:   tasks,
+			TaskOrder:       p.taskOrder,
 			TasksCompleted:  p.tasksCompleted,
+			LitersSaved:     p.litersSaved,
 			CompletedTasks:  p.completedTasks,
 			NextContaminate: p.nextContaminate,
 			NextChatTick:    p.nextChatTick,
@@ -194,7 +238,7 @@ func (r *Room) toSaved() savedRoom {
 		s.Meeting = &savedMeeting{
 			ReporterID:   m.reporterID,
 			TankSlot:     m.tankSlot,
-			LastVisitors: m.lastVisitors,
+			Reason:       m.reason,
 			Votes:        votes,
 			VotingEndsAt: m.votingEndsAt,
 			ResultEndsAt: m.resultEndsAt,
@@ -232,17 +276,42 @@ func Restore(state []byte, m *Map, opts ...Option) (*Room, error) {
 	}
 	r := NewRoom(s.Code, s.MatchID, m, opts...)
 	r.creatorID = s.CreatorID
+	if validTaskCount(s.TasksPerPlayer) {
+		r.tasksPerPlayer = s.TasksPerPlayer
+	}
+	if s.Impostors >= 1 {
+		r.impostors = s.Impostors
+	}
+	if validMatchMinutes(s.MatchMinutes) {
+		r.matchDuration = time.Duration(s.MatchMinutes) * time.Minute
+	}
 	r.phase = s.Phase
 	if r.phase == matchv1.Phase_ENDED {
 		return nil, fmt.Errorf("partida ya terminada")
 	}
 	r.tick = s.Tick
 	r.startTick = s.StartTick
+	r.meetingTicks = s.MeetingTicks
 	r.startedAt = s.StartedAt
 	r.order = s.Order
 	r.reservoir = s.Reservoir
 	r.participants = s.Participants
 	r.eventHistory = s.EventHistory
+	r.sabotageReadyAt = s.SabotageReadyAt
+	r.pipesUsed = s.PipesUsed
+	r.nextRandomAt = s.NextRandomAt
+	r.meetingReadyAt = s.MeetingReadyAt
+	if r.meetingReadyAt == 0 {
+		r.meetingReadyAt = r.startTick + meetingCallGraceTicks
+	}
+	r.meetingCallsUsed = s.MeetingCallsUsed
+	if se := s.Emergency; se != nil && isEmergencyKind(se.Kind) {
+		r.emergency = &emergencyState{
+			kind:     se.Kind,
+			endsAt:   se.EndsAt,
+			sabotage: se.Sabotage,
+		}
+	}
 	if s.Names != nil {
 		r.names = s.Names
 	}
@@ -270,6 +339,8 @@ func Restore(state []byte, m *Map, opts ...Option) (*Room, error) {
 				Id:        sp.ID,
 				Name:      sp.Name,
 				Color:     sp.Color,
+				Skin:      skinOrDefault(sp.Skin),
+				Accessory: sp.Accessory,
 				X:         sp.X,
 				Y:         sp.Y,
 				Connected: false,
@@ -278,7 +349,9 @@ func Restore(state []byte, m *Map, opts ...Option) (*Room, error) {
 			role:            sp.Role,
 			tankSlot:        sp.TankSlot,
 			assignedTasks:   tasks,
+			taskOrder:       sp.TaskOrder,
 			tasksCompleted:  sp.TasksCompleted,
+			litersSaved:     sp.LitersSaved,
 			completedTasks:  sp.CompletedTasks,
 			nextContaminate: sp.NextContaminate,
 			nextChatTick:    sp.NextChatTick,
@@ -310,7 +383,7 @@ func Restore(state []byte, m *Map, opts ...Option) (*Room, error) {
 		r.meeting = &meetingState{
 			reporterID:   sm.ReporterID,
 			tankSlot:     sm.TankSlot,
-			lastVisitors: sm.LastVisitors,
+			reason:       sm.Reason,
 			votes:        votes,
 			votingEndsAt: sm.VotingEndsAt,
 			resultEndsAt: sm.ResultEndsAt,

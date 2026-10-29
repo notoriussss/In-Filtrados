@@ -1,4 +1,6 @@
 import { ERROR_MESSAGES } from './constants';
+import type { RankingResponse } from './ranking';
+import type { ShopResponse } from './shop';
 
 export interface AuthResponse {
   token: string;
@@ -17,6 +19,9 @@ export interface MeResponse {
   coins: number;
   matchesPlayed: number;
   wins: number;
+  // S2-07: estadísticas como impostor.
+  timesImpostor: number;
+  winsAsImpostor: number;
 }
 
 export interface RoomResponse {
@@ -28,7 +33,7 @@ const BASE_URL = '/api';
 
 async function apiFetch<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<T> {
   const response = await fetch(`${BASE_URL}${endpoint}`, {
     ...options,
@@ -56,7 +61,7 @@ async function apiFetch<T>(
 export const api = {
   async register(
     username: string,
-    password: string
+    password: string,
   ): Promise<RegisterResponse> {
     return apiFetch<RegisterResponse>('/auth/register', {
       method: 'POST',
@@ -77,6 +82,28 @@ export const api = {
       headers: {
         Authorization: `Bearer ${token}`,
       },
+    });
+  },
+
+  async getShop(token: string): Promise<ShopResponse> {
+    return apiFetch<ShopResponse>('/shop', {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+
+  async getRanking(token: string): Promise<RankingResponse> {
+    return apiFetch<RankingResponse>('/ranking', {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  },
+
+  async buyItem(token: string, itemId: string): Promise<ShopResponse> {
+    return apiFetch<ShopResponse>('/shop/buy', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ itemId }),
     });
   },
 

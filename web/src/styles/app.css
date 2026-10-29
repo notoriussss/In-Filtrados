@@ -1,0 +1,231 @@
+/* Estilos propios del juego sobre el kit B-noche (ui-kit.css). Lo que
+   sale de las maquetas está marcado; el resto es del juego. */
+
+#root { position: fixed; inset: 0; background: var(--ink); }
+.px-icon, .px-sprite { image-rendering: pixelated; display: block; flex: none; }
+.btn .px-icon, .chip .px-icon, .pill .px-icon { display: inline-block; }
+button:disabled { cursor: default; opacity: .55; transform: none !important; }
+.btn:disabled:hover { background: var(--pan2); }
+.btn.pri:disabled:hover { background: var(--leaf); }
+
+/* Transición fluida al montar cualquier pantalla */
+.stage {
+  animation: stageScreenEnter 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes stageScreenEnter {
+  0% {
+    opacity: 0;
+    filter: brightness(0.75);
+  }
+  100% {
+    opacity: 1;
+    filter: brightness(1);
+  }
+}
+
+/* capa del juego */
+.game-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; }
+.hud-layer { position: fixed; left: 0; top: 0; transform-origin: 0 0; pointer-events: none; }
+.hud-layer .panel, .hud-layer button, .hud-layer input, .hud-layer .interactive { pointer-events: auto; }
+.overlay-stage { position: fixed; inset: 0; z-index: 20; background: rgba(3, 10, 24, .35); }
+.overlay-stage.solid { background: var(--ink); }
+/* La pausa deja ver el juego detrás. */
+.stage.scr-pause { background: transparent; }
+.hud .alert .t { white-space: nowrap; }
+@keyframes hud-flash { 50% { background: #7d2230; } }
+.hud .alert.steam { background: #233247; animation: none;
+  box-shadow: -6px 0 0 0 #9cc3d6, 6px 0 0 0 #9cc3d6, 0 -6px 0 0 #9cc3d6, 0 6px 0 0 #9cc3d6; }
+.hud .alert.calm { background: var(--pan); animation: none;
+  box-shadow: -6px 0 0 0 var(--line), 6px 0 0 0 var(--line), 0 -6px 0 0 var(--line), 0 6px 0 0 var(--line); }
+.hud .alert.ghost { background: #1b1a3a; animation: none;
+  box-shadow: -6px 0 0 0 #7ee6d8, 6px 0 0 0 #7ee6d8, 0 -6px 0 0 #7ee6d8, 0 6px 0 0 #7ee6d8; }
+.hud .alert.ghost .tx span { color: #bfe9ff; }
+@keyframes alert-float { 0%, 100% { transform: translateY(2px); opacity: .75; } 50% { transform: translateY(-5px); opacity: 1; } }
+.hud .alert.ghost .px-icon { animation: alert-float 1.8s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .hud .alert.ghost .px-icon { animation: none; } }
+.hud .slotk:disabled { opacity: .45; }
+.hud .slotk .cd { position: absolute; right: 6px; top: 6px; font-family: var(--body); font-size: 22px; color: var(--amber); }
+.hud .slotk.danger { box-shadow: -4px 0 0 0 #b34545, 4px 0 0 0 #b34545, 0 -4px 0 0 #b34545, 0 4px 0 0 #b34545; }
+.hud .slotk.danger:hover:not(:disabled) { background: #451818; }
+.hud .mini .map-box { position: relative; width: 332px; height: 220px; background: var(--ink); overflow: hidden; }
+.hud .mini .map-box img { width: 100%; height: 100%; image-rendering: pixelated; }
+.hud .mini .dot { position: absolute; width: 12px; height: 12px; margin: -6px 0 0 -6px; box-shadow: 0 0 0 3px var(--ink); }
+.hud .mini .dot.me { background: #fff; }
+.hud .mini .dot.task { background: var(--amber); width: 9px; height: 9px; margin: -4px 0 0 -4px; }
+.hud .mini .dot.tank { width: 16px; height: 16px; margin: -8px 0 0 -8px; background: var(--pan); border: 3px solid var(--aqua); border-radius: 3px; box-shadow: 0 0 0 2px var(--ink); }
+.hud .mini .dot.tank::after { content: ''; position: absolute; left: 3px; right: 3px; bottom: 2px; height: 5px; background: var(--water); }
+.hud .mini .dot.tank.dead { border-color: var(--coral); }
+.hud .mini .dot.tank.dead::after { background: var(--coral); }
+.hud .mini .dot.meet { background: transparent; border: 3px solid var(--amber); width: 16px; height: 16px; margin: -8px 0 0 -8px; box-shadow: 0 0 0 3px var(--ink); border-radius: 50%; }
+.hud .mini .dot.meet.ready { border-color: var(--aqua); animation: meet-pulse 1.2s steps(2) infinite; }
+@keyframes meet-pulse { 50% { transform: scale(1.3); box-shadow: 0 0 0 3px var(--ink), 0 0 0 6px rgba(126, 230, 216, .35); } }
+.hud .mini .mm-keys { display: inline-flex; align-items: center; gap: 10px; }
+.hud .mini .mm-key { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--amber); }
+.hud .mini .mm-key i { width: 10px; height: 10px; border: 2px solid var(--amber); border-radius: 50%; }
+.hud .mini .mm-key.tank { color: var(--aqua); }
+.hud .mini .mm-key.tank i { border-color: var(--aqua); background: rgba(126, 230, 216, .35); border-radius: 3px; }
+.hud .mini .dot.fix { background: var(--coral); animation: blink 0.6s steps(1) infinite; }
+.hud .me-card .portrait { width: 88px; height: 125px; image-rendering: pixelated; margin: -10px 0 -10px; }
+
+/* minijuego */
+.minigame { position: fixed; left: 50%; top: 50%; width: 800px; padding: 22px 26px; transform: translate(-50%, -50%); }
+.minigame canvas { display: block; margin: 0 auto; touch-action: none; cursor: pointer;
+  box-shadow: -4px 0 0 0 var(--line-d), 4px 0 0 0 var(--line-d), 0 -4px 0 0 var(--line-d), 0 4px 0 0 var(--line-d); }
+.minigame .title-bar { min-height: 78px; }
+.minigame .gauge { margin-top: 18px; }
+
+/* conexión en partida */
+.conn-panel { left: 50%; top: 170px; width: 830px; margin-left: -415px !important; padding: 26px 34px !important; }
+.conn-panel p { margin: 0 0 14px; }
+
+/* menús: formularios y listas */
+.form-error { min-height: 40px; }
+.stat-grid { display: grid; grid-template-columns: 1fr auto; gap: 6px 16px; font-size: 30px; }
+.stat-grid b { font-family: var(--head); font-weight: 400; font-size: 24px; color: var(--amber); text-align: right; }
+.tabs.access { margin-bottom: 20px; }
+.tab { border: 0; }
+
+/* ===== pantallas (de las maquetas B-noche) ===== */
+/* 01-carga: estilos encapsulados en styles/boot.css */
+/* 03-acceso */
+.scr-access .stand .plank {width:340px}
+.scr-access .stand canvas {position:absolute;left:50%;transform:translateX(-50%)}
+.scr-access .stand .plank {bottom:26px;height:20px}
+.scr-access .stand canvas {bottom:21px}
+.scr-access .prev {height:410px}
+/* 06-lobby: estilos encapsulados en styles/lobby.css */
+/* 07-ayuda: estilos encapsulados en styles/help.css */
+/* 09-rol: estilos encapsulados en styles/roleReveal.css */
+/* 11-conexion */
+.scr-conn .mo {padding:26px 34px!important}
+.scr-conn .mo p {margin:0 0 16px}
+/* 12-resultado */
+.scr-result .tr {grid-template-columns:84px 1fr 150px 90px 175px;gap:12px;min-height:54px;padding-block:2px;margin-bottom:6px}
+.scr-result .tr.head {min-height:0}
+.scr-result .tr .av {display:grid;place-items:center;height:48px;overflow:hidden}
+.scr-result .imp {margin-bottom:22px}
+.scr-result .imp .row {justify-content:space-between;margin-bottom:8px}
+/* 13-expulsion: estilos encapsulados en styles/ejection.css */
+/* 14-reunion: estilos encapsulados en styles/meeting.css */
+
+/* ===== HUD (maqueta 16-hud-eco) ===== */
+.hud .tasks {left: 60px; top: 36px; width: 470px; padding: 18px 22px 16px; }
+.hud .task {display: grid; grid-template-columns: 44px 1fr auto; gap: 12px; align-items: center; padding: 8px 0; border-bottom: 4px dashed var(--line-d); }
+.hud .task:last-of-type {border-bottom: 0; }
+.hud .task .px-icon {width: 40px !important; height: 40px !important; }
+.hud .task b {display: block; font-family: var(--head); font-weight: 400; font-size: 20px; line-height: 1.3; }
+.hud .task span.d {font-size: 26px; color: var(--mut); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+.hud .task > div { min-width: 0; }
+.hud .task.done b, .hud .task.done span.d {text-decoration: line-through; text-decoration-thickness: 4px; opacity: .7; }
+.hud .team {display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; margin-top: 12px; font-size: 28px; }
+.hud .alert {left: 50%; margin-left: -370px !important; top: 36px; width: 740px; height: 100px; padding: 0 26px; display: flex; align-items: center; gap: 22px; background: #5a1822; animation: hud-flash 1s steps(1) infinite;
+  box-shadow: -6px 0 0 0 var(--coral), 6px 0 0 0 var(--coral), 0 -6px 0 0 var(--coral), 0 6px 0 0 var(--coral); }
+
+.hud .alert .px-icon {width: 52px !important; height: 52px !important; flex: none; }
+.hud .alert .tx {flex: 1; }
+.hud .alert b {display: block; font-family: var(--head); font-weight: 400; font-size: 24px; line-height: 1.3; color: #fff; }
+.hud .alert .tx span {font-size: 28px; color: #ffc9c9; }
+.hud .alert .t {font-family: var(--logo); font-size: 34px; color: var(--amber); }
+.hud .res {right: 66px; top: 36px; width: 440px; padding: 18px 22px 18px; }
+.hud .res .m {display: grid; grid-template-columns: 112px 1fr 70px; gap: 12px; align-items: center; font-size: 30px; margin-top: 12px; }
+.hud .res .m span:last-child {text-align: right; }
+.hud .clock {right: 66px; top: 250px; width: 440px; padding: 14px 22px 12px; }
+.hud .clock .hud-ttl {justify-content: flex-start; gap: 12px; }
+.hud .clock .t {font-family: var(--logo); font-size: 56px; line-height: 1.3; text-align: center; color: var(--txt); }
+.hud .clock.low .t {color: var(--amber); }
+.hud .clock.low {box-shadow: -6px 0 0 0 var(--amber), 6px 0 0 0 var(--amber), 0 -6px 0 0 var(--amber), 0 6px 0 0 var(--amber); }
+.hud .clock.critical {background: #5a1822; animation: hud-flash 1s steps(1) infinite;
+  box-shadow: -6px 0 0 0 var(--coral), 6px 0 0 0 var(--coral), 0 -6px 0 0 var(--coral), 0 6px 0 0 var(--coral); }
+.hud .clock.critical .t {color: #fff; }
+@media (prefers-reduced-motion: reduce) { .hud .clock.critical {animation: none; } }
+.hud .me-card {left: 60px; bottom: 36px; width: 540px; padding: 14px 20px; }
+.hud .hot {left: 50%; margin-left: -330px !important; bottom: 36px; width: 660px; padding: 14px 20px; display: flex; gap: 20px; justify-content: center; }
+.hud .slotk {position: relative; width: 140px; height: 124px; display: grid; justify-items: center; align-content: center; gap: 6px; background: var(--bg2); border: 0; cursor: pointer; padding: 6px 0 0;
+  box-shadow: -4px 0 0 0 var(--line-d), 4px 0 0 0 var(--line-d), 0 -4px 0 0 var(--line-d), 0 4px 0 0 var(--line-d); margin: 4px; }
+.hud .slotk:hover, .hud .slotk.on {background: var(--pan3); box-shadow: -4px 0 0 0 var(--aqua), 4px 0 0 0 var(--aqua), 0 -4px 0 0 var(--aqua), 0 4px 0 0 var(--aqua); }
+.hud .slotk .px-icon {width: 44px !important; height: 44px !important; }
+.hud .slotk span {font-family: var(--head); font-size: 20px; line-height: 1; }
+.hud .slotk .key {position: absolute; left: -4px; top: -4px; min-width: 34px; height: 34px; font-size: 13px; padding: 0 6px; box-shadow: 0 4px 0 #6c8da1; }
+.hud .mini {right: 66px; bottom: 36px; width: 360px; padding: 12px 14px; }
+.hud .mini canvas {width: 332px !important; height: 186px !important; }
+.hud .mini .lab {font-family: var(--head); font-size: 18px; color: var(--mut); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+.justify-start { justify-self: start; }
+.screen-title { color: #f4fffb; font-size: 44px; text-shadow: 3px 3px 0 rgba(4, 28, 38, .8); }
+.scr-access .stand canvas { position: absolute; left: 50%; transform: translateX(-50%); bottom: 21px; }
+.hud .hud-ttl { font-size: 24px; padding-bottom: 10px; margin-bottom: 6px; }
+.hud .hud-name { font-family: var(--head); font-weight: 400; font-size: 24px; }
+.hud .card-meter { display: grid; grid-template-columns: 100px 1fr 120px; gap: 12px; align-items: center; font-size: 30px; margin-top: 8px; }
+
+.rt { text-align: right; }
+.scr-result .tr { grid-template-columns: 84px 1fr 180px 10px 200px; }
+
+/* 08-ajustes: estilos encapsulados en styles/settings.css */
+
+/* Ajustes de accesibilidad (settings.ts los pone en <html>) */
+html[data-contrast='high'] {
+  --mut: #d6eefa; --line: #9fd8ff; --line-d: #6fb4e0;
+  --bg2: #031120; --pan: #061a30; --ink: #000;
+}
+html[data-contrast='high'] .btn,
+html[data-contrast='high'] .chip,
+html[data-contrast='high'] .pill { color: #fff; }
+html[data-motion='reduced'] *,
+html[data-motion='reduced'] *::before,
+html[data-motion='reduced'] *::after {
+  animation: none !important; transition: none !important;
+}
+
+/* Textos largos: ninguna caja deja salir lo que lleva dentro. Los chips del
+   kit no parten línea (white-space: nowrap), así que los mensajes largos
+   del formulario sí lo permiten y los nombres se acortan con "…". */
+.chip .px-icon, .tg .px-icon { flex: none; }
+.field .chip, .form-error .chip {
+  white-space: normal; max-width: 100%; line-height: 1.15; align-items: flex-start;
+}
+.field .chip .px-icon, .form-error .chip .px-icon { margin-top: 4px; }
+.chip .fit {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* El título de la sala de espera no se parte; el chip con tu usuario cede. */
+.scr-lobby .title-bar .h2.grow { flex: 1 0 auto; }
+.title-bar .name-chip { flex: 0 1 auto; min-width: 0; max-width: 60%; }
+.hud .me-card .who-box { flex: 1; min-width: 0; }
+.hud .me-card .who {
+  display: flex; flex-wrap: wrap; align-items: center;
+  justify-content: space-between; gap: 4px 12px;
+}
+.hud .me-card .who .chip { flex: none; }
+.hud .hud-name {
+  flex: 1 1 auto; min-width: 0; max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.scr-lobby .slot .nm { min-width: 0; }
+.scr-lobby .slot .nm > * { flex: none; }
+.scr-lobby .slot .nm > .fit {
+  flex: 0 1 auto; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* Las teclas de las barras de ayuda heredaban la sombra de texto de la barra
+   (pensada para letras claras sobre el fondo) y se veían dobles. */
+.kbd, .key { text-shadow: none; }
+.scr-result .tr b {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* screens/pending (apagados por features.ts) */
+.room-chat-log {height:260px;overflow-y:auto;margin-bottom:8px}
+.room-chat .field {gap:12px;align-items:center}
+.room-chat .field input {flex:1;min-width:0;height:56px;font-size:30px}
+.room-row {font-size:30px}
+/* Aviso de emergencia: el icono se mueve según qué pasó y el reloj late. */
+@keyframes alert-wobble { 0%, 100% { transform: rotate(-9deg); } 50% { transform: rotate(9deg) scale(1.08); } }
+@keyframes alert-puff { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-5px) scale(1.1); } }
+@keyframes alert-tick { 50% { transform: scale(1.22); } }
+.hud .alert .px-icon { animation: alert-wobble .5s steps(4) infinite; transform-origin: 50% 70%; }
+.hud .alert.steam .px-icon { animation: alert-puff 1.2s ease-in-out infinite; }
+.hud .alert.calm .px-icon { animation: none; }
+.hud .alert .t { animation: alert-tick 1s steps(2) infinite; transform-origin: 100% 50%; }
+@keyframes slotk-ready { 50% { box-shadow: 0 0 0 3px var(--ink), 0 0 0 6px rgba(255, 107, 107, .35); } }
+.hud .slotk.danger:not(:disabled) { animation: slotk-ready 1.4s ease-in-out infinite; }

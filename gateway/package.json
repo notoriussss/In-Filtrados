@@ -7,7 +7,7 @@
     "start": "ts-node src/main.ts",
     "start:dev": "ts-node-dev src/main.ts",
     "lint": "tsc --noEmit",
-    "test": "tsc && node --test dist/clients/grpc-errors.test.js dist/clients/resilience.test.js dist/game/server-events.test.js dist/game/client-messages.test.js dist/game/play-relay.test.js dist/game/chat-dedupe.test.js dist/game/rate-limit.test.js dist/auth/login-throttler.guard.test.js"
+    "test": "tsc && node --test dist/clients/grpc-errors.test.js dist/clients/resilience.test.js dist/game/server-events.test.js dist/game/client-messages.test.js dist/game/play-relay.test.js dist/game/chat-dedupe.test.js dist/game/rate-limit.test.js dist/game/heartbeat.test.js dist/auth/login-throttler.guard.test.js"
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.14.5",
@@ -17,10 +17,11 @@
     "@nestjs/core": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/platform-ws": "^10.4.22",
+    "@nestjs/swagger": "^7.4.2",
     "@nestjs/throttler": "^6.7.1",
     "@nestjs/websockets": "^10.4.22",
     "class-transformer": "^0.5.1",
-    "class-validator": "^0.15.1",
+    "class-validator": "^0.14.4",
     "opossum": "^9.0.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1"

@@ -1,0 +1,599 @@
+/* =========================================================================
+   TIENDA Y VESTIDOR ABIERTO (Inspirado en vestidor de escenario unificado)
+   ========================================================================= */
+
+.stage.scr-shop {
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Viñeta ambiental que deja respirar al personaje en el escenario */
+.scr-shop .shop-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse at 36% 48%,
+      rgba(6, 28, 56, 0.58) 0%,
+      rgba(3, 12, 26, 0.88) 65%,
+      rgba(2, 8, 18, 0.95) 100%
+    );
+  z-index: 1;
+}
+
+/* =========================================================================
+   BARRA SUPERIOR (Volver + Aspecto Actual a la izq, Monedas a la der)
+   ========================================================================= */
+.scr-shop .shop-header {
+  position: absolute;
+  left: 90px;
+  right: 90px;
+  top: 22px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 10;
+}
+
+.scr-shop .shop-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.scr-shop .shop-back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 46px;
+  padding: 0 26px;
+  font-family: var(--head);
+  font-size: 19px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--txt);
+  background: rgba(10, 33, 57, 0.85);
+  border: 1.5px solid rgba(126, 230, 216, 0.35);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.scr-shop .shop-back-btn:hover {
+  background: rgba(14, 48, 84, 0.95);
+  border-color: var(--aqua);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.scr-shop .shop-header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.scr-shop .shop-feedback-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 8px;
+  font-family: var(--head);
+  font-size: 16px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.scr-shop .shop-feedback-pill.ok {
+  background: rgba(20, 90, 50, 0.85);
+  border: 1.5px solid #27ae60;
+  color: #e8fff6;
+}
+
+.scr-shop .shop-feedback-pill.bad {
+  background: rgba(110, 28, 36, 0.85);
+  border: 1.5px solid var(--coral);
+  color: #ffe8e8;
+}
+
+.scr-shop .shop-coins-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  height: 46px;
+  padding: 0 22px;
+  background: rgba(10, 33, 57, 0.88);
+  border: 1.5px solid rgba(255, 210, 74, 0.45);
+  border-radius: 10px;
+  font-family: var(--head);
+  font-size: 16px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--mut);
+}
+
+.scr-shop .shop-coins-val {
+  font-size: 22px;
+  letter-spacing: 2px;
+  color: var(--amber);
+}
+
+/* =========================================================================
+   CUERPO PRINCIPAL (Riel Izquierdo + Escenario Central + Rejilla Derecha)
+   ========================================================================= */
+.scr-shop .shop-main {
+  position: absolute;
+  left: 90px;
+  right: 90px;
+  top: 108px;
+  height: 785px;
+  display: grid;
+  grid-template-columns: 196px 590px 1fr;
+  gap: 34px;
+  align-items: stretch;
+  z-index: 5;
+}
+
+/* 1. RIEL VERTICAL DE CATEGORÍAS (Izquierda) */
+.scr-shop .shop-cat-rail {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding-top: 24px;
+  gap: 16px;
+}
+
+.scr-shop .shop-cat-tab {
+  position: relative;
+  height: 98px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(7, 25, 46, 0.65);
+  border: 1.5px solid rgba(126, 230, 216, 0.22);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+
+.scr-shop .shop-cat-tab:hover {
+  background: rgba(14, 48, 84, 0.82);
+  border-color: rgba(126, 230, 216, 0.55);
+  transform: translateX(3px);
+}
+
+.scr-shop .shop-cat-tab.active {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 210, 74, 0.22) 0%,
+    rgba(16, 68, 115, 0.92) 100%
+  );
+  border-color: var(--amber);
+  box-shadow:
+    inset 0 0 18px rgba(255, 210, 74, 0.18),
+    0 6px 18px rgba(0, 0, 0, 0.4);
+  transform: translateX(4px);
+}
+
+.scr-shop .shop-cat-label {
+  font-family: var(--head);
+  font-size: 20px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.scr-shop .shop-cat-count {
+  font-family: var(--head);
+  font-size: 14px;
+  letter-spacing: 1.5px;
+  color: var(--mut);
+}
+
+.scr-shop .shop-cat-tab.active .shop-cat-count {
+  color: var(--amber);
+}
+
+/* 2. ESCENARIO CENTRAL DEL PERSONAJE (Abierto, con anillos en el piso) */
+.scr-shop .shop-hero-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 18px;
+}
+
+/* Figura de cuerpo completo sobre pedestal circular */
+.scr-shop .shop-pedestal-zone {
+  position: relative;
+  width: 100%;
+  height: 550px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 36px;
+}
+
+.scr-shop .shop-hero-figure {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+/* Anillos elípticos concéntricos en el suelo (como en la referencia) */
+.scr-shop .shop-ring-outer {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  width: 440px;
+  height: 82px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  border: 1.5px solid rgba(126, 230, 216, 0.32);
+  background: radial-gradient(
+    ellipse at center,
+    rgba(26, 83, 132, 0.28) 0%,
+    rgba(7, 25, 46, 0.12) 60%,
+    transparent 80%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+.scr-shop .shop-ring-inner {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  width: 330px;
+  height: 58px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  border: 1px solid rgba(255, 210, 74, 0.38);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.scr-shop .shop-floor-shadow {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  width: 220px;
+  height: 36px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0.78) 0%,
+    rgba(0, 0, 0, 0.3) 55%,
+    transparent 78%
+  );
+  filter: blur(4px);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Pie del escenario: nombre del aspecto y botón de acción (Save / Comprar) */
+.scr-shop .shop-hero-footer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  z-index: 4;
+}
+
+.scr-shop .shop-preview-title {
+  font-family: var(--head);
+  font-size: 26px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 2px 2px 0 var(--ink);
+}
+
+.scr-shop .shop-preview-sub {
+  font-family: var(--head);
+  font-size: 17px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--mut);
+}
+
+.scr-shop .shop-cta-wrap {
+  margin-top: 12px;
+  width: 340px;
+  display: flex;
+  justify-content: center;
+}
+
+.scr-shop .shop-cta-btn {
+  width: 100%;
+  height: 58px;
+  border-radius: 29px;
+  font-family: var(--head);
+  font-size: 20px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 140ms ease;
+}
+
+.scr-shop .shop-cta-btn.buy {
+  background: linear-gradient(180deg, #f2b729 0%, #c88712 100%);
+  border: 2px solid #ffe07d;
+  color: #161004;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+}
+
+.scr-shop .shop-cta-btn.buy:hover:not(:disabled) {
+  background: linear-gradient(180deg, #ffca3a 0%, #d99616 100%);
+  transform: translateY(-2px);
+}
+
+.scr-shop .shop-cta-btn.locked {
+  background: rgba(15, 34, 56, 0.75);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  color: var(--mut);
+  cursor: not-allowed;
+}
+
+.scr-shop .shop-cta-badge {
+  width: 100%;
+  height: 54px;
+  border-radius: 27px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--head);
+  font-size: 19px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  background: rgba(16, 68, 115, 0.65);
+  border: 1.5px solid rgba(126, 230, 216, 0.45);
+  color: var(--aqua);
+}
+
+/* =========================================================================
+   3. PANEL DE GUARDARROPA A LA DERECHA (Encabezado con línea + Rejilla 4 col)
+   ========================================================================= */
+.scr-shop .shop-wardrobe-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+}
+
+/* Encabezado "Categoría · Artículo" con línea divisoria inferior */
+.scr-shop .shop-wardrobe-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+  border-bottom: 1.5px solid rgba(126, 230, 216, 0.28);
+}
+
+.scr-shop .shop-wardrobe-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.scr-shop .shop-wardrobe-cat {
+  font-family: var(--head);
+  font-size: 24px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.scr-shop .shop-wardrobe-dot {
+  font-size: 22px;
+  color: var(--aqua);
+}
+
+.scr-shop .shop-wardrobe-item {
+  font-family: var(--head);
+  font-size: 22px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+
+/* Contenedor de tarjetas con scroll limpio */
+.scr-shop .shop-grid-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.scr-shop .shop-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+/* Tarjeta de vestidor estilo retrato */
+.scr-shop .shop-card {
+  position: relative;
+  height: 170px;
+  padding: 10px 10px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(7, 25, 46, 0.72);
+  border: 1.5px solid rgba(126, 230, 216, 0.22);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 120ms ease;
+  overflow: hidden;
+}
+
+.scr-shop .shop-card:hover {
+  background: rgba(14, 48, 84, 0.88);
+  border-color: rgba(126, 230, 216, 0.6);
+  transform: translateY(-2px);
+}
+
+/* Tarjeta puesta actualmente */
+.scr-shop .shop-card.on {
+  background: rgba(16, 68, 115, 0.82);
+  border-color: var(--aqua);
+}
+
+/* Tarjeta enfocada / seleccionada (estilo dorado de la referencia) */
+.scr-shop .shop-card.focus {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 210, 74, 0.18) 0%,
+    rgba(16, 68, 115, 0.88) 100%
+  );
+  border: 2px solid var(--amber);
+  box-shadow: inset 0 0 14px rgba(255, 210, 74, 0.16);
+}
+
+.scr-shop .shop-card-top {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 20px;
+}
+
+.scr-shop .shop-card-tag {
+  font-family: var(--head);
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 5px;
+}
+
+.scr-shop .shop-card-tag.on {
+  color: var(--aqua);
+  background: rgba(4, 16, 31, 0.65);
+  border: 1px solid rgba(126, 230, 216, 0.35);
+}
+
+.scr-shop .shop-card-tag.price {
+  color: var(--amber);
+  background: rgba(4, 16, 31, 0.72);
+  border: 1px solid rgba(255, 210, 74, 0.35);
+}
+
+.scr-shop .shop-card-tag.owned {
+  color: var(--mut);
+}
+
+/* Área del retrato centrada y anclada abajo para no cortar accesorios */
+.scr-shop .shop-card-prev {
+  width: 100%;
+  height: 98px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 4px;
+  overflow: hidden;
+}
+
+.scr-shop .shop-card.no-acc .shop-card-prev {
+  align-items: center;
+  padding-bottom: 0;
+}
+
+.scr-shop .shop-card.locked .shop-card-prev {
+  opacity: 0.6;
+}
+
+.scr-shop .shop-none-glyph {
+  font-family: var(--head);
+  font-size: 38px;
+  color: var(--mut);
+}
+
+.scr-shop .shop-card-name {
+  width: 100%;
+  font-family: var(--head);
+  font-size: 15px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #fff;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scr-shop .shop-loading-note {
+  margin-top: 20px;
+  font-family: var(--head);
+  font-size: 18px;
+  letter-spacing: 1.5px;
+  color: var(--mut);
+  text-align: center;
+}
+
+/* =========================================================================
+   HINT BAR INFERIOR (Elevada a 86px como en Menú y Lobby)
+   ========================================================================= */
+.stage.scr-shop .hint {
+  position: absolute;
+  left: 50%;
+  right: auto;
+  bottom: 86px;
+  width: 680px;
+  height: 54px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 44px;
+  background: linear-gradient(
+    90deg,
+    rgba(4, 16, 31, 0),
+    rgba(4, 16, 31, 0.75) 22%,
+    rgba(4, 16, 31, 0.75) 78%,
+    rgba(4, 16, 31, 0)
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+
+.stage.scr-shop .hint span {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--head);
+  font-size: 18px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--mut);
+  text-shadow: 2px 2px 0 var(--ink);
+}
+
+.stage.scr-shop .hint .kbd {
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  display: inline-grid;
+  place-items: center;
+  font-family: var(--head);
+  font-size: 16px;
+  color: var(--aqua);
+  background: #0a2139;
+  border: 1.5px solid var(--aqua);
+  border-radius: 4px;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.6);
+}
+

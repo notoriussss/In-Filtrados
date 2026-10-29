@@ -1,0 +1,252 @@
+{
+ "A-dia": {
+  "eco": {
+   "hud-tareas": {
+    "w": 520,
+    "h": 373,
+    "x": 40,
+    "y": 40,
+    "margen": 18
+   },
+   "hud-alerta": {
+    "w": 560,
+    "h": 119,
+    "x": 680,
+    "y": 40,
+    "margen": 18
+   },
+   "hud-laguna": {
+    "w": 440,
+    "h": 192,
+    "x": 1440,
+    "y": 40,
+    "margen": 18
+   },
+   "hud-minimapa": {
+    "w": 300,
+    "h": 233,
+    "x": 40,
+    "y": 807,
+    "margen": 18
+   },
+   "hud-rol-cubeta": {
+    "w": 520,
+    "h": 154,
+    "x": 360,
+    "y": 886,
+    "margen": 18
+   },
+   "hud-acciones": {
+    "w": 687,
+    "h": 80,
+    "x": 1193,
+    "y": 960,
+    "margen": 18
+   },
+   "hud-accion-usar": {
+    "w": 187,
+    "h": 80,
+    "x": 1193,
+    "y": 960,
+    "margen": 18
+   },
+   "hud-accion-reportar": {
+    "w": 256,
+    "h": 80,
+    "x": 1396,
+    "y": 960,
+    "margen": 18
+   },
+   "hud-accion-chat": {
+    "w": 211,
+    "h": 80,
+    "x": 1669,
+    "y": 960,
+    "margen": 18
+   },
+   "hud-etiqueta-jugador": {
+    "w": 97,
+    "h": 34,
+    "x": 655,
+    "y": 198,
+    "margen": 18
+   },
+   "hud-etiqueta-propia": {
+    "w": 152,
+    "h": 34,
+    "x": 884,
+    "y": 454,
+    "margen": 18
+   },
+   "hud-tecla": {
+    "w": 42,
+    "h": 32,
+    "x": 279,
+    "y": 826,
+    "margen": 18
+   }
+  },
+  "planta2": {
+   "hud-tareas": {
+    "w": 520,
+    "h": 373,
+    "x": 40,
+    "y": 40,
+    "margen": 18
+   },
+   "hud-alerta": {
+    "w": 560,
+    "h": 119,
+    "x": 680,
+    "y": 40,
+    "margen": 18
+   },
+   "hud-laguna": {
+    "w": 440,
+    "h": 192,
+    "x": 1440,
+    "y": 40,
+    "margen": 18
+   },
+   "hud-minimapa": {
+    "w": 300,
+    "h": 233,
+    "x": 40,
+    "y": 807,
+    "margen": 18
+   },
+   "hud-rol-cubeta": {
+    "w": 520,
+    "h": 154,
+    "x": 360,
+    "y": 886,
+    "margen": 18
+   }
+  }
+ },
+ "B-noche": {
+  "eco": {
+   "hud-tareas": {
+    "w": 470,
+    "h": 403,
+    "x": 66,
+    "y": 42,
+    "margen": 18
+   },
+   "hud-alerta": {
+    "w": 740,
+    "h": 100,
+    "x": 576,
+    "y": 42,
+    "margen": 18
+   },
+   "hud-laguna": {
+    "w": 440,
+    "h": 190,
+    "x": 1408,
+    "y": 42,
+    "margen": 18
+   },
+   "hud-minimapa": {
+    "w": 360,
+    "h": 248,
+    "x": 1488,
+    "y": 790,
+    "margen": 18
+   },
+   "hud-rol-cubeta": {
+    "w": 560,
+    "h": 126,
+    "x": 66,
+    "y": 912,
+    "margen": 18
+   },
+   "hud-acciones": {
+    "w": 660,
+    "h": 160,
+    "x": 630,
+    "y": 878,
+    "margen": 18
+   },
+   "hud-accion-usar": {
+    "w": 140,
+    "h": 124,
+    "x": 722,
+    "y": 896,
+    "margen": 18
+   },
+   "hud-accion-reportar": {
+    "w": 140,
+    "h": 124,
+    "x": 890,
+    "y": 896,
+    "margen": 18
+   },
+   "hud-accion-chat": {
+    "w": 140,
+    "h": 124,
+    "x": 1058,
+    "y": 896,
+    "margen": 18
+   },
+   "hud-etiqueta-jugador": {
+    "w": 51,
+    "h": 32,
+    "x": 998,
+    "y": 136,
+    "margen": 18
+   },
+   "hud-etiqueta-propia": {
+    "w": 134,
+    "h": 32,
+    "x": 893,
+    "y": 456,
+    "margen": 18
+   },
+   "hud-tecla": {
+    "w": 34,
+    "h": 34,
+    "x": 718,
+    "y": 892,
+    "margen": 18
+   }
+  },
+  "planta2": {
+   "hud-tareas": {
+    "w": 470,
+    "h": 403,
+    "x": 66,
+    "y": 42,
+    "margen": 18
+   },
+   "hud-alerta": {
+    "w": 740,
+    "h": 100,
+    "x": 576,
+    "y": 42,
+    "margen": 18
+   },
+   "hud-laguna": {
+    "w": 440,
+    "h": 190,
+    "x": 1408,
+    "y": 42,
+    "margen": 18
+   },
+   "hud-minimapa": {
+    "w": 360,
+    "h": 248,
+    "x": 1488,
+    "y": 790,
+    "margen": 18
+   },
+   "hud-rol-cubeta": {
+    "w": 560,
+    "h": 126,
+    "x": 66,
+    "y": 912,
+    "margen": 18
+   }
+  }
+ }
+}

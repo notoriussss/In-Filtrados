@@ -1,7 +1,10 @@
 # deploy: un nodo por laptop en el laboratorio
 
 Cómo levantar In-Filtrados repartido en las 5 laptops del equipo.
-El porqué está en `docs/deployment-lab.md` (secciones 3 a 9).
+El porqué está en `docs/deployment-lab.md` (secciones 3 a 9). La guía paso a
+paso del día (imágenes de `develop` y reglas de firewall por IP de origen)
+está en `docs/deployment-lab-runbook.md`. Cómo actualizar los servicios de un
+nodo ya desplegado está en `docs/deployment-lab-update.md`.
 
 ```
 deploy/

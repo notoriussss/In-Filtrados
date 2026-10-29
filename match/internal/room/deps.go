@@ -46,7 +46,6 @@ type SavedSnapshot struct {
 // Tipos de fila de event_log (S2-03).
 const (
 	LogContaminate = "contaminate"
-	LogClean       = "clean"
 	LogVisit       = "visit"
 )
 

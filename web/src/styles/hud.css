@@ -1,0 +1,671 @@
+/* =========================================================================
+   HUD DEL JUEGO (Estándar unificado de paneles translúcidos sin bordes pixel)
+   ========================================================================= */
+
+.hud {
+  pointer-events: none;
+}
+
+.hud-panel {
+  position: absolute;
+  background: rgba(7, 25, 46, 0.88);
+  border: 1.5px solid rgba(126, 230, 216, 0.35);
+  border-radius: 14px;
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+  pointer-events: auto;
+  user-select: none;
+}
+
+/* =========================================================================
+   1. PANEL DE TAREAS (Arriba a la izquierda)
+   ========================================================================= */
+.hud-tasks {
+  left: 36px;
+  top: 32px;
+  width: 500px;
+  padding: 18px 22px 16px;
+}
+
+.hud-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1.5px solid rgba(126, 230, 216, 0.22);
+}
+
+.hud-header-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--head);
+  font-size: 20px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 2px 2px 0 var(--ink);
+}
+
+.hud-header-title.tasks {
+  color: var(--leaf);
+}
+
+.hud-header-title.res {
+  color: var(--water);
+}
+
+.hud-counter-pill {
+  font-family: var(--head);
+  font-size: 15px;
+  letter-spacing: 1.5px;
+  padding: 4px 14px;
+  border-radius: 20px;
+  background: rgba(20, 90, 50, 0.85);
+  border: 1.5px solid rgba(74, 222, 128, 0.55);
+  box-shadow: 0 0 10px rgba(74, 222, 128, 0.25);
+  color: #fff;
+}
+
+.hud-task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hud-task-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: rgba(10, 33, 57, 0.75);
+  border: 1.5px solid rgba(126, 230, 216, 0.18);
+  border-radius: 10px;
+  transition: all 120ms ease;
+}
+
+.hud-task-item:hover {
+  background: rgba(14, 48, 84, 0.9);
+  border-color: rgba(126, 230, 216, 0.4);
+}
+
+.hud-task-item.done {
+  opacity: 0.55;
+  background: rgba(4, 16, 31, 0.4);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.hud-task-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+.hud-task-type-badge {
+  font-family: var(--head);
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(16, 68, 115, 0.85);
+  border: 1px solid rgba(126, 230, 216, 0.4);
+  color: var(--aqua);
+  flex-shrink: 0;
+}
+
+.hud-task-name {
+  font-family: var(--head);
+  font-size: 16px;
+  letter-spacing: 1.2px;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hud-task-item.done .hud-task-name {
+  text-decoration: line-through;
+  color: var(--mut);
+}
+
+.hud-task-status-pill {
+  font-family: var(--head);
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.hud-task-status-pill.missing {
+  background: rgba(255, 210, 74, 0.18);
+  border: 1.5px solid rgba(255, 210, 74, 0.5);
+  color: var(--amber);
+}
+
+.hud-task-status-pill.done {
+  background: rgba(74, 222, 128, 0.2);
+  border: 1.5px solid rgba(74, 222, 128, 0.55);
+  color: var(--leaf);
+}
+
+.hud-team-gauge-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1.5px solid rgba(126, 230, 216, 0.18);
+}
+
+.hud-gauge-lbl {
+  font-family: var(--head);
+  font-size: 14px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--mut);
+  flex-shrink: 0;
+}
+
+.hud-gauge-num {
+  font-family: var(--head);
+  font-size: 16px;
+  letter-spacing: 1.5px;
+  color: var(--amber);
+  min-width: 54px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* =========================================================================
+   2. PANEL DEL EMBALSE (Arriba a la derecha)
+   ========================================================================= */
+.hud-reservoir {
+  right: 36px;
+  top: 32px;
+  width: 440px;
+  padding: 18px 22px 16px;
+}
+
+.hud-code-pill {
+  font-family: var(--head);
+  font-size: 16px;
+  letter-spacing: 2.5px;
+  padding: 4px 14px;
+  border-radius: 8px;
+  background: rgba(255, 210, 74, 0.18);
+  border: 1.5px solid rgba(255, 210, 74, 0.5);
+  color: var(--amber);
+}
+
+.hud-metric-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.hud-metric-lbl {
+  font-family: var(--head);
+  font-size: 14px;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--mut);
+  width: 86px;
+  flex-shrink: 0;
+}
+
+/* =========================================================================
+   2b. RELOJ DE PARTIDA (Debajo del embalse)
+   El embalse y el reloj van en una columna: el reloj siempre queda
+   debajo, sin importar cuánto crezca el embalse.
+   ========================================================================= */
+.hud-right-stack {
+  position: absolute;
+  right: 36px;
+  top: 32px;
+  width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.hud-right-stack .hud-panel {
+  position: relative;
+  right: auto;
+  top: auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.hud-clock {
+  padding: 12px 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hud-clock-lbl {
+  font-family: var(--head);
+  font-size: 15px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--mut);
+}
+
+.hud-clock-time {
+  font-family: var(--logo);
+  font-size: 28px;
+  letter-spacing: 2px;
+  color: #fff;
+}
+
+.hud-clock.low {
+  border-color: rgba(255, 210, 74, 0.55);
+}
+
+.hud-clock.low .hud-clock-time {
+  color: var(--amber);
+}
+
+.hud-clock.critical {
+  background: rgba(110, 28, 36, 0.92);
+  border-color: var(--coral);
+  box-shadow: 0 6px 24px rgba(255, 107, 107, 0.35);
+}
+
+.hud-clock.critical .hud-clock-time {
+  color: #fff;
+}
+
+/* =========================================================================
+   3. BARRA DE ACCIONES (Abajo al centro)
+   ========================================================================= */
+.hud-hotbar {
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 32px;
+  display: flex;
+  gap: 18px;
+  padding: 14px 20px;
+  background: rgba(7, 25, 46, 0.92);
+}
+
+.hud-action-slot {
+  position: relative;
+  width: 146px;
+  height: 106px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(10, 33, 57, 0.82);
+  border: 1.5px solid rgba(126, 230, 216, 0.32);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 120ms ease;
+  padding: 0 10px;
+  outline: none;
+}
+
+.hud-action-slot:hover:not(:disabled) {
+  background: rgba(16, 68, 115, 0.95);
+  border-color: var(--aqua);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+}
+
+.hud-action-slot.active {
+  background: linear-gradient(
+    180deg,
+    rgba(16, 68, 115, 0.95) 0%,
+    rgba(10, 33, 57, 0.95) 100%
+  );
+  border-color: var(--aqua);
+  box-shadow: 0 0 16px rgba(126, 230, 216, 0.4);
+}
+
+.hud-action-slot:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.hud-action-slot.danger {
+  border-color: rgba(255, 107, 107, 0.45);
+}
+
+.hud-action-slot.danger:hover:not(:disabled) {
+  background: rgba(90, 24, 34, 0.9);
+  border-color: var(--coral);
+  box-shadow: 0 0 14px rgba(255, 107, 107, 0.4);
+}
+
+.hud-slot-key {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 6px;
+  display: grid;
+  place-items: center;
+  font-family: var(--head);
+  font-size: 13px;
+  color: var(--aqua);
+  background: rgba(4, 16, 31, 0.9);
+  border: 1px solid rgba(126, 230, 216, 0.4);
+  border-radius: 4px;
+}
+
+.hud-slot-cd {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  font-family: var(--head);
+  font-size: 13px;
+  color: var(--amber);
+}
+
+.hud-slot-label {
+  font-family: var(--head);
+  font-size: 15px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+/* =========================================================================
+   4. TARJETA DEL JUGADOR (Abajo a la izquierda)
+   ========================================================================= */
+.hud-me-card {
+  left: 36px;
+  bottom: 32px;
+  width: 530px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.hud-me-portrait {
+  width: 72px;
+  height: 78px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 2px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: rgba(4, 16, 31, 0.7);
+  border: 1.5px solid rgba(126, 230, 216, 0.28);
+  border-radius: 10px;
+}
+
+.hud-me-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.hud-me-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hud-me-name {
+  font-family: var(--head);
+  font-size: 21px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hud-role-pill {
+  font-family: var(--head);
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.hud-role-pill.ok {
+  background: rgba(20, 90, 50, 0.8);
+  border: 1.5px solid rgba(74, 222, 128, 0.5);
+  color: var(--leaf);
+}
+
+.hud-role-pill.bad {
+  background: rgba(110, 28, 36, 0.8);
+  border: 1.5px solid rgba(255, 107, 107, 0.5);
+  color: var(--coral);
+}
+
+.hud-role-pill.warn {
+  background: rgba(255, 210, 74, 0.22);
+  border: 1.5px solid rgba(255, 210, 74, 0.5);
+  color: var(--amber);
+}
+
+.hud-tank-meter-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* =========================================================================
+   5. MINIMAPA (Abajo a la derecha)
+   ========================================================================= */
+.hud-minimap {
+  right: 36px;
+  bottom: 32px;
+  width: 356px;
+  padding: 14px 16px;
+}
+
+.hud-map-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.hud-map-lbl {
+  font-family: var(--head);
+  font-size: 16px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.hud-map-legend {
+  font-family: var(--head);
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--amber);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hud-map-box {
+  position: relative;
+  width: 324px;
+  height: 204px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(4, 16, 31, 0.9);
+  border: 1.5px solid rgba(126, 230, 216, 0.25);
+}
+
+.hud-map-img {
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  display: block;
+}
+
+/* Puntos en el minimapa */
+.hud-minimap .dot {
+  position: absolute;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.hud-minimap .dot.me {
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border: 2px solid var(--aqua);
+  box-shadow: 0 0 8px rgba(126, 230, 216, 0.8);
+  z-index: 5;
+}
+
+.hud-minimap .dot.task {
+  width: 8px;
+  height: 8px;
+  background: var(--amber);
+  box-shadow: 0 0 6px rgba(255, 210, 74, 0.6);
+  z-index: 3;
+}
+
+.hud-minimap .dot.meet {
+  width: 16px;
+  height: 16px;
+  border: 2.5px solid var(--amber);
+  background: transparent;
+  z-index: 4;
+}
+
+.hud-minimap .dot.meet.ready {
+  border-color: var(--aqua);
+  box-shadow: 0 0 8px rgba(126, 230, 216, 0.7);
+}
+
+.hud-minimap .dot.tank {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: var(--aqua);
+  border: 2px solid #04101f;
+  z-index: 4;
+}
+
+.hud-minimap .dot.tank.dead {
+  background: var(--coral);
+}
+
+.hud-minimap .dot.fix {
+  width: 12px;
+  height: 12px;
+  background: var(--coral);
+  box-shadow: 0 0 10px rgba(255, 107, 107, 0.8);
+  animation: hud-dot-blink 0.6s steps(1) infinite;
+  z-index: 6;
+}
+
+@keyframes hud-dot-blink {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* =========================================================================
+   6. PANEL DE ALERTA DE EMERGENCIA (Arriba al centro)
+   ========================================================================= */
+.hud-alert-banner {
+  left: 50%;
+  transform: translateX(-50%);
+  top: 32px;
+  min-width: 640px;
+  padding: 14px 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  background: rgba(110, 28, 36, 0.94);
+  border: 1.5px solid var(--coral);
+  box-shadow: 0 8px 28px rgba(255, 107, 107, 0.4);
+  animation: hud-alert-flash 1s steps(1) infinite;
+}
+
+.hud-alert-banner.calm {
+  background: rgba(14, 48, 84, 0.94);
+  border-color: var(--aqua);
+  box-shadow: 0 8px 28px rgba(126, 230, 216, 0.3);
+  animation: none;
+}
+
+.hud-alert-banner.steam {
+  background: rgba(35, 50, 71, 0.94);
+  border-color: #9cc3d6;
+  box-shadow: 0 8px 28px rgba(156, 195, 214, 0.3);
+  animation: none;
+}
+
+.hud-alert-banner.ghost {
+  background: rgba(58, 36, 98, 0.94);
+  border-color: #c4b5fd;
+  box-shadow: 0 8px 28px rgba(196, 181, 253, 0.3);
+  animation: none;
+}
+
+@keyframes hud-alert-flash {
+  50% {
+    background: rgba(140, 35, 45, 0.98);
+  }
+}
+
+.hud-alert-tx {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hud-alert-title {
+  font-family: var(--head);
+  font-size: 21px;
+  letter-spacing: 2.2px;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.hud-alert-hint {
+  font-family: var(--head);
+  font-size: 15px;
+  letter-spacing: 1.2px;
+  color: #ffc9c9;
+}
+
+.hud-alert-banner.calm .hud-alert-hint {
+  color: var(--txt);
+}
+
+.hud-alert-time {
+  font-family: var(--logo);
+  font-size: 28px;
+  letter-spacing: 2px;
+  color: var(--amber);
+}
+

@@ -1,0 +1,20 @@
+{
+  "cell": {
+    "w": 120,
+    "h": 168
+  },
+  "columns": [
+    "front",
+    "side",
+    "back"
+  ],
+  "rows": [
+    "neutral",
+    "happy",
+    "worried",
+    "sleepy",
+    "surprised",
+    "angry",
+    "smug"
+  ]
+}

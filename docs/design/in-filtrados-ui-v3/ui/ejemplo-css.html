@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>In-Filtrados · ejemplo del kit CSS</title>
+<!-- Elige el estilo con ?skin=A (día, «Cuarto de bombas») o ?skin=B (noche, «Consola de riego») -->
+<script>
+  const skin = new URLSearchParams(location.search).get('skin') === 'B' ? 'B' : 'A';
+  document.write('<link rel="stylesheet" href="fuentes/fonts.css">');
+  document.write('<link rel="stylesheet" href="css/in-filtrados-ui-' + skin + '.css">');
+</script>
+<style>
+  body { overflow: auto; height: auto; }
+  .stage { position: static; transform: none; width: auto; height: auto; padding: 40px; overflow: visible; display: grid; gap: 24px; align-content: start; }
+  .panel { position: relative; width: 860px; padding: 24px 30px; }
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <section class="panel">
+    <header class="title-bar"><canvas data-icon="gota" data-colors='{"a":"#3f9fd6","b":"#bdeeff","c":"#1c5f94","o":"#10303a"}'></canvas><h2 class="h2 grow">Panel con título</h2><span class="chip ok">Activo</span></header>
+    <div class="row" style="gap:16px;flex-wrap:wrap">
+      <button class="btn pri">Crear sala</button><button class="btn">Unirse</button><button class="btn sec">Ajustes</button><button class="btn dan">Salir</button><button class="btn" disabled>Deshabilitado</button>
+    </div>
+    <div style="margin-top:20px" class="gauge leaf"><i style="width:64%"></i></div>
+    <div class="row" style="margin-top:20px"><span class="chip">neutro</span><span class="chip warn">aviso</span><span class="chip bad">error</span><span class="chip info">info</span><span class="tog on"></span><div class="seg"><span class="on">1</span><span>2</span></div></div>
+  </section>
+</div>
+<script src="js/in-filtrados-ui-runtime.js"></script>
+<script>UI.hydrate();</script>
+</body>
+</html>

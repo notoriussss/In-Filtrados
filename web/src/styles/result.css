@@ -1,0 +1,371 @@
+/* =========================================================================
+   PANTALLA DE RESULTADO / FIN DE PARTIDA (Estándar unificado de escenario)
+   ========================================================================= */
+
+.stage.scr-result {
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+}
+
+.scr-result .result-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse at 50% 30%,
+      rgba(4, 20, 42, 0.72) 0%,
+      rgba(2, 8, 18, 0.96) 100%
+    );
+  z-index: 1;
+}
+
+.scr-result .result-vignette.bad {
+  background:
+    radial-gradient(
+      ellipse at 50% 30%,
+      rgba(50, 10, 20, 0.8) 0%,
+      rgba(2, 8, 18, 0.96) 100%
+    );
+}
+
+/* =========================================================================
+   HERO / BANNER SUPERIOR DE VICTORIA / DERROTA
+   ========================================================================= */
+.scr-result .result-hero {
+  position: absolute;
+  left: 90px;
+  right: 90px;
+  top: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  z-index: 10;
+}
+
+.scr-result .result-title {
+  font-family: var(--logo);
+  font-size: 52px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--leaf);
+  text-shadow:
+    0 0 24px rgba(74, 222, 128, 0.45),
+    4px 4px 0 var(--ink);
+  margin-bottom: 8px;
+}
+
+.scr-result .result-title.bad {
+  color: var(--coral);
+  text-shadow:
+    0 0 24px rgba(255, 107, 107, 0.45),
+    4px 4px 0 var(--ink);
+}
+
+.scr-result .result-sub {
+  font-family: var(--head);
+  font-size: 19px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--txt);
+  text-shadow: 2px 2px 0 var(--ink);
+}
+
+/* =========================================================================
+   CUERPO PRINCIPAL (2 PANELES: JUGADORES E IMPACTO 3R)
+   ========================================================================= */
+.scr-result .result-content {
+  position: absolute;
+  left: 90px;
+  right: 90px;
+  top: 170px;
+  height: 750px;
+  display: grid;
+  grid-template-columns: 1fr 640px;
+  gap: 36px;
+  z-index: 5;
+}
+
+.scr-result .result-panel {
+  background: rgba(7, 25, 46, 0.82);
+  border: 1.5px solid rgba(126, 230, 216, 0.28);
+  border-radius: 14px;
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+.scr-result .result-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+  border-bottom: 1.5px solid rgba(126, 230, 216, 0.22);
+}
+
+.scr-result .result-panel-title {
+  font-family: var(--head);
+  font-size: 22px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.scr-result .result-room-pill {
+  font-family: var(--head);
+  font-size: 15px;
+  letter-spacing: 2px;
+  padding: 4px 14px;
+  border-radius: 8px;
+  background: rgba(14, 48, 84, 0.8);
+  border: 1px solid rgba(126, 230, 216, 0.4);
+  color: var(--aqua);
+}
+
+/* Lista de jugadores */
+.scr-result .result-players-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.scr-result .result-player-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 18px;
+  background: rgba(10, 33, 57, 0.7);
+  border: 1.5px solid rgba(126, 230, 216, 0.18);
+  border-radius: 10px;
+  transition: all 120ms ease;
+}
+
+.scr-result .result-player-row.is-me {
+  background: rgba(16, 68, 115, 0.8);
+  border-color: rgba(126, 230, 216, 0.5);
+  box-shadow: 0 0 14px rgba(126, 230, 216, 0.2);
+}
+
+.scr-result .result-player-avatar {
+  width: 52px;
+  height: 54px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 2px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: rgba(4, 16, 31, 0.6);
+  border: 1px solid rgba(126, 230, 216, 0.25);
+  border-radius: 8px;
+}
+
+.scr-result .result-player-name {
+  font-family: var(--head);
+  font-size: 19px;
+  letter-spacing: 1.5px;
+  color: #fff;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scr-result .result-role-pill {
+  font-family: var(--head);
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.scr-result .result-role-pill.crew {
+  background: rgba(20, 90, 50, 0.75);
+  border: 1px solid rgba(74, 222, 128, 0.45);
+  color: var(--leaf);
+}
+
+.scr-result .result-role-pill.impostor {
+  background: rgba(110, 28, 36, 0.75);
+  border: 1px solid rgba(255, 107, 107, 0.45);
+  color: var(--coral);
+}
+
+.scr-result .result-status-pill {
+  font-family: var(--head);
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.scr-result .result-status-pill.alive {
+  background: rgba(14, 48, 84, 0.7);
+  border: 1px solid rgba(126, 230, 216, 0.35);
+  color: var(--aqua);
+}
+
+.scr-result .result-status-pill.offline {
+  background: rgba(20, 30, 45, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--mut);
+}
+
+.scr-result .result-status-pill.ghost {
+  background: rgba(255, 210, 74, 0.18);
+  border: 1px solid rgba(255, 210, 74, 0.45);
+  color: var(--amber);
+}
+
+/* Panel de Impacto 3R */
+.scr-result .result-impact-items {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.scr-result .result-impact-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  background: rgba(10, 33, 57, 0.65);
+  border: 1.5px solid rgba(126, 230, 216, 0.18);
+  border-radius: 10px;
+}
+
+.scr-result .result-impact-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.scr-result .result-impact-title {
+  font-family: var(--head);
+  font-size: 17px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.scr-result .result-impact-liters {
+  font-family: var(--head);
+  font-size: 18px;
+  letter-spacing: 1.5px;
+  color: var(--amber);
+}
+
+/* Métricas globales de la partida */
+.scr-result .result-stats-well {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-top: 18px;
+  padding: 16px;
+  background: rgba(4, 16, 31, 0.75);
+  border: 1px solid rgba(126, 230, 216, 0.2);
+  border-radius: 10px;
+}
+
+.scr-result .result-stat-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.scr-result .result-stat-val {
+  font-family: var(--head);
+  font-size: 26px;
+  letter-spacing: 1.5px;
+  color: #fff;
+}
+
+.scr-result .result-stat-lbl {
+  font-family: var(--head);
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--mut);
+}
+
+.scr-result .result-fact-note {
+  margin-top: 14px;
+  font-family: var(--head);
+  font-size: 14px;
+  letter-spacing: 1.2px;
+  line-height: 1.4;
+  color: var(--aqua);
+  text-align: center;
+}
+
+/* =========================================================================
+   BARRA DE ACCIONES / SALIDA
+   ========================================================================= */
+.scr-result .result-footer {
+  position: absolute;
+  left: 90px;
+  right: 90px;
+  bottom: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 10;
+}
+
+.scr-result .result-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  padding: 0 32px;
+  font-family: var(--head);
+  font-size: 19px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 10px;
+  transition: all 120ms ease;
+}
+
+.scr-result .result-btn.sec {
+  background: rgba(10, 33, 57, 0.85);
+  border: 1.5px solid rgba(126, 230, 216, 0.35);
+  color: var(--txt);
+}
+
+.scr-result .result-btn.sec:hover {
+  background: rgba(14, 48, 84, 0.95);
+  border-color: var(--aqua);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.scr-result .result-btn.pri {
+  background: #145a32;
+  border: 2px solid #27ae60;
+  color: #fff;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+
+.scr-result .result-btn.pri:hover {
+  background: #196f3d;
+  border-color: var(--leaf);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(39, 174, 96, 0.35);
+}
+

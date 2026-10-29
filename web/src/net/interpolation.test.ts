@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { PlayerView } from '@in-filtrados/messages';
-import {
-  INTERPOLATION_DELAY_MS,
-  Interpolator,
-  TICK_MS,
-} from './interpolation';
+import { INTERPOLATION_DELAY_MS, Interpolator, TICK_MS } from './interpolation';
 
 const at = (x: number, y = 0, id = 'a'): PlayerView => ({
   id,
@@ -14,6 +10,7 @@ const at = (x: number, y = 0, id = 'a'): PlayerView => ({
   y,
   connected: true,
   alive: true,
+  activity: null,
 });
 
 // feed pushes ticks 0..n-1 arriving exactly every 50 ms from t=1000,

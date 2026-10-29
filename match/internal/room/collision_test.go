@@ -11,12 +11,6 @@ import (
 // The test runs in match/internal/room.
 const sharedMapPath = "../../../shared/map.json"
 
-// canal: walls from y 640 to 680, open only at the 3 bridges.
-const (
-	canalTop    = 640
-	canalBottom = 680
-)
-
 func sharedMap(t *testing.T) *Map {
 	t.Helper()
 	m, err := LoadMap(sharedMapPath)
@@ -26,16 +20,19 @@ func sharedMap(t *testing.T) *Map {
 	return m
 }
 
-// walk applies Move n times with the same step.
-func walk(m *Map, x, y, dx, dy float64, n int) (float64, float64) {
-	for i := 0; i < n; i++ {
-		x, y = m.Move(x, y, dx, dy)
+// wallMap es un mundo de 1000 × 1000 con una pared de 200 × 40 en el
+// centro, para probar el deslizamiento sin depender del arte del mapa.
+func wallMap() *Map {
+	return &Map{
+		Width:  1000,
+		Height: 1000,
+		Spawn:  Point{X: 100, Y: 100},
+		Walls:  []Rect{{X: 400, Y: 480, W: 200, H: 40}},
 	}
-	return x, y
 }
 
 func TestMoveDoesNotGoThroughWalls(t *testing.T) {
-	m := sharedMap(t)
+	m := wallMap()
 	tests := []struct {
 		name   string
 		x, y   float64
@@ -43,26 +40,19 @@ func TestMoveDoesNotGoThroughWalls(t *testing.T) {
 		ok     func(x, y float64) bool
 	}{
 		{
-			name: "down into the canal",
-			x:    400, y: 600, dx: 0, dy: 10,
-			ok: func(x, y float64) bool { return y+playerRadius <= canalTop },
+			name: "down into the wall",
+			x:    500, y: 400, dx: 0, dy: 10,
+			ok: func(x, y float64) bool { return y+playerRadius <= 480 },
 		},
 		{
-			name: "up into the canal",
-			x:    1200, y: 740, dx: 0, dy: -10,
-			ok: func(x, y float64) bool {
-				return y-playerRadius >= canalBottom
-			},
+			name: "up into the wall",
+			x:    500, y: 600, dx: 0, dy: -10,
+			ok: func(x, y float64) bool { return y-playerRadius >= 520 },
 		},
 		{
 			name: "left into the border",
 			x:    300, y: 300, dx: -10, dy: 0,
-			ok: func(x, y float64) bool { return x-playerRadius >= 20 },
-		},
-		{
-			name: "up into the border",
-			x:    300, y: 300, dx: 0, dy: -10,
-			ok: func(x, y float64) bool { return y-playerRadius >= 20 },
+			ok: func(x, y float64) bool { return x-playerRadius >= 0 },
 		},
 	}
 	for _, tt := range tests {
@@ -79,7 +69,7 @@ func TestMoveDoesNotGoThroughWalls(t *testing.T) {
 }
 
 func TestMoveSlidesAlongWalls(t *testing.T) {
-	m := sharedMap(t)
+	m := wallMap()
 	tests := []struct {
 		name         string
 		x, y         float64
@@ -87,24 +77,24 @@ func TestMoveSlidesAlongWalls(t *testing.T) {
 		wantX, wantY float64
 	}{
 		{
-			name: "diagonal into the canal slides in X",
-			x:    400, y: 620, dx: 10, dy: 10,
-			wantX: 410, wantY: 620,
+			name: "diagonal into the wall slides in X",
+			x:    500, y: 464, dx: 10, dy: 10,
+			wantX: 510, wantY: 464,
 		},
 		{
 			name: "diagonal into the left border slides in Y",
-			x:    36, y: 300, dx: -10, dy: 10,
-			wantX: 36, wantY: 310,
+			x:    16, y: 300, dx: -10, dy: 10,
+			wantX: 16, wantY: 310,
 		},
 		{
 			name: "diagonal into the top-left corner stays",
-			x:    36, y: 36, dx: -10, dy: -10,
-			wantX: 36, wantY: 36,
+			x:    16, y: 16, dx: -10, dy: -10,
+			wantX: 16, wantY: 16,
 		},
 		{
 			name: "free diagonal moves in both axes",
-			x:    800, y: 500, dx: 10, dy: -10,
-			wantX: 810, wantY: 490,
+			x:    800, y: 800, dx: 10, dy: -10,
+			wantX: 810, wantY: 790,
 		},
 	}
 	for _, tt := range tests {
@@ -123,37 +113,71 @@ func TestMoveSlidesAlongWalls(t *testing.T) {
 	}
 }
 
-func TestCanalOnlyCrossedByBridges(t *testing.T) {
-	m := sharedMap(t)
-	// Centers that fit through each 100-wide bridge with radius 16.
-	bridges := []struct{ lo, hi float64 }{
-		{36, 104},
-		{766, 834},
-		{1496, 1564},
+// reachable recorre el mapa en una cuadrícula de 8 unidades desde el
+// spawn, como lo haría un jugador, y devuelve los centros alcanzables.
+func reachable(m *Map) [][2]float64 {
+	const cell = 8
+	type key struct{ i, j int }
+	start := key{int(m.Spawn.X) / cell, int(m.Spawn.Y) / cell}
+	seen := map[key]bool{start: true}
+	queue := []key{start}
+	var out [][2]float64
+	for len(queue) > 0 {
+		k := queue[0]
+		queue = queue[1:]
+		out = append(out, [2]float64{
+			float64(k.i * cell),
+			float64(k.j * cell),
+		})
+		for _, d := range []key{{1, 0}, {-1, 0}, {0, 1}, {0, -1}} {
+			n := key{k.i + d.i, k.j + d.j}
+			if seen[n] || m.blocked(float64(n.i*cell), float64(n.j*cell)) {
+				continue
+			}
+			seen[n] = true
+			queue = append(queue, n)
+		}
 	}
-	onBridge := func(x float64) bool {
-		for _, b := range bridges {
-			if x >= b.lo && x <= b.hi {
+	return out
+}
+
+// TestEverythingIsReachable: cada estación, tanque y punto de
+// reparación de shared/map.json se alcanza a pie desde el spawn y queda
+// dentro del rango con que match acepta la acción.
+func TestEverythingIsReachable(t *testing.T) {
+	m := sharedMap(t)
+	pts := reachable(m)
+	near := func(x, y, r float64) bool {
+		for _, p := range pts {
+			if math.Hypot(p[0]-x, p[1]-y) <= r {
 				return true
 			}
 		}
 		return false
 	}
-
-	crossings, inCrossing := 0, false
-	for x := 40.0; x <= 1560; x += 2 {
-		_, y := walk(m, x, 600, 0, 10, 20)
-		crossed := y-playerRadius >= canalBottom
-		if crossed != onBridge(x) {
-			t.Errorf("x=%v: crossed=%v, on bridge=%v", x, crossed, onBridge(x))
+	for _, s := range m.Stations {
+		if !near(s.X, s.Y, s.radius()) {
+			t.Errorf("station %s is out of reach", s.ID)
 		}
-		if crossed && !inCrossing {
-			crossings++
-		}
-		inCrossing = crossed
 	}
-	if crossings != len(bridges) {
-		t.Errorf("want %d bridges, got %d", len(bridges), crossings)
+	for _, tk := range m.Tanks {
+		if !near(tk.X, tk.Y, tankRange) {
+			t.Errorf("tank %d is out of reach", tk.Slot)
+		}
+		if !near(tk.X, tk.Y, reportRange) {
+			t.Errorf("tank %d cannot be reported", tk.Slot)
+		}
+	}
+	for _, fp := range m.FixPoints {
+		if !near(fp.X, fp.Y, fixRange) {
+			t.Errorf("fix point %s is out of reach", fp.ID)
+		}
+	}
+	if len(m.Stations) < maxTasksPerPlayer {
+		t.Errorf("want at least %d stations", maxTasksPerPlayer)
+	}
+	if len(m.Tanks) < 10 {
+		t.Errorf("want 10 tanks, got %d", len(m.Tanks))
 	}
 }
 
@@ -167,7 +191,7 @@ func TestMoveStaysInsideTheWorld(t *testing.T) {
 		{1, 0}, {-1, 0}, {0, 1}, {0, -1},
 		{1, 1}, {1, -1}, {-1, 1}, {-1, -1},
 	}
-	starts := [][2]float64{{800, 500}, {300, 900}, {1300, 300}}
+	starts := [][2]float64{{1328, 1008}, {336, 784}, {1040, 400}}
 	for name, m := range maps {
 		for _, s := range starts {
 			for _, d := range dirs {
@@ -209,7 +233,7 @@ func TestSpawnPoints(t *testing.T) {
 			}
 		}
 		dist := math.Hypot(xs[i]-m.Spawn.X, ys[i]-m.Spawn.Y)
-		if dist > 2*spawnGap+spawnGap/2 {
+		if dist > 3*spawnGap {
 			t.Errorf("spawn %d is %v away from the spawn point", i, dist)
 		}
 	}

@@ -1,0 +1,1052 @@
+{
+ "A-dia": {
+  "boton-pri-normal": {
+   "w": 360,
+   "h": 84,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "boton-pri-hover": {
+   "w": 360,
+   "h": 84,
+   "pad": 18,
+   "state": "hover",
+   "nueve_cortes_px": 28
+  },
+  "boton-pri-active": {
+   "w": 360,
+   "h": 84,
+   "pad": 18,
+   "state": "active",
+   "nueve_cortes_px": 28
+  },
+  "boton-pri-disabled": {
+   "w": 360,
+   "h": 84,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "boton-def-normal": {
+   "w": 360,
+   "h": 84,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "boton-def-hover": {
+   "w": 360,
+   "h": 84,
+   "pad": 18,
+   "state": "hover",
+   "nueve_cortes_px": 28
+  },
+  "boton-def-active": {
+   "w": 360,
+   "h": 84,
+   "pad": 18,
+   "state": "active",
+   "nueve_cortes_px": 28
+  },
+  "boton-def-disabled": {
+   "w": 360,
+   "h": 84,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "boton-sec-normal": {
+   "w": 360,
+   "h": 84,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "boton-sec-hover": {
+   "w": 360,
+   "h": 84,
+   "pad": 18,
+   "state": "hover",
+   "nueve_cortes_px": 28
+  },
+  "boton-sec-active": {
+   "w": 360,
+   "h": 84,
+   "pad": 18,
+   "state": "active",
+   "nueve_cortes_px": 28
+  },
+  "boton-sec-disabled": {
+   "w": 360,
+   "h": 84,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "boton-dan-normal": {
+   "w": 360,
+   "h": 84,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "boton-dan-hover": {
+   "w": 360,
+   "h": 84,
+   "pad": 18,
+   "state": "hover",
+   "nueve_cortes_px": 28
+  },
+  "boton-dan-active": {
+   "w": 360,
+   "h": 84,
+   "pad": 18,
+   "state": "active",
+   "nueve_cortes_px": 28
+  },
+  "boton-dan-disabled": {
+   "w": 360,
+   "h": 84,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "boton-amber-normal": {
+   "w": 360,
+   "h": 84,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "boton-amber-hover": {
+   "w": 360,
+   "h": 84,
+   "pad": 18,
+   "state": "hover",
+   "nueve_cortes_px": 28
+  },
+  "boton-amber-active": {
+   "w": 360,
+   "h": 84,
+   "pad": 18,
+   "state": "active",
+   "nueve_cortes_px": 28
+  },
+  "boton-amber-disabled": {
+   "w": 360,
+   "h": 84,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "boton-pri-pequeno-normal": {
+   "w": 200,
+   "h": 56,
+   "pad": 18,
+   "state": "normal"
+  },
+  "boton-sec-pequeno-normal": {
+   "w": 200,
+   "h": 56,
+   "pad": 18,
+   "state": "normal"
+  },
+  "panel-claro": {
+   "w": 480,
+   "h": 300,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "panel-oscuro": {
+   "w": 480,
+   "h": 300,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "panel-madera": {
+   "w": 480,
+   "h": 300,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "pozo": {
+   "w": 480,
+   "h": 160,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "pozo-oscuro": {
+   "w": 480,
+   "h": 160,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "chip-neutro": {
+   "w": 65,
+   "h": 42,
+   "pad": 18,
+   "state": "normal"
+  },
+  "chip-grande-neutro": {
+   "w": 90,
+   "h": 50,
+   "pad": 18,
+   "state": "normal"
+  },
+  "chip-ok": {
+   "w": 65,
+   "h": 42,
+   "pad": 18,
+   "state": "normal"
+  },
+  "chip-grande-ok": {
+   "w": 90,
+   "h": 50,
+   "pad": 18,
+   "state": "normal"
+  },
+  "chip-warn": {
+   "w": 65,
+   "h": 42,
+   "pad": 18,
+   "state": "normal"
+  },
+  "chip-grande-warn": {
+   "w": 90,
+   "h": 50,
+   "pad": 18,
+   "state": "normal"
+  },
+  "chip-bad": {
+   "w": 65,
+   "h": 42,
+   "pad": 18,
+   "state": "normal"
+  },
+  "chip-grande-bad": {
+   "w": 90,
+   "h": 50,
+   "pad": 18,
+   "state": "normal"
+  },
+  "chip-info": {
+   "w": 65,
+   "h": 42,
+   "pad": 18,
+   "state": "normal"
+  },
+  "chip-grande-info": {
+   "w": 90,
+   "h": 50,
+   "pad": 18,
+   "state": "normal"
+  },
+  "medidor-agua-0": {
+   "w": 480,
+   "h": 34,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "medidor-agua-50": {
+   "w": 480,
+   "h": 34,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "medidor-agua-100": {
+   "w": 480,
+   "h": 34,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "medidor-leaf-0": {
+   "w": 480,
+   "h": 34,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "medidor-leaf-50": {
+   "w": 480,
+   "h": 34,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "medidor-leaf-100": {
+   "w": 480,
+   "h": 34,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "medidor-amber-0": {
+   "w": 480,
+   "h": 34,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "medidor-amber-50": {
+   "w": 480,
+   "h": 34,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "medidor-amber-100": {
+   "w": 480,
+   "h": 34,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "medidor-bad-0": {
+   "w": 480,
+   "h": 34,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "medidor-bad-50": {
+   "w": 480,
+   "h": 34,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "medidor-bad-100": {
+   "w": 480,
+   "h": 34,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "campo-normal": {
+   "w": 480,
+   "h": 66,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "campo-foco": {
+   "w": 480,
+   "h": 66,
+   "pad": 18,
+   "state": "focus",
+   "nueve_cortes_px": 28
+  },
+  "interruptor-apagado": {
+   "w": 88,
+   "h": 44,
+   "pad": 18,
+   "state": "normal"
+  },
+  "interruptor-encendido": {
+   "w": 88,
+   "h": 44,
+   "pad": 18,
+   "state": "normal"
+  },
+  "deslizador-0": {
+   "w": 480,
+   "h": 30,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "deslizador-50": {
+   "w": 480,
+   "h": 30,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "deslizador-100": {
+   "w": 480,
+   "h": 30,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "selector-segmentado": {
+   "w": 194,
+   "h": 56,
+   "pad": 18,
+   "state": "normal"
+  },
+  "pestana-normal": {
+   "w": 106,
+   "h": 66,
+   "pad": 18,
+   "state": "normal"
+  },
+  "pestana-activa": {
+   "w": 106,
+   "h": 66,
+   "pad": 18,
+   "state": "normal"
+  },
+  "opcion-normal": {
+   "w": 480,
+   "h": 65,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "opcion-activa": {
+   "w": 480,
+   "h": 65,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "tarjeta-normal": {
+   "w": 300,
+   "h": 200,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "tarjeta-activa": {
+   "w": 300,
+   "h": 200,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "fila-tabla": {
+   "w": 600,
+   "h": 62,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "fila-tabla-activa": {
+   "w": 600,
+   "h": 62,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "jugador-ranura": {
+   "w": 560,
+   "h": 80,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "jugador-ranura-propia": {
+   "w": 560,
+   "h": 80,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "jugador-ranura-vacia": {
+   "w": 560,
+   "h": 80,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "muestra-color-normal": {
+   "w": 64,
+   "h": 64,
+   "pad": 18,
+   "state": "normal"
+  },
+  "muestra-color-elegida": {
+   "w": 64,
+   "h": 64,
+   "pad": 18,
+   "state": "normal"
+  },
+  "accesorio-normal": {
+   "w": 96,
+   "h": 96,
+   "pad": 18,
+   "state": "normal"
+  },
+  "accesorio-elegido": {
+   "w": 96,
+   "h": 96,
+   "pad": 18,
+   "state": "normal"
+  },
+  "tecla": {
+   "w": 46,
+   "h": 46,
+   "pad": 18,
+   "state": "normal"
+  },
+  "codigo-sala": {
+   "w": 133,
+   "h": 55,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "pildora": {
+   "w": 109,
+   "h": 52,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "tablon": {
+   "w": 340,
+   "h": 46,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "marco-imagen": {
+   "w": 480,
+   "h": 270,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "punto-estado": {
+   "w": 16,
+   "h": 16,
+   "pad": 18,
+   "state": "normal"
+  }
+ },
+ "B-noche": {
+  "boton-pri-normal": {
+   "w": 360,
+   "h": 60,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "boton-pri-hover": {
+   "w": 360,
+   "h": 60,
+   "pad": 18,
+   "state": "hover",
+   "nueve_cortes_px": 28
+  },
+  "boton-pri-active": {
+   "w": 360,
+   "h": 60,
+   "pad": 18,
+   "state": "active",
+   "nueve_cortes_px": 28
+  },
+  "boton-pri-disabled": {
+   "w": 360,
+   "h": 60,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "boton-def-normal": {
+   "w": 360,
+   "h": 60,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "boton-def-hover": {
+   "w": 360,
+   "h": 60,
+   "pad": 18,
+   "state": "hover",
+   "nueve_cortes_px": 28
+  },
+  "boton-def-active": {
+   "w": 360,
+   "h": 60,
+   "pad": 18,
+   "state": "active",
+   "nueve_cortes_px": 28
+  },
+  "boton-def-disabled": {
+   "w": 360,
+   "h": 60,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "boton-sec-normal": {
+   "w": 360,
+   "h": 60,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "boton-sec-hover": {
+   "w": 360,
+   "h": 60,
+   "pad": 18,
+   "state": "hover",
+   "nueve_cortes_px": 28
+  },
+  "boton-sec-active": {
+   "w": 360,
+   "h": 60,
+   "pad": 18,
+   "state": "active",
+   "nueve_cortes_px": 28
+  },
+  "boton-sec-disabled": {
+   "w": 360,
+   "h": 60,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "boton-dan-normal": {
+   "w": 360,
+   "h": 60,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "boton-dan-hover": {
+   "w": 360,
+   "h": 60,
+   "pad": 18,
+   "state": "hover",
+   "nueve_cortes_px": 28
+  },
+  "boton-dan-active": {
+   "w": 360,
+   "h": 60,
+   "pad": 18,
+   "state": "active",
+   "nueve_cortes_px": 28
+  },
+  "boton-dan-disabled": {
+   "w": 360,
+   "h": 60,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "boton-amber-normal": {
+   "w": 360,
+   "h": 60,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "boton-amber-hover": {
+   "w": 360,
+   "h": 60,
+   "pad": 18,
+   "state": "hover",
+   "nueve_cortes_px": 28
+  },
+  "boton-amber-active": {
+   "w": 360,
+   "h": 60,
+   "pad": 18,
+   "state": "active",
+   "nueve_cortes_px": 28
+  },
+  "boton-amber-disabled": {
+   "w": 360,
+   "h": 60,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "boton-pri-pequeno-normal": {
+   "w": 200,
+   "h": 48,
+   "pad": 18,
+   "state": "normal"
+  },
+  "boton-sec-pequeno-normal": {
+   "w": 200,
+   "h": 48,
+   "pad": 18,
+   "state": "normal"
+  },
+  "panel-claro": {
+   "w": 480,
+   "h": 300,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "panel-oscuro": {
+   "w": 480,
+   "h": 300,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "panel-madera": {
+   "w": 480,
+   "h": 300,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "pozo": {
+   "w": 480,
+   "h": 160,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "pozo-oscuro": {
+   "w": 480,
+   "h": 160,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "chip-neutro": {
+   "w": 107,
+   "h": 32,
+   "pad": 18,
+   "state": "normal"
+  },
+  "chip-grande-neutro": {
+   "w": 152,
+   "h": 40,
+   "pad": 18,
+   "state": "normal"
+  },
+  "chip-ok": {
+   "w": 107,
+   "h": 32,
+   "pad": 18,
+   "state": "normal"
+  },
+  "chip-grande-ok": {
+   "w": 152,
+   "h": 40,
+   "pad": 18,
+   "state": "normal"
+  },
+  "chip-warn": {
+   "w": 107,
+   "h": 32,
+   "pad": 18,
+   "state": "normal"
+  },
+  "chip-grande-warn": {
+   "w": 152,
+   "h": 40,
+   "pad": 18,
+   "state": "normal"
+  },
+  "chip-bad": {
+   "w": 107,
+   "h": 32,
+   "pad": 18,
+   "state": "normal"
+  },
+  "chip-grande-bad": {
+   "w": 152,
+   "h": 40,
+   "pad": 18,
+   "state": "normal"
+  },
+  "chip-info": {
+   "w": 107,
+   "h": 32,
+   "pad": 18,
+   "state": "normal"
+  },
+  "chip-grande-info": {
+   "w": 152,
+   "h": 40,
+   "pad": 18,
+   "state": "normal"
+  },
+  "medidor-agua-0": {
+   "w": 480,
+   "h": 34,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "medidor-agua-50": {
+   "w": 480,
+   "h": 34,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "medidor-agua-100": {
+   "w": 480,
+   "h": 34,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "medidor-leaf-0": {
+   "w": 480,
+   "h": 34,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "medidor-leaf-50": {
+   "w": 480,
+   "h": 34,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "medidor-leaf-100": {
+   "w": 480,
+   "h": 34,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "medidor-amber-0": {
+   "w": 480,
+   "h": 34,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "medidor-amber-50": {
+   "w": 480,
+   "h": 34,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "medidor-amber-100": {
+   "w": 480,
+   "h": 34,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "medidor-bad-0": {
+   "w": 480,
+   "h": 34,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "medidor-bad-50": {
+   "w": 480,
+   "h": 34,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "medidor-bad-100": {
+   "w": 480,
+   "h": 34,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "campo-normal": {
+   "w": 480,
+   "h": 72,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "campo-foco": {
+   "w": 480,
+   "h": 72,
+   "pad": 18,
+   "state": "focus",
+   "nueve_cortes_px": 28
+  },
+  "interruptor-apagado": {
+   "w": 88,
+   "h": 44,
+   "pad": 18,
+   "state": "normal"
+  },
+  "interruptor-encendido": {
+   "w": 88,
+   "h": 44,
+   "pad": 18,
+   "state": "normal"
+  },
+  "deslizador-0": {
+   "w": 480,
+   "h": 26,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "deslizador-50": {
+   "w": 480,
+   "h": 26,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "deslizador-100": {
+   "w": 480,
+   "h": 26,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "selector-segmentado": {
+   "w": 228,
+   "h": 53,
+   "pad": 18,
+   "state": "normal"
+  },
+  "pestana-normal": {
+   "w": 136,
+   "h": 55,
+   "pad": 18,
+   "state": "normal"
+  },
+  "pestana-activa": {
+   "w": 136,
+   "h": 55,
+   "pad": 18,
+   "state": "normal"
+  },
+  "opcion-normal": {
+   "w": 480,
+   "h": 51,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "opcion-activa": {
+   "w": 480,
+   "h": 51,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "tarjeta-normal": {
+   "w": 300,
+   "h": 200,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "tarjeta-activa": {
+   "w": 300,
+   "h": 200,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "fila-tabla": {
+   "w": 600,
+   "h": 60,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "fila-tabla-activa": {
+   "w": 600,
+   "h": 60,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "jugador-ranura": {
+   "w": 560,
+   "h": 80,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "jugador-ranura-propia": {
+   "w": 560,
+   "h": 80,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "jugador-ranura-vacia": {
+   "w": 560,
+   "h": 80,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "muestra-color-normal": {
+   "w": 64,
+   "h": 64,
+   "pad": 18,
+   "state": "normal"
+  },
+  "muestra-color-elegida": {
+   "w": 64,
+   "h": 64,
+   "pad": 18,
+   "state": "normal"
+  },
+  "accesorio-normal": {
+   "w": 96,
+   "h": 96,
+   "pad": 18,
+   "state": "normal"
+  },
+  "accesorio-elegido": {
+   "w": 96,
+   "h": 96,
+   "pad": 18,
+   "state": "normal"
+  },
+  "tecla": {
+   "w": 42,
+   "h": 42,
+   "pad": 18,
+   "state": "normal"
+  },
+  "codigo-sala": {
+   "w": 296,
+   "h": 50,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "pildora": {
+   "w": 193,
+   "h": 50,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "tablon": {
+   "w": 340,
+   "h": 36,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "marco-imagen": {
+   "w": 480,
+   "h": 270,
+   "pad": 18,
+   "state": "normal",
+   "nueve_cortes_px": 28
+  },
+  "punto-estado": {
+   "w": 16,
+   "h": 16,
+   "pad": 18,
+   "state": "normal"
+  }
+ }
+}

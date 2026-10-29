@@ -9,12 +9,14 @@ export interface SessionData {
 
 const STORAGE_KEY = 'in-filtrados-session';
 
-// initialScreen decide a dónde ir al cargar la página (S3-01).
+// initialScreen decide a dónde ir al cargar la página (S3-01): sin
+// sesión al acceso; con una sala guardada, de vuelta a ella (recargar a
+// mitad de partida o de reunión); si no, al menú.
 export function initialScreen(
   data: SessionData | null,
-): 'login' | 'lobby' | 'game' {
-  if (!data?.token) return 'login';
-  return data.matchId ? 'game' : 'lobby';
+): 'access' | 'menu' | 'room' {
+  if (!data?.token) return 'access';
+  return data.matchId ? 'room' : 'menu';
 }
 
 export const session = {

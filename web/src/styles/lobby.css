@@ -1,0 +1,656 @@
+/* =========================================================================
+   SALA DE ESPERA UNIFICADA (Distribución balanceada, centrada y sin cortes)
+   ========================================================================= */
+
+.stage.scr-lobby {
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Fondo con viñeta ambiental cinematográfica */
+.scr-lobby .lobby-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse at 50% 50%,
+      rgba(4, 18, 38, 0.72) 0%,
+      rgba(2, 8, 18, 0.94) 100%
+    );
+  z-index: 1;
+}
+
+/* =========================================================================
+   BARRA SUPERIOR INTEGRADA (Código centrado exactamente en pantalla)
+   ========================================================================= */
+.scr-lobby .lobby-header {
+  position: absolute;
+  left: 90px;
+  right: 90px;
+  top: 20px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 10;
+}
+
+.scr-lobby .lobby-exit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 46px;
+  padding: 0 26px;
+  font-family: var(--head);
+  font-size: 19px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--txt);
+  background: rgba(10, 33, 57, 0.85);
+  border: 1.5px solid rgba(126, 230, 216, 0.35);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.scr-lobby .lobby-exit-btn:hover {
+  background: rgba(14, 48, 84, 0.95);
+  border-color: var(--aqua);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+/* CÓDIGO DE SALA: EXACTAMENTE CENTRADO EN LA PANTALLA (X = 50%) */
+.scr-lobby .lobby-code-badge {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 26px;
+  background: rgba(10, 33, 57, 0.85);
+  border: 1.5px solid rgba(126, 230, 216, 0.35);
+  border-radius: 10px;
+  box-shadow: none;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.scr-lobby .lobby-code-badge:hover {
+  background: rgba(14, 48, 84, 0.95);
+  border-color: var(--aqua);
+  box-shadow: none;
+  transform: translateX(-50%) translateY(-2px);
+}
+
+.scr-lobby .lobby-code-lbl {
+  font-family: var(--head);
+  font-size: 16px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--mut);
+}
+
+.scr-lobby .lobby-code-val {
+  font-family: var(--logo);
+  font-size: 34px;
+  letter-spacing: 0.22em;
+  color: var(--amber);
+  line-height: 1;
+}
+
+.scr-lobby .lobby-code-action {
+  font-family: var(--head);
+  font-size: 15px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--aqua);
+  background: rgba(20, 53, 84, 0.7);
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(126, 230, 216, 0.4);
+}
+
+.scr-lobby .lobby-header-meta {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-family: var(--head);
+  font-size: 18px;
+  letter-spacing: 1.5px;
+  color: var(--txt);
+}
+
+.scr-lobby .lobby-meta-dot {
+  color: var(--aqua);
+}
+
+/* =========================================================================
+   CUERPO UNIFICADO DE LA PANTALLA (Separado de la barra superior)
+   ========================================================================= */
+.scr-lobby .lobby-stage-content {
+  position: absolute;
+  left: 90px;
+  right: 90px;
+  top: 122px;
+  height: 750px;
+  display: grid;
+  grid-template-columns: 780px 1px 1fr;
+  gap: 40px;
+  align-items: start;
+  z-index: 5;
+}
+
+/* Divisor vertical entre Tu Personaje y Sala */
+.scr-lobby .lobby-v-divider {
+  width: 1px;
+  height: 720px;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(126, 230, 216, 0.25) 15%,
+    rgba(126, 230, 216, 0.25) 85%,
+    transparent 100%
+  );
+}
+
+/* MITAD IZQUIERDA: PERSONAJE Y PERSONALIZACIÓN DIRECTA */
+.scr-lobby .lobby-hero-col {
+  display: flex;
+  flex-direction: column;
+  padding-right: 10px;
+}
+
+.scr-lobby .lobby-char-pedestal {
+  position: relative;
+  width: 100%;
+  height: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.scr-lobby .lobby-char-figure {
+  height: 225px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 1;
+}
+
+.scr-lobby .lobby-char-shadow {
+  position: absolute;
+  bottom: 58px;
+  width: 200px;
+  height: 30px;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0.3) 50%,
+    transparent 75%
+  );
+  filter: blur(4px);
+  pointer-events: none;
+}
+
+.scr-lobby .lobby-char-name-tag {
+  margin-top: 6px;
+  font-family: var(--head);
+  font-size: 23px;
+  letter-spacing: 2px;
+  color: #fff;
+  text-shadow: 2px 2px 0 var(--ink);
+}
+
+.scr-lobby .lobby-char-desc {
+  font-family: var(--head);
+  font-size: 16px;
+  letter-spacing: 1.5px;
+  color: var(--mut);
+  margin-top: 4px;
+}
+
+/* Separador horizontal sutil entre secciones */
+.scr-lobby .lobby-section-sep {
+  width: 100%;
+  height: 1px;
+  background: rgba(126, 230, 216, 0.15);
+  margin: 12px 0;
+}
+
+/* Controles de personalización directos y espaciados */
+.scr-lobby .lobby-controls-flow {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.scr-lobby .lobby-control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.scr-lobby .lobby-control-title {
+  font-family: var(--head);
+  font-size: 14px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--aqua);
+}
+
+/* Opciones de personaje (Skin) */
+.scr-lobby .lobby-skin-options {
+  display: flex;
+  gap: 12px;
+}
+
+.scr-lobby .lobby-pill-opt {
+  flex: 1;
+  height: 46px;
+  font-family: var(--head);
+  font-size: 17px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--mut);
+  background: rgba(7, 25, 46, 0.8);
+  border: 1.5px solid rgba(126, 230, 216, 0.25);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.scr-lobby .lobby-pill-opt:hover:not(:disabled) {
+  border-color: var(--aqua);
+  color: #fff;
+  background: rgba(14, 48, 84, 0.9);
+}
+
+.scr-lobby .lobby-pill-opt.active {
+  color: #fff;
+  background: #104473;
+  border-color: var(--aqua);
+  box-shadow: 0 0 12px rgba(126, 230, 216, 0.35);
+}
+
+/* Fila de 8 colores */
+.scr-lobby .lobby-color-row {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 10px;
+}
+
+.scr-lobby .lobby-color-dot {
+  position: relative;
+  height: 50px;
+  border-radius: 8px;
+  border: 2px solid rgba(4, 16, 31, 0.85);
+  cursor: pointer;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.35),
+    0 4px 8px rgba(0, 0, 0, 0.4);
+  transition: all 120ms ease;
+}
+
+.scr-lobby .lobby-color-dot:hover:not(:disabled) {
+  transform: translateY(-3px);
+  border-color: #fff;
+}
+
+.scr-lobby .lobby-color-dot.active {
+  border: 2.5px solid #fff;
+  outline: 2px solid var(--aqua);
+  outline-offset: 2px;
+  transform: translateY(-2px);
+}
+
+.scr-lobby .lobby-color-dot.taken {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+/* Fila de accesorios integrada y con retratos centrados dentro de la caja */
+.scr-lobby .lobby-acc-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+}
+
+.scr-lobby .lobby-acc-item {
+  height: 66px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 0 7px;
+  overflow: hidden;
+  background: rgba(7, 25, 46, 0.75);
+  border: 1.5px solid rgba(126, 230, 216, 0.22);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.scr-lobby .lobby-acc-item.no-acc {
+  align-items: center;
+  padding: 0;
+}
+
+.scr-lobby .lobby-acc-item:hover:not(.locked) {
+  border-color: var(--aqua);
+  background: rgba(14, 48, 84, 0.9);
+}
+
+.scr-lobby .lobby-acc-item.active {
+  border-color: var(--aqua);
+  background: #104473;
+  box-shadow: 0 0 12px rgba(126, 230, 216, 0.3);
+}
+
+.scr-lobby .lobby-acc-item.locked {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.scr-lobby .lobby-no-acc-glyph {
+  font-family: var(--head);
+  font-size: 22px;
+  color: var(--mut);
+}
+
+/* =========================================================================
+   MITAD DERECHA: SALA, JUGADORES Y BOTÓN BIEN DISTRIBUIDOS
+   ========================================================================= */
+.scr-lobby .lobby-players-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.scr-lobby .lobby-players-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  border-bottom: 1.5px solid rgba(126, 230, 216, 0.2);
+  font-family: var(--head);
+  font-size: 21px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.scr-lobby .lobby-players-count {
+  font-family: var(--head);
+  font-size: 18px;
+  color: var(--amber);
+}
+
+/* Grid de los 10 jugadores en 2 columnas de 5 con separación holgada */
+.scr-lobby .lobby-roster-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(5, 62px);
+  gap: 18px 24px;
+  margin-top: 18px;
+}
+
+.scr-lobby .lobby-player-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 20px;
+  background: rgba(7, 25, 46, 0.65);
+  border: 1.5px solid rgba(126, 230, 216, 0.2);
+  border-radius: 10px;
+  transition: all 120ms ease;
+}
+
+.scr-lobby .lobby-player-card.is-me {
+  background: rgba(15, 61, 108, 0.55);
+  border-color: rgba(126, 230, 216, 0.5);
+}
+
+.scr-lobby .lobby-player-card.is-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(4, 14, 27, 0.35);
+  border: 1.5px dashed rgba(255, 255, 255, 0.15);
+  color: var(--mut);
+}
+
+.scr-lobby .lobby-player-avatar {
+  width: 46px;
+  height: 48px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 2px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.scr-lobby .lobby-player-card-sep {
+  width: 1px;
+  height: 32px;
+  background: rgba(126, 230, 216, 0.18);
+  flex-shrink: 0;
+}
+
+.scr-lobby .lobby-player-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.scr-lobby .lobby-player-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.scr-lobby .lobby-player-name {
+  font-family: var(--head);
+  font-size: 18px;
+  letter-spacing: 1.5px;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scr-lobby .lobby-player-tag {
+  font-family: var(--head);
+  font-size: 13px;
+  color: var(--aqua);
+}
+
+.scr-lobby .lobby-player-sub {
+  font-family: var(--head);
+  font-size: 14px;
+  color: var(--mut);
+}
+
+.scr-lobby .lobby-player-badge {
+  font-family: var(--head);
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(20, 53, 84, 0.6);
+  color: var(--aqua);
+  border: 1px solid rgba(126, 230, 216, 0.3);
+  margin-left: auto;
+}
+
+.scr-lobby .lobby-player-badge.host {
+  background: rgba(255, 210, 74, 0.15);
+  color: var(--amber);
+  border-color: rgba(255, 210, 74, 0.4);
+}
+
+/* =========================================================================
+   CAJA DE LANZAMIENTO / INICIO CON ESPACIADO AMPLIO Y SEPARADO
+   ========================================================================= */
+.scr-lobby .lobby-action-footer {
+  display: flex;
+  flex-direction: column;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1.5px solid rgba(126, 230, 216, 0.2);
+}
+
+/* Ajustes de la partida: una fila por ajuste, etiqueta + opciones */
+.scr-lobby .lobby-config {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.scr-lobby .lobby-config-row {
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  align-items: center;
+  gap: 16px;
+}
+
+.scr-lobby .lobby-config-row .lobby-control-title {
+  margin: 0;
+}
+
+.scr-lobby .lobby-config-options {
+  display: flex;
+  gap: 10px;
+}
+
+.scr-lobby .lobby-config-options .lobby-pill-opt {
+  height: 42px;
+}
+
+.scr-lobby .lobby-config-value {
+  font-family: var(--head);
+  font-size: 18px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+/* Aviso de mínimo de jugadores con margen holgado arriba y abajo */
+.scr-lobby .lobby-min-players-alert {
+  margin-top: 14px;
+  font-family: var(--head);
+  font-size: 15px;
+  letter-spacing: 2px;
+  color: var(--amber);
+  text-align: center;
+  text-transform: uppercase;
+  text-shadow: 1px 1px 0 var(--ink);
+}
+
+/* Botón principal de Iniciar Partida ubicado más abajo y separado del texto */
+.scr-lobby .lobby-main-cta {
+  margin-top: 18px;
+  height: 68px;
+  font-family: var(--logo);
+  font-size: 24px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #fff;
+  background: #145a32;
+  border: 2px solid #27ae60;
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.scr-lobby .lobby-main-cta:hover:not(:disabled) {
+  background: #196f3d;
+  border-color: var(--leaf);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(39, 174, 96, 0.35);
+}
+
+.scr-lobby .lobby-main-cta:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.scr-lobby .lobby-guest-notice {
+  margin-top: 18px;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(7, 25, 46, 0.7);
+  border: 1.5px solid rgba(255, 210, 74, 0.4);
+  border-radius: 10px;
+  font-family: var(--head);
+  font-size: 20px;
+  letter-spacing: 1.5px;
+  color: var(--amber);
+}
+
+/* =========================================================================
+   HINT BAR INFERIOR (Elevada como en el Menú Principal para no tocar bordes)
+   ========================================================================= */
+.stage.scr-lobby .hint {
+  position: absolute;
+  left: 50%;
+  right: auto;
+  bottom: 86px;
+  width: 680px;
+  height: 54px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 44px;
+  background: linear-gradient(
+    90deg,
+    rgba(4, 16, 31, 0),
+    rgba(4, 16, 31, 0.75) 22%,
+    rgba(4, 16, 31, 0.75) 78%,
+    rgba(4, 16, 31, 0)
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+
+.stage.scr-lobby .hint span {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--head);
+  font-size: 18px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--mut);
+  text-shadow: 2px 2px 0 var(--ink);
+}
+
+.stage.scr-lobby .hint .kbd {
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  display: inline-grid;
+  place-items: center;
+  font-family: var(--head);
+  font-size: 16px;
+  color: var(--aqua);
+  background: #0a2139;
+  border: 1.5px solid var(--aqua);
+  border-radius: 4px;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.6);
+}

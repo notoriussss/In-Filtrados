@@ -25,21 +25,8 @@ func (r *Room) startContaminate(id string, p *player, slot int32) {
 	}
 }
 
-// startClean empieza a limpiar el tanque slot, propio o ajeno.
-func (r *Room) startClean(p *player, slot int32) {
-	if r.phase != matchv1.Phase_PLAYING {
-		return
-	}
-	t := r.tankAt(slot)
-	if t == nil || t.contamination == 0 || !r.canWorkOn(p, t) {
-		return
-	}
-	p.pending = &tankAction{
-		kind:      LogClean,
-		slot:      slot,
-		ticksLeft: cleanTicks,
-	}
-}
+// Nadie limpia tanques: la contaminación nunca baja, así que el daño del
+// impostor es permanente.
 
 // canWorkOn: el tanque sigue vivo y el jugador está quieto y cerca.
 func (r *Room) canWorkOn(p *player, t *tank) bool {
@@ -77,8 +64,6 @@ func (r *Room) stepAction(id string, p *player) {
 		p.nextContaminate = r.tick + contaminateCooldown
 		r.addContamination(t, contaminateAmount)
 		r.startOilTrail(p)
-	case LogClean:
-		t.contamination = max(t.contamination-cleanAmount, 0)
 	}
 	r.logEvent(id, kind, t.slot)
 }
@@ -101,13 +86,20 @@ func (r *Room) driftImpostorTanks() {
 }
 
 // addContamination sube el tanque; a 100 muere y su dueño queda fantasma.
+// El tanque del impostor se queda en 99: la subida sola y la tubería son
+// solo un disfraz y no deben sacarlo de la partida.
 func (r *Room) addContamination(t *tank, amount int32) {
-	t.contamination = min(t.contamination+amount, maxContamination)
+	limit := int32(maxContamination)
+	owner, ok := r.players[t.ownerID]
+	if ok && owner.role == matchv1.Role_IMPOSTOR {
+		limit = maxContamination - 1
+	}
+	t.contamination = min(t.contamination+amount, limit)
 	if t.contamination < maxContamination {
 		return
 	}
 	t.dead = true
-	if owner, ok := r.players[t.ownerID]; ok {
+	if ok {
 		owner.view.Alive = false
 		owner.pending = nil
 	}

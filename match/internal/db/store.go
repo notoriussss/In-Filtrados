@@ -94,9 +94,10 @@ func (s *Store) FinishMatch(
 	defer func() { _ = tx.Rollback(ctx) }()
 
 	queries := s.queries.WithTx(tx)
+	// Sin ganador (sala cerrada por el host) se guarda NULL.
 	err = queries.FinishMatch(ctx, FinishMatchParams{
 		ID:     id,
-		Winner: pgtype.Text{String: winner, Valid: true},
+		Winner: pgtype.Text{String: winner, Valid: winner != ""},
 	})
 	if err != nil {
 		return fmt.Errorf("store: terminando partida: %w", err)

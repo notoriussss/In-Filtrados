@@ -78,10 +78,6 @@ func contaminate(r *Room, id string, slot int32) {
 	})
 }
 
-func clean(r *Room, id string, slot int32) {
-	r.handleAction(PlayerAction{PlayerID: id, Clean: true, TankSlot: slot})
-}
-
 func move(r *Room, id string, dx, dy int32) {
 	r.handleAction(PlayerAction{PlayerID: id, DX: dx, DY: dy})
 }
@@ -186,11 +182,11 @@ func TestContaminateCooldown(t *testing.T) {
 	}
 }
 
-// (d) 3 contaminaciones sin limpiar matan el tanque y el dueño es fantasma.
-func TestThreeContaminationsKillTheTank(t *testing.T) {
+// (d) 2 contaminaciones matan el tanque y el dueño es fantasma.
+func TestTwoContaminationsKillTheTank(t *testing.T) {
 	r, eventLog := playingRoom(t)
 	placeAt(r, "imp", 1)
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 2; i++ {
 		contaminate(r, "imp", 1)
 		tickN(r, contaminateTicks)
 		tickN(r, contaminateCooldown)
@@ -203,19 +199,11 @@ func TestThreeContaminationsKillTheTank(t *testing.T) {
 	if r.players["crew1"].view.Alive {
 		t.Fatalf("el dueño del tanque muerto debía quedar fantasma")
 	}
-	if eventLog.count(LogContaminate, 1) != 3 {
+	if eventLog.count(LogContaminate, 1) != 2 {
 		t.Errorf(
-			"want 3 contaminaciones en event_log, got %d",
+			"want 2 contaminaciones en event_log, got %d",
 			eventLog.count(LogContaminate, 1),
 		)
-	}
-
-	// Un tanque muerto ya no se limpia.
-	placeAt(r, "crew2", 1)
-	clean(r, "crew2", 1)
-	tickN(r, cleanTicks)
-	if level(r, 1) != maxContamination {
-		t.Errorf("un tanque muerto no debe poder limpiarse")
 	}
 
 	// El snapshot lo muestra a todos.
@@ -225,36 +213,54 @@ func TestThreeContaminationsKillTheTank(t *testing.T) {
 	}
 }
 
-func TestCleanTakesTwoSecondsAndSubtracts(t *testing.T) {
-	r, eventLog := playingRoom(t)
+// Nadie limpia tanques: lo que contamina el impostor no baja nunca, ni
+// con los tripulantes parados junto al tanque.
+func TestContaminationNeverGoesDown(t *testing.T) {
+	r, _ := playingRoom(t)
 	placeAt(r, "imp", 1)
 	contaminate(r, "imp", 1)
 	tickN(r, contaminateTicks)
-
-	placeAt(r, "crew2", 1)
-	clean(r, "crew2", 1)
-	tickN(r, cleanTicks-1)
 	if level(r, 1) != contaminateAmount {
-		t.Fatalf("limpió antes de 2 s")
+		t.Fatalf("la contaminación no terminó")
 	}
-	tickN(r, 1)
-	want := int32(contaminateAmount - cleanAmount)
-	if got := level(r, 1); got != want {
-		t.Fatalf("want %d tras limpiar, got %d", want, got)
-	}
-	if eventLog.count(LogClean, 1) != 1 {
-		t.Errorf("la limpieza debe quedar en event_log")
+
+	placeAt(r, "crew1", 1)
+	placeAt(r, "crew2", 1)
+	for i := 0; i < 30; i++ {
+		tickN(r, 100)
+		if got := level(r, 1); got < contaminateAmount {
+			t.Fatalf("la contaminación bajó a %d", got)
+		}
 	}
 }
 
-func TestCleanNeverGoesBelowZero(t *testing.T) {
+// Con 50 de daño por contaminación, dos matan un tanque.
+func TestContaminateAmountKillsInTwoHits(t *testing.T) {
+	if 2*contaminateAmount < maxContamination {
+		t.Fatalf("dos contaminaciones deben bastar para matar un tanque")
+	}
+	if contaminateAmount >= maxContamination {
+		t.Fatalf("una sola contaminación no debe matar un tanque")
+	}
+}
+
+// El tanque del impostor nunca muere solo: ni la subida automática ni la
+// tubería lo pasan de 99 (partida EEES: 60 de subida + 2 tuberías).
+func TestImpostorTankNeverDies(t *testing.T) {
 	r, _ := playingRoom(t)
-	r.tankAt(2).contamination = 5
-	placeAt(r, "crew2", 2)
-	clean(r, "crew2", 2)
-	tickN(r, cleanTicks)
-	if got := level(r, 2); got != 0 {
-		t.Fatalf("want 0, got %d", got)
+	imp := r.tankAt(0)
+	imp.contamination = maxContamination - 1
+	tickN(r, impostorDriftTicks)
+	r.addContamination(imp, pipeDamage)
+
+	if imp.contamination != maxContamination-1 || imp.dead {
+		t.Fatalf("el tanque del impostor debía quedar en 99: %+v", imp)
+	}
+	if !r.players["imp"].view.Alive {
+		t.Fatal("el impostor no debe quedar fantasma por su tanque")
+	}
+	if r.phase != matchv1.Phase_PLAYING {
+		t.Fatal("la partida no debe terminar")
 	}
 }
 

@@ -1,0 +1,143 @@
+/* =========================================================================
+   MODAL DE PAUSA EN PARTIDA (Minimalista, limpio y sin sobrecarga visual)
+   ========================================================================= */
+
+.stage.scr-pause {
+  background: transparent;
+}
+
+.scr-pause .pause-modal {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 520px;
+  background: rgba(5, 18, 34, 0.92);
+  border: 1.5px solid rgba(126, 230, 216, 0.28);
+  border-radius: 16px;
+  box-shadow:
+    0 20px 48px rgba(0, 0, 0, 0.75),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  padding: 30px 36px 26px;
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+}
+
+.scr-pause .pause-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 20px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid rgba(126, 230, 216, 0.16);
+}
+
+.scr-pause .pause-title {
+  font-family: var(--head);
+  font-size: 24px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 2px 2px 0 var(--ink);
+}
+
+.scr-pause .pause-meta-chips {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.scr-pause .pause-chip {
+  font-family: var(--head);
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 3px 12px;
+  border-radius: 20px;
+  background: rgba(14, 48, 84, 0.65);
+  border: 1px solid rgba(126, 230, 216, 0.25);
+  color: var(--mut);
+}
+
+.scr-pause .pause-chip.code {
+  color: var(--aqua);
+  background: rgba(16, 68, 115, 0.75);
+  border-color: rgba(126, 230, 216, 0.4);
+}
+
+.scr-pause .pause-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.scr-pause .pause-btn {
+  width: 100%;
+  height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--head);
+  font-size: 17px;
+  letter-spacing: 2.2px;
+  text-transform: uppercase;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 120ms ease;
+  outline: none;
+}
+
+.scr-pause .pause-btn.pri {
+  background: #145a32;
+  border: 1.5px solid #27ae60;
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.scr-pause .pause-btn.pri:hover {
+  background: #196f3d;
+  border-color: var(--leaf);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(39, 174, 96, 0.35);
+}
+
+.scr-pause .pause-btn.sec {
+  background: rgba(10, 33, 57, 0.7);
+  border: 1.5px solid rgba(126, 230, 216, 0.22);
+  color: var(--txt);
+}
+
+.scr-pause .pause-btn.sec:hover {
+  background: rgba(14, 48, 84, 0.95);
+  border-color: var(--aqua);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.scr-pause .pause-btn.dan {
+  background: rgba(70, 18, 26, 0.65);
+  border: 1.5px solid rgba(255, 107, 107, 0.35);
+  color: #ffcccc;
+}
+
+.scr-pause .pause-btn.dan:hover {
+  background: rgba(100, 24, 34, 0.9);
+  border-color: var(--coral);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(255, 107, 107, 0.35);
+}
+
+.scr-pause .pause-leave-note {
+  margin-top: 18px;
+  font-family: var(--head);
+  font-size: 12px;
+  letter-spacing: 1.2px;
+  color: var(--mut);
+  text-align: center;
+  line-height: 1.4;
+  opacity: 0.8;
+}

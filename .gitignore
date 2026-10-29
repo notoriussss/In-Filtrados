@@ -22,3 +22,9 @@ match/match
 .idea/
 .DS_Store
 Thumbs.db
+
+# Graphify
+graphify-out/
+
+# Claude worktrees
+.claude/worktrees/

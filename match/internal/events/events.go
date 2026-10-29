@@ -29,6 +29,18 @@ const (
 	WinnerImpostor = "impostor"
 )
 
+// Razones de fin de partida (S2-06).
+const (
+	ReasonReservoirFull     = "reservoir_full"
+	ReasonImpostorsEjected  = "impostors_ejected"
+	ReasonTanksContaminated = "tanks_contaminated"
+	ReasonTimeOut           = "timeout"
+	ReasonHostLeft          = "host_left"
+)
+
+// WinnerNone: la sala se cerró sin ganador (el host se fue a propósito).
+const WinnerNone = ""
+
 // Publisher publica un evento en el exchange `game.events`.
 type Publisher interface {
 	Publish(ctx context.Context, routingKey string, payload any) error
@@ -97,6 +109,8 @@ type PlayerResult struct {
 	Role     string `json:"role"`
 	Ejected  bool   `json:"ejected"`
 	Harvest  int    `json:"harvest"`
+	// Litros que sus tareas sumaron al embalse (el impostor no suma).
+	LitersSaved int `json:"liters_saved"`
 }
 
 // NewMatchStarted arma el evento con un `event_id` nuevo.

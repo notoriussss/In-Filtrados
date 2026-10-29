@@ -1,0 +1,145 @@
+{
+  "_nota": "Hojas a escala de mundo (1 px = 1 unidad; ampliar sin suavizado). 1 celda = 40×56 px. Columnas: vistas (front, side, back) × poses (idle0, idle1, walk0..3) = 18. Fila 0 = vivo, fila 1 = fantasma (dibujar con alpha ≈ 0.62). La vista side mira a la derecha; para ir a la izquierda, voltear en horizontal. Para componer: dibuja la hoja de cuerpo y encima la de accesorio en la misma celda.",
+  "cell": {
+    "w": 40,
+    "h": 56
+  },
+  "columns": [
+    "front_idle0",
+    "front_idle1",
+    "front_walk0",
+    "front_walk1",
+    "front_walk2",
+    "front_walk3",
+    "side_idle0",
+    "side_idle1",
+    "side_walk0",
+    "side_walk1",
+    "side_walk2",
+    "side_walk3",
+    "back_idle0",
+    "back_idle1",
+    "back_walk0",
+    "back_walk1",
+    "back_walk2",
+    "back_walk3"
+  ],
+  "rows": [
+    "vivo",
+    "fantasma"
+  ],
+  "anchor": {
+    "x": 20,
+    "y": 46,
+    "nota": "Punto (x,y) del jugador dentro de la celda: dibujar la celda en (x - 20, y - 46). Los pies quedan ~6 px por debajo; para ordenar por profundidad usa baseY = y + 6."
+  },
+  "hitCircleRadius": 16,
+  "fps": {
+    "idle": 2,
+    "walk": 8
+  },
+  "poses": {
+    "idle": [
+      "idle0",
+      "idle1"
+    ],
+    "walk": [
+      "walk0",
+      "walk1",
+      "walk2",
+      "walk3"
+    ]
+  },
+  "accesorios": [
+    {
+      "id": "brote",
+      "nombre": "Brote",
+      "color": "#58c05f"
+    },
+    {
+      "id": "audifonos",
+      "nombre": "Audífonos",
+      "color": "#ef6b73"
+    },
+    {
+      "id": "gorra",
+      "nombre": "Gorra",
+      "color": "#4a7fd6"
+    },
+    {
+      "id": "lentes",
+      "nombre": "Lentes",
+      "color": "#2b2f4a"
+    },
+    {
+      "id": "paja",
+      "nombre": "Sombrero de paja",
+      "color": "#e2b95e"
+    },
+    {
+      "id": "bufanda",
+      "nombre": "Bufanda",
+      "color": "#e86a5a"
+    },
+    {
+      "id": "flor",
+      "nombre": "Flor",
+      "color": "#f7a1cf"
+    },
+    {
+      "id": "visor",
+      "nombre": "Visor de buceo",
+      "color": "#ee8f3a"
+    },
+    {
+      "id": "casco",
+      "nombre": "Casco de obra",
+      "color": "#f4c430"
+    },
+    {
+      "id": "pescador",
+      "nombre": "Gorro de pescador",
+      "color": "#c9b27c"
+    },
+    {
+      "id": "impermeable",
+      "nombre": "Impermeable",
+      "color": "#f2c230"
+    },
+    {
+      "id": "mochila",
+      "nombre": "Tanque de riego",
+      "color": "#4fae82"
+    }
+  ],
+  "caras": [
+    {
+      "id": "neutral",
+      "name": "Neutral"
+    },
+    {
+      "id": "happy",
+      "name": "Feliz"
+    },
+    {
+      "id": "worried",
+      "name": "Preocupado"
+    },
+    {
+      "id": "sleepy",
+      "name": "Soñoliento"
+    },
+    {
+      "id": "surprised",
+      "name": "Sorprendido"
+    },
+    {
+      "id": "angry",
+      "name": "Molesto"
+    },
+    {
+      "id": "smug",
+      "name": "Pícaro"
+    }
+  ]
+}

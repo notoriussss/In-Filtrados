@@ -1,30 +1,85 @@
 import type {
+  Activity,
   ChatMessage,
+  Emergency,
+  EmergencyKind,
+  EndReason,
   ErrorCode,
   Meeting,
+  MeetingButton,
   MyTask,
   OilDrop,
+  PlayerView,
+  SabotageStatus,
   ServerMessage,
   Snapshot,
   TankView,
+  Winner,
 } from '@in-filtrados/messages';
 
 // Shapes of the gRPC ServerEvent as @grpc/proto-loader decodes it
 // (camelCase, enums as strings, longs as numbers, defaults on).
-type GrpcMeeting = Omit<Meeting, 'ejectedId'> & {
+type GrpcMeeting = Omit<Meeting, 'ejectedId' | 'reason'> & {
   ejectedId?: string | null;
+  reason?: string;
 };
+
+type GrpcPlayerView = Omit<PlayerView, 'activity' | 'accessory' | 'skin'> & {
+  activity?: string;
+  accessory?: string;
+  skin?: string;
+};
+
+type GrpcEmergency = Omit<Emergency, 'kind'> & { kind: string };
 
 type GrpcSnapshot = Omit<
   Snapshot,
-  'type' | 'meeting' | 'myTasks' | 'myActiveTask'
+  | 'type'
+  | 'players'
+  | 'meeting'
+  | 'myTasks'
+  | 'myActiveTask'
+  | 'emergency'
+  | 'mySabotage'
+  | 'myMeeting'
 > & {
+  players?: GrpcPlayerView[];
   meeting: GrpcMeeting | null;
   myTasks?: MyTask[];
   myActiveTask?: string;
+  emergency?: GrpcEmergency | null;
+  mySabotage?: SabotageStatus | null;
+  myMeeting?: MeetingButton | null;
 };
 
-type GrpcMatchEnded = { winner: string; impostorIds: string[] };
+const ACTIVITIES: readonly string[] = [
+  'reduce',
+  'reuse',
+  'recycle',
+  'tank',
+  'fix',
+];
+const EMERGENCY_KINDS: readonly string[] = ['pipe', 'steam'];
+const VALID_END_REASONS: readonly EndReason[] = [
+  'reservoir_full',
+  'impostors_ejected',
+  'tanks_contaminated',
+  'timeout',
+  'host_left',
+];
+
+function normalizeEndReason(raw?: string): EndReason | undefined {
+  if (!raw) return undefined;
+  return VALID_END_REASONS.includes(raw as EndReason)
+    ? (raw as EndReason)
+    : undefined;
+}
+
+type GrpcMatchEnded = {
+  winner: string;
+  impostorIds: string[];
+  reason?: string;
+};
 
 export type GrpcServerEvent =
   | { event: 'snapshot'; snapshot: GrpcSnapshot }
@@ -38,12 +93,17 @@ export function toServerMessage(ev: GrpcServerEvent): ServerMessage | null {
     return toSnapshot(ev.snapshot);
   }
   if (ev.event === 'matchEnded') {
-    const winner = ev.matchEnded.winner;
-    if (winner !== 'crew' && winner !== 'impostor') return null;
+    const raw = ev.matchEnded.winner;
+    const reason = normalizeEndReason(ev.matchEnded.reason);
+    // Sin ganador solo vale cuando el host cerró la sala; otro valor no.
+    const noWinner = !raw && reason === 'host_left';
+    if (!noWinner && raw !== 'crew' && raw !== 'impostor') return null;
+    const winner = noWinner ? null : (raw as Winner);
     return {
       type: 'matchEnded',
       winner,
       impostorIds: [...(ev.matchEnded.impostorIds ?? [])],
+      ...(reason ? { reason } : {}),
     };
   }
   if (ev.event === 'error') {
@@ -61,7 +121,7 @@ function toSnapshot(s: GrpcSnapshot): Snapshot {
     type: 'snapshot',
     tick: s.tick,
     phase: s.phase,
-    players: s.players ?? [],
+    players: (s.players ?? []).map(toPlayer),
     tanks: (s.tanks ?? []).map(toTank),
     reservoir: s.reservoir ?? 0,
     myRole: s.myRole ?? 'NO_ROLE',
@@ -79,6 +139,51 @@ function toSnapshot(s: GrpcSnapshot): Snapshot {
       s.myActiveTask && s.myActiveTask.length > 0
         ? s.myActiveTask
         : null,
+    emergency: toEmergency(s.emergency),
+    mySabotage: s.mySabotage
+      ? {
+          readyAtTick: s.mySabotage.readyAtTick,
+          pipesLeft: s.mySabotage.pipesLeft,
+        }
+      : null,
+    myMeeting: s.myMeeting
+      ? {
+          readyAtTick: s.myMeeting.readyAtTick,
+          callsLeft: s.myMeeting.callsLeft,
+        }
+      : null,
+    tasksPerPlayer: s.tasksPerPlayer ?? 0,
+    impostors: s.impostors ?? 0,
+    matchMinutes: s.matchMinutes ?? 0,
+    matchEndsAtTick: s.matchEndsAtTick ?? 0,
+  };
+}
+
+function toPlayer(p: GrpcPlayerView): PlayerView {
+  return {
+    id: p.id,
+    name: p.name,
+    color: p.color,
+    x: p.x,
+    y: p.y,
+    connected: Boolean(p.connected),
+    alive: Boolean(p.alive),
+    activity:
+      p.activity && ACTIVITIES.includes(p.activity)
+        ? (p.activity as Activity)
+        : null,
+    accessory: p.accessory ?? '',
+    skin: p.skin || 'jimena',
+  };
+}
+
+// S3-05: emergencia activa; null si no hay o si el tipo no se conoce.
+function toEmergency(e?: GrpcEmergency | null): Emergency | null {
+  if (!e || !EMERGENCY_KINDS.includes(e.kind)) return null;
+  return {
+    kind: e.kind as EmergencyKind,
+    endsAtTick: e.endsAtTick,
+    heldPoints: [...(e.heldPoints ?? [])],
   };
 }
 
@@ -88,6 +193,7 @@ function toTank(t: TankView): TankView {
     ownerId: t.ownerId,
     contamination: t.contamination,
     dead: t.dead,
+    reported: t.reported ?? false,
   };
 }
 
@@ -95,7 +201,8 @@ function toMeeting(m: GrpcMeeting): Meeting {
   return {
     reporterId: m.reporterId,
     tankSlot: m.tankSlot,
-    lastVisitors: [...(m.lastVisitors ?? [])],
+    reason:
+      m.reason === 'MEETING_REASON_EMERGENCY' ? 'emergency' : 'report',
     votesCast: [...(m.votesCast ?? [])],
     endsAtTick: m.endsAtTick,
     votingClosed: Boolean(m.votingClosed),

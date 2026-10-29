@@ -127,7 +127,7 @@ En parejas, como en `team-plan.md`, sección 5:
 
 | Qué queda listo | Tarea |
 |---|---|
-| `Resume` con la foto completa, volver tras recargar la página, **pausar la sala cuando se desconecta cualquier jugador** y gracia configurable (`RECONNECT_GRACE_SECONDS`) | S3-01 |
+| `Resume` con la foto completa, volver tras recargar la página, **pausar la sala solo cuando se desconecta el host** (los demás siguen jugando) y gracia configurable (`RECONNECT_GRACE_SECONDS`) | S3-01 |
 | Instantáneas cada 2 s en `snapshots` y restaurarlas al arrancar; JWT validado con la clave pública en gateway y `match` | S3-02 |
 | **Outbox en `match`** (tabla `outbox` + publicador), ack solo después de guardar en Rust | S3-03 |
 | Cola de chat sin conexión con ids únicos; jugadores desconectados en el panel | S3-04 |

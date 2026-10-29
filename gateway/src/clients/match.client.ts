@@ -1,14 +1,20 @@
 import { Injectable } from '@nestjs/common';
+import { ApiProperty } from '@nestjs/swagger';
 import * as grpc from '@grpc/grpc-js';
-import { loadPackage, requireAddr, unary } from './grpc';
+import {
+  CHANNEL_OPTIONS,
+  loadPackage,
+  requireAddr,
+  unary,
+} from './grpc';
 import { createBreaker, guarded } from './resilience';
 
 export type PlayStream = grpc.ClientDuplexStream<unknown, any>;
 
-export type RoomReply = {
-  roomCode: string;
-  matchId: string;
-};
+export class RoomReply {
+  @ApiProperty() roomCode!: string;
+  @ApiProperty() matchId!: string;
+}
 
 @Injectable()
 export class MatchClient {
@@ -20,6 +26,7 @@ export class MatchClient {
     this.client = new pkg.match.v1.Match(
       requireAddr('MATCH_GRPC_ADDR'),
       grpc.credentials.createInsecure(),
+      CHANNEL_OPTIONS,
     );
   }
 

@@ -1,0 +1,427 @@
+/* =========================================================================
+   PANTALLA DE RANKING UNIFICADA (Escenario abierto, sin cajas pesadas)
+   ========================================================================= */
+
+.stage.scr-ranking {
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Viñeta ambiental consistente con Menú, Sala de Espera y Tienda */
+.scr-ranking .rk-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse at 50% 45%,
+      rgba(6, 26, 52, 0.68) 0%,
+      rgba(3, 12, 26, 0.9) 68%,
+      rgba(2, 8, 18, 0.96) 100%
+    );
+  z-index: 1;
+}
+
+/* =========================================================================
+   BARRA SUPERIOR (Volver a la izq, Título centrado, Tu posición a la der)
+   ========================================================================= */
+.scr-ranking .rk-header {
+  position: absolute;
+  left: 90px;
+  right: 90px;
+  top: 22px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 10;
+}
+
+.scr-ranking .rk-back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 46px;
+  padding: 0 26px;
+  font-family: var(--head);
+  font-size: 19px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--txt);
+  background: rgba(10, 33, 57, 0.85);
+  border: 1.5px solid rgba(126, 230, 216, 0.35);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.scr-ranking .rk-back-btn:hover {
+  background: rgba(14, 48, 84, 0.95);
+  border-color: var(--aqua);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.scr-ranking .rk-header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.scr-ranking .rk-alert-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 8px;
+  background: rgba(110, 28, 36, 0.85);
+  border: 1.5px solid var(--coral);
+  font-family: var(--head);
+  font-size: 16px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #ffe8e8;
+}
+
+.scr-ranking .rk-pos-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 46px;
+  padding: 0 22px;
+  background: rgba(10, 33, 57, 0.88);
+  border: 1.5px solid rgba(126, 230, 216, 0.4);
+  border-radius: 10px;
+  font-family: var(--head);
+  font-size: 17px;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--aqua);
+}
+
+/* =========================================================================
+   CUERPO PRINCIPAL DEL RANKING
+   ========================================================================= */
+.scr-ranking .rk-main {
+  position: absolute;
+  left: 90px;
+  right: 90px;
+  top: 108px;
+  height: 785px;
+  display: flex;
+  flex-direction: column;
+  z-index: 5;
+}
+
+/* Barra de encabezado con título + pastillas de ordenamiento rápido */
+.scr-ranking .rk-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+  border-bottom: 1.5px solid rgba(126, 230, 216, 0.25);
+}
+
+.scr-ranking .rk-toolbar-title {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.scr-ranking .rk-title-main {
+  font-family: var(--head);
+  font-size: 24px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.scr-ranking .rk-title-dot {
+  font-size: 22px;
+  color: var(--aqua);
+}
+
+.scr-ranking .rk-title-sub {
+  font-family: var(--head);
+  font-size: 20px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--amber);
+}
+
+.scr-ranking .rk-sort-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.scr-ranking .rk-sort-lbl {
+  font-family: var(--head);
+  font-size: 14px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--mut);
+  margin-right: 4px;
+}
+
+.scr-ranking .rk-sort-pill {
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 8px;
+  background: rgba(7, 25, 46, 0.72);
+  border: 1.5px solid rgba(126, 230, 216, 0.22);
+  font-family: var(--head);
+  font-size: 14px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--mut);
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.scr-ranking .rk-sort-pill:hover {
+  background: rgba(14, 48, 84, 0.88);
+  border-color: rgba(126, 230, 216, 0.55);
+  color: #fff;
+}
+
+.scr-ranking .rk-sort-pill.active {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 210, 74, 0.22) 0%,
+    rgba(16, 68, 115, 0.92) 100%
+  );
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+/* Contenedor desplazable de la tabla */
+.scr-ranking .rk-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.scr-ranking .rk-empty {
+  margin-top: 160px;
+  font-family: var(--head);
+  font-size: 24px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--mut);
+  text-align: center;
+}
+
+/* Tabla abierta con filas tipo tarjeta */
+.scr-ranking .rk-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 10px;
+}
+
+.scr-ranking .rk-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 10px 18px;
+  font-family: var(--head);
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-align: right;
+  color: var(--mut);
+  background: rgba(3, 13, 27, 0.94);
+  border-bottom: 1px solid rgba(126, 230, 216, 0.2);
+  white-space: nowrap;
+}
+
+.scr-ranking .rk-table thead th.pos,
+.scr-ranking .rk-table thead th.name {
+  text-align: left;
+}
+
+.scr-ranking .rk-table thead th button {
+  border: 0;
+  padding: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  background: none;
+  cursor: pointer;
+  transition: color 120ms ease;
+}
+
+.scr-ranking .rk-table thead th button:hover,
+.scr-ranking .rk-table thead th button:focus-visible {
+  outline: none;
+  color: #fff;
+}
+
+.scr-ranking .rk-table thead th.on {
+  color: var(--amber);
+}
+
+/* Celdas de cada fila formando una tarjeta redondeada limpia */
+.scr-ranking .rk-table tbody td {
+  height: 58px;
+  padding: 0 18px;
+  font-family: var(--head);
+  font-size: 19px;
+  letter-spacing: 1.5px;
+  text-align: right;
+  color: var(--txt);
+  background: rgba(7, 25, 46, 0.68);
+  border-top: 1.5px solid rgba(126, 230, 216, 0.18);
+  border-bottom: 1.5px solid rgba(126, 230, 216, 0.18);
+  white-space: nowrap;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.scr-ranking .rk-table tbody td:first-child {
+  border-left: 1.5px solid rgba(126, 230, 216, 0.18);
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+  width: 78px;
+}
+
+.scr-ranking .rk-table tbody td:last-child {
+  border-right: 1.5px solid rgba(126, 230, 216, 0.18);
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+
+.scr-ranking .rk-table tbody tr:hover td {
+  background: rgba(14, 48, 84, 0.82);
+  border-color: rgba(126, 230, 216, 0.38);
+}
+
+.scr-ranking .rk-table tbody td.pos,
+.scr-ranking .rk-table tbody td.name {
+  text-align: left;
+}
+
+.scr-ranking .rk-table tbody td.name {
+  width: 100%;
+  font-size: 20px;
+  color: #fff;
+  text-transform: uppercase;
+}
+
+.scr-ranking .rk-you-tag {
+  margin-left: 10px;
+  font-size: 14px;
+  letter-spacing: 1.5px;
+  color: var(--aqua);
+}
+
+.scr-ranking .rk-table tbody td.active-col {
+  color: var(--amber);
+}
+
+/* Fila del propio jugador resaltada en tono agua */
+.scr-ranking .rk-table tbody tr.rk-self td {
+  background: rgba(15, 61, 108, 0.62);
+  border-color: rgba(126, 230, 216, 0.55);
+}
+
+/* Medallas / Insignias de posición (1°, 2°, 3° y resto) */
+.scr-ranking .rk-medal {
+  display: inline-grid;
+  place-items: center;
+  min-width: 38px;
+  height: 34px;
+  padding: 0 8px;
+  border-radius: 8px;
+  font-family: var(--head);
+  font-size: 17px;
+  letter-spacing: 1px;
+  color: var(--mut);
+  background: rgba(4, 16, 31, 0.78);
+  border: 1.5px solid rgba(126, 230, 216, 0.22);
+}
+
+.scr-ranking .rk-table tbody tr.rk-p1 .rk-medal {
+  color: #1a1202;
+  background: linear-gradient(180deg, #ffe07d 0%, #f2b729 100%);
+  border-color: #fff0a8;
+}
+
+.scr-ranking .rk-table tbody tr.rk-p2 .rk-medal {
+  color: #101824;
+  background: linear-gradient(180deg, #eef3f8 0%, #b8c6d6 100%);
+  border-color: #ffffff;
+}
+
+.scr-ranking .rk-table tbody tr.rk-p3 .rk-medal {
+  color: #1f1004;
+  background: linear-gradient(180deg, #f0c391 0%, #c97d3b 100%);
+  border-color: #f7d9b9;
+}
+
+/* Pie de página sutil sobre la barra de teclas */
+.scr-ranking .rk-foot-note {
+  margin-top: 12px;
+  font-family: var(--head);
+  font-size: 15px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--mut);
+  text-align: center;
+}
+
+/* =========================================================================
+   HINT BAR INFERIOR (Elevada a 86px como en Menú, Sala de Espera y Tienda)
+   ========================================================================= */
+.stage.scr-ranking .hint {
+  position: absolute;
+  left: 50%;
+  right: auto;
+  bottom: 86px;
+  width: 680px;
+  height: 54px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 44px;
+  background: linear-gradient(
+    90deg,
+    rgba(4, 16, 31, 0),
+    rgba(4, 16, 31, 0.75) 22%,
+    rgba(4, 16, 31, 0.75) 78%,
+    rgba(4, 16, 31, 0)
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+
+.stage.scr-ranking .hint span {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--head);
+  font-size: 18px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--mut);
+  text-shadow: 2px 2px 0 var(--ink);
+}
+
+.stage.scr-ranking .hint .kbd {
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  display: inline-grid;
+  place-items: center;
+  font-family: var(--head);
+  font-size: 16px;
+  color: var(--aqua);
+  background: #0a2139;
+  border: 1.5px solid var(--aqua);
+  border-radius: 4px;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.6);
+}
+

@@ -24,7 +24,7 @@ El *porqué* de todo está en `docs/architecture.md`; el *cómo* de cada tarea, 
 
 | Carpeta | Stack |
 |---|---|
-| `web/` | TypeScript, canvas, Vite, nginx |
+| `web/` | TypeScript, React (pantallas y HUD), canvas (mundo), Vite, nginx |
 | `gateway/` | NestJS, `@grpc/proto-loader`, sin base de datos |
 | `match/` | Go, gRPC, pgx + sqlc, una goroutine por sala sin mutex |
 | `players/` | Rust: tokio, tonic, sqlx, lapin, argon2 y axum para `/health` |

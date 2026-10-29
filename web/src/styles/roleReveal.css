@@ -1,0 +1,335 @@
+/* roleReveal.css: rediseño pulcro y atmosférico de la pantalla de inicio de partida */
+
+.scr-role {
+  position: relative;
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 42px 60px 36px;
+  box-sizing: border-box;
+}
+
+/* Viñeta ambiental */
+.scr-role .role-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.scr-role .role-vignette.crew {
+  background: radial-gradient(
+    ellipse at 50% 45%,
+    rgba(7, 32, 54, 0.45) 0%,
+    rgba(3, 14, 28, 0.88) 70%,
+    rgba(2, 9, 18, 0.98) 100%
+  );
+}
+
+.scr-role .role-vignette.impostor {
+  background: radial-gradient(
+    ellipse at 50% 45%,
+    rgba(54, 12, 20, 0.5) 0%,
+    rgba(30, 7, 14, 0.9) 70%,
+    rgba(14, 3, 7, 0.98) 100%
+  );
+}
+
+/* Capa de contenido por encima de la viñeta */
+.scr-role .role-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Encabezado: tag, título del rol y subtítulo */
+.scr-role .role-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.scr-role .role-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 20px;
+  border-radius: 999px;
+  font-family: var(--head);
+  font-size: 14px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.scr-role .role-tag.crew {
+  background: rgba(38, 208, 170, 0.12);
+  border: 1.5px solid rgba(38, 208, 170, 0.45);
+  color: #38efbd;
+  box-shadow: 0 0 16px rgba(38, 208, 170, 0.2);
+}
+
+.scr-role .role-tag.impostor {
+  background: rgba(255, 77, 109, 0.12);
+  border: 1.5px solid rgba(255, 77, 109, 0.45);
+  color: #ff5470;
+  box-shadow: 0 0 16px rgba(255, 77, 109, 0.2);
+}
+
+.scr-role .role-title {
+  margin: 0;
+  font-family: var(--head);
+  font-size: 54px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+
+.scr-role .role-title.crew {
+  color: #38efbd;
+  text-shadow:
+    0 0 24px rgba(56, 239, 189, 0.5),
+    0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+.scr-role .role-title.impostor {
+  color: #ff5470;
+  text-shadow:
+    0 0 24px rgba(255, 84, 112, 0.5),
+    0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+.scr-role .role-desc {
+  margin: 0;
+  font-family: var(--body);
+  font-size: 21px;
+  color: #d6e8ee;
+  max-width: 740px;
+  line-height: 1.4;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+/* Escenario central del personaje con pedestal y halo */
+.scr-role .role-hero-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 380px;
+}
+
+.scr-role .role-halo {
+  position: absolute;
+  width: 520px;
+  height: 520px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.scr-role .role-halo.crew {
+  background: radial-gradient(
+    circle,
+    rgba(38, 208, 170, 0.24) 0%,
+    rgba(38, 208, 170, 0.08) 45%,
+    transparent 70%
+  );
+}
+
+.scr-role .role-halo.impostor {
+  background: radial-gradient(
+    circle,
+    rgba(255, 77, 109, 0.24) 0%,
+    rgba(255, 77, 109, 0.08) 45%,
+    transparent 70%
+  );
+}
+
+.scr-role .role-character {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.scr-role .role-pedestal {
+  position: relative;
+  z-index: 1;
+  width: 240px;
+  height: 28px;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0.55) 0%,
+    rgba(0, 0, 0, 0.2) 60%,
+    transparent 80%
+  );
+  margin-top: -12px;
+}
+
+.scr-role .role-my-name {
+  position: relative;
+  z-index: 2;
+  margin-top: 14px;
+  padding: 4px 20px;
+  font-family: var(--head);
+  font-size: 17px;
+  letter-spacing: 1px;
+  color: #ffffff;
+  background: rgba(7, 25, 46, 0.85);
+  border: 1.5px solid rgba(126, 230, 216, 0.35);
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+/* Tarjeta de compañeros en la estación */
+.scr-role .role-mates-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 28px;
+  background: rgba(7, 25, 46, 0.7);
+  border: 1px solid rgba(126, 230, 216, 0.22);
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  max-width: 880px;
+}
+
+.scr-role .role-mates-title {
+  font-family: var(--head);
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #7ee6d8;
+  opacity: 0.9;
+}
+
+.scr-role .role-mates-list {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.scr-role .role-mate-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.scr-role .role-mate-name {
+  font-family: var(--body);
+  font-size: 15px;
+  color: #c5dbe4;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Barra inferior de inicio y progreso */
+.scr-role .role-bottom-card {
+  width: 680px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 28px;
+  background: rgba(7, 25, 46, 0.88);
+  border: 1.5px solid rgba(126, 230, 216, 0.3);
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  box-sizing: border-box;
+}
+
+.scr-role .role-bottom-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.scr-role .role-starts-in {
+  font-family: var(--head);
+  font-size: 17px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #f4fffb;
+}
+
+.scr-role .role-starts-sec {
+  font-family: var(--head);
+  font-size: 20px;
+  color: #38efbd;
+  text-shadow: 0 0 10px rgba(56, 239, 189, 0.4);
+}
+
+.scr-role .role-starts-sec.impostor {
+  color: #ff5470;
+  text-shadow: 0 0 10px rgba(255, 84, 112, 0.4);
+}
+
+.scr-role .role-bar-track {
+  width: 100%;
+  height: 12px;
+  background: #030e1a;
+  border: 1px solid rgba(126, 230, 216, 0.2);
+  border-radius: 999px;
+  padding: 2px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.scr-role .role-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 100ms linear;
+}
+
+.scr-role .role-bar-fill.crew {
+  background: linear-gradient(
+    90deg,
+    #136237 0%,
+    #21b069 40%,
+    #38efbd 100%
+  );
+  box-shadow: 0 0 12px rgba(56, 239, 189, 0.4);
+}
+
+.scr-role .role-bar-fill.impostor {
+  background: linear-gradient(
+    90deg,
+    #7a1829 0%,
+    #d62846 40%,
+    #ff5470 100%
+  );
+  box-shadow: 0 0 12px rgba(255, 84, 112, 0.4);
+}
+
+/* Nota táctica sutil al pie */
+.scr-role .role-note {
+  font-family: var(--body);
+  font-size: 15px;
+  color: rgba(205, 231, 238, 0.75);
+  text-align: center;
+  margin: 0;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+}
+

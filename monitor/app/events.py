@@ -10,6 +10,7 @@ from datetime import UTC, datetime
 import aio_pika
 
 from app.messages import (
+    EVENT_MATCH_CLOSED_BY_HOST,
     EVENT_MATCH_FINISHED,
     EVENT_MATCH_STARTED,
     EVENT_PLAYER_DISCONNECTED,
@@ -254,6 +255,8 @@ class EventStats:
             self._grace_at.pop(key)
         self.finished_today += 1
 
+        if not payload.get("winner"):
+            return EVENT_MATCH_CLOSED_BY_HOST
         winner = WINNER_LABELS.get(
             payload.get("winner"),
             WINNER_UNKNOWN,

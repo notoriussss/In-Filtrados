@@ -35,7 +35,7 @@ class FakeSocket implements SocketLike {
   send(data: string): void {
     this.sent.push(JSON.parse(data));
   }
-  close(): void { }
+  close(): void {}
 
   open(): void {
     this.readyState = 1;
@@ -57,6 +57,7 @@ function setup() {
   const sockets: FakeSocket[] = [];
   const timers: { fn: () => void; ms: number }[] = [];
   const statuses: SocketStatus[] = [];
+  const clock = fakeInterval();
   let unauthorized = 0;
   const gs = new GameSocket({
     token: 't',
@@ -68,12 +69,46 @@ function setup() {
       return s;
     },
     setTimer: (fn, ms) => timers.push({ fn, ms }),
-    clearTimer: () => { },
+    clearTimer: () => {},
+    now: clock.now,
+    setInterval: clock.setInterval,
+    clearInterval: clock.clearInterval,
     onUnauthorized: () => unauthorized++,
   });
   gs.onStatus((s) => statuses.push(s));
   gs.connect();
-  return { gs, sockets, timers, statuses, unauthorized: () => unauthorized };
+  return {
+    gs,
+    sockets,
+    timers,
+    statuses,
+    clock,
+    unauthorized: () => unauthorized,
+  };
+}
+
+// Reloj e intervalo falsos del heartbeat: advance corre el intervalo
+// una vez por cada segundo simulado.
+function fakeInterval() {
+  let nowMs = 0;
+  let tick: (() => void) | null = null;
+  return {
+    now: () => nowMs,
+    setInterval: (fn: () => void) => {
+      tick = fn;
+      return 1;
+    },
+    clearInterval: () => {
+      tick = null;
+    },
+    running: () => tick !== null,
+    advance(ms: number) {
+      for (let i = 0; i < ms / 1000; i++) {
+        nowMs += 1000;
+        tick?.();
+      }
+    },
+  };
 }
 
 const snapshot = (tick: number) => ({
@@ -86,9 +121,7 @@ const snapshot = (tick: number) => ({
 describe('reconnectDelay', () => {
   it('waits 0.5, 1, 2, 4, 8 and then 10 s forever', () => {
     const delays = [1, 2, 3, 4, 5, 6, 7, 50].map(reconnectDelay);
-    expect(delays).toEqual([
-      500, 1000, 2000, 4000, 8000, 10000, 10000, 10000,
-    ]);
+    expect(delays).toEqual([500, 1000, 2000, 4000, 8000, 10000, 10000, 10000]);
   });
 });
 
@@ -219,5 +252,63 @@ describe('GameSocket', () => {
     sockets[0].drop(1006); // late event from the old socket
     expect(statuses.length).toBe(before);
     expect(timers).toHaveLength(1);
+  });
+
+  it('sends ping every 2 s while it hears from the server', () => {
+    const { sockets, clock, timers } = setup();
+    sockets[0].open();
+    for (let i = 0; i < 4; i++) {
+      clock.advance(2000);
+      sockets[0].receive({ type: 'pong' });
+    }
+    const pings = sockets[0].sent.filter((m) => m.type === 'ping');
+    expect(pings).toHaveLength(4);
+    expect(timers).toHaveLength(0);
+  });
+
+  it('a pong does not reach onMessage', () => {
+    const { gs, sockets } = setup();
+    const got: unknown[] = [];
+    gs.onMessage((m) => got.push(m));
+    sockets[0].open();
+    sockets[0].receive({ type: 'pong' });
+    expect(got).toHaveLength(0);
+  });
+
+  it('5 s without hearing anything counts as a drop', () => {
+    const { sockets, timers, statuses, clock } = setup();
+    sockets[0].open();
+    sockets[0].receive(snapshot(7));
+    clock.advance(4000);
+    expect(timers).toHaveLength(0);
+    clock.advance(1000); // sin close: la red quedó a medias
+    expect(statuses.at(-1)).toEqual({ state: 'reconnecting', attempt: 1 });
+    timers[0].fn();
+    sockets[1].open();
+    expect(sockets[1].sent[0]).toEqual({
+      type: 'join',
+      matchId: 'm-1',
+      lastTick: 7,
+    });
+    // Un close tardío del socket viejo no agenda otro reintento.
+    sockets[0].drop(1006);
+    expect(timers).toHaveLength(1);
+  });
+
+  it('a socket that does not open in 5 s is retried', () => {
+    const { sockets, timers, clock } = setup();
+    clock.advance(5000);
+    expect(timers.map((t) => t.ms)).toEqual([500]);
+    timers[0].fn();
+    expect(sockets).toHaveLength(2);
+  });
+
+  it('close() stops the heartbeat', () => {
+    const { gs, sockets, clock, timers } = setup();
+    sockets[0].open();
+    gs.close();
+    expect(clock.running()).toBe(false);
+    clock.advance(10_000);
+    expect(timers).toHaveLength(0);
   });
 });
