@@ -140,7 +140,7 @@ export const LOBBY_TEXT = {
   WIN_IMPOSTOR:
     'Infiltrado: contamina tanques hasta igualar a los ' +
     'cuidadores o aguanta 8 minutos.',
-  MIN_PLAYERS: 'Mínimo 2 jugadores para empezar',
+  MIN_PLAYERS: 'Mínimo 3 jugadores para empezar',
   START: 'Iniciar partida',
   waitingFor: (name: string) => `Esperando a que ${name} inicie`,
 } as const;
